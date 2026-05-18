@@ -1,0 +1,26 @@
+{
+  "job_name": "sample-skillflow-inject",
+  "jobs_dir": "outputs/evaluation",
+  "model": "openai/gpt-5-codex",
+  "tasks_path": "integration/skillsbench/tasks",
+  "selector_cache": "outputs/pipeline/sample/result_cache.json",
+  "tasks_dir_for_skills": "integration/skillsbench/tasks",
+  "corpus_dir": "data/skills",
+  "num_runs": 1,
+  "environment": {
+    "use_daytona": true,
+    "n_concurrent": 1
+  },
+  "tasks": {
+    "include_tasks": [
+      "sales-pivot-analysis"
+    ],
+    "exclude_tasks": []
+  },
+  "retry": {
+    "resume": false,
+    "retry_errors": false,
+    "retry_tasks": [],
+    "retry_error_types": []
+  }
+}

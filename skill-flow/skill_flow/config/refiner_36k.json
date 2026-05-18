@@ -1,0 +1,27 @@
+{
+  "source_index_dir": "outputs/indices/bge-base-36k/",
+  "source_corpus_dir": "data/skills/",
+  "output_corpus_dir": "data/skills-refined-36k/",
+  "report_dir": "outputs/refiner-36k/",
+  "eps": 0.10,
+  "merger": {
+    "enabled": true,
+    "model": "gpt-4o-mini",
+    "max_tokens": 3500,
+    "temperature": 0.0,
+    "max_group_size": 3,
+    "max_workers": 32,
+    "skip_cluster_size_above": 5,
+    "instruction_path": "skill_flow/refiner/instructions/merge_v1.j2",
+    "cache_path": "outputs/refiner-36k/merge_cache.json"
+  },
+  "quality_filter": {
+    "enabled": true,
+    "model": "gpt-4o-mini",
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "max_workers": 32,
+    "instruction_path": "skill_flow/refiner/instructions/filter_v1.j2",
+    "cache_path": "outputs/refiner-36k/filter_cache.json"
+  }
+}

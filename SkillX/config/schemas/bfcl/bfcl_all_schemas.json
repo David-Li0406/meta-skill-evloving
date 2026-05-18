@@ -1,0 +1,3273 @@
+{
+  "cat": {
+    "type": "function",
+    "function": {
+      "name": "cat",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Display the contents of a file of any extension from currrent directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "The name of the file from current directory to display. No path is allowed. "
+          }
+        },
+        "required": [
+          "file_name"
+        ]
+      }
+    }
+  },
+  "cd": {
+    "type": "function",
+    "function": {
+      "name": "cd",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Change the current working directory to the specified folder.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "folder": {
+            "type": "string",
+            "description": "The folder of the directory to change to. You can only change one folder level at a time. "
+          }
+        },
+        "required": [
+          "folder"
+        ]
+      }
+    }
+  },
+  "cp": {
+    "type": "function",
+    "function": {
+      "name": "cp",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Copy a file or directory from one location to another.  If the destination is a directory, the source file or directory will be copied into the destination directory.  Both source and destination must be local to the current directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "The name of the file or directory to copy."
+          },
+          "destination": {
+            "type": "string",
+            "description": "The destination name to copy the file or directory to. If the destination is a directory, the source will be copied into this directory. No file paths allowed. "
+          }
+        },
+        "required": [
+          "source",
+          "destination"
+        ]
+      }
+    }
+  },
+  "diff": {
+    "type": "function",
+    "function": {
+      "name": "diff",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Compare two files of any extension line by line at the current directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_name1": {
+            "type": "string",
+            "description": "The name of the first file in current directory."
+          },
+          "file_name2": {
+            "type": "string",
+            "description": "The name of the second file in current directory. "
+          }
+        },
+        "required": [
+          "file_name1",
+          "file_name2"
+        ]
+      }
+    }
+  },
+  "du": {
+    "type": "function",
+    "function": {
+      "name": "du",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Estimate the disk usage of a directory and its contents.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "human_readable": {
+            "type": "boolean",
+            "description": "If True, returns the size in human-readable format (e.g., KB, MB). ",
+            "default": false
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  "echo": {
+    "type": "function",
+    "function": {
+      "name": "echo",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Write content to a file at current directory or display it in the terminal.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The content to write or display."
+          },
+          "file_name": {
+            "type": "string",
+            "description": "The name of the file at current directory to write the content to. Defaults to None. ",
+            "default": "None"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      }
+    }
+  },
+  "find": {
+    "type": "function",
+    "function": {
+      "name": "find",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Find any file or directories under specific path that contain name in its file name.  This method searches for files of any extension and directories within a specified path that match the given name. If no name is provided, it returns all files and directories in the specified path and its subdirectories. Note: This method performs a recursive search through all subdirectories of the given path.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The directory path to start the search. Defaults to the current directory (\".\").",
+            "default": "."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the file or directory to search for. If None, all items are returned. ",
+            "default": "None"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  "grep": {
+    "type": "function",
+    "function": {
+      "name": "grep",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Search for lines in a file of any extension at current directory that contain the specified pattern.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "The name of the file to search. No path is allowed and you can only perform on file at local directory."
+          },
+          "pattern": {
+            "type": "string",
+            "description": "The pattern to search for. "
+          }
+        },
+        "required": [
+          "file_name",
+          "pattern"
+        ]
+      }
+    }
+  },
+  "ls": {
+    "type": "function",
+    "function": {
+      "name": "ls",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: List the contents of the current directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "boolean",
+            "description": "Show hidden files and directories. Defaults to False. ",
+            "default": false
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  "mkdir": {
+    "type": "function",
+    "function": {
+      "name": "mkdir",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Create a new directory in the current directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "dir_name": {
+            "type": "string",
+            "description": "The name of the new directory at current directory. You can only create directory at current directory."
+          }
+        },
+        "required": [
+          "dir_name"
+        ]
+      }
+    }
+  },
+  "mv": {
+    "type": "function",
+    "function": {
+      "name": "mv",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Move a file or directory from one location to another.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Source name of the file or directory to move. Source must be local to the current directory."
+          },
+          "destination": {
+            "type": "string",
+            "description": "The destination name to move the file or directory to. Destination must be local to the current directory and cannot be a path. If destination is not an existing directory like when renaming something, destination is the new file name. "
+          }
+        },
+        "required": [
+          "source",
+          "destination"
+        ]
+      }
+    }
+  },
+  "pwd": {
+    "type": "function",
+    "function": {
+      "name": "pwd",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Return the current working directory path.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "rm": {
+    "type": "function",
+    "function": {
+      "name": "rm",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Remove a file or directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "The name of the file or directory to remove. "
+          }
+        },
+        "required": [
+          "file_name"
+        ]
+      }
+    }
+  },
+  "rmdir": {
+    "type": "function",
+    "function": {
+      "name": "rmdir",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Remove a directory at current directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "dir_name": {
+            "type": "string",
+            "description": "The name of the directory to remove. Directory must be local to the current directory. "
+          }
+        },
+        "required": [
+          "dir_name"
+        ]
+      }
+    }
+  },
+  "sort": {
+    "type": "function",
+    "function": {
+      "name": "sort",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Sort the contents of a file line by line.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "The name of the file appeared at current directory to sort. "
+          }
+        },
+        "required": [
+          "file_name"
+        ]
+      }
+    }
+  },
+  "tail": {
+    "type": "function",
+    "function": {
+      "name": "tail",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Display the last part of a file of any extension.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "The name of the file to display. No path is allowed and you can only perform on file at local directory."
+          },
+          "lines": {
+            "type": "integer",
+            "description": "The number of lines to display from the end of the file. Defaults to 10. ",
+            "default": 10
+          }
+        },
+        "required": [
+          "file_name"
+        ]
+      }
+    }
+  },
+  "touch": {
+    "type": "function",
+    "function": {
+      "name": "touch",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Create a new file of any extension in the current directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "The name of the new file in the current directory. file_name is local to the current directory and does not allow path."
+          }
+        },
+        "required": [
+          "file_name"
+        ]
+      }
+    }
+  },
+  "wc": {
+    "type": "function",
+    "function": {
+      "name": "wc",
+      "description": "This tool belongs to the Gorilla file system. It is a simple file system that allows users to perform basic file operations such as navigating directories, creating files and directories, reading and writing to files, etc. Tool description: Count the number of lines, words, and characters in a file of any extension from current directory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "Name of the file of current directory to perform wc operation on."
+          },
+          "mode": {
+            "type": "string",
+            "description": "Mode of operation ('l' for lines, 'w' for words, 'c' for characters). ",
+            "default": "l"
+          }
+        },
+        "required": [
+          "file_name"
+        ]
+      }
+    }
+  },
+  "absolute_value": {
+    "type": "function",
+    "function": {
+      "name": "absolute_value",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Calculate the absolute value of a number.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "float",
+            "description": "The number to calculate the absolute value of. "
+          }
+        },
+        "required": [
+          "number"
+        ]
+      }
+    }
+  },
+  "add": {
+    "type": "function",
+    "function": {
+      "name": "add",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Add two numbers.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "float",
+            "description": "First number."
+          },
+          "b": {
+            "type": "float",
+            "description": "Second number. "
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ]
+      }
+    }
+  },
+  "divide": {
+    "type": "function",
+    "function": {
+      "name": "divide",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Divide one number by another.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "float",
+            "description": "Numerator."
+          },
+          "b": {
+            "type": "float",
+            "description": "Denominator. "
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ]
+      }
+    }
+  },
+  "imperial_si_conversion": {
+    "type": "function",
+    "function": {
+      "name": "imperial_si_conversion",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Convert a value between imperial and SI units.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "float",
+            "description": "Value to be converted."
+          },
+          "unit_in": {
+            "type": "string",
+            "description": "Unit of the input value."
+          },
+          "unit_out": {
+            "type": "string",
+            "description": "Unit to convert the value to. "
+          }
+        },
+        "required": [
+          "value",
+          "unit_in",
+          "unit_out"
+        ]
+      }
+    }
+  },
+  "logarithm": {
+    "type": "function",
+    "function": {
+      "name": "logarithm",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Compute the logarithm of a number with adjustable precision using mpmath.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "float",
+            "description": "The number to compute the logarithm of."
+          },
+          "base": {
+            "type": "float",
+            "description": "The base of the logarithm."
+          },
+          "precision": {
+            "type": "integer",
+            "description": "Desired precision for the result. "
+          }
+        },
+        "required": [
+          "value",
+          "base",
+          "precision"
+        ]
+      }
+    }
+  },
+  "max_value": {
+    "type": "function",
+    "function": {
+      "name": "max_value",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Find the maximum value in a list of numbers.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "float"
+            },
+            "description": "List of numbers to find the maximum from. "
+          }
+        },
+        "required": [
+          "numbers"
+        ]
+      }
+    }
+  },
+  "mean": {
+    "type": "function",
+    "function": {
+      "name": "mean",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Calculate the mean of a list of numbers.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "float"
+            },
+            "description": "List of numbers to calculate the mean of. "
+          }
+        },
+        "required": [
+          "numbers"
+        ]
+      }
+    }
+  },
+  "min_value": {
+    "type": "function",
+    "function": {
+      "name": "min_value",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Find the minimum value in a list of numbers.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "float"
+            },
+            "description": "List of numbers to find the minimum from. "
+          }
+        },
+        "required": [
+          "numbers"
+        ]
+      }
+    }
+  },
+  "multiply": {
+    "type": "function",
+    "function": {
+      "name": "multiply",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Multiply two numbers.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "float",
+            "description": "First number."
+          },
+          "b": {
+            "type": "float",
+            "description": "Second number. "
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ]
+      }
+    }
+  },
+  "percentage": {
+    "type": "function",
+    "function": {
+      "name": "percentage",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Calculate the percentage of a part relative to a whole.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "part": {
+            "type": "float",
+            "description": "The part value."
+          },
+          "whole": {
+            "type": "float",
+            "description": "The whole value. "
+          }
+        },
+        "required": [
+          "part",
+          "whole"
+        ]
+      }
+    }
+  },
+  "power": {
+    "type": "function",
+    "function": {
+      "name": "power",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Raise a number to a power.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "float",
+            "description": "The base number."
+          },
+          "exponent": {
+            "type": "float",
+            "description": "The exponent. "
+          }
+        },
+        "required": [
+          "base",
+          "exponent"
+        ]
+      }
+    }
+  },
+  "round_number": {
+    "type": "function",
+    "function": {
+      "name": "round_number",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Round a number to a specified number of decimal places.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "float",
+            "description": "The number to round."
+          },
+          "decimal_places": {
+            "type": "integer",
+            "description": "The number of decimal places to round to. Defaults to 0. ",
+            "default": 0
+          }
+        },
+        "required": [
+          "number"
+        ]
+      }
+    }
+  },
+  "si_unit_conversion": {
+    "type": "function",
+    "function": {
+      "name": "si_unit_conversion",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Convert a value from one SI unit to another.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "float",
+            "description": "Value to be converted."
+          },
+          "unit_in": {
+            "type": "string",
+            "description": "Unit of the input value."
+          },
+          "unit_out": {
+            "type": "string",
+            "description": "Unit to convert the value to. "
+          }
+        },
+        "required": [
+          "value",
+          "unit_in",
+          "unit_out"
+        ]
+      }
+    }
+  },
+  "square_root": {
+    "type": "function",
+    "function": {
+      "name": "square_root",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Calculate the square root of a number with adjustable precision using the decimal module.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "float",
+            "description": "The number to calculate the square root of."
+          },
+          "precision": {
+            "type": "integer",
+            "description": "Desired precision for the result. "
+          }
+        },
+        "required": [
+          "number",
+          "precision"
+        ]
+      }
+    }
+  },
+  "standard_deviation": {
+    "type": "function",
+    "function": {
+      "name": "standard_deviation",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Calculate the standard deviation of a list of numbers.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "float"
+            },
+            "description": "List of numbers to calculate the standard deviation of. "
+          }
+        },
+        "required": [
+          "numbers"
+        ]
+      }
+    }
+  },
+  "subtract": {
+    "type": "function",
+    "function": {
+      "name": "subtract",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Subtract one number from another.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "a": {
+            "type": "float",
+            "description": "Number to subtract from."
+          },
+          "b": {
+            "type": "float",
+            "description": "Number to subtract. "
+          }
+        },
+        "required": [
+          "a",
+          "b"
+        ]
+      }
+    }
+  },
+  "sum_values": {
+    "type": "function",
+    "function": {
+      "name": "sum_values",
+      "description": "This tool belongs to the Math API, which provides various mathematical operations. Tool description: Calculate the sum of a list of numbers.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "numbers": {
+            "type": "array",
+            "items": {
+              "type": "float"
+            },
+            "description": "List of numbers to sum. "
+          }
+        },
+        "required": [
+          "numbers"
+        ]
+      }
+    }
+  },
+  "archival_memory_add": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_add",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Add a new entry to the archival memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The text to be added to the archival memory. "
+          }
+        },
+        "required": [
+          "text"
+        ]
+      }
+    }
+  },
+  "archival_memory_clear": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_clear",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Clear all entries in the archival memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "archival_memory_key_search": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_key_search",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Search for key names in the long-term memory that are similar to the query using BM25+ algorithm.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The query text to search for."
+          },
+          "k": {
+            "type": "integer",
+            "description": "The number of results to return. ",
+            "default": 5
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  },
+  "archival_memory_list_keys": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_list_keys",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: List all keys currently in the long-term memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "archival_memory_remove": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_remove",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Remove an entry from the archival memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "vec_id": {
+            "type": "integer",
+            "description": "The ID of the entry to be removed. "
+          }
+        },
+        "required": [
+          "vec_id"
+        ]
+      }
+    }
+  },
+  "archival_memory_replace": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_replace",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Replace a key-value pair in the long-term memory with a new value.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The key to replace in the long-term memory. Case-sensitive."
+          },
+          "value": {
+            "type": "string",
+            "description": "The new value associated with the key. "
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ]
+      }
+    }
+  },
+  "archival_memory_retrieve": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_retrieve",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Retrieve the most similar entries from the archival memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The query text to search for."
+          },
+          "top_k": {
+            "type": "integer",
+            "description": "The number of top similar entries to retrieve.",
+            "default": 5
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  },
+  "core_memory_add": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_add",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Add a new entry to the core memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The text to be added to the core memory. "
+          }
+        },
+        "required": [
+          "text"
+        ]
+      }
+    }
+  },
+  "core_memory_clear": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_clear",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Clear all entries in the core memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "core_memory_key_search": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_key_search",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Search for key names in the short-term memory that are similar to the query using BM25+ algorithm.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The query text to search for."
+          },
+          "k": {
+            "type": "integer",
+            "description": "The number of results to return. ",
+            "default": 5
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  },
+  "core_memory_list_keys": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_list_keys",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: List all keys currently in the short-term memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "core_memory_remove": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_remove",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Remove an entry from the core memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "vec_id": {
+            "type": "integer",
+            "description": "The ID of the entry to be removed. "
+          }
+        },
+        "required": [
+          "vec_id"
+        ]
+      }
+    }
+  },
+  "core_memory_replace": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_replace",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Replace a key-value pair in the short-term memory with a new value.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The key to replace in the short-term memory. Case-sensitive."
+          },
+          "value": {
+            "type": "string",
+            "description": "The new value associated with the key. "
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ]
+      }
+    }
+  },
+  "core_memory_retrieve": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_retrieve",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Retrieve the most similar entries from the core memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The query text to search for."
+          },
+          "top_k": {
+            "type": "integer",
+            "description": "The number of top similar entries to retrieve. ",
+            "default": 5
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  },
+  "core_memory_retrieve_all": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_retrieve_all",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Retrieve all entries from the core memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "memory_append": {
+    "type": "function",
+    "function": {
+      "name": "memory_append",
+      "description": "This tool belongs to the memory suite, which provides APIs to manage memory data via recursive summarization. Tool description: Append a new text to the end of the memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The text to append to the memory. "
+          }
+        },
+        "required": [
+          "text"
+        ]
+      }
+    }
+  },
+  "memory_clear": {
+    "type": "function",
+    "function": {
+      "name": "memory_clear",
+      "description": "This tool belongs to the memory suite, which provides APIs to manage memory data via recursive summarization. Tool description: Clear all content in the memory, including any from previous interactions. This operation is irreversible.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "memory_replace": {
+    "type": "function",
+    "function": {
+      "name": "memory_replace",
+      "description": "This tool belongs to the memory suite, which provides APIs to manage memory data via recursive summarization. Tool description: Replace a specific text in the memory with new text.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "old_text": {
+            "type": "string",
+            "description": "The text to be replaced in the memory."
+          },
+          "new_text": {
+            "type": "string",
+            "description": "The new text to replace the old text."
+          }
+        },
+        "required": [
+          "old_text",
+          "new_text"
+        ]
+      }
+    }
+  },
+  "memory_retrieve": {
+    "type": "function",
+    "function": {
+      "name": "memory_retrieve",
+      "description": "This tool belongs to the memory suite, which provides APIs to manage memory data via recursive summarization. Tool description: Retrieve the current content of the memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "memory_update": {
+    "type": "function",
+    "function": {
+      "name": "memory_update",
+      "description": "This tool belongs to the memory suite, which provides APIs to manage memory data via recursive summarization. Tool description: Update the memory with new text. This will replace the existing memory content.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The new text to set as the memory. "
+          }
+        },
+        "required": [
+          "text"
+        ]
+      }
+    }
+  },
+  "archival_memory_retrieve_all": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_retrieve_all",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Retrieve all entries from the archival memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "archival_memory_update": {
+    "type": "function",
+    "function": {
+      "name": "archival_memory_update",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Update an entry in the archival memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "vec_id": {
+            "type": "integer",
+            "description": "The ID of the entry to be updated."
+          },
+          "new_text": {
+            "type": "string",
+            "description": "The new text to replace the old text. "
+          }
+        },
+        "required": [
+          "vec_id",
+          "new_text"
+        ]
+      }
+    }
+  },
+  "core_memory_update": {
+    "type": "function",
+    "function": {
+      "name": "core_memory_update",
+      "description": "This tool belongs to the memory suite, which provides APIs to interact with a key-value based memory system. Tool description: Update an entry in the core memory.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "vec_id": {
+            "type": "integer",
+            "description": "The ID of the entry to be updated."
+          },
+          "new_text": {
+            "type": "string",
+            "description": "The new text to replace the old text. "
+          }
+        },
+        "required": [
+          "vec_id",
+          "new_text"
+        ]
+      }
+    }
+  },
+  "add_contact": {
+    "type": "function",
+    "function": {
+      "name": "add_contact",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: Add a contact to the workspace.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_name": {
+            "type": "string",
+            "description": "User name of contact to be added."
+          }
+        },
+        "required": [
+          "user_name"
+        ]
+      }
+    }
+  },
+  "delete_message": {
+    "type": "function",
+    "function": {
+      "name": "delete_message",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: Delete the latest message sent to a receiver.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "receiver_id": {
+            "type": "string",
+            "description": "User ID of the user to send the message to."
+          }
+        },
+        "required": [
+          "receiver_id"
+        ]
+      }
+    }
+  },
+  "get_message_stats": {
+    "type": "function",
+    "function": {
+      "name": "get_message_stats",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: Get statistics about messages for the current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "get_user_id": {
+    "type": "function",
+    "function": {
+      "name": "get_user_id",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: Get user ID from user name.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string",
+            "description": "User name of the user. "
+          }
+        },
+        "required": [
+          "user"
+        ]
+      }
+    }
+  },
+  "list_users": {
+    "type": "function",
+    "function": {
+      "name": "list_users",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: List all users in the workspace.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "message_get_login_status": {
+    "type": "function",
+    "function": {
+      "name": "message_get_login_status",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: Get the login status of the current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "message_login": {
+    "type": "function",
+    "function": {
+      "name": "message_login",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: Log in a user with the given user ID to messeage application.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "User ID of the user to log in. "
+          }
+        },
+        "required": [
+          "user_id"
+        ]
+      }
+    }
+  },
+  "search_messages": {
+    "type": "function",
+    "function": {
+      "name": "search_messages",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: Search for messages containing a specific keyword.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "description": "The keyword to search for in messages."
+          }
+        },
+        "required": [
+          "keyword"
+        ]
+      }
+    }
+  },
+  "send_message": {
+    "type": "function",
+    "function": {
+      "name": "send_message",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: Send a message to a user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "receiver_id": {
+            "type": "string",
+            "description": "User ID of the user to send the message to."
+          },
+          "message": {
+            "type": "string",
+            "description": "Message to be sent."
+          }
+        },
+        "required": [
+          "receiver_id",
+          "message"
+        ]
+      }
+    }
+  },
+  "view_messages_sent": {
+    "type": "function",
+    "function": {
+      "name": "view_messages_sent",
+      "description": "This tool belongs to the Message API, which is used to manage user interactions in a workspace. Tool description: View all historical messages sent by the current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "authenticate_twitter": {
+    "type": "function",
+    "function": {
+      "name": "authenticate_twitter",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Authenticate a user with username and password.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username of the user."
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user."
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      }
+    }
+  },
+  "comment": {
+    "type": "function",
+    "function": {
+      "name": "comment",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Comment on a tweet for the authenticated user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tweet_id": {
+            "type": "integer",
+            "description": "ID of the tweet to comment on."
+          },
+          "comment_content": {
+            "type": "string",
+            "description": "Content of the comment."
+          }
+        },
+        "required": [
+          "tweet_id",
+          "comment_content"
+        ]
+      }
+    }
+  },
+  "follow_user": {
+    "type": "function",
+    "function": {
+      "name": "follow_user",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Follow a user for the authenticated user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username_to_follow": {
+            "type": "string",
+            "description": "Username of the user to follow."
+          }
+        },
+        "required": [
+          "username_to_follow"
+        ]
+      }
+    }
+  },
+  "get_tweet": {
+    "type": "function",
+    "function": {
+      "name": "get_tweet",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Retrieve a specific tweet.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tweet_id": {
+            "type": "integer",
+            "description": "ID of the tweet to retrieve."
+          }
+        },
+        "required": [
+          "tweet_id"
+        ]
+      }
+    }
+  },
+  "get_tweet_comments": {
+    "type": "function",
+    "function": {
+      "name": "get_tweet_comments",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Retrieve all comments for a specific tweet.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tweet_id": {
+            "type": "integer",
+            "description": "ID of the tweet to retrieve comments for."
+          }
+        },
+        "required": [
+          "tweet_id"
+        ]
+      }
+    }
+  },
+  "get_user_stats": {
+    "type": "function",
+    "function": {
+      "name": "get_user_stats",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Get statistics for a specific user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username of the user to get statistics for."
+          }
+        },
+        "required": [
+          "username"
+        ]
+      }
+    }
+  },
+  "get_user_tweets": {
+    "type": "function",
+    "function": {
+      "name": "get_user_tweets",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Retrieve all tweets from a specific user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username of the user whose tweets to retrieve."
+          }
+        },
+        "required": [
+          "username"
+        ]
+      }
+    }
+  },
+  "list_all_following": {
+    "type": "function",
+    "function": {
+      "name": "list_all_following",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: List all users that the authenticated user is following.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "mention": {
+    "type": "function",
+    "function": {
+      "name": "mention",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Mention specified users in a tweet.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tweet_id": {
+            "type": "integer",
+            "description": "ID of the tweet where users are mentioned."
+          },
+          "mentioned_usernames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of usernames to be mentioned."
+          }
+        },
+        "required": [
+          "tweet_id",
+          "mentioned_usernames"
+        ]
+      }
+    }
+  },
+  "post_tweet": {
+    "type": "function",
+    "function": {
+      "name": "post_tweet",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Post a tweet for the authenticated user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Content of the tweet."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of tags for the tweet. Tag name should start with #. This is only relevant if the user wants to add tags to the tweet.",
+            "default": []
+          },
+          "mentions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of users mentioned in the tweet. Mention name should start with @. This is only relevant if the user wants to add mentions to the tweet.",
+            "default": []
+          }
+        },
+        "required": [
+          "content"
+        ]
+      }
+    }
+  },
+  "posting_get_login_status": {
+    "type": "function",
+    "function": {
+      "name": "posting_get_login_status",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Get the login status of the current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "retweet": {
+    "type": "function",
+    "function": {
+      "name": "retweet",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Retweet a tweet for the authenticated user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tweet_id": {
+            "type": "integer",
+            "description": "ID of the tweet to retweet."
+          }
+        },
+        "required": [
+          "tweet_id"
+        ]
+      }
+    }
+  },
+  "search_tweets": {
+    "type": "function",
+    "function": {
+      "name": "search_tweets",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Search for tweets containing a specific keyword.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "description": "Keyword to search for in the content of the tweets."
+          }
+        },
+        "required": [
+          "keyword"
+        ]
+      }
+    }
+  },
+  "unfollow_user": {
+    "type": "function",
+    "function": {
+      "name": "unfollow_user",
+      "description": "This tool belongs to the TwitterAPI, which provides core functionality for posting tweets, retweeting, commenting, and following users on Twitter. Tool description: Unfollow a user for the authenticated user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username_to_unfollow": {
+            "type": "string",
+            "description": "Username of the user to unfollow."
+          }
+        },
+        "required": [
+          "username_to_unfollow"
+        ]
+      }
+    }
+  },
+  "close_ticket": {
+    "type": "function",
+    "function": {
+      "name": "close_ticket",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Close a ticket.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticket_id": {
+            "type": "integer",
+            "description": "ID of the ticket to be closed. "
+          }
+        },
+        "required": [
+          "ticket_id"
+        ]
+      }
+    }
+  },
+  "create_ticket": {
+    "type": "function",
+    "function": {
+      "name": "create_ticket",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Create a ticket in the system and queue it.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Title of the ticket."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the ticket. Defaults to an empty string.",
+            "default": ""
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Priority of the ticket, from 1 to 5. Defaults to 1. 5 is the highest priority. ",
+            "default": 1
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
+    }
+  },
+  "edit_ticket": {
+    "type": "function",
+    "function": {
+      "name": "edit_ticket",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Modify the details of an existing ticket.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticket_id": {
+            "type": "integer",
+            "description": "ID of the ticket to be changed."
+          },
+          "updates": {
+            "type": "object",
+            "description": "Dictionary containing the fields to be updated.",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "[Optional] New title for the ticket."
+              },
+              "description": {
+                "type": "string",
+                "description": "[Optional] New description for the ticket."
+              },
+              "status": {
+                "type": "string",
+                "description": "[Optional] New status for the ticket."
+              },
+              "priority": {
+                "type": "integer",
+                "description": "[Optional] New priority for the ticket."
+              }
+            }
+          }
+        },
+        "required": [
+          "ticket_id",
+          "updates"
+        ]
+      }
+    }
+  },
+  "get_ticket": {
+    "type": "function",
+    "function": {
+      "name": "get_ticket",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Get a specific ticket by its ID.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticket_id": {
+            "type": "integer",
+            "description": "ID of the ticket to retrieve. "
+          }
+        },
+        "required": [
+          "ticket_id"
+        ]
+      }
+    }
+  },
+  "get_user_tickets": {
+    "type": "function",
+    "function": {
+      "name": "get_user_tickets",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Get all tickets created by the current user, optionally filtered by status.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Status to filter tickets by. If None, return all tickets. ",
+            "default": "None"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  "logout": {
+    "type": "function",
+    "function": {
+      "name": "logout",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Log out the current user.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "resolve_ticket": {
+    "type": "function",
+    "function": {
+      "name": "resolve_ticket",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Resolve a ticket with a resolution.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ticket_id": {
+            "type": "integer",
+            "description": "ID of the ticket to be resolved."
+          },
+          "resolution": {
+            "type": "string",
+            "description": "Resolution details for the ticket. "
+          }
+        },
+        "required": [
+          "ticket_id",
+          "resolution"
+        ]
+      }
+    }
+  },
+  "ticket_get_login_status": {
+    "type": "function",
+    "function": {
+      "name": "ticket_get_login_status",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Get the login status of the currently authenticated user.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "ticket_login": {
+    "type": "function",
+    "function": {
+      "name": "ticket_login",
+      "description": "This tool belongs to the ticketing system that is part of a company, which allows users to create, view, and manage support business tickets. Tool description: Authenticate a user for ticket system.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username of the user."
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user. "
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      }
+    }
+  },
+  "add_to_watchlist": {
+    "type": "function",
+    "function": {
+      "name": "add_to_watchlist",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Add a stock to the watchlist.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "stock": {
+            "type": "string",
+            "description": "the stock symbol to add to the watchlist. "
+          }
+        },
+        "required": [
+          "stock"
+        ]
+      }
+    }
+  },
+  "cancel_order": {
+    "type": "function",
+    "function": {
+      "name": "cancel_order",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Cancel an order.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "integer",
+            "description": "ID of the order to cancel. "
+          }
+        },
+        "required": [
+          "order_id"
+        ]
+      }
+    }
+  },
+  "filter_stocks_by_price": {
+    "type": "function",
+    "function": {
+      "name": "filter_stocks_by_price",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Filter stocks based on a price range.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "stocks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of stock symbols to filter."
+          },
+          "min_price": {
+            "type": "float",
+            "description": "Minimum stock price."
+          },
+          "max_price": {
+            "type": "float",
+            "description": "Maximum stock price. "
+          }
+        },
+        "required": [
+          "stocks",
+          "min_price",
+          "max_price"
+        ]
+      }
+    }
+  },
+  "fund_account": {
+    "type": "function",
+    "function": {
+      "name": "fund_account",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Fund the account with the specified amount.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "float",
+            "description": "Amount to fund the account with. "
+          }
+        },
+        "required": [
+          "amount"
+        ]
+      }
+    }
+  },
+  "get_account_info": {
+    "type": "function",
+    "function": {
+      "name": "get_account_info",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get account information.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "get_available_stocks": {
+    "type": "function",
+    "function": {
+      "name": "get_available_stocks",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get a list of stock symbols in the given sector.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "sector": {
+            "type": "string",
+            "description": "The sector to retrieve stocks from (e.g., 'Technology'). "
+          }
+        },
+        "required": [
+          "sector"
+        ]
+      }
+    }
+  },
+  "get_current_time": {
+    "type": "function",
+    "function": {
+      "name": "get_current_time",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get the current time.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "get_order_details": {
+    "type": "function",
+    "function": {
+      "name": "get_order_details",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get the details of an order.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "integer",
+            "description": "ID of the order. "
+          }
+        },
+        "required": [
+          "order_id"
+        ]
+      }
+    }
+  },
+  "get_order_history": {
+    "type": "function",
+    "function": {
+      "name": "get_order_history",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get the stock order ID history.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "get_stock_info": {
+    "type": "function",
+    "function": {
+      "name": "get_stock_info",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get the details of a stock.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Symbol that uniquely identifies the stock. "
+          }
+        },
+        "required": [
+          "symbol"
+        ]
+      }
+    }
+  },
+  "get_symbol_by_name": {
+    "type": "function",
+    "function": {
+      "name": "get_symbol_by_name",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get the symbol of a stock by company name.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the company. "
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    }
+  },
+  "get_transaction_history": {
+    "type": "function",
+    "function": {
+      "name": "get_transaction_history",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get the transaction history within a specified date range.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "start_date": {
+            "type": "string",
+            "description": "Start date for the history (format: 'YYYY-MM-DD').",
+            "default": "None"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date for the history (format: 'YYYY-MM-DD'). ",
+            "default": "None"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  "get_watchlist": {
+    "type": "function",
+    "function": {
+      "name": "get_watchlist",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get the watchlist.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "notify_price_change": {
+    "type": "function",
+    "function": {
+      "name": "notify_price_change",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Notify if there is a significant price change in the stocks.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "stocks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of stock symbols to check."
+          },
+          "threshold": {
+            "type": "float",
+            "description": "Percentage change threshold to trigger a notification. "
+          }
+        },
+        "required": [
+          "stocks",
+          "threshold"
+        ]
+      }
+    }
+  },
+  "place_order": {
+    "type": "function",
+    "function": {
+      "name": "place_order",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Place an order.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "order_type": {
+            "type": "string",
+            "description": "Type of the order (Buy/Sell)."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Symbol of the stock to trade."
+          },
+          "price": {
+            "type": "float",
+            "description": "Price at which to place the order."
+          },
+          "amount": {
+            "type": "integer",
+            "description": "Number of shares to trade. "
+          }
+        },
+        "required": [
+          "order_type",
+          "symbol",
+          "price",
+          "amount"
+        ]
+      }
+    }
+  },
+  "remove_stock_from_watchlist": {
+    "type": "function",
+    "function": {
+      "name": "remove_stock_from_watchlist",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Remove a stock from the watchlist.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Symbol of the stock to remove. "
+          }
+        },
+        "required": [
+          "symbol"
+        ]
+      }
+    }
+  },
+  "trading_get_login_status": {
+    "type": "function",
+    "function": {
+      "name": "trading_get_login_status",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Get the login status.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "trading_login": {
+    "type": "function",
+    "function": {
+      "name": "trading_login",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Handle user login.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username for authentication."
+          },
+          "password": {
+            "type": "string",
+            "description": "Password for authentication. "
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      }
+    }
+  },
+  "trading_logout": {
+    "type": "function",
+    "function": {
+      "name": "trading_logout",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Handle user logout for trading system.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "withdraw_funds": {
+    "type": "function",
+    "function": {
+      "name": "withdraw_funds",
+      "description": "This tool belongs to the trading system, which allows users to trade stocks, manage their account, and view stock information. Tool description: Withdraw funds from the account balance.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "float",
+            "description": "Amount to withdraw from the account. "
+          }
+        },
+        "required": [
+          "amount"
+        ]
+      }
+    }
+  },
+  "authenticate_travel": {
+    "type": "function",
+    "function": {
+      "name": "authenticate_travel",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Authenticate the user with the travel API",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "The client applications client_id supplied by App Management"
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "The client applications client_secret supplied by App Management"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "The refresh token obtained from the initial authentication"
+          },
+          "grant_type": {
+            "type": "string",
+            "description": "The grant type of the authentication request. Here are the options: read_write, read, write"
+          },
+          "user_first_name": {
+            "type": "string",
+            "description": "The first name of the user"
+          },
+          "user_last_name": {
+            "type": "string",
+            "description": "The last name of the user"
+          }
+        },
+        "required": [
+          "client_id",
+          "client_secret",
+          "refresh_token",
+          "grant_type",
+          "user_first_name",
+          "user_last_name"
+        ]
+      }
+    }
+  },
+  "book_flight": {
+    "type": "function",
+    "function": {
+      "name": "book_flight",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Book a flight given the travel information. From and To should be the airport codes in the IATA format.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token obtained from the authenticate"
+          },
+          "card_id": {
+            "type": "string",
+            "description": "The ID of the credit card to use for the booking"
+          },
+          "travel_date": {
+            "type": "string",
+            "description": "The date of the travel in the format YYYY-MM-DD"
+          },
+          "travel_from": {
+            "type": "string",
+            "description": "The location the travel is from"
+          },
+          "travel_to": {
+            "type": "string",
+            "description": "The location the travel is to"
+          },
+          "travel_class": {
+            "type": "string",
+            "description": "The class of the travel"
+          }
+        },
+        "required": [
+          "access_token",
+          "card_id",
+          "travel_date",
+          "travel_from",
+          "travel_to",
+          "travel_class"
+        ]
+      }
+    }
+  },
+  "cancel_booking": {
+    "type": "function",
+    "function": {
+      "name": "cancel_booking",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Cancel a booking",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token obtained from the authenticate"
+          },
+          "booking_id": {
+            "type": "string",
+            "description": "The ID of the booking"
+          }
+        },
+        "required": [
+          "access_token",
+          "booking_id"
+        ]
+      }
+    }
+  },
+  "compute_exchange_rate": {
+    "type": "function",
+    "function": {
+      "name": "compute_exchange_rate",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Compute the exchange rate between two currencies",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "base_currency": {
+            "type": "string",
+            "description": "The base currency. [Enum]: USD, RMB, EUR, JPY, GBP, CAD, AUD, INR, RUB, BRL, MXN"
+          },
+          "target_currency": {
+            "type": "string",
+            "description": "The target currency. [Enum]: USD, RMB, EUR, JPY, GBP, CAD, AUD, INR, RUB, BRL, MXN"
+          },
+          "value": {
+            "type": "float",
+            "description": "The value to convert"
+          }
+        },
+        "required": [
+          "base_currency",
+          "target_currency",
+          "value"
+        ]
+      }
+    }
+  },
+  "contact_customer_support": {
+    "type": "function",
+    "function": {
+      "name": "contact_customer_support",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Contact travel booking customer support, get immediate support on an issue with an online call.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "booking_id": {
+            "type": "string",
+            "description": "The ID of the booking"
+          },
+          "message": {
+            "type": "string",
+            "description": "The message to send to customer support"
+          }
+        },
+        "required": [
+          "booking_id",
+          "message"
+        ]
+      }
+    }
+  },
+  "get_all_credit_cards": {
+    "type": "function",
+    "function": {
+      "name": "get_all_credit_cards",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Get all registered credit cards",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "get_booking_history": {
+    "type": "function",
+    "function": {
+      "name": "get_booking_history",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Retrieve all booking history for the user.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token obtained from the authenticate method. "
+          }
+        },
+        "required": [
+          "access_token"
+        ]
+      }
+    }
+  },
+  "get_budget_fiscal_year": {
+    "type": "function",
+    "function": {
+      "name": "get_budget_fiscal_year",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Get the budget fiscal year",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "lastModifiedAfter": {
+            "type": "string",
+            "description": "Use this field if you only want Fiscal Years that were changed after the supplied date. The supplied date will be interpreted in the UTC time zone. If lastModifiedAfter is not supplied, the service will return all Fiscal Years, regardless of modified date. Example: 2016-03-29T16:12:20. Return in the format of YYYY-MM-DDTHH:MM:SS.",
+            "default": "None"
+          },
+          "includeRemoved": {
+            "type": "string",
+            "description": "If true, the service will return all Fiscal Years, including those that were previously removed. If not supplied, this field defaults to false.",
+            "default": "None"
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  "get_credit_card_balance": {
+    "type": "function",
+    "function": {
+      "name": "get_credit_card_balance",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Get the balance of a credit card",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token obtained from the authenticate"
+          },
+          "card_id": {
+            "type": "string",
+            "description": "The ID of the credit card"
+          }
+        },
+        "required": [
+          "access_token",
+          "card_id"
+        ]
+      }
+    }
+  },
+  "get_flight_cost": {
+    "type": "function",
+    "function": {
+      "name": "get_flight_cost",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Get the list of cost of a flight in USD based on location, date, and class",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "travel_from": {
+            "type": "string",
+            "description": "The 3 letter code of the departing airport"
+          },
+          "travel_to": {
+            "type": "string",
+            "description": "The 3 letter code of the arriving airport"
+          },
+          "travel_date": {
+            "type": "string",
+            "description": "The date of the travel in the format 'YYYY-MM-DD'"
+          },
+          "travel_class": {
+            "type": "string",
+            "description": "The class of the travel. Options are: economy, business, first."
+          }
+        },
+        "required": [
+          "travel_from",
+          "travel_to",
+          "travel_date",
+          "travel_class"
+        ]
+      }
+    }
+  },
+  "get_nearest_airport_by_city": {
+    "type": "function",
+    "function": {
+      "name": "get_nearest_airport_by_city",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Get the nearest airport to the given location",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The name of the location. [Enum]: Rivermist, Stonebrook, Maplecrest, Silverpine, Shadowridge, London, Paris, Sunset Valley, Oakendale, Willowbend, Crescent Hollow, Autumnville, Pinehaven, Greenfield, San Francisco, Los Angeles, New York, Chicago, Boston, Beijing, Hong Kong, Rome, Tokyo"
+          }
+        },
+        "required": [
+          "location"
+        ]
+      }
+    }
+  },
+  "list_all_airports": {
+    "type": "function",
+    "function": {
+      "name": "list_all_airports",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: List all available airports",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "purchase_insurance": {
+    "type": "function",
+    "function": {
+      "name": "purchase_insurance",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Purchase insurance",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token obtained from the authenticate"
+          },
+          "insurance_type": {
+            "type": "string",
+            "description": "The type of insurance to purchase"
+          },
+          "insurance_cost": {
+            "type": "float",
+            "description": "The cost of the insurance"
+          },
+          "booking_id": {
+            "type": "string",
+            "description": "The ID of the booking"
+          },
+          "card_id": {
+            "type": "string",
+            "description": "The ID of the credit card to use for the"
+          }
+        },
+        "required": [
+          "access_token",
+          "insurance_type",
+          "booking_id",
+          "insurance_cost",
+          "card_id"
+        ]
+      }
+    }
+  },
+  "register_credit_card": {
+    "type": "function",
+    "function": {
+      "name": "register_credit_card",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Register a credit card",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token obtained from the authenticate method"
+          },
+          "card_number": {
+            "type": "string",
+            "description": "The credit card number"
+          },
+          "expiration_date": {
+            "type": "string",
+            "description": "The expiration date of the credit card in the format MM/YYYY"
+          },
+          "cardholder_name": {
+            "type": "string",
+            "description": "The name of the cardholder"
+          },
+          "card_verification_number": {
+            "type": "integer",
+            "description": "The card verification number"
+          }
+        },
+        "required": [
+          "access_token",
+          "card_number",
+          "expiration_date",
+          "cardholder_name",
+          "card_verification_number"
+        ]
+      }
+    }
+  },
+  "retrieve_invoice": {
+    "type": "function",
+    "function": {
+      "name": "retrieve_invoice",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Retrieve the invoice for a booking.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token obtained from the authenticate"
+          },
+          "booking_id": {
+            "type": "string",
+            "description": "The ID of the booking",
+            "default": "None"
+          },
+          "insurance_id": {
+            "type": "string",
+            "description": "The ID of the insurance",
+            "default": "None"
+          }
+        },
+        "required": [
+          "access_token"
+        ]
+      }
+    }
+  },
+  "set_budget_limit": {
+    "type": "function",
+    "function": {
+      "name": "set_budget_limit",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Set the budget limit for the user",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "The access token obtained from the authentication process or initial configuration."
+          },
+          "budget_limit": {
+            "type": "float",
+            "description": "The budget limit to set in USD"
+          }
+        },
+        "required": [
+          "access_token",
+          "budget_limit"
+        ]
+      }
+    }
+  },
+  "travel_get_login_status": {
+    "type": "function",
+    "function": {
+      "name": "travel_get_login_status",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Get the status of the login",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "verify_traveler_information": {
+    "type": "function",
+    "function": {
+      "name": "verify_traveler_information",
+      "description": "This tool belongs to the travel system, which allows users to book flights, manage credit cards, and view budget information. Tool description: Verify the traveler information",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "description": "The first name of the traveler"
+          },
+          "last_name": {
+            "type": "string",
+            "description": "The last name of the traveler"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "description": "The date of birth of the traveler in the format YYYY-MM-DD"
+          },
+          "passport_number": {
+            "type": "string",
+            "description": "The passport number of the traveler"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "date_of_birth",
+          "passport_number"
+        ]
+      }
+    }
+  },
+  "activateParkingBrake": {
+    "type": "function",
+    "function": {
+      "name": "activateParkingBrake",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Activates the parking brake of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "description": "The mode to set. [Enum]: [\"engage\", \"release\"]"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      }
+    }
+  },
+  "adjustClimateControl": {
+    "type": "function",
+    "function": {
+      "name": "adjustClimateControl",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Adjusts the climate control of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "temperature": {
+            "type": "float",
+            "description": "The temperature to set in degree. Default to be celsius."
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit of temperature. [Enum]: [\"celsius\", \"fahrenheit\"]",
+            "default": "celsius"
+          },
+          "fanSpeed": {
+            "type": "integer",
+            "description": "The fan speed to set from 0 to 100. Default is 50.",
+            "default": 50
+          },
+          "mode": {
+            "type": "string",
+            "description": "The climate mode to set. [Enum]: [\"auto\", \"cool\", \"heat\", \"defrost\"]",
+            "default": "auto"
+          }
+        },
+        "required": [
+          "temperature"
+        ]
+      }
+    }
+  },
+  "check_tire_pressure": {
+    "type": "function",
+    "function": {
+      "name": "check_tire_pressure",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Checks the tire pressure of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "displayCarStatus": {
+    "type": "function",
+    "function": {
+      "name": "displayCarStatus",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Displays the status of the vehicle based on the provided display option.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "option": {
+            "type": "string",
+            "description": "The option to display. [Enum]: [\"fuel\", \"battery\", \"doors\", \"climate\", \"headlights\", \"parkingBrake\", \"brakePedal\", \"engine\"]"
+          }
+        },
+        "required": [
+          "option"
+        ]
+      }
+    }
+  },
+  "display_log": {
+    "type": "function",
+    "function": {
+      "name": "display_log",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Displays the log messages.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The list of messages to display."
+          }
+        },
+        "required": [
+          "messages"
+        ]
+      }
+    }
+  },
+  "estimate_distance": {
+    "type": "function",
+    "function": {
+      "name": "estimate_distance",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Estimates the distance between two cities.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "cityA": {
+            "type": "string",
+            "description": "The zipcode of the first city."
+          },
+          "cityB": {
+            "type": "string",
+            "description": "The zipcode of the second city."
+          }
+        },
+        "required": [
+          "cityA",
+          "cityB"
+        ]
+      }
+    }
+  },
+  "estimate_drive_feasibility_by_mileage": {
+    "type": "function",
+    "function": {
+      "name": "estimate_drive_feasibility_by_mileage",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Estimates the milage of the vehicle given the distance needed to drive.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "distance": {
+            "type": "float",
+            "description": "The distance to travel in miles."
+          }
+        },
+        "required": [
+          "distance"
+        ]
+      }
+    }
+  },
+  "fillFuelTank": {
+    "type": "function",
+    "function": {
+      "name": "fillFuelTank",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Fills the fuel tank of the vehicle. The fuel tank can hold up to 50 gallons.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "fuelAmount": {
+            "type": "float",
+            "description": "The amount of fuel to fill in gallons; this is the additional fuel to add to the tank."
+          }
+        },
+        "required": [
+          "fuelAmount"
+        ]
+      }
+    }
+  },
+  "find_nearest_tire_shop": {
+    "type": "function",
+    "function": {
+      "name": "find_nearest_tire_shop",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Finds the nearest tire shop.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "gallon_to_liter": {
+    "type": "function",
+    "function": {
+      "name": "gallon_to_liter",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Converts the gallon to liter.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "gallon": {
+            "type": "float",
+            "description": "The amount of gallon to convert."
+          }
+        },
+        "required": [
+          "gallon"
+        ]
+      }
+    }
+  },
+  "get_current_speed": {
+    "type": "function",
+    "function": {
+      "name": "get_current_speed",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Gets the current speed of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "get_outside_temperature_from_google": {
+    "type": "function",
+    "function": {
+      "name": "get_outside_temperature_from_google",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Gets the outside temperature.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "get_outside_temperature_from_weather_com": {
+    "type": "function",
+    "function": {
+      "name": "get_outside_temperature_from_weather_com",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Gets the outside temperature.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "get_zipcode_based_on_city": {
+    "type": "function",
+    "function": {
+      "name": "get_zipcode_based_on_city",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Gets the zipcode based on the city.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "The name of the city."
+          }
+        },
+        "required": [
+          "city"
+        ]
+      }
+    }
+  },
+  "liter_to_gallon": {
+    "type": "function",
+    "function": {
+      "name": "liter_to_gallon",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Converts the liter to gallon.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "liter": {
+            "type": "float",
+            "description": "The amount of liter to convert."
+          }
+        },
+        "required": [
+          "liter"
+        ]
+      }
+    }
+  },
+  "lockDoors": {
+    "type": "function",
+    "function": {
+      "name": "lockDoors",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Locks the doors of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "unlock": {
+            "type": "boolean",
+            "description": "True if the doors are to be unlocked, False otherwise."
+          },
+          "door": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The list of doors to lock or unlock. [Enum]: [\"driver\", \"passenger\", \"rear_left\", \"rear_right\"]"
+          }
+        },
+        "required": [
+          "unlock",
+          "door"
+        ]
+      }
+    }
+  },
+  "pressBrakePedal": {
+    "type": "function",
+    "function": {
+      "name": "pressBrakePedal",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Presses the brake pedal based on pedal position. The brake pedal will be kept pressed until released.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "pedalPosition": {
+            "type": "float",
+            "description": "Position of the brake pedal, between 0 (not pressed) and 1 (fully pressed)."
+          }
+        },
+        "required": [
+          "pedalPosition"
+        ]
+      }
+    }
+  },
+  "releaseBrakePedal": {
+    "type": "function",
+    "function": {
+      "name": "releaseBrakePedal",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Releases the brake pedal of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  },
+  "setCruiseControl": {
+    "type": "function",
+    "function": {
+      "name": "setCruiseControl",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Sets the cruise control of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "speed": {
+            "type": "float",
+            "description": "The speed to set in m/h. The speed should be between 0 and 120 and a multiple of 5."
+          },
+          "activate": {
+            "type": "boolean",
+            "description": "True to activate the cruise control, False to deactivate."
+          },
+          "distanceToNextVehicle": {
+            "type": "float",
+            "description": "The distance to the next vehicle in meters."
+          }
+        },
+        "required": [
+          "speed",
+          "activate",
+          "distanceToNextVehicle"
+        ]
+      }
+    }
+  },
+  "setHeadlights": {
+    "type": "function",
+    "function": {
+      "name": "setHeadlights",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Sets the headlights of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "description": "The mode of the headlights. [Enum]: [\"on\", \"off\", \"auto\"]"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      }
+    }
+  },
+  "set_navigation": {
+    "type": "function",
+    "function": {
+      "name": "set_navigation",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Navigates to the destination.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "destination": {
+            "type": "string",
+            "description": "The destination to navigate in the format of street, city, state."
+          }
+        },
+        "required": [
+          "destination"
+        ]
+      }
+    }
+  },
+  "startEngine": {
+    "type": "function",
+    "function": {
+      "name": "startEngine",
+      "description": "This tool belongs to the vehicle control system, which allows users to control various aspects of the car such as engine, doors, climate control, lights, and more. Tool description: Starts the engine of the vehicle.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ignitionMode": {
+            "type": "string",
+            "description": "The ignition mode of the vehicle. [Enum]: [\"START\", \"STOP\"]"
+          }
+        },
+        "required": [
+          "ignitionMode"
+        ]
+      }
+    }
+  },
+  "search_engine_query": {
+    "type": "function",
+    "function": {
+      "name": "search_engine_query",
+      "description": "This tool belongs to the Web Search API category. It provides functions to search the web and browse search results. Tool description: This function queries the search engine for the provided keywords and region.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "keywords": {
+            "type": "string",
+            "description": "The keywords to search for."
+          },
+          "max_results": {
+            "type": "integer",
+            "description": "The maximum number of search results to return.",
+            "default": 10
+          },
+          "region": {
+            "type": "string",
+            "description": "The region to search in. Defaults to 'wt-wt' (No region).",
+            "default": "wt-wt",
+            "enum": [
+              "xa-ar",
+              "xa-en",
+              "ar-es",
+              "au-en",
+              "at-de",
+              "be-fr",
+              "be-nl",
+              "br-pt",
+              "bg-bg",
+              "ca-en",
+              "ca-fr",
+              "ct-ca",
+              "cl-es",
+              "cn-zh",
+              "co-es",
+              "hr-hr",
+              "cz-cs",
+              "dk-da",
+              "ee-et",
+              "fi-fi",
+              "fr-fr",
+              "de-de",
+              "gr-el",
+              "hk-tz",
+              "hu-hu",
+              "in-en",
+              "id-id",
+              "id-en",
+              "ie-en",
+              "il-he",
+              "it-it",
+              "jp-jp",
+              "kr-kr",
+              "lv-lv",
+              "lt-lt",
+              "xl-es",
+              "my-ms",
+              "my-en",
+              "mx-es",
+              "nl-nl",
+              "nz-en",
+              "no-no",
+              "pe-es",
+              "ph-en",
+              "ph-tl",
+              "pl-pl",
+              "pt-pt",
+              "ro-ro",
+              "ru-ru",
+              "sg-en",
+              "sk-sk",
+              "sl-sl",
+              "za-en",
+              "es-es",
+              "se-sv",
+              "ch-de",
+              "ch-fr",
+              "ch-it",
+              "tw-tz",
+              "th-th",
+              "tr-tr",
+              "ua-uk",
+              "uk-en",
+              "us-en",
+              "ue-es",
+              "ve-es",
+              "vn-vi",
+              "wt-wt"
+            ]
+          }
+        },
+        "required": [
+          "keywords"
+        ]
+      }
+    }
+  },
+  "fetch_url_content": {
+    "type": "function",
+    "function": {
+      "name": "fetch_url_content",
+      "description": "This tool belongs to the Web Search API category. It provides functions to search the web and browse search results. Tool description: This function retrieves content from the provided URL and processes it based on the selected mode.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The URL to fetch content from. Must start with 'http://' or 'https://'."
+          },
+          "mode": {
+            "type": "string",
+            "description": "The mode to process the fetched content. `raw` returns the raw HTML content; `markdown` converts raw HTML content to Markdown format for better readability, using html2text; `truncate` extracts and cleans text by removing scripts, styles, and extraneous whitespace.",
+            "default": "raw",
+            "enum": [
+              "raw",
+              "markdown",
+              "truncate"
+            ]
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    }
+  }
+}

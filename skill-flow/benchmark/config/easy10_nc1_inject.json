@@ -1,0 +1,45 @@
+{
+  "jobs_dir": "outputs/evaluation",
+  "model": "openai/gpt-5-codex",
+  "reasoning_effort": "medium",
+  "selector_cache": "outputs/pipeline/full_run/result_cache.json",
+  "tasks_dir_for_skills": "integration/skillsbench/tasks",
+  "corpus_dir": "data/skills",
+  "tasks_path": "integration/skillsbench/tasks",
+  "num_runs": 1,
+  "environment": {
+    "use_daytona": true,
+    "n_concurrent": 1
+  },
+  "tasks": {
+    "include_tasks": [
+      "powerlifting-coef-calc",
+      "offer-letter-generator",
+      "dialogue-parser",
+      "court-form-filling",
+      "fix-build-agentops",
+      "lake-warming-attribution",
+      "threejs-to-obj",
+      "threejs-structure-parser",
+      "travel-planning",
+      "crystallographic-wyckoff-position-analysis"
+    ],
+    "exclude_tasks": []
+  },
+  "retry": {
+    "resume": false,
+    "retry_errors": false,
+    "retry_tasks": [],
+    "retry_error_types": [
+      "AgentSetupTimeoutError",
+      "CancelledError",
+      "EnvironmentStartTimeoutError",
+      "RewardFileNotFoundError",
+      "VerifierTimeoutError",
+      "RuntimeError",
+      "DaytonaNotFoundError",
+      "AddTestsDirError"
+    ]
+  },
+  "job_name": "easy10-nc1-skillflow-inject"
+}
