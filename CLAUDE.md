@@ -1,1 +1,1 @@
-Any large dataset or model should be stored under /scratch/daweili5/
+Any large dataset or model should be stored under ./scratch/daweili5/

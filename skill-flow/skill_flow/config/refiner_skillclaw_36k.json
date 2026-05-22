@@ -1,0 +1,44 @@
+{
+  "source_index_dir": "outputs/indices/bge-base-36k/",
+  "source_corpus_dir": "data/skills/",
+  "eps": 0.1,
+  "engine": "skillclaw",
+  "output_corpus_dir": "data/skills-refined-skillclaw-36k/",
+  "report_dir": "outputs/refiner-skillclaw-36k/",
+  "skillclaw": {
+    "enabled": true,
+    "model": "gpt-4o-mini",
+    "max_tokens": 3500,
+    "temperature": 0.0,
+    "max_workers": 32,
+    "max_group_size": 5,
+    "verify_enabled": true,
+    "verify_model": "gpt-4o-mini",
+    "verify_min_score": 0.5,
+    "verify_max_tokens": 256,
+    "evolve_instruction_path": "skill_flow/refiner/instructions/skillclaw_evolve_v1.j2",
+    "verify_instruction_path": "skill_flow/refiner/instructions/skillclaw_verify_v1.j2",
+    "evolve_cache_path": "outputs/refiner-skillclaw-36k/skillclaw_evolve_cache.json",
+    "verify_cache_path": "outputs/refiner-skillclaw-36k/skillclaw_verify_cache.json"
+  },
+  "merger": {
+    "enabled": false,
+    "model": "gpt-4o-mini",
+    "max_tokens": 1024,
+    "temperature": 0.0,
+    "max_group_size": 5,
+    "max_workers": 8,
+    "skip_cluster_size_above": 5,
+    "instruction_path": "skill_flow/refiner/instructions/merge_v1.j2",
+    "cache_path": "outputs/refiner-skillclaw-36k/merge_cache.json"
+  },
+  "quality_filter": {
+    "enabled": false,
+    "model": "gpt-4o-mini",
+    "max_tokens": 256,
+    "temperature": 0.0,
+    "max_workers": 8,
+    "instruction_path": "skill_flow/refiner/instructions/filter_v1.j2",
+    "cache_path": "outputs/refiner-skillclaw-36k/filter_cache.json"
+  }
+}

@@ -98,18 +98,21 @@ class TarGzSkillInjector:
             staging_dir: Temporary staging directory.
             logs_dir: Local logs directory for copying.
         """
-        skill_name = skill_folder.name
+        base_name = skill_folder.name
+        skill_name = base_name
+        counter = 2
+        while (staging_dir / skill_name).exists():
+            skill_name = f"{base_name}-{counter}"
+            counter += 1
         self._logger.debug(f"Staging skill: {skill_name}")
 
-        # Copy to staging
         shutil.copytree(skill_folder, staging_dir / skill_name)
 
-        # Copy to logs directory for visibility in outputs
         skills_log_dir = logs_dir / "skills" / skill_name
         try:
             skills_log_dir.mkdir(parents=True, exist_ok=True)
             shutil.copytree(skill_folder, skills_log_dir, dirs_exist_ok=True)
-        except PermissionError:
+        except (PermissionError, FileExistsError):
             self._logger.warning(f"Could not copy skill to logs dir: {skill_name}")
 
     async def _upload_archive(

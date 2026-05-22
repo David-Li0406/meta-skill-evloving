@@ -1,4 +1,11 @@
-"""Orchestrates cluster → merge → quality-filter → library write."""
+"""Orchestrates the refiner pipeline; dispatches on RefinerConfig.engine.
+
+Supported engines:
+- "skillx" (default): DBSCAN cluster → LLM merge → LLM quality-filter
+- "autoskill": vector-similarity pairs → LLM merge-judge → SkillX merger
+- "skillclaw": DBSCAN cluster → LLM evolve (improve/create/merge/skip) + verify
+- "agentskillos": KMeans top-level categories + LLM labels + active/dormant split
+"""
 
 from __future__ import annotations
 
@@ -13,6 +20,11 @@ import numpy as np
 
 from skill_flow.corpus.loader import load_corpus
 from skill_flow.refiner.cluster import cluster_skills
+from skill_flow.refiner.engines import (
+    refine_agentskillos,
+    refine_autoskill,
+    refine_skillclaw,
+)
 from skill_flow.refiner.library import write_refined_corpus
 from skill_flow.refiner.merger import SkillMdMerger
 from skill_flow.refiner.models import (
@@ -29,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 def refine_library(config: RefinerConfig) -> RefineReport:
-    """Run the full cluster → merge → filter → write pipeline."""
+    """Run the configured engine end-to-end."""
     started = time.time()
 
     source_corpus = Path(config.source_corpus_dir)
@@ -60,30 +72,79 @@ def refine_library(config: RefinerConfig) -> RefineReport:
     if len(indexed_records) != len(skill_ids):
         logger.warning(
             "Index has %d ids but metadata has %d records — using %d intersection",
-            len(skill_ids),
-            len(records),
-            len(indexed_records),
+            len(skill_ids), len(records), len(indexed_records),
         )
     emb_subset = embeddings[rows] if rows else embeddings
 
-    clusters = cluster_skills(emb_subset, eps=config.eps)
-    (report_dir / "cluster_report.json").write_text(
-        json.dumps(
-            {
-                "n_clusters": len(clusters),
-                "sizes": [len(c) for c in clusters],
-                "size_ge_2_count": sum(1 for c in clusters if len(c) >= 2),
-                "members": [
-                    [indexed_records[i].key for i in c]
-                    for c in clusters
-                    if len(c) >= 2
-                ],
-            },
-            indent=2,
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
+    engine = config.engine
+    logger.info("Refiner engine: %s", engine)
+
+    if engine == "skillx":
+        kept_singletons, kept_merged, dropped, extra = _run_skillx(
+            indexed_records, emb_subset, contents, config, report_dir,
+        )
+    elif engine == "autoskill":
+        singletons, merged_skills, merge_failures, ex = refine_autoskill(
+            indexed_records, emb_subset, contents, config, report_dir,
+        )
+        # Apply shared SkillX-style quality filter after merge
+        kept_singletons, kept_merged, dropped = _apply_quality_filter(
+            config, singletons, merged_skills, contents,
+        )
+        extra = {**ex, "merge_failures": merge_failures}
+    elif engine == "skillclaw":
+        clusters = cluster_skills(emb_subset, eps=config.eps)
+        _write_cluster_report(clusters, indexed_records, report_dir)
+        singletons, merged_skills, merge_failures, ex = refine_skillclaw(
+            indexed_records, clusters, contents, config, report_dir,
+        )
+        # SkillClaw has its own verifier; skip the shared quality_filter.
+        kept_singletons, kept_merged, dropped = singletons, merged_skills, 0
+        extra = {**ex, "merge_failures": merge_failures}
+    elif engine == "agentskillos":
+        singletons, merged_skills, merge_failures, ex = refine_agentskillos(
+            indexed_records, emb_subset, contents, config, report_dir,
+        )
+        kept_singletons, kept_merged, dropped = singletons, merged_skills, 0
+        extra = {**ex, "merge_failures": merge_failures}
+    else:
+        msg = f"Unknown engine: {engine!r}"
+        raise ValueError(msg)
+
+    write_refined_corpus(
+        source_corpus, output_corpus, kept_singletons, kept_merged,
     )
+
+    report = RefineReport(
+        engine=engine,
+        before_count=len(records),
+        after_count=len(kept_singletons) + len(kept_merged),
+        clusters_total=int(extra.get("clusters_total", 0)),
+        clusters_merged=len(kept_merged),
+        merge_failures=int(extra.get("merge_failures", 0)),
+        dropped_by_filter=dropped,
+        kept_singletons=len(kept_singletons),
+        kept_merged=len(kept_merged),
+        elapsed_sec=round(time.time() - started, 2),
+        extra=extra,
+    )
+    (report_dir / "summary.json").write_text(
+        report.model_dump_json(indent=2), encoding="utf-8",
+    )
+    logger.info("Refine complete (%s): %s", engine, report.model_dump())
+    return report
+
+
+def _run_skillx(
+    indexed_records: list[SkillRecord],
+    embeddings: np.ndarray,
+    contents: dict[str, str],
+    config: RefinerConfig,
+    report_dir: Path,
+) -> tuple[list[SkillRecord], list[MergedSkill], int, dict[str, object]]:
+    """Original SkillX pipeline (DBSCAN → merge → filter)."""
+    clusters = cluster_skills(embeddings, eps=config.eps)
+    _write_cluster_report(clusters, indexed_records, report_dir)
 
     merged_skills: list[MergedSkill] = []
     merge_failures = 0
@@ -99,8 +160,7 @@ def refine_library(config: RefinerConfig) -> RefineReport:
     if skipped_big:
         logger.info(
             "Skipping %d clusters with size > %d (their members become singletons)",
-            skipped_big,
-            skip_above,
+            skipped_big, skip_above,
         )
     if config.merger.enabled and multi:
         merger = SkillMdMerger(config.merger)
@@ -125,12 +185,6 @@ def refine_library(config: RefinerConfig) -> RefineReport:
                 if i % 100 == 0:
                     logger.info("merged %d/%d clusters", i, len(multi))
         merger.flush()
-        logger.info(
-            "Merged %d/%d multi-member clusters (failures=%d)",
-            len(merged_skills),
-            len(multi),
-            merge_failures,
-        )
 
     surviving_singletons: list[SkillRecord] = []
     merged_source_keys: set[str] = {
@@ -145,44 +199,49 @@ def refine_library(config: RefinerConfig) -> RefineReport:
             if rec.key not in merged_source_keys:
                 surviving_singletons.append(rec)
 
-    qf_filter = (
-        SkillMdQualityFilter(config.quality_filter)
-        if config.quality_filter.enabled
-        else None
+    kept_singletons, kept_merged, dropped = _apply_quality_filter(
+        config, surviving_singletons, merged_skills, contents,
     )
-    kept_singletons, kept_merged, dropped = _apply_filter(
-        qf_filter, surviving_singletons, merged_skills, contents,
-    )
+    extra = {
+        "engine": "skillx",
+        "clusters_total": len(clusters),
+        "merge_failures": merge_failures,
+    }
+    return kept_singletons, kept_merged, dropped, extra
 
-    write_refined_corpus(
-        source_corpus, output_corpus, kept_singletons, kept_merged,
-    )
 
-    report = RefineReport(
-        before_count=len(records),
-        after_count=len(kept_singletons) + len(kept_merged),
-        clusters_total=len(clusters),
-        clusters_merged=len(merged_skills),
-        merge_failures=merge_failures,
-        dropped_by_filter=dropped,
-        kept_singletons=len(kept_singletons),
-        kept_merged=len(kept_merged),
-        elapsed_sec=round(time.time() - started, 2),
-    )
-    (report_dir / "summary.json").write_text(
-        report.model_dump_json(indent=2),
+def _write_cluster_report(
+    clusters: list[list[int]],
+    indexed_records: list[SkillRecord],
+    report_dir: Path,
+) -> None:
+    (report_dir / "cluster_report.json").write_text(
+        json.dumps(
+            {
+                "n_clusters": len(clusters),
+                "sizes": [len(c) for c in clusters],
+                "size_ge_2_count": sum(1 for c in clusters if len(c) >= 2),
+                "members": [
+                    [indexed_records[i].key for i in c]
+                    for c in clusters if len(c) >= 2
+                ],
+            },
+            indent=2, ensure_ascii=False,
+        ),
         encoding="utf-8",
     )
-    logger.info("Refine complete: %s", report.model_dump())
-    return report
 
 
-def _apply_filter(
-    qf: SkillMdQualityFilter | None,
+def _apply_quality_filter(
+    config: RefinerConfig,
     singletons: list[SkillRecord],
     merged: list[MergedSkill],
     contents: dict[str, str],
 ) -> tuple[list[SkillRecord], list[MergedSkill], int]:
+    qf = (
+        SkillMdQualityFilter(config.quality_filter)
+        if config.quality_filter.enabled else None
+    )
     if qf is None:
         return singletons, merged, 0
 
@@ -191,16 +250,14 @@ def _apply_filter(
     for rec in singletons:
         body = contents.get(rec.key, "")
         if not body:
-            body = (
-                f"---\nname: {rec.name}\ndescription: {rec.description}\n---\n"
-            )
+            body = f"---\nname: {rec.name}\ndescription: {rec.description}\n---\n"
         work.append((rec.key, body))
     for m in merged:
         work.append((m.key, m.content))
 
     with ThreadPoolExecutor(max_workers=qf._config.max_workers) as pool:  # noqa: SLF001
         futures = {pool.submit(qf.judge, k, b): k for k, b in work}
-        done_count = 0
+        done = 0
         for fut in as_completed(futures):
             key = futures[fut]
             try:
@@ -208,9 +265,9 @@ def _apply_filter(
             except Exception as exc:  # noqa: BLE001
                 logger.warning("filter error for %s: %s", key, exc)
                 decisions[key] = True
-            done_count += 1
-            if done_count % 1000 == 0:
-                logger.info("filtered %d/%d skills", done_count, len(work))
+            done += 1
+            if done % 1000 == 0:
+                logger.info("filtered %d/%d skills", done, len(work))
     qf.flush()
 
     kept_singletons = [r for r in singletons if decisions.get(r.key, True)]
@@ -220,10 +277,7 @@ def _apply_filter(
     )
     logger.info(
         "Quality filter: kept %d/%d singletons + %d/%d merged (%d dropped)",
-        len(kept_singletons),
-        len(singletons),
-        len(kept_merged),
-        len(merged),
-        dropped,
+        len(kept_singletons), len(singletons),
+        len(kept_merged), len(merged), dropped,
     )
     return kept_singletons, kept_merged, dropped

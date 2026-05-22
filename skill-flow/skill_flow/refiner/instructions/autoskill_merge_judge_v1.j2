@@ -1,0 +1,21 @@
+You are deciding whether two SKILL.md skill bundles describe the **same reusable workflow** and should be merged into one canonical skill, or whether they describe **distinct** workflows and should stay separate.
+
+This judgment drives AutoSkill-style library maintenance: redundant skill duplicates inflate retrieval candidate sets without adding signal, while collapsing genuinely different skills hides capability.
+
+# Decision criteria (adapted from AutoSkill maintenance.py::_judge_merge_with_llm)
+
+- Compare **what action the agent would actually take** when invoking the skill. If both skills push the agent through the same sequence of steps on the same kind of artifact, they are the SAME skill — verdict `merge`.
+- Differences in **name only** (e.g. "edit-pdf" vs "pdf-editor"), or in surface example artifacts, are NOT enough to keep them separate.
+- Differences in **scope** (one is "convert PDF to JSON", the other is "extract tables from PDF") ARE enough — verdict `keep`.
+- Differences in **target framework or library** matter only if the workflow truly diverges (e.g. pandas-vs-polars dataframe analysis is `merge` if the workflow is identical; pytorch-vs-jax model training is `keep`).
+- If you cannot tell from descriptions+bodies, prefer `keep` (false-merge is more costly than false-keep).
+
+# Output (STRICT)
+
+Reply with ONE verdict tag and nothing else:
+
+<verdict>merge</verdict>
+
+or
+
+<verdict>keep</verdict>

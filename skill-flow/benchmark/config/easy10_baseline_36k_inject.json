@@ -9,7 +9,7 @@
   "num_runs": 1,
   "environment": {
     "use_daytona": true,
-    "n_concurrent": 1
+    "n_concurrent": 10
   },
   "tasks": {
     "include_tasks": [
@@ -27,8 +27,8 @@
     "exclude_tasks": []
   },
   "retry": {
-    "resume": false,
-    "retry_errors": false,
+    "resume": true,
+    "retry_errors": true,
     "retry_tasks": [],
     "retry_error_types": [
       "DaytonaError",
@@ -39,7 +39,8 @@
       "RewardFileNotFoundError",
       "VerifierTimeoutError",
       "DaytonaNotFoundError",
-      "AddTestsDirError"
+      "AddTestsDirError",
+      "FileExistsError"
     ]
   },
   "job_name": "easy10-baseline-36k-inject"
