@@ -1,0 +1,120 @@
+---
+title: GitHub Integration
+description: Connect your GitHub repository to automatically deploy Dart and Flutter apps on every push, with support for production and preview deployments.
+---
+
+Connect your GitHub repository to **deploy automatically** from **pushes** and **merges**. GitHub integration replaces manual deployment steps and keeps your workflow continuous, enabling automatic deployments for both preview and production environments.
+
+## With GitHub integration, you can:
+
+- **Import a GitHub repository** to create and deploy a new Globe project
+- **Automatically trigger deployments** on every push to any branch
+- **Designate a production branch** for live releases
+- **Connect existing Globe projects** to GitHub repositories
+- **Disconnect or switch repositories** anytime
+- **View deployment status** for each commit
+
+<Info>
+  Globe integrates with GitHub via the [GitHub
+  Application](https://github.com/apps/dart-globe).
+</Info>
+
+## How to Create a Project from a GitHub Repository
+
+Import a repository to create a new Globe project with automatic deployments enabled from the start.
+
+### Step 1. Start Project Creation
+
+From the Globe dashboard, go to **Projects → Create Project** and select **Import from GitHub**.
+
+What you see next depends on whether your GitHub account is already connected:
+
+- **Already connected?** You'll see a list of your repositories ready to import. Skip to Step 3.
+
+  <Image src="/assets/core-concepts/github-apps-list.png" />
+
+- **Not connected yet?** You'll see a **Connect** button. Continue with Step 2.
+
+  <Image src="/assets/core-concepts/connect-github.png" />
+
+### Step 2. Connect Your GitHub Account (if needed)
+
+1. Select the **Connect** button to authorize the **Globe GitHub App**
+2. You'll be redirected to GitHub to grant access
+3. After authorization, you'll return to the **Project Create** screen
+
+### Step 3. Choose Repositories
+
+After authorizing the GitHub app, configure the repositories that are available to Globe:
+
+1. Select **Configure the GitHub app**
+2. Select specific or all repositories you want Globe to access
+3. You will be redirected to the **Project Create** screen
+
+<Image src="/assets/core-concepts/select-project-github.png" />
+
+### Step 4. Import & Configure
+
+1. Select **Import** next to the repository you want to use
+2. Configure the following:
+   - **Import settings:** organization, name, root directory, branch
+   - **Build settings:** framework preset, build command, entry point
+   - **Build config:** SDK version, build runner, Melos
+   - **Environment variables**
+3. Select **Deploy** to trigger the first deployment
+
+<Warning>
+  Your project's root directory must contain a `pubspec.yaml` file.
+</Warning>
+
+<Image src="/assets/core-concepts/configure-github.png" />
+
+From now on, every time you push to GitHub, Globe will automatically create a new deployment:
+
+- For your production branch, a **production deployment** is created
+- For all other branches, a **preview deployment** is triggered
+
+## How to Connect a Repository to an Existing Project
+
+If you've already deployed a project (e.g., via CLI) and want to connect it to a GitHub repository:
+
+1. Open the project → Go to **Settings** → **Git**
+2. Select **Connect** and choose your repository
+3. Set deployment configurations as needed
+
+<Image src="/assets/core-concepts/connect-git.png" />
+
+Once connected, pushes to your GitHub repository will automatically trigger deployments for this project.
+
+## How GitHub Integration Works
+
+The GitHub integration enables automatic deployments based on your repository activity:
+
+- **Preview Deployments:** Triggered by pushes to any branch except your production branch
+- **Production Deployments:** Triggered by pushes to your designated production branch
+- **Commit Status:** Globe adds deployment status indicators to your GitHub commits
+
+## How to Disconnect a GitHub Repository
+
+To stop automatic deployments:
+
+1. Go to your project → **Settings → Git**
+2. Select **Disconnect**
+
+<Info>
+  Disconnecting from GitHub will not delete existing deployments. It only stops
+  new deployments from being triggered by Git pushes.
+</Info>
+
+## Best Practices
+
+- Use a clear branching strategy (e.g., `main` for production, `dev` for testing)
+- Protect your production branch if collaborating in teams
+- Consider pairing this with the CLI for local preview builds
+- Only connect necessary repositories for clarity and security; follow the principle of least privilege
+
+## Related Topics
+
+- [Deployments](/core-concepts/deployments) - Understand how GitHub integration triggers deployments
+- [Static Assets](/core-concepts/static-assets) - Serve static files from your deployment
+- [Set up CI/CD with GitHub Integration](/guides/github-integration) - Detailed guide for GitHub integration setup

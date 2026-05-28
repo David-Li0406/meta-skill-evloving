@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html class="dark" lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Skills Project Index</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#00bdc7",
+            "background-dark": "#101818",
+            "surface-dark": "#1a2424",
+            "border-dark": "#27393a",
+            "text-muted": "#9ababc",
+            "accent-red": "#fa5c38",
+            "accent-green": "#0bda50",
+            "accent-yellow": "#f5c84c"
+          },
+          fontFamily: {
+            display: ["Space Grotesk", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body class="bg-background-dark text-white font-display min-h-screen">
+  <!-- Toast 通知容器 -->
+  <div id="toast-container" class="fixed top-20 right-6 z-[200] flex flex-col gap-2"></div>
+
+  <div class="min-h-screen flex flex-col">
+    <header class="border-b border-border-dark bg-background-dark/90 backdrop-blur sticky top-0 z-50">
+      <div class="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-background-dark">
+              <span class="material-symbols-outlined">terminal</span>
+            </div>
+            <div>
+              <div class="text-[10px] uppercase tracking-[0.3em] text-text-muted">Skills</div>
+              <div class="text-base font-bold">Project Index</div>
+            </div>
+          </div>
+          <nav class="flex items-center gap-6">
+            <button class="tab-button is-active text-sm font-bold uppercase tracking-widest" data-tab-button="launchpad" aria-selected="true" aria-controls="tab-launchpad">任务启动</button>
+            <button class="tab-button text-sm font-bold uppercase tracking-widest" data-tab-button="operations" aria-selected="false" aria-controls="tab-operations">运维监控</button>
+            <button class="tab-button text-sm font-bold uppercase tracking-widest" data-tab-button="insights" aria-selected="false" aria-controls="tab-insights">项目洞察</button>
+          </nav>
+          <select id="project-selector" class="ml-4 px-3 py-1.5 text-sm bg-surface-dark border border-border-dark rounded-lg text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+            <option value="">选择项目...</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-3">
+          <div id="system-status" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-dark border border-border-dark text-[10px] uppercase tracking-[0.2em] text-text-muted">
+            <span id="system-status-dot" class="w-2 h-2 rounded-full bg-accent-green"></span>
+            <span id="system-status-text">系统在线</span>
+          </div>
+          <button class="px-3 py-2 rounded-lg bg-primary text-background-dark text-xs font-bold uppercase tracking-widest" id="header-new-task">
+            新建任务
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+      <aside class="w-16 border-r border-border-dark bg-background-dark flex flex-col items-center py-6 gap-4">
+        <button class="sidebar-button is-active" data-sidebar-button="grid" aria-label="网格">
+          <span class="material-symbols-outlined">grid_view</span>
+        </button>
+        <button class="sidebar-button" data-sidebar-button="analytics" aria-label="分析">
+          <span class="material-symbols-outlined">analytics</span>
+        </button>
+        <div class="mt-auto flex flex-col gap-3">
+          <button class="sidebar-button" data-sidebar-button="help" aria-label="帮助">
+            <span class="material-symbols-outlined">help_outline</span>
+          </button>
+          <button class="sidebar-button" data-sidebar-button="settings" aria-label="设置">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="flex-1 overflow-hidden">
+        <section class="tab-panel flex flex-col h-full overflow-y-auto custom-scrollbar" id="tab-launchpad" data-tab-panel="launchpad">
+          <div class="px-8 pt-8 pb-4">
+            <div class="flex flex-wrap justify-between items-end gap-6">
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-3xl font-black tracking-tight uppercase">任务启动器</h2>
+                  <button id="launchpad-refresh" class="p-1.5 hover:bg-border-dark rounded text-text-muted hover:text-primary transition-colors" title="刷新">
+                    <span class="material-symbols-outlined text-lg">refresh</span>
+                  </button>
+                </div>
+                <p class="text-text-muted max-w-2xl">
+                  启动并配置技能索引的维护脚本。为专业工作流提供精确控制。
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <button class="px-4 py-2 border border-border-dark text-text-muted rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-surface-dark transition-colors">
+                  <span class="material-symbols-outlined text-sm">visibility</span>
+                  查看进行中的任务
+                </button>
+                <button class="px-4 py-2 bg-primary text-background-dark rounded-lg text-sm font-bold flex items-center gap-2 hover:opacity-90 transition-opacity">
+                  <span class="material-symbols-outlined text-sm">add</span>
+                  新建预设
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <section class="px-8 py-4">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-text-muted mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm text-primary">auto_awesome</span>
+              工作流预设
+            </h3>
+            <div class="flex flex-wrap gap-3" id="launchpad-presets">
+              <div class="animate-pulse flex gap-3">
+                <div class="h-10 w-24 bg-border-dark rounded-lg"></div>
+                <div class="h-10 w-20 bg-border-dark rounded-lg"></div>
+                <div class="h-10 w-20 bg-border-dark rounded-lg"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="flex-1 px-8 py-4">
+            <h3 class="text-xs font-bold uppercase tracking-widest text-text-muted mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm text-primary">build</span>
+              工具箱
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="launchpad-cards">
+              <div class="animate-pulse p-6 bg-surface-dark/40 border border-border-dark rounded-xl">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="size-12 rounded-lg bg-border-dark"></div>
+                  <div class="h-5 w-16 bg-border-dark rounded"></div>
+                </div>
+                <div class="h-5 w-32 bg-border-dark rounded mb-2"></div>
+                <div class="h-4 w-full bg-border-dark rounded"></div>
+              </div>
+              <div class="animate-pulse p-6 bg-surface-dark/40 border border-border-dark rounded-xl">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="size-12 rounded-lg bg-border-dark"></div>
+                  <div class="h-5 w-16 bg-border-dark rounded"></div>
+                </div>
+                <div class="h-5 w-32 bg-border-dark rounded mb-2"></div>
+                <div class="h-4 w-full bg-border-dark rounded"></div>
+              </div>
+              <div class="animate-pulse p-6 bg-surface-dark/40 border border-border-dark rounded-xl">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="size-12 rounded-lg bg-border-dark"></div>
+                  <div class="h-5 w-16 bg-border-dark rounded"></div>
+                </div>
+                <div class="h-5 w-32 bg-border-dark rounded mb-2"></div>
+                <div class="h-4 w-full bg-border-dark rounded"></div>
+              </div>
+            </div>
+            <p class="text-xs text-text-muted mt-4 flex items-center gap-2" id="launchpad-loading">
+              <span class="material-symbols-outlined text-sm animate-spin">sync</span>
+              正在扫描项目，首次加载可能稍慢...
+            </p>
+          </section>
+
+          <section class="px-8 py-6 border-t border-border-dark bg-surface-dark/70">
+            <div class="max-w-5xl mx-auto">
+              <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
+                  <h3 class="text-xl font-bold">配置: <span class="text-primary underline underline-offset-4 decoration-primary/30" id="launchpad-config-title">索引</span></h3>
+                  <span class="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-mono border border-primary/20">--task-id=0xFA2</span>
+                </div>
+                <button class="text-text-muted hover:text-white transition-colors">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="space-y-4" id="launchpad-args">
+                  <p class="text-xs text-text-muted">请选择任务以查看可选参数</p>
+                </div>
+                <div class="space-y-6">
+                  <div id="launchpad-concurrency-section">
+                    <div class="flex justify-between mb-2">
+                      <label class="text-sm font-bold">并发数</label>
+                      <span class="text-primary text-sm font-mono" id="launchpad-concurrency">04</span>
+                    </div>
+                    <input class="w-full h-1.5 bg-border-dark rounded-lg appearance-none cursor-pointer accent-primary" max="12" min="1" type="range" value="4" id="launchpad-concurrency-input">
+                    <div class="flex justify-between mt-1 px-1">
+                      <span class="text-[10px] text-text-muted">1</span>
+                      <span class="text-[10px] text-text-muted">12</span>
+                    </div>
+                  </div>
+                  <div id="launchpad-depth-section">
+                    <div class="flex justify-between mb-2">
+                      <label class="text-sm font-bold">索引深度</label>
+                      <span class="text-primary text-sm font-mono" id="launchpad-depth">标准</span>
+                    </div>
+                    <div class="flex bg-border-dark p-1 rounded-lg">
+                      <button class="flex-1 py-1 text-[10px] font-bold text-text-muted" data-depth="shallow" data-layer="1">浅层</button>
+                      <button class="flex-1 py-1 text-[10px] font-bold bg-primary text-background-dark rounded" data-depth="normal" data-layer="2">标准</button>
+                      <button class="flex-1 py-1 text-[10px] font-bold text-text-muted" data-depth="deep" data-layer="3">深层</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex flex-col justify-end gap-3">
+                  <div class="bg-border-dark/40 border border-border-dark rounded-lg p-4 mb-2">
+                    <p class="text-[10px] text-text-muted uppercase font-bold mb-2">预计时间</p>
+                    <p class="text-lg font-bold flex items-center gap-2">
+                      <span class="material-symbols-outlined text-primary">timer</span>
+                      <span id="launchpad-estimate">1分24秒</span>
+                    </p>
+                  </div>
+                  <button class="w-full bg-primary text-background-dark py-3 rounded-lg font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity" id="launchpad-start">
+                    <span class="material-symbols-outlined">play_arrow</span>
+                    开始任务
+                  </button>
+                  <p class="text-[10px] text-center text-text-muted font-mono tracking-tighter">
+                    按 CTRL + ENTER 启动
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel panel-hidden flex flex-col h-full overflow-y-auto custom-scrollbar" id="tab-operations" data-tab-panel="operations">
+          <div class="px-8 pt-8 pb-4">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-3xl font-black tracking-tight">运维中心</h2>
+                  <button id="ops-refresh" class="p-1.5 hover:bg-border-dark rounded text-text-muted hover:text-primary transition-colors" title="刷新">
+                    <span class="material-symbols-outlined text-lg">refresh</span>
+                  </button>
+                </div>
+                <p class="text-text-muted">监控任务健康状态、重试情况与实时执行日志。</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="relative" id="filter-dropdown-container">
+                  <button class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border-dark text-xs font-semibold hover:bg-surface-dark transition-colors" id="ops-filter-btn">
+                    <span class="material-symbols-outlined text-sm">filter_list</span>
+                    <span id="ops-filter-label">全部</span>
+                    <span class="material-symbols-outlined text-sm">expand_more</span>
+                  </button>
+                  <div class="absolute top-full left-0 mt-1 w-48 bg-surface-dark border border-border-dark rounded-lg shadow-xl z-50 hidden" id="ops-filter-menu">
+                    <div class="p-2 border-b border-border-dark">
+                      <p class="text-[10px] text-text-muted uppercase tracking-wider mb-2">状态筛选</p>
+                      <button class="filter-option w-full text-left px-3 py-2 text-sm rounded hover:bg-border-dark transition-colors" data-filter-status="all">全部状态</button>
+                      <button class="filter-option w-full text-left px-3 py-2 text-sm rounded hover:bg-border-dark transition-colors" data-filter-status="running">
+                        <span class="inline-block w-2 h-2 rounded-full bg-primary mr-2"></span>运行中
+                      </button>
+                      <button class="filter-option w-full text-left px-3 py-2 text-sm rounded hover:bg-border-dark transition-colors" data-filter-status="failed">
+                        <span class="inline-block w-2 h-2 rounded-full bg-accent-red mr-2"></span>失败
+                      </button>
+                      <button class="filter-option w-full text-left px-3 py-2 text-sm rounded hover:bg-border-dark transition-colors" data-filter-status="completed">
+                        <span class="inline-block w-2 h-2 rounded-full bg-accent-green mr-2"></span>成功
+                      </button>
+                    </div>
+                    <div class="p-2">
+                      <p class="text-[10px] text-text-muted uppercase tracking-wider mb-2">任务类型</p>
+                      <button class="filter-option w-full text-left px-3 py-2 text-sm rounded hover:bg-border-dark transition-colors" data-filter-type="all">全部类型</button>
+                      <div id="filter-type-options"></div>
+                    </div>
+                  </div>
+                </div>
+                <button class="flex items-center gap-2 px-3 py-2 rounded-lg border border-border-dark text-xs font-semibold hover:bg-surface-dark transition-colors" id="ops-group-toggle" title="切换分组视图">
+                  <span class="material-symbols-outlined text-sm">view_agenda</span>
+                  分组
+                </button>
+                <button class="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-background-dark text-xs font-bold hover:brightness-110 transition-all" id="ops-run-all">
+                  <span class="material-symbols-outlined text-sm">play_arrow</span>
+                  全部运行
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <section class="px-8 pb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+              <div class="bg-surface-dark p-6 rounded-xl border border-border-dark flex flex-col gap-1 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                  <span class="material-symbols-outlined text-4xl text-primary">sync</span>
+                </div>
+                <span class="text-sm font-medium text-text-muted">运行中任务</span>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-bold" id="ops-running-count">0</span>
+                  <span class="text-xs font-semibold text-primary flex items-center gap-0.5">
+                    <span class="material-symbols-outlined text-xs">arrow_upward</span>
+                    <span id="ops-running-delta">0</span>
+                  </span>
+                </div>
+                <div class="mt-4 w-full bg-border-dark h-1 rounded-full overflow-hidden">
+                  <div class="bg-primary h-full w-[65%]"></div>
+                </div>
+              </div>
+              <div class="bg-surface-dark p-6 rounded-xl border border-border-dark flex flex-col gap-1 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                  <span class="material-symbols-outlined text-4xl text-accent-red">error</span>
+                </div>
+                <span class="text-sm font-medium text-text-muted">失败任务</span>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-bold text-accent-red" id="ops-failed-count">0</span>
+                  <span class="text-xs font-semibold text-accent-red flex items-center gap-0.5">
+                    <span class="material-symbols-outlined text-xs">arrow_upward</span>
+                    <span id="ops-failed-delta">0</span>
+                  </span>
+                </div>
+                <p class="text-[10px] text-text-muted mt-4 italic" id="ops-failed-note">未检测到失败</p>
+              </div>
+              <div class="bg-surface-dark p-6 rounded-xl border border-border-dark flex flex-col gap-1 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                  <span class="material-symbols-outlined text-4xl text-accent-green">check_circle</span>
+                </div>
+                <span class="text-sm font-medium text-text-muted">成功率</span>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-bold" id="ops-success-rate">0%</span>
+                  <span class="text-xs font-semibold text-accent-green flex items-center gap-0.5">
+                    <span class="material-symbols-outlined text-xs">trending_up</span>
+                    <span id="ops-success-delta">0%</span>
+                  </span>
+                </div>
+                <div class="mt-4 flex gap-1 items-end h-8">
+                  <div class="bg-primary/20 w-full h-[40%] rounded-sm"></div>
+                  <div class="bg-primary/40 w-full h-[60%] rounded-sm"></div>
+                  <div class="bg-primary/60 w-full h-[55%] rounded-sm"></div>
+                  <div class="bg-primary/80 w-full h-[85%] rounded-sm"></div>
+                  <div class="bg-primary w-full h-full rounded-sm"></div>
+                </div>
+              </div>
+              <div class="bg-surface-dark p-6 rounded-xl border border-border-dark flex flex-col gap-1 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                  <span class="material-symbols-outlined text-4xl text-text-muted">schedule</span>
+                </div>
+                <p class="text-text-muted text-[10px]">预计剩余</p>
+                <p class="text-2xl font-black" id="ops-eta">--</p>
+                <p class="text-[10px] text-text-muted" id="ops-eta-note">基于历史耗时</p>
+              </div>
+              <div class="bg-surface-dark p-6 rounded-xl border border-border-dark flex flex-col gap-1 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                  <span class="material-symbols-outlined text-4xl text-text-muted">schedule</span>
+                </div>
+                <span class="text-sm font-medium text-text-muted">最后同步</span>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-3xl font-bold" id="ops-last-sync">--</span>
+                </div>
+                <p class="text-xs text-text-muted mt-4 font-mono" id="ops-last-sync-id">编号: --</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="px-8 pb-8">
+            <div class="flex flex-col xl:flex-row gap-6">
+              <div class="flex-1 flex flex-col gap-4 min-w-0">
+                <div class="bg-surface-dark rounded-xl border border-border-dark overflow-hidden flex flex-col">
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr class="border-b border-border-dark bg-background-dark/60">
+                          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-text-muted">状态</th>
+                          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-text-muted">任务名称</th>
+                          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-text-muted">目标路径</th>
+                          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-text-muted">耗时</th>
+                          <th class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-text-muted text-right">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-border-dark" id="ops-table-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="w-full xl:w-[420px] flex flex-col bg-surface-dark border border-border-dark rounded-xl overflow-hidden shadow-2xl">
+                <div class="p-6 border-b border-border-dark flex flex-col gap-4">
+                  <div class="flex items-start justify-between">
+                    <div class="flex flex-col">
+                      <h3 class="font-bold text-lg" id="ops-detail-title">--</h3>
+                      <span class="text-xs text-text-muted flex items-center gap-1" id="ops-detail-path">
+                        <span class="material-symbols-outlined text-xs">folder</span>
+                        --
+                      </span>
+                    </div>
+                    <span class="status-tag status-queued" id="ops-detail-status">排队中</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="flex-1 bg-accent-red text-white py-2 rounded-lg text-xs font-bold hover:brightness-110 transition-all flex items-center justify-center gap-2" data-action="retry" id="ops-detail-retry">
+                      <span class="material-symbols-outlined text-sm">replay</span>
+                      强制重试
+                    </button>
+                    <button class="p-2 border border-border-dark rounded-lg text-text-muted hover:text-primary transition-colors" data-action="copy">
+                      <span class="material-symbols-outlined text-sm">content_copy</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="flex border-b border-border-dark px-6" id="ops-detail-tabs">
+                  <button class="px-4 py-3 text-xs font-bold text-primary border-b-2 border-primary" data-ops-tab="logs" aria-selected="true">日志</button>
+                  <button class="px-4 py-3 text-xs font-bold text-text-muted hover:text-white" data-ops-tab="stack" aria-selected="false">堆栈跟踪</button>
+                  <button class="px-4 py-3 text-xs font-bold text-text-muted hover:text-white" data-ops-tab="params" aria-selected="false">参数</button>
+                </div>
+                <div class="flex-1 terminal-bg p-4 font-mono text-[11px] overflow-y-auto custom-scrollbar leading-relaxed">
+                  <div id="ops-detail-logs" data-ops-panel="logs"></div>
+                  <div id="ops-detail-stack" data-ops-panel="stack" class="panel-hidden whitespace-pre-wrap"></div>
+                  <div id="ops-detail-params" data-ops-panel="params" class="panel-hidden whitespace-pre-wrap"></div>
+                </div>
+                <div class="p-4 bg-background-dark/60 border-t border-border-dark flex justify-between text-[10px] text-text-muted" id="ops-detail-metrics">
+                  <div class="flex gap-4">
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[10px]">memory</span> --</span>
+                    <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[10px]">speed</span> --</span>
+                  </div>
+                  <span>工作节点: --</span>
+                </div>
+              </aside>
+            </div>
+          </section>
+        </section>
+
+        <section class="tab-panel panel-hidden flex flex-col h-full overflow-y-auto custom-scrollbar" id="tab-insights" data-tab-panel="insights">
+          <div class="px-8 pt-8 pb-4">
+            <div class="flex flex-wrap justify-between items-end gap-3">
+              <div class="flex flex-col gap-1">
+                <p class="text-text-muted text-xs uppercase tracking-wider">项目中心</p>
+                <h2 class="text-3xl font-black tracking-tight">项目洞察与配置</h2>
+                <p class="text-text-muted text-sm">用于 <code class="text-primary bg-primary/10 px-1.5 py-0.5 rounded">stale-core-v3</code> 的维护与规则配置</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 bg-surface-dark px-3 py-1.5 rounded-lg border border-border-dark">
+                  <span class="size-2 rounded-full bg-accent-green"></span>
+                  <span class="text-white text-[11px] font-bold uppercase tracking-tighter">v1.2.4-稳定</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1 flex flex-col xl:flex-row gap-8 px-8 pb-8">
+            <section class="flex-1 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2">
+              <div class="flex items-center justify-between px-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-white text-lg font-bold tracking-tight">项目洞察</h3>
+                  <button id="insights-refresh" class="p-1.5 hover:bg-border-dark rounded text-text-muted hover:text-primary transition-colors" title="刷新">
+                    <span class="material-symbols-outlined text-lg">refresh</span>
+                  </button>
+                </div>
+                <span class="text-text-muted text-xs font-medium" id="insights-last-sync">正在加载...</span>
+              </div>
+
+              <div class="flex flex-col gap-4 rounded-xl border border-border-dark bg-surface-dark/40 p-6">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <p class="text-text-muted text-xs font-bold uppercase tracking-widest mb-1">待处理</p>
+                    <p class="text-white text-4xl font-black tracking-tight" id="insights-audit-total">0</p>
+                  </div>
+                  <div class="flex-1 mx-8" id="insights-audit-history"></div>
+                  <div>
+                    <p class="text-text-muted text-xs font-bold uppercase tracking-widest mb-1 text-right">已修复</p>
+                    <p class="text-accent-green text-4xl font-black tracking-tight text-right" id="insights-audit-resolved">0</p>
+                  </div>
+                </div>
+                <p class="text-text-muted text-[10px]" id="insights-audit-stats">--</p>
+                <div class="grid grid-cols-4 items-end gap-4 h-32 mt-4 px-2" id="insights-audit-bars"></div>
+                <div class="mt-4 pt-4 border-t border-border-dark">
+                  <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest mb-2">目录覆盖率</p>
+                  <div class="flex flex-wrap gap-2" id="insights-dir-coverage"></div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex flex-col gap-3 rounded-xl border border-border-dark bg-surface-dark/40 p-5">
+                  <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">测试覆盖率</p>
+                  <div class="flex items-baseline gap-2">
+                    <p class="text-white text-2xl font-black tracking-tight" id="insights-test-rate">--</p>
+                    <p class="text-text-muted text-[10px] font-bold" id="insights-test-stats">-- 模块有测试</p>
+                  </div>
+                  <div class="h-16 w-full mt-2">
+                    <svg fill="none" height="100%" preserveAspectRatio="none" viewBox="0 0 200 60" width="100%">
+                      <path d="M0 45C20 45 30 10 50 10C70 10 80 35 100 35C120 35 130 5 150 5C170 5 180 25 200 25V60H0V45Z" fill="url(#grad)" opacity="0.2"></path>
+                      <path d="M0 45C20 45 30 10 50 10C70 10 80 35 100 35C120 35 130 5 150 5C170 5 180 25 200 25" stroke="#00bdc7" stroke-linecap="round" stroke-width="2"></path>
+                      <defs>
+                        <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0%" stop-color="#00bdc7"></stop>
+                          <stop offset="100%" stop-color="transparent"></stop>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-3 rounded-xl border border-border-dark bg-surface-dark/40 p-5">
+                  <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">文档覆盖率</p>
+                  <div class="flex items-baseline gap-2">
+                    <p class="text-white text-2xl font-black tracking-tight" id="insights-doc-coverage">--</p>
+                    <p class="text-primary text-[10px] font-bold">CLAUDE.md</p>
+                  </div>
+                  <div class="flex flex-col gap-3 mt-auto">
+                    <div class="flex items-center justify-between text-[10px] font-bold text-text-muted uppercase">
+                      <span>模块就绪</span>
+                      <span class="text-white" id="insights-doc-core">--</span>
+                    </div>
+                    <div class="w-full bg-border-dark h-1 rounded-full overflow-hidden">
+                      <div class="bg-primary h-full" id="insights-doc-core-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[10px] font-bold text-text-muted uppercase">
+                      <span>审计覆盖</span>
+                      <span class="text-white" id="insights-doc-auth">--</span>
+                    </div>
+                    <div class="w-full bg-border-dark h-1 rounded-full overflow-hidden">
+                      <div class="bg-primary/60 h-full" id="insights-doc-auth-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-3 rounded-xl border border-border-dark bg-surface-dark/40 p-5">
+                  <p class="text-text-muted text-[10px] font-bold uppercase tracking-widest">Stale 情况</p>
+                  <!-- CLAUDE.md -->
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-text-muted">CLAUDE.md</span>
+                    <div class="flex items-center gap-2">
+                      <span class="text-accent-green text-sm font-bold" id="insights-stale-claude-fresh">--</span>
+                      <span class="text-text-muted">/</span>
+                      <span class="text-accent-yellow text-sm font-bold" id="insights-stale-claude-stale">--</span>
+                    </div>
+                  </div>
+                  <!-- AUDIT.md -->
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-text-muted">AUDIT.md</span>
+                    <div class="flex items-center gap-2">
+                      <span class="text-accent-green text-sm font-bold" id="insights-stale-audit-fresh">--</span>
+                      <span class="text-text-muted">/</span>
+                      <span class="text-accent-yellow text-sm font-bold" id="insights-stale-audit-stale">--</span>
+                    </div>
+                  </div>
+                  <!-- 进度条 -->
+                  <div class="w-full bg-border-dark h-1 rounded-full overflow-hidden mt-2">
+                    <div class="bg-accent-green h-full" id="insights-stale-bar" style="width: 0%"></div>
+                  </div>
+                  <p class="text-[10px] text-text-muted">Fresh / Stale</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="w-full xl:w-[420px] flex flex-col gap-6 bg-surface-dark/60 border border-border-dark rounded-xl p-6 overflow-y-auto custom-scrollbar">
+              <div class="flex items-center justify-between border-b border-border-dark pb-4">
+                <div class="flex items-center gap-2">
+                  <span class="material-symbols-outlined text-primary">data_object</span>
+                  <h3 class="text-white text-lg font-bold tracking-tight">.stale-config.json</h3>
+                </div>
+                <span class="text-[10px] font-bold text-text-muted bg-border-dark px-2 py-0.5 rounded">JSON 模式</span>
+              </div>
+
+              <div class="space-y-8">
+                <div class="space-y-4">
+                  <h4 class="text-text-muted text-[11px] font-black uppercase tracking-[0.2em]">文件发现</h4>
+                  <div class="space-y-4">
+                    <div>
+                      <label class="block text-white text-xs font-bold mb-2">包含路径</label>
+                      <div class="flex flex-wrap gap-2 p-3 bg-background-dark border border-border-dark rounded-lg" id="config-include-chips"></div>
+                      <div class="flex gap-2 mt-2">
+                        <input type="text" class="flex-1 bg-background-dark border border-border-dark rounded-lg px-3 py-1.5 text-xs text-white placeholder-text-muted" id="config-include-input" placeholder="添加路径，如 src/">
+                        <button class="px-3 py-1.5 bg-primary/20 text-primary rounded-lg text-xs font-bold hover:bg-primary/30" id="config-include-add">+ 添加</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-white text-xs font-bold mb-2">忽略模式</label>
+                      <div class="flex flex-wrap gap-2 p-3 bg-background-dark border border-border-dark rounded-lg" id="config-ignore-chips"></div>
+                      <div class="flex gap-2 mt-2">
+                        <input type="text" class="flex-1 bg-background-dark border border-border-dark rounded-lg px-3 py-1.5 text-xs text-white placeholder-text-muted" id="config-ignore-input" placeholder="添加忽略模式，如 **/test">
+                        <button class="px-3 py-1.5 bg-accent-red/20 text-accent-red rounded-lg text-xs font-bold hover:bg-accent-red/30" id="config-ignore-add">+ 添加</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <h4 class="text-text-muted text-[11px] font-black uppercase tracking-[0.2em]">功能开关</h4>
+                  <div class="grid grid-cols-2 gap-3" id="config-features">
+                    <div class="flex items-center justify-between p-2 bg-background-dark border border-border-dark rounded-lg">
+                      <span class="text-white text-xs font-bold">文档分析</span>
+                      <div class="toggle" data-feature="doc"><span></span></div>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-background-dark border border-border-dark rounded-lg">
+                      <span class="text-white text-xs font-bold">代码审计</span>
+                      <div class="toggle" data-feature="audit"><span></span></div>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-background-dark border border-border-dark rounded-lg">
+                      <span class="text-white text-xs font-bold">Kanban</span>
+                      <div class="toggle" data-feature="kanban"><span></span></div>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-background-dark border border-border-dark rounded-lg">
+                      <span class="text-white text-xs font-bold">测试分析</span>
+                      <div class="toggle" data-feature="testAnalysis"><span></span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <h4 class="text-text-muted text-[11px] font-black uppercase tracking-[0.2em]">安全与分析</h4>
+                  <div class="grid grid-cols-1 gap-4">
+                    <div class="flex flex-col gap-2">
+                      <label class="text-white text-xs font-bold">敏感级别</label>
+                      <div class="grid grid-cols-3 bg-background-dark p-1 rounded-lg border border-border-dark" id="config-sensitivity">
+                        <button class="text-[10px] font-bold py-1.5 rounded transition-colors text-text-muted" data-sensitivity="permissive">宽松</button>
+                        <button class="text-[10px] font-bold py-1.5 rounded transition-colors text-text-muted" data-sensitivity="strict">严格</button>
+                        <button class="text-[10px] font-bold py-1.5 rounded transition-colors text-text-muted" data-sensitivity="paranoid">极严</button>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-background-dark border border-border-dark rounded-lg">
+                      <div class="flex flex-col">
+                        <span class="text-white text-xs font-bold">自动修正规约</span>
+                        <span class="text-text-muted text-[10px]">保存时应用风格修正</span>
+                      </div>
+                      <div class="toggle" id="config-auto-fix"><span></span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <h4 class="text-text-muted text-[11px] font-black uppercase tracking-[0.2em]">质量约束</h4>
+                  <div class="flex items-center gap-3">
+                    <div class="flex-1 bg-background-dark border border-border-dark rounded-lg px-3 py-2">
+                      <span class="text-text-muted text-[10px] block">MIN_TEST_COVERAGE</span>
+                      <input class="w-full bg-transparent text-white text-sm font-bold outline-none" id="config-min-coverage" inputmode="numeric" max="100" min="0" step="1" type="number" value="0">
+                    </div>
+                    <div class="flex-1 bg-background-dark border border-border-dark rounded-lg px-3 py-2">
+                      <span class="text-text-muted text-[10px] block">MAX_CYCLOMATIC</span>
+                      <input class="w-full bg-transparent text-white text-sm font-bold outline-none" id="config-max-cyclomatic" inputmode="numeric" min="0" step="1" type="number" value="0">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <label class="text-text-muted text-[11px] font-black uppercase tracking-[0.2em]">配置编辑器</label>
+                <textarea class="w-full min-h-[180px] bg-background-dark border border-border-dark rounded-lg p-3 text-[11px] font-mono text-white" id="config-editor" spellcheck="false"></textarea>
+                <div class="flex items-center justify-between text-[10px] text-text-muted">
+                  <span id="config-status">无更改</span>
+                  <span id="config-last-saved">上次保存: --</span>
+                </div>
+                <div class="text-[10px] text-text-muted" id="config-validation">JSON 未校验</div>
+                <div class="flex items-center gap-3">
+                  <button class="text-white text-xs font-bold px-4 py-2 hover:bg-white/5 rounded-lg transition-colors" id="config-discard">放弃更改</button>
+                  <button class="flex items-center gap-2 bg-primary text-background-dark px-6 py-2 rounded-lg text-xs font-black uppercase tracking-[0.1em] shadow-[0_0_20px_rgba(0,189,199,0.3)] hover:shadow-[0_0_30px_rgba(0,189,199,0.4)] transition-all" id="config-save">
+                    保存并应用配置
+                    <span class="material-symbols-outlined text-sm">rocket_launch</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="border-t border-border-dark bg-background-dark px-6 py-3 text-xs text-text-muted flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-4">
+        <span class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-accent-green"></span>
+          系统在线
+        </span>
+        <span>API 1.24.0-稳定</span>
+        <span id="footer-sync">正在初始化...</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a class="hover:text-primary" href="#">文档</a>
+        <a class="hover:text-primary" href="#">报告事件</a>
+        <a class="hover:text-primary" href="#">CLI 参考</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+#pragma once
+
+#include <juce_dsp/juce_dsp.h>
+
+/**
+ * StereoReverb
+ *
+ * High-quality stereo reverb using JUCE's built-in reverb algorithm.
+ * Provides a simple interface for controlling room characteristics.
+ */
+class StereoReverb
+{
+public:
+    StereoReverb() = default;
+
+    //==========================================================================
+    void prepare(const juce::dsp::ProcessSpec& spec)
+    {
+        reverb.prepare(spec);
+        sampleRate = spec.sampleRate;
+    }
+
+    void reset()
+    {
+        reverb.reset();
+    }
+
+    //==========================================================================
+    void setRoomSize(float size)
+    {
+        params.roomSize = juce::jlimit(0.0f, 1.0f, size);
+        reverb.setParameters(params);
+    }
+
+    void setDamping(float damping)
+    {
+        params.damping = juce::jlimit(0.0f, 1.0f, damping);
+        reverb.setParameters(params);
+    }
+
+    void setWetLevel(float wet)
+    {
+        params.wetLevel = juce::jlimit(0.0f, 1.0f, wet);
+        reverb.setParameters(params);
+    }
+
+    void setDryLevel(float dry)
+    {
+        params.dryLevel = juce::jlimit(0.0f, 1.0f, dry);
+        reverb.setParameters(params);
+    }
+
+    void setWidth(float width)
+    {
+        params.width = juce::jlimit(0.0f, 1.0f, width);
+        reverb.setParameters(params);
+    }
+
+    void setMix(float mix)
+    {
+        // Convenience method: sets wet/dry from a single mix parameter
+        params.wetLevel = mix;
+        params.dryLevel = 1.0f - mix;
+        reverb.setParameters(params);
+    }
+
+    void setParameters(float roomSize, float damping, float mix, float width)
+    {
+        params.roomSize = juce::jlimit(0.0f, 1.0f, roomSize);
+        params.damping = juce::jlimit(0.0f, 1.0f, damping);
+        params.wetLevel = juce::jlimit(0.0f, 1.0f, mix);
+        params.dryLevel = 1.0f - params.wetLevel;
+        params.width = juce::jlimit(0.0f, 1.0f, width);
+        reverb.setParameters(params);
+    }
+
+    //==========================================================================
+    void process(juce::AudioBuffer<float>& buffer)
+    {
+        juce::dsp::AudioBlock<float> block(buffer);
+        juce::dsp::ProcessContextReplacing<float> context(block);
+        reverb.process(context);
+    }
+
+    void process(float& left, float& right)
+    {
+        // Single-sample processing (less efficient but useful for some architectures)
+        float samples[2] = { left, right };
+        reverb.processStereo(samples, samples, 1);
+        left = samples[0];
+        right = samples[1];
+    }
+
+private:
+    juce::dsp::Reverb reverb;
+    juce::Reverb::Parameters params;
+    double sampleRate = 44100.0;
+};
+
+//==============================================================================
+/**
+ * Wavefolder
+ *
+ * Waveshaping distortion that folds the waveform back on itself.
+ * Creates rich harmonic content with metallic character.
+ */
+class Wavefolder
+{
+public:
+    void setAmount(float amount)
+    {
+        // Amount 0-1 maps to threshold 1.0-0.1
+        this->amount = juce::jlimit(0.0f, 1.0f, amount);
+        threshold = 1.0f - (amount * 0.9f);
+        gain = 1.0f + amount * 4.0f;
+    }
+
+    float process(float input)
+    {
+        float sample = input * gain;
+
+        // Multi-pass folding for smoother results
+        for (int i = 0; i < 4; ++i)
+        {
+            if (sample > threshold)
+                sample = 2.0f * threshold - sample;
+            else if (sample < -threshold)
+                sample = -2.0f * threshold - sample;
+        }
+
+        // Normalize and apply soft clipping
+        sample /= gain;
+        return std::tanh(sample);
+    }
+
+    void processBlock(juce::AudioBuffer<float>& buffer)
+    {
+        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+        {
+            auto* channelData = buffer.getWritePointer(channel);
+            for (int i = 0; i < buffer.getNumSamples(); ++i)
+            {
+                channelData[i] = process(channelData[i]);
+            }
+        }
+    }
+
+private:
+    float amount = 0.0f;
+    float threshold = 1.0f;
+    float gain = 1.0f;
+};
+
+//==============================================================================
+/**
+ * DCBlocker
+ *
+ * Simple first-order high-pass filter for DC offset removal.
+ * Essential after nonlinear processing.
+ */
+class DCBlocker
+{
+public:
+    void prepare(double sampleRate)
+    {
+        // Cutoff around 5 Hz
+        float omega = juce::MathConstants<float>::twoPi * 5.0f / static_cast<float>(sampleRate);
+        coefficient = 1.0f / (1.0f + omega);
+    }
+
+    void reset()
+    {
+        x1 = 0.0f;
+        y1 = 0.0f;
+    }
+
+    float process(float input)
+    {
+        float output = coefficient * (input - x1 + y1);
+        x1 = input;
+        y1 = output;
+        return output;
+    }
+
+private:
+    float coefficient = 0.999f;
+    float x1 = 0.0f;
+    float y1 = 0.0f;
+};
+
+//==============================================================================
+/**
+ * StereoWidth
+ *
+ * Stereo width processor using Mid/Side technique and Haas effect.
+ */
+class StereoWidth
+{
+public:
+    void prepare(double sampleRate)
+    {
+        this->sampleRate = sampleRate;
+        // Max 30ms delay for Haas effect
+        maxDelaySamples = static_cast<int>(sampleRate * 0.03);
+        delayLine.resize(maxDelaySamples, 0.0f);
+    }
+
+    void reset()
+    {
+        std::fill(delayLine.begin(), delayLine.end(), 0.0f);
+        writePos = 0;
+    }
+
+    void setWidth(float w)
+    {
+        width = juce::jlimit(0.0f, 2.0f, w);
+    }
+
+    void process(float& left, float& right)
+    {
+        // Mid/Side encoding
+        float mid = (left + right) * 0.5f;
+        float side = (left - right) * 0.5f;
+
+        // Apply width (scale side component)
+        side *= width;
+
+        // Haas effect: slight delay on one channel for psychoacoustic widening
+        float haasDelay = width * 0.015f; // 0-15ms based on width
+        int delaySamples = static_cast<int>(haasDelay * sampleRate);
+        delaySamples = juce::jmin(delaySamples, maxDelaySamples - 1);
+
+        // Read delayed sample
+        int readPos = writePos - delaySamples;
+        if (readPos < 0)
+            readPos += maxDelaySamples;
+        float delayed = delayLine[readPos];
+
+        // Write current sample
+        delayLine[writePos] = right;
+        writePos = (writePos + 1) % maxDelaySamples;
+
+        // Mid/Side decoding
+        left = mid + side;
+        right = mid - side;
+
+        // Apply subtle Haas to right channel
+        if (width > 0.0f)
+        {
+            right = right * 0.7f + delayed * 0.3f * width;
+        }
+    }
+
+private:
+    double sampleRate = 44100.0;
+    float width = 1.0f;
+    std::vector<float> delayLine;
+    int maxDelaySamples = 0;
+    int writePos = 0;
+};

@@ -1,0 +1,226 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://meatyprompts.com/schemas/symbols-config.schema.json",
+  "title": "Symbols Configuration",
+  "description": "Configuration schema for MeatyPrompts symbol extraction and analysis system",
+  "type": "object",
+  "required": ["projectName", "symbolsDir", "domains", "extraction"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference (optional)"
+    },
+    "projectName": {
+      "type": "string",
+      "description": "Name of the project using this symbol system",
+      "minLength": 1,
+      "examples": ["MeatyPrompts", "MyProject"]
+    },
+    "symbolsDir": {
+      "type": "string",
+      "description": "Directory where symbol files are stored (relative to project root)",
+      "pattern": "^[^/].*[^/]$",
+      "examples": ["ai", "symbols", ".symbols"]
+    },
+    "domains": {
+      "type": "object",
+      "description": "Domain-specific symbol file configurations",
+      "minProperties": 1,
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": {
+          "type": "object",
+          "required": ["file", "description"],
+          "properties": {
+            "file": {
+              "type": "string",
+              "description": "Symbol file name (relative to symbolsDir)",
+              "pattern": "^symbols-.*\\.json$",
+              "examples": ["symbols-ui.json", "symbols-api.json"]
+            },
+            "description": {
+              "type": "string",
+              "description": "Human-readable description of this domain",
+              "minLength": 1,
+              "examples": ["UI primitives from packages/ui", "Backend API services"]
+            },
+            "testFile": {
+              "type": "string",
+              "description": "Test symbol file name (optional, relative to symbolsDir)",
+              "pattern": "^symbols-.*-tests\\.json$",
+              "examples": ["symbols-ui-tests.json"]
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether this domain is active (default: true)",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "apiLayers": {
+      "type": "object",
+      "description": "Layer-specific API symbol file configurations (optional)",
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*s?$": {
+          "type": "object",
+          "required": ["file", "description"],
+          "properties": {
+            "file": {
+              "type": "string",
+              "description": "Layer-specific symbol file name (relative to symbolsDir)",
+              "pattern": "^symbols-api-.*\\.json$",
+              "examples": ["symbols-api-routers.json", "symbols-api-services.json"]
+            },
+            "description": {
+              "type": "string",
+              "description": "Human-readable description of this layer",
+              "minLength": 1,
+              "examples": ["API route handlers", "Business logic services"]
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether this layer is active (default: true)",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "extraction": {
+      "type": "object",
+      "description": "Symbol extraction configuration by language",
+      "required": ["python", "typescript"],
+      "properties": {
+        "python": {
+          "type": "object",
+          "description": "Python symbol extraction configuration",
+          "required": ["directories", "extensions"],
+          "properties": {
+            "directories": {
+              "type": "array",
+              "description": "Directories to scan for Python files",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^[^/].*[^/]$",
+                "examples": ["services/api", "packages/utils"]
+              }
+            },
+            "extensions": {
+              "type": "array",
+              "description": "File extensions to process",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.[a-z0-9]+$",
+                "examples": [".py", ".pyi"]
+              },
+              "default": [".py"]
+            },
+            "excludes": {
+              "type": "array",
+              "description": "Patterns to exclude from scanning",
+              "items": {
+                "type": "string",
+                "examples": ["__pycache__", "*.pyc", "tests/", ".venv/"]
+              },
+              "default": ["__pycache__", "*.pyc"]
+            },
+            "excludeTests": {
+              "type": "boolean",
+              "description": "Exclude test files from main extraction (default: true)",
+              "default": true
+            },
+            "excludePrivate": {
+              "type": "boolean",
+              "description": "Exclude private symbols (default: false)",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "typescript": {
+          "type": "object",
+          "description": "TypeScript/JavaScript symbol extraction configuration",
+          "required": ["directories", "extensions"],
+          "properties": {
+            "directories": {
+              "type": "array",
+              "description": "Directories to scan for TypeScript/JavaScript files",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^[^/].*[^/]$",
+                "examples": ["apps/web", "packages/ui"]
+              }
+            },
+            "extensions": {
+              "type": "array",
+              "description": "File extensions to process",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^\\.[a-z0-9]+$",
+                "examples": [".ts", ".tsx", ".js", ".jsx"]
+              },
+              "default": [".ts", ".tsx", ".js", ".jsx"]
+            },
+            "excludes": {
+              "type": "array",
+              "description": "Patterns to exclude from scanning",
+              "items": {
+                "type": "string",
+                "examples": ["node_modules/", "*.test.*", "*.spec.*", "dist/", "build/"]
+              },
+              "default": ["node_modules/", "dist/", "build/"]
+            },
+            "excludeTests": {
+              "type": "boolean",
+              "description": "Exclude test files from main extraction (default: true)",
+              "default": true
+            },
+            "excludePrivate": {
+              "type": "boolean",
+              "description": "Exclude private symbols (default: false)",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata about the configuration",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Configuration schema version",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+          "examples": ["1.0", "2.0.1"]
+        },
+        "author": {
+          "type": "string",
+          "description": "Configuration author or maintainer"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "ISO 8601 date of last configuration update",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "description": "Additional notes about this configuration"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

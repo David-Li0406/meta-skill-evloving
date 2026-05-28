@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metaprompt name="loop-preflight" version="1.0">
+  <philosophy>
+    validate work before marking done or creating PR.
+    catch issues before human review.
+  </philosophy>
+
+  <parameters>
+    <param name="issue_id" required="true">Linear issue identifier</param>
+    <param name="issue_title" required="true">Issue title</param>
+    <param name="issue_requirements" required="true">Acceptance criteria</param>
+    <param name="changes_summary" required="true">What was changed</param>
+    <param name="files_modified" required="true">List of modified files</param>
+    <param name="test_results" required="true">Test output/status</param>
+    <param name="diff_summary" required="false">git diff --stat output</param>
+  </parameters>
+
+  <instructions>
+    <instruction priority="high">
+      You are a pre-flight validator for completed work.
+      Your job: ensure work is ready for PR.
+    </instruction>
+
+    <instruction priority="high">
+      Output ONLY valid JSON. No markdown.
+    </instruction>
+
+    <instruction priority="high">
+      Be thorough. Check each requirement explicitly.
+    </instruction>
+
+    <instruction priority="medium">
+      Flag any missing tests for new functionality.
+    </instruction>
+  </instructions>
+
+  <workflow>
+    <step order="1">Map changes to requirements</step>
+    <step order="2">Verify each requirement addressed</step>
+    <step order="3">Check test coverage</step>
+    <step order="4">Identify gaps or issues</step>
+    <step order="5">Render verdict</step>
+  </workflow>
+
+  <output_requirements>
+    <format>JSON</format>
+    <schema>
+{
+  "verdict": "ready | needs_work | blocked",
+  "requirements_met": [
+    {"requirement": "req 1", "status": "met | partial | unmet", "evidence": "how verified"}
+  ],
+  "test_coverage": "adequate | gaps | missing",
+  "gaps": ["gap 1", "gap 2"],
+  "blocking_issues": ["issue 1"],
+  "recommendations": ["rec 1"],
+  "pr_ready": true,
+  "confidence": 8
+}
+    </schema>
+    <constraints>
+      <constraint>verdict: exactly one of ready/needs_work/blocked</constraint>
+      <constraint>pr_ready: boolean, true only if verdict is ready</constraint>
+      <constraint>all requirements must be explicitly checked</constraint>
+    </constraints>
+  </output_requirements>
+
+  <validation_checklist>
+    <check>All acceptance criteria addressed</check>
+    <check>Tests pass</check>
+    <check>No console.log/debug statements</check>
+    <check>No hardcoded secrets</check>
+    <check>Error handling present</check>
+    <check>Types correct (if TypeScript)</check>
+  </validation_checklist>
+
+  <failure_modes>
+    <failure type="missing_requirement">
+      verdict: needs_work, list missing in gaps
+    </failure>
+    <failure type="tests_failing">
+      verdict: needs_work, must fix tests
+    </failure>
+    <failure type="security_issue">
+      verdict: blocked, requires human review
+    </failure>
+  </failure_modes>
+
+  <template>
+Pre-flight validation.
+
+Issue: {{issue_id}} - {{issue_title}}
+
+Requirements:
+{{issue_requirements}}
+
+Changes made:
+{{changes_summary}}
+
+Files modified:
+{{files_modified}}
+
+Test results:
+{{test_results}}
+
+{{#if diff_summary}}
+Diff summary:
+{{diff_summary}}
+{{/if}}
+
+Task: Validate work against requirements. Output JSON verdict.
+  </template>
+</metaprompt>

@@ -1,0 +1,95 @@
+# eNcounter Refresh: User Directory - Participants Tab Feature Test Plan
+
+## Requirements Analysis
+
+| Scenario Name | Requirement | Test Case |
+|---------------|-------------|-----------|
+| Scenario 1: User Opens Participants Tab 
+|  | 1.1 Participants button should be visible on the workspace page | 1.1.1 Verify Participants button is visible on workspace page |
+|  | 1.2 Participants button should be located in the bottom right corner | 1.2.1 Verify Participants button position in bottom right corner |
+|  | 1.3 Participants button should be clickable and open the Participants tab | 1.3.1 Verify Participants button opens Participants tab when clicked |
+|
+| Scenario 2: User is not yet on a call with another user 
+|  | 2.1 Participants tab should display current user's avatar when not on a call | 2.1.1 Verify current user's avatar displays in Participants tab |
+|  | 2.2 Participants tab should display current user's name when not on a call | 2.2.1 Verify current user's name displays in Participants tab |
+|  | 2.3 Participants tab should display current user's role when not on a call | 2.3.1 Verify current user's role displays in Participants tab |
+|  | 2.4 Only the current user should be visible when not on a call | 2.4.1 Verify only current user is shown when not on a call |
+|
+| Scenario 3: User is on a call with 1 or more other users 
+|  | 3.1 Participants tab should display current user's avatar when on a call | 3.1.1 Verify current user's avatar displays when on a call |
+|  | 3.2 Participants tab should display current user's name when on a call | 3.2.1 Verify current user's name displays when on a call |
+|  | 3.3 Participants tab should display current user's role when on a call | 3.3.1 Verify current user's role displays when on a call |
+|  | 3.4 Participants tab should display avatar for all other users on the call | 3.4.1 Verify all other users' avatars display when on a call |
+|  | 3.5 Participants tab should display name for all other users on the call | 3.5.1 Verify all other users' names display when on a call |
+|  | 3.6 Participants tab should display role for all other users on the call | 3.6.1 Verify all other users' roles display when on a call |
+|
+| Scenario 4: User selects "Copy URL" 
+|  | 4.1 Copy URL button should be visible in the Participants tab | 4.1.1 Verify Copy URL button is visible in Participants tab |
+|  | 4.2 Copy URL button should be clickable | 4.2.1 Verify Copy URL button is clickable |
+|  | 4.3 Selecting Copy URL should copy the current session URL to clipboard | 4.3.1 Verify session URL is copied to clipboard when Copy URL is clicked |
+|  | 4.4 Copied URL should allow guest users to join the session | 4.4.1 Verify copied URL enables guest user access to session |
+|
+| Scenario 5: User joins call who is NOT a registered eNcounter user 
+|  | 5.1 Guest user should be able to join via shared URL | 5.1.1 Verify guest user can join using shared URL |
+|  | 5.2 Guest user's name should display in Participants tab as entered in eView | 5.2.1 Verify guest user's name displays as entered in eView |
+|  | 5.3 Guest user's role should display as "Guest" in Participants tab | 5.3.1 Verify guest user's role displays as "Guest" |
+|
+| Scenario 6: Close Participant Tab 
+|  | 6.1 Participants tab should have a close button (X) in upper right corner | 6.1.1 Verify close button (X) is visible in upper right corner |
+|  | 6.2 Clicking X should close the Participants tab | 6.2.1 Verify clicking X closes the Participants tab |
+|
+| Scenario 7: User selects Add Participant 
+|  | 7.1 Add Participant button should be visible in the Participants tab | 7.1.1 Verify Add Participant button is visible in Participants tab |
+|  | 7.2 Add Participant button should be clickable | 7.2.1 Verify Add Participant button is clickable |
+|  | 7.3 Clicking Add Participant should open the User Directory | 7.3.1 Verify User Directory opens when Add Participant is clicked |
+|  | 7.4 User Directory should allow searching for participants to add | 7.4.1 Verify user can search for participants in User Directory |
+|
+
+## Detailed Test Cases
+
+| Test Case ID | Test Scenario | Expected Result | Test Data |
+|--------------|---------------|-----------------|-----------|
+| 1.1.1 | Navigate to workspace page and observe Participants button | Participants button is visible on the workspace page | N/A |
+| 1.2.1 | Verify position of Participants button on workspace page | Participants button is located in the bottom right corner of the workspace page | N/A |
+| 1.3.1 | Click the Participants button on workspace page | Participants tab opens after clicking the button | N/A |
+| 2.1.1 | Open Participants tab when not on a call and observe avatar | Current user's avatar is displayed in the Participants tab | User not on active call |
+| 2.2.1 | Open Participants tab when not on a call and observe name | Current user's name is displayed in the Participants tab | User not on active call |
+| 2.3.1 | Open Participants tab when not on a call and observe role | Current user's role is displayed in the Participants tab | User not on active call |
+| 2.4.1 | Open Participants tab when not on a call and verify participant count | Only the current user is visible in the Participants tab | User not on active call |
+| 3.1.1 | Open Participants tab when on a call and observe current user's avatar | Current user's avatar is displayed in the Participants tab | User on active call with 1+ participants |
+| 3.2.1 | Open Participants tab when on a call and observe current user's name | Current user's name is displayed in the Participants tab | User on active call with 1+ participants |
+| 3.3.1 | Open Participants tab when on a call and observe current user's role | Current user's role is displayed in the Participants tab | User on active call with 1+ participants |
+| 3.4.1 | Open Participants tab when on a call and observe other users' avatars | All other users' avatars are displayed in the Participants tab | User on active call with 1+ participants |
+| 3.5.1 | Open Participants tab when on a call and observe other users' names | All other users' names are displayed in the Participants tab | User on active call with 1+ participants |
+| 3.6.1 | Open Participants tab when on a call and observe other users' roles | All other users' roles are displayed in the Participants tab | User on active call with 1+ participants |
+| 4.1.1 | Open Participants tab and locate Copy URL button | Copy URL button is visible in the Participants tab | N/A |
+| 4.2.1 | Click Copy URL button in Participants tab | Copy URL button responds to click action | N/A |
+| 4.3.1 | Click Copy URL and verify clipboard contents | Current eNcounter session URL is copied to the clipboard | N/A |
+| 4.4.1 | Share copied URL with guest user and verify join capability | Guest user can use the URL to join the eNcounter session | Guest user with URL |
+| 5.1.1 | Send session URL to non-registered user and verify join | Guest user who is not a registered eNcounter user can join the call via URL | Non-registered guest user |
+| 5.2.1 | Observe guest user's name in Participants tab | Guest user's name displays as entered in eView | Guest user on call |
+| 5.3.1 | Observe guest user's role in Participants tab | Guest user's role displays as "Guest" | Guest user on call |
+| 6.1.1 | Open Participants tab and locate close button | Close button (X) is visible in the upper right corner of the Participants tab | N/A |
+| 6.2.1 | Click the X button in Participants tab | Participants tab closes when X button is clicked | N/A |
+| 7.1.1 | Open Participants tab and locate Add Participant button | Add Participant button is visible in the Participants tab | N/A |
+| 7.2.1 | Click Add Participant button | Add Participant button responds to click action | N/A |
+| 7.3.1 | Click Add Participant and observe User Directory | User Directory opens when Add Participant button is clicked | N/A |
+| 7.4.1 | Open User Directory via Add Participant and attempt search | User can search for participants to add to the call in User Directory | User Directory functional |
+
+## Test Coverage Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Scenarios | 7 |
+| Total Requirements | 26 |
+| Total Test Cases | 26 |
+| CSV Test Cases | 12 |
+
+**Notes:**
+- Each scenario has been analyzed and broken down into specific, testable requirements
+- 26 individual test case IDs were defined (1.1.1 through 7.4.1) during requirement analysis
+- Related test case IDs were logically grouped into 12 CSV test cases for efficient test execution
+- Complete traceability maintained between scenarios → requirements → test case IDs → CSV test cases
+- Test cases cover participant visibility for both solo and multi-user call scenarios
+- Guest user functionality and URL sharing are thoroughly tested
+- User Directory integration is covered through Add Participant functionality

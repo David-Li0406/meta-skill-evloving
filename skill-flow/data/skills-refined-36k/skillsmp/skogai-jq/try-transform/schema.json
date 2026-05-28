@@ -1,0 +1,82 @@
+{
+  "name": "try-transform",
+  "description": "Try a transformation expression, return fallback on error (error handling meta-transformation)",
+  "version": "1.0.0",
+  "input": {
+    "type": ["object", "array", "string", "number", "boolean", "null"],
+    "description": "Any JSON value to transform"
+  },
+  "args": {
+    "transform_expr": {
+      "type": "string",
+      "required": true,
+      "description": "Transformation to attempt. Supported formats: 'identity', 'getpath:field.path', 'divide:field:divisor', 'tonumber:field', 'array_access:field:index', 'fromjson:field', 'nested:field.path'"
+    },
+    "fallback": {
+      "type": "string",
+      "required": true,
+      "description": "Value to return on error (as JSON string, will be parsed)"
+    }
+  },
+  "output": {
+    "type": ["object", "array", "string", "number", "boolean", "null"],
+    "description": "Result of transform_expr on success, fallback value on error"
+  },
+  "examples": [
+    {
+      "description": "Division with fallback on divide-by-zero",
+      "input": {"count": 10, "divisor": 0},
+      "args": {
+        "transform_expr": "divide:count:0",
+        "fallback": "null"
+      },
+      "output": null
+    },
+    {
+      "description": "Get nested field with fallback on missing path",
+      "input": {"user": {}},
+      "args": {
+        "transform_expr": "getpath:user.profile.age",
+        "fallback": "0"
+      },
+      "output": 0
+    },
+    {
+      "description": "Convert to number with fallback on invalid string",
+      "input": {"value": "not-a-number"},
+      "args": {
+        "transform_expr": "tonumber:value",
+        "fallback": "-1"
+      },
+      "output": -1
+    },
+    {
+      "description": "Array access with fallback on out-of-bounds",
+      "input": {"items": [1, 2, 3]},
+      "args": {
+        "transform_expr": "array_access:items:10",
+        "fallback": "null"
+      },
+      "output": null
+    },
+    {
+      "description": "Parse JSON with fallback on invalid JSON",
+      "input": {"data": "not valid json"},
+      "args": {
+        "transform_expr": "fromjson:data",
+        "fallback": "{}"
+      },
+      "output": {}
+    },
+    {
+      "description": "Successful transformation returns result",
+      "input": {"value": "42"},
+      "args": {
+        "transform_expr": "tonumber:value",
+        "fallback": "0"
+      },
+      "output": 42
+    }
+  ],
+  "tags": ["meta", "error-handling", "try-catch", "defensive"]
+}

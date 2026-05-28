@@ -1,0 +1,53 @@
+{
+  "name": "is-timestamp",
+  "description": "Check if a string value at a specified path is a valid ISO 8601 timestamp",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the timestamp field (e.g., 'created_at', 'user.timestamp')"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if string is a valid ISO 8601 timestamp, false if not valid, doesn't exist, or is not a string"
+  },
+  "examples": [
+    {
+      "description": "Valid ISO 8601 timestamp with timezone",
+      "input": {"created_at": "2024-01-15T10:30:00Z"},
+      "args": {"path": "created_at"},
+      "output": true
+    },
+    {
+      "description": "Valid ISO 8601 date only",
+      "input": {"date": "2024-01-15"},
+      "args": {"path": "date"},
+      "output": true
+    },
+    {
+      "description": "Invalid timestamp format",
+      "input": {"timestamp": "2024/01/15"},
+      "args": {"path": "timestamp"},
+      "output": false
+    },
+    {
+      "description": "Non-string value (number)",
+      "input": {"timestamp": 1705320600},
+      "args": {"path": "timestamp"},
+      "output": false
+    },
+    {
+      "description": "Field doesn't exist",
+      "input": {"other": "value"},
+      "args": {"path": "timestamp"},
+      "output": false
+    }
+  ],
+  "tags": ["string", "timestamp", "date", "validation", "iso8601"]
+}

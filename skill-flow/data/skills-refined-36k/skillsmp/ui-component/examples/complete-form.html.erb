@@ -1,0 +1,121 @@
+<!-- Complete Form Component -->
+<!-- app/views/posts/new.html.erb (example) -->
+
+<div class="min-h-screen bg-background pb-20">
+  <!-- Header -->
+  <header class="sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border z-40">
+    <div class="max-w-screen-xl mx-auto px-4 py-4 flex items-center gap-3">
+      <%= link_to :back, class: "inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors", "aria-label": "뒤로가기" do %>
+        <%= render partial: "shared/icons/arrow_left", locals: { css_class: "h-5 w-5" } %>
+      <% end %>
+      <div>
+        <h1 class="text-2xl font-bold">새 게시글</h1>
+        <p class="text-sm text-muted-foreground">커뮤니티에 공유하세요</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Form -->
+  <main class="max-w-screen-xl mx-auto px-4 py-6">
+    <div class="bg-card rounded-xl p-6 border border-border">
+      <%= form_with model: @post, class: "space-y-6" do |form| %>
+        <!-- Form-level Errors -->
+        <% if @post.errors.any? %>
+          <div class="rounded-md bg-destructive/10 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-destructive" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-destructive">
+                  <%= pluralize(@post.errors.count, "개의 오류") %>가 발생했습니다:
+                </h3>
+                <div class="mt-2 text-sm text-destructive">
+                  <ul class="list-disc pl-5 space-y-1">
+                    <% @post.errors.full_messages.each do |message| %>
+                      <li><%= message %></li>
+                    <% end %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Title Field -->
+        <div class="space-y-2">
+          <%= form.label :title, class: "text-sm font-medium" do %>
+            제목 <span class="text-destructive">*</span>
+          <% end %>
+          <%= form.text_field :title,
+              class: "flex h-9 w-full rounded-md border #{@post.errors[:title].any? ? 'border-destructive' : 'border-input'} bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+              placeholder: "제목을 입력하세요",
+              required: true %>
+          <% if @post.errors[:title].any? %>
+            <p class="text-sm text-destructive"><%= @post.errors[:title].first %></p>
+          <% else %>
+            <p class="text-xs text-muted-foreground">5자 이상, 최대 100자</p>
+          <% end %>
+        </div>
+
+        <!-- Content Field -->
+        <div class="space-y-2">
+          <%= form.label :content, class: "text-sm font-medium" do %>
+            내용 <span class="text-destructive">*</span>
+          <% end %>
+          <%= form.text_area :content,
+              rows: 8,
+              class: "flex min-h-[120px] w-full rounded-md border #{@post.errors[:content].any? ? 'border-destructive' : 'border-input'} bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+              placeholder: "내용을 입력하세요",
+              required: true %>
+          <% if @post.errors[:content].any? %>
+            <p class="text-sm text-destructive"><%= @post.errors[:content].first %></p>
+          <% else %>
+            <p class="text-xs text-muted-foreground">10자 이상</p>
+          <% end %>
+        </div>
+
+        <!-- Category Select (optional) -->
+        <div class="space-y-2">
+          <%= form.label :category, "카테고리", class: "text-sm font-medium" %>
+          <%= form.select :category,
+              options_for_select([
+                ["선택하세요", ""],
+                ["개발", "development"],
+                ["디자인", "design"],
+                ["기획", "planning"],
+                ["마케팅", "marketing"]
+              ], @post.category),
+              {},
+              class: "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" %>
+        </div>
+
+        <!-- Status Radio (optional) -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium">공개 설정</label>
+          <div class="flex gap-4">
+            <div class="flex items-center space-x-2">
+              <%= form.radio_button :status, "draft", checked: @post.draft?, class: "h-4 w-4 border-border text-primary focus:ring-2 focus:ring-ring" %>
+              <%= form.label :status_draft, "임시저장", class: "text-sm" %>
+            </div>
+            <div class="flex items-center space-x-2">
+              <%= form.radio_button :status, "published", checked: @post.published?, class: "h-4 w-4 border-border text-primary focus:ring-2 focus:ring-ring" %>
+              <%= form.label :status_published, "발행", class: "text-sm" %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="flex gap-3 pt-4 border-t border-border">
+          <%= form.submit "게시글 작성",
+              data: { disable_with: "작성 중..." },
+              class: "flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-md inline-flex items-center justify-center text-sm font-medium disabled:opacity-50 transition-colors" %>
+          <%= link_to "취소", :back,
+              class: "flex-1 inline-flex items-center justify-center h-10 rounded-md text-sm border border-border hover:bg-secondary transition-colors" %>
+        </div>
+      <% end %>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Children's Toy Business Analysis Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+            --chart-grid: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Navigation Bar */
+        nav {
+            background-color: var(--header-bg);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .nav-left {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .nav-center {
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 5px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Presentation Area */
+        #presentation-container {
+            flex: 1;
+            position: relative;
+            background-color: var(--bg-color);
+            width: 100%;
+            height: calc(100vh - 60px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px 60px;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 48px;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 32px;
+            color: var(--accent-primary);
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--accent-primary);
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+
+        h3 {
+            font-size: 20px;
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+        }
+
+        p, li {
+            font-size: 18px;
+            line-height: 1.5;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .bullet-point {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .bullet-point::before {
+            content: "•";
+            color: var(--accent-primary);
+            font-size: 24px;
+            margin-right: 12px;
+            line-height: 1;
+        }
+
+        /* Layouts */
+        .layout-title-center {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding-top: 0;
+        }
+
+        .layout-title-center h1 {
+            color: var(--accent-primary);
+        }
+
+        .layout-title-center p {
+            font-size: 20px;
+            color: var(--text-light);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            height: 100%;
+        }
+
+        .col-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .full-width .chart-container {
+            height: 500px;
+        }
+
+        /* McKinsey-style Elements */
+        .key-highlight {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--accent-blue);
+            padding: 15px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+
+        /* Conceptual Visualizations */
+        .pyramid-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pyramid-wrapper {
+            position: relative;
+            width: 500px;
+            height: 350px;
+        }
+
+        .pyramid-level {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .pyramid-level:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        /* Triangle shapes using clip-path */
+        .py-level-1 {
+            top: 0;
+            width: 140px;
+            height: 80px;
+            background-color: var(--accent-primary);
+            font-size: 13px;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            padding: 40px 20px 10px 20px;
+        }
+
+        .py-level-2 {
+            top: 95px;
+            width: 280px;
+            height: 90px;
+            background-color: var(--accent-blue);
+            font-size: 15px;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
+            padding: 10px 40px 20px 40px;
+        }
+
+        .py-level-3 {
+            top: 200px;
+            width: 420px;
+            height: 100px;
+            background-color: var(--accent-green);
+            font-size: 17px;
+            clip-path: polygon(16.67% 0%, 83.33% 0%, 100% 100%, 0% 100%);
+            padding: 10px 60px 30px 60px;
+        }
+
+        .cycle-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cycle-node {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--accent-blue);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            font-size: 14px;
+            z-index: 2;
+        }
+        
+        .cycle-node strong {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--accent-blue);
+        }
+
+        .node-1 { top: 10px; left: 50%; transform: translateX(-50%); border-color: var(--accent-primary); }
+        .node-2 { top: 40%; right: 15%; }
+        .node-3 { bottom: 40px; right: 25%; border-color: var(--accent-green); }
+        .node-4 { bottom: 40px; left: 25%; border-color: var(--accent-yellow); }
+        .node-5 { top: 40%; left: 15%; border-color: var(--accent-blue-light); }
+
+        .cycle-center {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #333;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .chart-container { height: 300px; }
+            h1 { font-size: 36px; }
+            h2 { font-size: 24px; }
+            .pyramid-wrapper { width: 400px; height: 280px; }
+            .py-level-1 { width: 110px; height: 65px; font-size: 11px; top: 0; }
+            .py-level-2 { width: 220px; height: 75px; font-size: 13px; top: 75px; }
+            .py-level-3 { width: 330px; height: 85px; font-size: 14px; top: 165px; }
+            .two-column { grid-template-columns: 1fr; }
+            .cycle-container { height: auto; padding: 40px 0; flex-wrap: wrap; }
+            .cycle-node { position: relative; width: 120px; height: 120px; margin: 10px; top: auto; left: auto; right: auto; bottom: auto; transform: none;}
+            .cycle-center { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-left">McKinsey-style Analysis</div>
+        <div class="nav-center" id="slide-counter">Slide 1 of 13</div>
+        <div class="nav-right">
+            <button onclick="prevSlide()">← Prev</button>
+            <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
+            <button onclick="nextSlide()">Next →</button>
+        </div>
+    </nav>
+
+    <div id="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active layout-title-center" id="slide-1">
+            <h1>AI Children's Toy Business Analysis Report <br><span style="font-size: 0.6em; color: #556EE6;">(儿童玩具+AI 智能商业分析报告)</span></h1>
+            <p style="margin-top: 40px;">Report Date: January 2026 | Research Scope: Global and China markets (2024-2030)<br>Research Method: Public data cross-validation, industry chain interviews, consumer surveys, competitor teardown</p>
+        </div>
+
+        <!-- Slide 2: Executive Summary -->
+        <div class="slide" id="slide-2">
+            <h2>Executive Summary: The Triple Inflection Point <span style="font-size:0.6em; color:#74788d;">(核心观点：三重拐点已至)</span></h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <ul>
+                    <li class="bullet-point">Market Size: 2025 global AI toy market $18.1-24.6B, China ¥30B, CAGR 25-30%, 2030 global expected to exceed $60B.</li>
+                    <li class="bullet-point">Demand Inflection: Post-'Double Reduction' 3-hour after-school gap, refined parenting, loneliness economy - parents willing to pay ≥30% premium for 'education + emotion'.</li>
+                    <li class="bullet-point">Technology Inflection: Domestic LLMs, lightweight voice chips, multimodal emotion computing - cost curves all declining, hardware BOM cost down 38% in 2 years.</li>
+                    <li class="bullet-point">Competitive Landscape: Three tiers - ①IP+Channel leaders (Alpha Animation, Xinghui) ②AI-native unicorns (Yueran, FoloToy, Mengyou) ③Cross-sector enablers (Volcano Engine, DeepSeek).</li>
+                </ul>
+                <ul>
+                    <li class="bullet-point">Business Model: Hardware one-time gross margin 25-35%, subscription/content/data services gross margin 60-70%, net profit margin up 8-12 percentage points.</li>
+                    <li class="bullet-point">Risks: Data compliance, high-end chip supply cut, homogenization bubble.</li>
+                    <li class="bullet-point">Investment Advice: 2026-2027 M&A window, focus on 'self-developed model + offline experience network + IP matrix' targets.</li>
+                </ul>
+            </div>
+            <div style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px;">
+                <h3 style="color: #000;">Key Takeaways</h3>
+                <p><strong>Market Size:</strong> 2030 global expected to exceed $60B</p>
+                <p><strong>Demand:</strong> ≥30% premium for 'education + emotion'</p>
+                <p><strong>Tech:</strong> Hardware BOM cost down 38% in 2 years</p>
+                <p><strong>Model:</strong> Subscription services gross margin 60-70%</p>
+                <p><strong>Strategy:</strong> Focus on 'self-developed model + offline experience network + IP matrix'</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: Market Size -->
+        <div class="slide" id="slide-3">
+            <h2>Market Size & Growth Trajectory <span style="font-size:0.6em; color:#74788d;">(市场规模与增长趋势)</span></h2>
+            <div class="two-column">
+                <div class="col-content">
+                    <p>Global market expected to exceed $60B by 2030. CAGR 15.6% globally, with China >25%. Asia leads regional growth at 45%. Penetration rate expected to jump from 8.7% (2024) to 25% (2030).</p>
+                    <div class="key-highlight">Global: 2024 $18.1B → 2030 $60B</div>
+                    <div class="key-highlight">China: 2024 ¥24.6B → 2025 ¥30B</div>
+                    <div class="key-highlight">Penetration: 8.7% (2024) → 25% (2030)</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-3-line"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Conceptual (Pyramid) -->
+        <div class="slide" id="slide-4">
+            <h2>Demand Inflection: The 'Education + Emotion' Value Proposition <span style="font-size:0.6em; color:#74788d;">(需求拐点：教育+情感)</span></h2>
+            <div class="two-column">
+                <div class="pyramid-container">
+                    <div class="pyramid-wrapper">
+                        <div class="pyramid-level py-level-1">Emotional Companionship<br><span style="font-size: 0.85em;">(Growth 173%)</span></div>
+                        <div class="pyramid-level py-level-2">Education & Cognition<br><span style="font-size: 0.85em;">(Category 50%)</span></div>
+                        <div class="pyramid-level py-level-3">Basic Hardware/Entertainment</div>
+                    </div>
+                </div>
+                <div class="col-content">
+                    <h3>Key Drivers</h3>
+                    <ul>
+                        <li class="bullet-point">Post-'Double Reduction' 3-hour after-school gap</li>
+                        <li class="bullet-point">Refined parenting and loneliness economy driving demand shift</li>
+                        <li class="bullet-point">Emotional companionship growth 173%</li>
+                        <li class="bullet-point">Willingness to pay ≥30% premium</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Market Share -->
+        <div class="slide" id="slide-5">
+            <h2>Competitive Landscape & Market Share <span style="font-size:0.6em; color:#74788d;">(竞争格局与市场份额)</span></h2>
+            <div class="two-column">
+                <div class="chart-container">
+                    <canvas id="chart-5-pie"></canvas>
+                </div>
+                <div class="col-content">
+                    <p>Three tiers of competition. Leaders (Alpha Animation, Xinghui, UBTECH) hold 38%. New forces (Yueran, FoloToy, Mengyou) capture 15%.</p>
+                    <ul>
+                        <li class="bullet-point">Leaders: 38%</li>
+                        <li class="bullet-point">New forces: 15%</li>
+                        <li class="bullet-point">Enablers: Volcano Engine, DeepSeek</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Cost Structure -->
+        <div class="slide" id="slide-6">
+            <h2>Cost Structure Analysis <span style="font-size:0.6em; color:#74788d;">(成本结构分析)</span></h2>
+            <div class="two-column">
+                <div class="col-content" style="flex: 0.8;">
+                    <p>Supply chain cost breakdown showing Chips (28%) and Manufacturing (25%) as the largest cost drivers.</p>
+                    <div class="key-highlight">Chips: 28%</div>
+                    <div class="key-highlight">Manufacturing: 25%</div>
+                    <div class="key-highlight">LLM licensing: 10%</div>
+                </div>
+                <div class="chart-container" style="flex: 1.2;">
+                    <canvas id="chart-6-doughnut"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Benchmarking -->
+        <div class="slide" id="slide-7">
+            <h2>Star Products Benchmarking <span style="font-size:0.6em; color:#74788d;">(标杆产品对比)</span></h2>
+            <div class="chart-container">
+                <canvas id="chart-7-bar"></canvas>
+            </div>
+            <p style="text-align: center; margin-top: 20px;">Comparison of BubblePal, Magicbox, and Alpha Super Bell across Tech Level, Price, Model, and Margin.</p>
+        </div>
+
+        <!-- Slide 8: Financial Model -->
+        <div class="slide" id="slide-8">
+            <h2>Financial Model: Unit Economics <span style="font-size:0.6em; color:#74788d;">(财务模型：单SKU经济模型)</span></h2>
+            <div class="two-column">
+                <div class="chart-container">
+                    <canvas id="chart-8-waterfall"></canvas>
+                </div>
+                <div class="col-content">
+                    <p>Single SKU 1M units lifecycle (¥M). Hardware revenue 300, Subscription 48. Total cost 210. Net profit 45 (15% margin). ROI 2.1 years.</p>
+                    <ul>
+                        <li class="bullet-point">Total Revenue: 348M</li>
+                        <li class="bullet-point">Total Cost: 210M</li>
+                        <li class="bullet-point">Net Profit: 45M</li>
+                        <li class="bullet-point">ROI: 2.1 years</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Tech Roadmap -->
+        <div class="slide" id="slide-9">
+            <h2>Technology Roadmap 2025-2030 <span style="font-size:0.6em; color:#74788d;">(技术路线图)</span></h2>
+            <div class="chart-container" style="height: 300px;">
+                <canvas id="chart-9-gantt"></canvas>
+            </div>
+            <div style="margin-top: 20px; display: flex; justify-content: space-around; text-align: center;">
+                <div><strong>2025:</strong> L2 Multimodal, 98% accuracy</div>
+                <div><strong>2026-2027:</strong> L3 Emotion Computing, &lt;300ms latency</div>
+                <div><strong>2028-2030:</strong> L4 Adaptive Learning</div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Risk Assessment -->
+        <div class="slide" id="slide-10">
+            <h2>Risk Assessment & Mitigation <span style="font-size:0.6em; color:#74788d;">(风险评估与应对)</span></h2>
+            <div class="two-column">
+                <div class="chart-container">
+                    <canvas id="chart-10-scatter"></canvas>
+                </div>
+                <div class="col-content">
+                    <p>Key risks include Data compliance, High-end chip supply cut, and Homogenization price war.</p>
+                    <ul>
+                        <li class="bullet-point">Homogenization price war (High probability)</li>
+                        <li class="bullet-point">High-end chip supply cut (Medium probability)</li>
+                        <li class="bullet-point">Data compliance fines (Low-Med probability)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Future Trends (Cycle) -->
+        <div class="slide" id="slide-11">
+            <h2>Future Trends: 5 Key Shifts <span style="font-size:0.6em; color:#74788d;">(未来趋势：五大关键转变)</span></h2>
+            <div class="cycle-container">
+                <div class="cycle-center">Trends<br>2025+</div>
+                <div class="cycle-node node-1">
+                    <strong>1. Tech Demo</strong>
+                    Edge LLM &lt;100MB<br>Cost &lt;¥20
+                </div>
+                <div class="cycle-node node-2">
+                    <strong>2. Scenario</strong>
+                    'Toy' → 'Family<br>Smart Terminal'
+                </div>
+                <div class="cycle-node node-3">
+                    <strong>3. Globalization</strong>
+                    Export 50%<br>by 2028
+                </div>
+                <div class="cycle-node node-4">
+                    <strong>4. Standards</strong>
+                    2026 National<br>Standard
+                </div>
+                <div class="cycle-node node-5">
+                    <strong>5. Capital</strong>
+                    M&A Wave<br>CR5 38%→60%
+                </div>
+            </div>
+            <ul style="margin-top: 20px; text-align: center;">
+                <li style="display: inline-block; margin: 0 15px;">Edge LLM &lt;100MB, cost &lt;¥20</li>
+                <li style="display: inline-block; margin: 0 15px;">Export 50% by 2028</li>
+                <li style="display: inline-block; margin: 0 15px;">M&A wave: CR5 38% → 60%</li>
+            </ul>
+        </div>
+
+        <!-- Slide 12: Strategic Recommendations -->
+        <div class="slide" id="slide-12">
+            <h2>Strategic Recommendations <span style="font-size:0.6em; color:#74788d;">(战略建议)</span></h2>
+            <div class="two-column">
+                <div class="key-highlight" style="border-left-color: var(--accent-green);">
+                    <h3>Startups</h3>
+                    <p>3-6 age language delay niche, medical-grade, >50% premium.</p>
+                </div>
+                <div class="key-highlight" style="border-left-color: var(--accent-blue);">
+                    <h3>Leading Toy Companies</h3>
+                    <p>Acquire AI teams, 5-8x PS in 2026, DTC private domain.</p>
+                </div>
+                <div class="key-highlight" style="border-left-color: var(--accent-yellow);">
+                    <h3>Investors</h3>
+                    <p>Complete by 2026 H1, 'model + experience + IP', GDPR+COPPA priority.</p>
+                </div>
+            </div>
+            <div style="margin-top: 30px;">
+                <ul>
+                    <li class="bullet-point">Startups: Focus on medical-grade niche</li>
+                    <li class="bullet-point">Leaders: Acquire AI teams, 5-8x PS</li>
+                    <li class="bullet-point">Investors: Focus on 'model + experience + IP'</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 13: Conclusion -->
+        <div class="slide" id="slide-13">
+            <h2>Conclusion: From Gimmick to Essential <span style="font-size:0.6em; color:#74788d;">(结论：从噱头到必需品)</span></h2>
+            <div style="display: flex; justify-content: center; align-items: center; height: 60%;">
+                <div style="text-align: center; max-width: 800px;">
+                    <p style="font-size: 22px; margin-bottom: 30px;">Children's AI toys at 'technology-demand-policy' triple cycle inflection. 'Gimmick' → 'essential', 'hardware' → 'subscription+data'. 'Domestic model + compliant data + global channels' = dominance in $60B market.</p>
+                    <div style="border-top: 3px solid var(--accent-primary); padding-top: 20px;">
+                        <h3 style="color: #000;">Triple cycle inflection reached</h3>
+                        <h3 style="color: #000;">Shift to subscription+data model</h3>
+                        <h3 style="color: var(--accent-primary);">Winning formula: Domestic model + compliant data + global channels</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 13;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            const counter = document.getElementById('slide-counter');
+            
+            if (n > totalSlides) currentSlide = 1;
+            if (n < 1) currentSlide = totalSlides;
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            document.getElementById(`slide-${currentSlide}`).classList.add('active');
+            counter.innerText = `Slide ${currentSlide} of ${totalSlides}`;
+        }
+
+        function nextSlide() {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+
+        function prevSlide() {
+            currentSlide--;
+            showSlide(currentSlide);
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartDefaults = {
+                font: {
+                    family: "'Helvetica Neue', sans-serif",
+                    size: 12
+                },
+                color: '#333333'
+            };
+
+            Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0,0,0,0.8)';
+            Chart.defaults.plugins.tooltip.titleFont.size = 14;
+            Chart.defaults.plugins.tooltip.bodyFont.size = 12;
+            Chart.defaults.plugins.legend.position = 'bottom';
+
+            // Slide 3: Line Chart
+            const ctx3 = document.getElementById('chart-3-line');
+            if(ctx3) new Chart(ctx3, {
+                type: 'line',
+                data: {
+                    labels: ['2024', '2025', '2026', '2027', '2028', '2030'],
+                    datasets: [{
+                        label: 'Global Market Size (B USD)',
+                        data: [18.1, 22.0, 28.5, 38.0, 48.5, 60.0],
+                        borderColor: '#F85d42',
+                        backgroundColor: 'rgba(248, 93, 66, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#F85d42',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Billions USD' } }
+                    }
+                }
+            });
+
+            // Slide 5: Pie Chart
+            const ctx5 = document.getElementById('chart-5-pie');
+            if(ctx5) new Chart(ctx5, {
+                type: 'pie',
+                data: {
+                    labels: ['Leaders (Alpha, Xinghui, UBTECH)', 'New Forces (Yueran, FoloToy, Mengyou)', 'Others/Traditional'],
+                    datasets: [{
+                        data: [38, 15, 47],
+                        backgroundColor: ['#F85d42', '#556EE6', '#74788d'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Slide 6: Doughnut Chart
+            const ctx6 = document.getElementById('chart-6-doughnut');
+            if(ctx6) new Chart(ctx6, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Chips', 'Manufacturing', 'Sensors', 'LLM licensing', 'Channels', 'Content IP', 'Mic Arrays'],
+                    datasets: [{
+                        data: [28, 25, 12, 10, 9, 8, 8],
+                        backgroundColor: ['#F85d42', '#556EE6', '#50a5f1', '#34c38f', '#f1b44c', '#74788d', '#a0aec0'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Slide 7: Grouped Bar Chart
+            const ctx7 = document.getElementById('chart-7-bar');
+            if(ctx7) new Chart(ctx7, {
+                type: 'bar',
+                data: {
+                    labels: ['BubblePal', 'Magicbox', 'Alpha Super Bell'],
+                    datasets: [
+                        {
+                            label: 'Price (¥)',
+                            data: [399, 299, 199],
+                            backgroundColor: '#556EE6',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Margin (%)',
+                            data: [35, 32, 28],
+                            backgroundColor: '#34c38f',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: {display:true, text:'Price (¥)'} },
+                        y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display:true, text:'Margin (%)'} }
+                    }
+                }
+            });
+
+            // Slide 8: Waterfall (Stacked Bar)
+            const ctx8 = document.getElementById('chart-8-waterfall');
+            if(ctx8) new Chart(ctx8, {
+                type: 'bar',
+                data: {
+                    labels: ['Hard. Rev', 'Sub. Rev', 'Total Cost', 'Marketing', 'R&D', 'Net Profit'],
+                    datasets: [
+                        { label: 'Positive Flow', data: [300, 48, 0, 0, 0, 63], backgroundColor: '#34c38f' },
+                        { label: 'Negative Flow', data: [0, 0, -210, -45, -30, -18], backgroundColor: '#F85d42' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, title: {display: true, text: 'Value (M ¥)'} }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) { label += context.parsed.y + 'M'; }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Slide 9: Gantt (Horizontal Bar)
+            const ctx9 = document.getElementById('chart-9-gantt');
+            if(ctx9) new Chart(ctx9, {
+                type: 'bar',
+                data: {
+                    labels: ['L2 Multimodal', 'L3 Emotion Computing', 'L4 Adaptive Learning'],
+                    datasets: [{
+                        label: 'Period',
+                        data: [
+                            [2025, 2025.9], 
+                            [2026, 2027.9], 
+                            [2028, 2030]
+                        ],
+                        backgroundColor: ['#F85d42', '#556EE6', '#34c38f'],
+                        barPercentage: 0.5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { min: 2024, max: 2031, type: 'linear', ticks: {stepSize: 1} }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Slide 10: Scatter
+            const ctx10 = document.getElementById('chart-10-scatter');
+            if(ctx10) new Chart(ctx10, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Risks (X=Prob, Y=Impact)',
+                        data: [
+                            {x: 5, y: 8, label: 'Homogenization'},
+                            {x: 3, y: 5, label: 'Chip Cut'},
+                            {x: 2, y: 7, label: 'Compliance'},
+                            {x: 4, y: 6, label: 'Tech Iteration'}
+                        ],
+                        backgroundColor: ['#F85d42', '#f1b44c', '#556EE6', '#50a5f1'],
+                        pointRadius: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: {display: true, text: 'Probability'}, min: 0, max: 6 },
+                        y: { title: {display: true, text: 'Impact'}, min: 0, max: 10 }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

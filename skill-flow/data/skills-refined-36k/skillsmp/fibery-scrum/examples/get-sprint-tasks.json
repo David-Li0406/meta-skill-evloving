@@ -1,0 +1,30 @@
+{
+  "description": "Get all non-completed tasks in the current (In Progress) sprint",
+  "tool": "mcp__fibery__query_database",
+  "params": {
+    "q_from": "Scrum/Task",
+    "q_select": {
+      "Name": ["Scrum/Name"],
+      "Task ID": ["Scrum/Task ID"],
+      "Public Id": ["fibery/public-id"],
+      "State": ["workflow/state", "enum/name"],
+      "DRI": ["Scrum/DRI", "user/name"],
+      "Priority": ["Scrum/Priority", "enum/name"],
+      "Task Type": ["Scrum/Task Type", "enum/name"],
+      "Task Size": ["Scrum/Task Size", "enum/name"],
+      "Story": ["Scrum/Story", "Scrum/Name"],
+      "Sprint": ["Scrum/Story Sprint", "Scrum/Name"],
+      "PR Link": ["Scrum/PR link"]
+    },
+    "q_where": ["q/and",
+      ["!=", ["workflow/state", "workflow/Final"], "$notFinal"],
+      ["=", ["Scrum/Story Sprint", "workflow/state", "enum/name"], "$sprintState"]
+    ],
+    "q_order_by": {"Scrum/Priority": "q/asc"},
+    "q_limit": 100,
+    "q_params": {
+      "$notFinal": true,
+      "$sprintState": "In Progress"
+    }
+  }
+}

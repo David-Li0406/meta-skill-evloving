@@ -1,0 +1,65 @@
+{
+    "description": "Patient transfer between units - MV|M6|C",
+    "messageType": "MV|M6|C",
+    "hpk": {
+        "raw": "MV|M6|C|HEXAGONE|20260123090000|USER002|PAT12345|VIS20260122001|UF_NEURO_01|LIT_102|NEURO|UF_CARDIO_01|LIT_001|CARDIO||||||||||||||||||||||||||||||",
+        "parsed": {
+            "type": "MV",
+            "message": "M6",
+            "mode": "C",
+            "emetteur": "HEXAGONE",
+            "date": "20260123090000",
+            "user": "USER002",
+            "ipp": "PAT12345",
+            "visitId": "VIS20260122001",
+            "newFunctionalUnit": "UF_NEURO_01",
+            "newBed": "LIT_102",
+            "newService": "NEURO",
+            "previousFunctionalUnit": "UF_CARDIO_01",
+            "previousBed": "LIT_001",
+            "previousService": "CARDIO"
+        }
+    },
+    "expectedHL7": {
+        "messageType": "ADT^A02",
+        "segments": {
+            "MSH": {
+                "sendingApplication": "HEXAFLUX",
+                "messageType": "ADT^A02^ADT_A02",
+                "versionId": "2.5"
+            },
+            "EVN": {
+                "eventTypeCode": "A02",
+                "recordedDateTime": "20260123090000"
+            },
+            "PID": {
+                "patientId": "PAT12345"
+            },
+            "PV1": {
+                "patientClass": "I",
+                "assignedPatientLocation": "CHU_PARIS^NEURO^LIT_102",
+                "visitNumber": "VIS20260122001"
+            },
+            "PV2": {
+                "priorPatientLocation": "CHU_PARIS^CARDIO^LIT_001"
+            }
+        }
+    },
+    "businessRules": [
+        "MV|M6|C maps to ADT^A02 (Patient Transfer)",
+        "HPK newFunctionalUnit (field 8) + newBed (field 9) + newService (field 10) map to PV1-3 assigned patient location",
+        "HPK previousFunctionalUnit (field 11) + previousBed (field 12) + previousService (field 13) map to PV2-1 prior patient location",
+        "Transfer events require both current and prior location information",
+        "Visit ID remains the same (patient stays in same visit/séjour)"
+    ],
+    "testScenario": "Transfer from cardiology to neurology service",
+    "validationChecks": [
+        "HL7 message type must be ADT^A02",
+        "PV1 segment must have assigned patient location with new location",
+        "PV2 segment must exist with prior patient location",
+        "Prior location must match HPK previous location fields",
+        "New location must match HPK new location fields",
+        "Visit number must remain the same",
+        "Patient ID must match HPK IPP"
+    ]
+}

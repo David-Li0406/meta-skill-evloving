@@ -1,0 +1,111 @@
+{
+  "asof": "2026-01-26",
+  "status": "success",
+  "confidence": 0.75,
+
+  "latest": {
+    "shfe_inventory_tonnes": 235000,
+    "shfe_rebuild_z": 1.9,
+    "shfe_inventory_percentile": 0.87,
+    "shfe_high_inventory": true,
+    "shfe_fast_rebuild": true,
+    "comex_inventory_tonnes": 18500,
+    "comex_rebuild_z": 0.5,
+    "comex_inventory_percentile": 0.42,
+    "total_inventory_tonnes": 253500,
+    "copper_price": 4.52,
+    "price_percentile": 0.32,
+    "near_term_signal": "CAUTION",
+    "long_term_view": "CHEAP"
+  },
+
+  "backtest": {
+    "peak_match_window_weeks": 2,
+    "signal_count": 21,
+    "hit_count": 13,
+    "signal_to_local_peak_hit_rate": 0.62
+  },
+
+  "drivers": {
+    "shfe_inventory_tonnes": 235000,
+    "shfe_rebuild_window_weeks": 4,
+    "shfe_rebuild_z": 1.9,
+    "comex_inventory_tonnes": 18500,
+    "comex_rebuild_z": 0.5,
+    "high_inventory_rule": "percentile>=0.85"
+  },
+
+  "long_term": {
+    "window_years": 10,
+    "price_percentile": 0.32,
+    "cheap_threshold": 0.35,
+    "rich_threshold": 0.65,
+    "long_term_view": "CHEAP"
+  },
+
+  "metadata": {
+    "data_sources": {
+      "shfe_inventory": "MacroMicro (CDP)",
+      "comex_inventory": "MacroMicro (CDP)",
+      "copper_price": "Yahoo Finance (HG=F)"
+    },
+    "shfe_data_range": {
+      "start": "2015-01-01",
+      "end": "2026-01-26"
+    },
+    "comex_data_range": {
+      "start": "2015-01-01",
+      "end": "2026-01-26"
+    },
+    "price_data_range": {
+      "start": "2015-01-01",
+      "end": "2026-01-26"
+    },
+    "analyzed_at": "2026-01-26T10:30:00Z"
+  },
+
+  "config": {
+    "fast_rebuild_window_weeks": 4,
+    "fast_rebuild_z": 1.5,
+    "z_baseline_weeks": 156,
+    "high_inventory_mode": "percentile",
+    "high_inventory_percentile": 0.85,
+    "peak_match_window_weeks": 2,
+    "long_term_window_years": 10,
+    "cheap_percentile": 0.35,
+    "rich_percentile": 0.65
+  },
+
+  "reasons": [
+    "SHFE 庫存 235,000 噸，處於 87% 分位數（偏高）",
+    "SHFE 4 週回補速度 z-score +1.9，超過 1.5 門檻（異常快）",
+    "COMEX 庫存 18,500 噸，處於 42% 分位數（正常）",
+    "COMEX 4 週回補速度 z-score +0.5，屬正常範圍",
+    "總庫存（SHFE + COMEX）253,500 噸",
+    "歷史同類訊號命中率 62%",
+    "銅價 10 年分位數 32%，處於「偏便宜」區間"
+  ],
+
+  "artifacts": [
+    {
+      "type": "chart",
+      "path": "output/copper_inventory_signal.png",
+      "description": "Bloomberg 風格銅庫存回補訊號圖表"
+    },
+    {
+      "type": "data",
+      "path": "cache/shfe_inventory.csv",
+      "description": "SHFE 庫存時序數據"
+    },
+    {
+      "type": "data",
+      "path": "cache/comex_inventory.csv",
+      "description": "COMEX 庫存時序數據"
+    },
+    {
+      "type": "data",
+      "path": "cache/copper_price.csv",
+      "description": "銅期貨價格時序數據"
+    }
+  ]
+}

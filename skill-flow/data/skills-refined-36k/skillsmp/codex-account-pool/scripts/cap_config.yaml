@@ -1,0 +1,31 @@
+# codex-account-pool config
+#
+# `sources` is a comma-separated list of CODEX_HOME template directories.
+# Each directory should contain its own Codex config/auth (so many workers can
+# spread across multiple accounts/credentials).
+#
+# Examples:
+#   sources: "~/.codex, ~/.codex-account-b, /mnt/d/codex-homes/account-c"
+#
+# Strategy:
+# - round_robin (default): picks sources sequentially (persists counter in state_file)
+# - hash: stable selection based on worker name (no state)
+#
+# state_file is only used for round_robin (relative to skill root if not absolute).
+sources: ""
+strategy: round_robin
+state_file: "share/state.json"
+
+# Required when using auth balancing (called by tmux-workflow when account-pool is enabled):
+# A directory containing multiple auth files (contents are Codex auth JSON).
+# File names are unrestricted; picked file content will be copied into each worker home as `auth.json`.
+auth_team_dir: ""
+
+# Optional file glob under auth_team_dir (default: all files).
+# Example: "auth.json.*" or "*.json"
+auth_team_glob: "*"
+
+# Auth selection strategy (used by `pick-auth`):
+# - balanced:   least-used (default historical behavior)
+# - team_cycle: one auth for the whole team; rotate via `cap auth-advance` / `cap watch-team`
+auth_strategy: balanced

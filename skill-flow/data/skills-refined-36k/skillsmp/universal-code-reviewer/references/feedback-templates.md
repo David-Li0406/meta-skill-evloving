@@ -1,0 +1,60 @@
+# 反馈模板
+
+提交 CR 结果时请使用此模板。
+
+## Template A: 标准代码审查 (Standard Code Review)
+
+适用于大多数代码审查场景。
+
+```markdown
+# 代码审查报告
+
+## 🔴 阻断项 (Blockers)
+> *严重问题、违反"红线"规则、逻辑错误或安全风险。必须修复。*
+
+- **[文件名]**: {简要问题描述}
+  - **背景**: {解释为什么这是一个阻断问题，引用规则或最佳实践}
+  - **建议**:
+    ```language
+    {修改后的代码片段}
+    ```
+
+## 🟡 建议项 (Suggestions)
+> *可读性、可维护性或性能方面的改进。非阻断性。*
+
+- **[文件名]**: {简要优化建议}
+  - **说明**: {解释优化的理由}
+
+## 🔵 确认项 (Questions)
+> *对业务逻辑或意图的确认。*
+
+- **[文件名]**: {问题内容}
+
+---
+## 🏁 总结
+{整体健康度评分 (1-10) 与简短总结}
+**[CHECKPOINT:REVIEW_COMPLETE]**
+```
+
+## 证据模式 (Evidence Mode)
+
+在指出不一致性或违反项目习惯时，请使用以下格式增强说服力：
+
+> "⚠️ **不一致**: 与 `{reference_file.ts}` 不一致。本项目通常使用 `{pattern_name}` 模式，但此处使用了 `{wrong_pattern}`。"
+
+## 项目规则定义模板 (Project Rules Template)
+
+当定义或更新项目规则时使用。
+
+```markdown
+# 项目规则: {Project Name}
+
+## 🏗 架构与模式 (Architecture & Patterns)
+- **{Pattern Name}**: {描述}
+
+## 🎨 编码规范 (Coding Standards)
+- **{Standard Name}**: {描述}
+
+## 🚫 红线 (Blockers)
+- **{Constraint}**: {描述}
+```

@@ -1,0 +1,81 @@
+{
+  "skill": "analyze-copper-stock-resilience-dependency",
+  "version": "0.1.0",
+  "as_of": "2026-01-22",
+  "quick_check": false,
+  "inputs": {
+    "start_date": "2015-01-01",
+    "end_date": "2026-01-22",
+    "copper_series": "HG=F (converted to USD/ton)",
+    "equity_proxy_series": "ACWI",
+    "ma_window": 60,
+    "rolling_window": 24,
+    "round_levels": [10000, 13000]
+  },
+  "latest_state": {
+    "date": "2026-01-31",
+    "copper_price_usd_per_ton": 12727.29,
+    "copper_sma_60": 9354.78,
+    "copper_sma_slope": 80.82,
+    "copper_trend": "up",
+    "near_resistance_levels": [13000],
+    "near_support_levels": [],
+    "equity_resilience_score": 91.1,
+    "rolling_beta_equity_24m": -0.802,
+    "rolling_beta_yield_24m": -0.053
+  },
+  "backfill_analysis": {
+    "events_detected": 0,
+    "backfill_events": 0,
+    "backfill_probability_12m": {
+      "overall": null,
+      "equity_resilience_high": null,
+      "equity_resilience_low": null
+    },
+    "note": "歷史上銅價未曾接近 13,000 關卡，無法計算回補機率"
+  },
+  "historical_betas": {
+    "beta_equity_percentile": 1,
+    "beta_equity_mean": 0.261,
+    "beta_equity_std": 0.341,
+    "interpretation": "當前 β 為負值且處於歷史 1% 分位，表示銅脫離傳統風險資產模式"
+  },
+  "diagnosis": {
+    "trend_status": "上升趨勢中，銅價高於長期均線且均線斜率為正",
+    "level_status": "接近 13,000 關卡，為重要阻力位",
+    "resilience_status": "股市韌性評分 91，處於高韌性區間",
+    "dependency_status": "滾動 β 為負值 (-0.80)，銅與股市呈反向關係，脫離傳統風險資產模式",
+    "narrative": "銅價上升趨勢中，接近 13,000 關卡，股市韌性高檔。",
+    "scenario": "續航機率較高"
+  },
+  "actionable_flags": [
+    {
+      "flag": "APPROACHING_RESISTANCE",
+      "level": "active",
+      "condition": "copper within 5% of 13000",
+      "meaning": "接近重要阻力位，關注能否突破"
+    },
+    {
+      "flag": "HIGH_RESILIENCE",
+      "level": "active",
+      "condition": "equity_resilience_score >= 70",
+      "meaning": "股市韌性高，支持風險資產"
+    },
+    {
+      "flag": "NEGATIVE_BETA_REGIME",
+      "level": "active",
+      "condition": "beta_equity = -0.80 < 0",
+      "meaning": "銅與股市呈反向關係，脫離傳統風險資產模式，可能受避險/供給因素驅動"
+    },
+    {
+      "flag": "LOW_BETA_ANOMALY",
+      "level": "warning",
+      "condition": "beta_equity at 1st percentile (historical extreme)",
+      "meaning": "β 處於歷史極端低位，銅正展現獨立於股市的上漲邏輯"
+    }
+  ],
+  "metadata": {
+    "generated_at": "2026-01-22T15:24:09.693057",
+    "data_points": 133
+  }
+}

@@ -1,0 +1,236 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix paper: <https://kg.corca.ai/paper#> .
+@prefix shapes: <https://kg.corca.ai/shapes#> .
+
+# Prefix declarations for SPARQL constraints
+shapes: sh:declare [
+    sh:prefix "paper" ;
+    sh:namespace "https://kg.corca.ai/paper#"^^xsd:anyURI ;
+] .
+
+# Reusable Property Shapes
+
+shapes:RequiredLabel a sh:PropertyShape ;
+    sh:path rdfs:label ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string .
+
+shapes:OptionalComment a sh:PropertyShape ;
+    sh:path rdfs:comment ;
+    sh:datatype xsd:string .
+
+# Paper Shape
+
+shapes:PaperShape a sh:NodeShape ;
+    sh:targetClass paper:Paper ;
+    sh:severity sh:Violation ;
+    sh:property shapes:RequiredLabel ;
+    sh:property shapes:OptionalComment ;
+    sh:property [
+        sh:path paper:year ;
+        sh:datatype xsd:integer ;
+        sh:minInclusive 1400 ;
+        sh:maxInclusive 2100 ;
+    ] ;
+    sh:property [
+        sh:path paper:abstract ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path paper:primaryAuthor ;
+        sh:minCount 1 ;
+        sh:class paper:Author ;
+    ] ;
+    sh:property [
+        sh:path paper:author ;
+        sh:class paper:Author ;
+    ] ;
+    sh:property [
+        sh:path paper:about ;
+        sh:class paper:Concept ;
+    ] ;
+    sh:property [
+        sh:path paper:hasClaim ;
+        sh:class paper:Claim ;
+    ] ;
+    sh:property [
+        sh:path paper:publishedIn ;
+        sh:class paper:Venue ;
+    ] ;
+    sh:property [
+        sh:path paper:cites ;
+        sh:class paper:Paper ;
+    ] ;
+    sh:property [
+        sh:path paper:doi ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path paper:arxivId ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path paper:semanticScholarId ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:sparql [
+        sh:prefixes shapes: ;
+        sh:message "Duplicate DOI" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this paper:doi ?doi .
+                ?other paper:doi ?doi .
+                FILTER($this != ?other)
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        sh:prefixes shapes: ;
+        sh:message "Duplicate arXiv ID" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this paper:arxivId ?id .
+                ?other paper:arxivId ?id .
+                FILTER($this != ?other)
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        sh:prefixes shapes: ;
+        sh:message "Duplicate Semantic Scholar ID" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this paper:semanticScholarId ?id .
+                ?other paper:semanticScholarId ?id .
+                FILTER($this != ?other)
+            }
+        """ ;
+    ] .
+
+# Author Shape
+
+shapes:AuthorShape a sh:NodeShape ;
+    sh:targetClass paper:Author ;
+    sh:severity sh:Violation ;
+    sh:property shapes:RequiredLabel ;
+    sh:property shapes:OptionalComment ;
+    sh:property [
+        sh:path paper:orcidId ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path paper:semanticScholarAuthorId ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:sparql [
+        sh:prefixes shapes: ;
+        sh:message "Duplicate ORCID" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this paper:orcidId ?id .
+                ?other paper:orcidId ?id .
+                FILTER($this != ?other)
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        sh:prefixes shapes: ;
+        sh:message "Duplicate Semantic Scholar Author ID" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this paper:semanticScholarAuthorId ?id .
+                ?other paper:semanticScholarAuthorId ?id .
+                FILTER($this != ?other)
+            }
+        """ ;
+    ] .
+
+# Claim Shape
+
+shapes:ClaimShape a sh:NodeShape ;
+    sh:targetClass paper:Claim ;
+    sh:severity sh:Violation ;
+    sh:property shapes:RequiredLabel ;
+    sh:property shapes:OptionalComment ;
+    sh:property [
+        sh:path paper:extends ;
+        sh:class paper:Claim ;
+    ] ;
+    sh:property [
+        sh:path paper:refutes ;
+        sh:class paper:Claim ;
+    ] ;
+    sh:property [
+        sh:path paper:supports ;
+        sh:class paper:Claim ;
+    ] ;
+    sh:property [
+        sh:path paper:regarding ;
+        sh:class paper:Concept ;
+    ] .
+
+# Concept Shape
+
+shapes:ConceptShape a sh:NodeShape ;
+    sh:targetClass paper:Concept ;
+    sh:severity sh:Violation ;
+    sh:property shapes:RequiredLabel ;
+    sh:property shapes:OptionalComment ;
+    sh:property [
+        sh:path paper:broader ;
+        sh:class paper:Concept ;
+    ] ;
+    sh:property [
+        sh:path paper:partOf ;
+        sh:class paper:Concept ;
+    ] ;
+    sh:property [
+        sh:path paper:dependsOn ;
+        sh:class paper:Concept ;
+    ] ;
+    sh:property [
+        sh:path paper:wikidataId ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:sparql [
+        sh:prefixes shapes: ;
+        sh:message "Duplicate Wikidata ID" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this paper:wikidataId ?id .
+                ?other paper:wikidataId ?id .
+                FILTER($this != ?other)
+            }
+        """ ;
+    ] .
+
+# Venue Shape
+
+shapes:VenueShape a sh:NodeShape ;
+    sh:targetClass paper:Venue ;
+    sh:severity sh:Violation ;
+    sh:property shapes:RequiredLabel ;
+    sh:property shapes:OptionalComment ;
+    sh:property [
+        sh:path paper:venueType ;
+        sh:datatype xsd:string ;
+        sh:in ("conference" "journal" "preprint" "workshop") ;
+    ] ;
+    sh:property [
+        sh:path paper:semanticScholarVenueId ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:sparql [
+        sh:prefixes shapes: ;
+        sh:message "Duplicate Semantic Scholar Venue ID" ;
+        sh:select """
+            SELECT $this WHERE {
+                $this paper:semanticScholarVenueId ?id .
+                ?other paper:semanticScholarVenueId ?id .
+                FILTER($this != ?other)
+            }
+        """ ;
+    ] .

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex CLI Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0f1117; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; transition: transform 0.2s; }
+        .card:hover { border-color: #10b981; transform: translateY(-2px); }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
+        .stat-label { font-size: 0.875rem; color: #94a3b8; }
+        .highlight-green { color: #10b981; }
+        .highlight-blue { color: #3b82f6; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-green { background-color: #065f46; color: #d1fae5; }
+        .badge-blue { background-color: #1e40af; color: #dbeafe; }
+        .badge-purple { background-color: #6b21a8; color: #f3e8ff; }
+        .badge-orange { background-color: #c2410c; color: #ffedd5; }
+        .progress-bar { background-color: #374151; border-radius: 9999px; height: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 9999px; transition: width 0.3s ease; }
+        .section-title { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Header -->
+    <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Codex CLI Dashboard</h1>
+            <p class="text-sm text-gray-500 mb-2">OpenAI Codex Usage Analytics</p>
+            <div class="flex flex-wrap gap-2 mt-2">
+                <span class="badge badge-green">{{CURRENT_MODEL}}</span>
+                <span class="badge badge-blue">Effort: {{REASONING_EFFORT}}</span>
+                <span class="badge badge-purple">{{TRUSTED_PROJECTS}} Trusted Projects</span>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="text-sm text-gray-500">Dashboard Updated</div>
+            <div class="font-mono text-xl text-white">{{TIMESTAMP}}</div>
+            <div class="text-xs text-gray-500 mt-1">Data: {{FIRST_DATE}} to {{LAST_DATE}}</div>
+        </div>
+    </header>
+
+    <!-- Key Metrics Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+        <div class="card p-4">
+            <div class="stat-label">Sessions</div>
+            <div class="stat-value highlight-green">{{TOTAL_SESSIONS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Days Active</div>
+            <div class="stat-value text-blue-400">{{DAYS_WITH_ACTIVITY}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Commands</div>
+            <div class="stat-value text-purple-400">{{TOTAL_COMMANDS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Avg Prompt</div>
+            <div class="stat-value text-orange-400">{{AVG_PROMPT_LENGTH}}</div>
+            <div class="text-xs text-gray-500">chars</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Messages</div>
+            <div class="stat-value">{{TOTAL_MESSAGES}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Function Calls</div>
+            <div class="stat-value text-yellow-400">{{FUNCTION_CALLS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Reasoning</div>
+            <div class="stat-value text-pink-400">{{REASONING_COUNT}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">User/Asst</div>
+            <div class="stat-value text-cyan-400 text-sm">{{USER_MESSAGES}}/{{ASSISTANT_MESSAGES}}</div>
+        </div>
+    </div>
+
+    <!-- Token Stats Row -->
+    <h2 class="section-title">🔢 Token Usage</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">📥</span>
+                <h3 class="font-semibold text-white">Input Tokens</h3>
+            </div>
+            <div class="stat-value text-green-400">{{INPUT_TOKENS}}</div>
+        </div>
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">📤</span>
+                <h3 class="font-semibold text-white">Output Tokens</h3>
+            </div>
+            <div class="stat-value text-blue-400">{{OUTPUT_TOKENS}}</div>
+        </div>
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">💾</span>
+                <h3 class="font-semibold text-white">Cached Tokens</h3>
+            </div>
+            <div class="stat-value text-purple-400">{{CACHED_TOKENS}}</div>
+        </div>
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">🧠</span>
+                <h3 class="font-semibold text-white">Reasoning Tokens</h3>
+            </div>
+            <div class="stat-value text-orange-400">{{REASONING_TOKENS}}</div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">📈 Daily Activity</h3>
+            <canvas id="dailyActivityChart" height="200"></canvas>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">📊 Session Length Distribution</h3>
+            <canvas id="sessionLengthChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">🕐 Hourly Activity</h3>
+            <canvas id="hourlyActivityChart" height="200"></canvas>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">🔧 Tool Usage (Top 15)</h3>
+            <canvas id="toolUsageChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Charts Row 3 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">🤖 Model Usage</h3>
+            <canvas id="modelUsageChart" height="200"></canvas>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">📁 Project Activity (Top 15)</h3>
+            <canvas id="projectActivityChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-700">
+        <p>Generated by llms-dashboard skill • Data from ~/.codex/</p>
+    </footer>
+
+<script>
+    const dailyActivity = {{DAILY_ACTIVITY}};
+    const sessionLengths = {{SESSION_LENGTHS}};
+    const hourlyActivity = {{HOURLY_ACTIVITY}};
+    const toolUsage = {{TOOL_USAGE}};
+    const modelData = {{MODEL_DATA}};
+    const projectData = {{PROJECT_DATA}};
+
+    // Daily Activity Chart
+    if (dailyActivity.length > 0) {
+        new Chart(document.getElementById('dailyActivityChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: dailyActivity.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Messages',
+                        data: dailyActivity.map(d => d.messages),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Sessions',
+                        data: dailyActivity.map(d => d.sessions),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { type: 'linear', position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, title: { display: true, text: 'Messages', color: '#94a3b8' } },
+                    y1: { type: 'linear', position: 'right', ticks: { color: '#94a3b8' }, grid: { display: false }, title: { display: true, text: 'Sessions', color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    // Session Length Distribution
+    if (sessionLengths.length > 0) {
+        new Chart(document.getElementById('sessionLengthChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: sessionLengths.map(s => s.range + ' msgs'),
+                datasets: [{
+                    label: 'Sessions',
+                    data: sessionLengths.map(s => s.count),
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(59, 130, 246, 0.7)',
+                        'rgba(168, 85, 247, 0.7)',
+                        'rgba(251, 146, 60, 0.7)',
+                        'rgba(248, 113, 113, 0.7)',
+                        'rgba(251, 191, 36, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // Hourly Activity
+    if (hourlyActivity.length > 0) {
+        new Chart(document.getElementById('hourlyActivityChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: hourlyActivity.map(h => h.hour.toString().padStart(2, '0') + ':00'),
+                datasets: [{
+                    label: 'Commands',
+                    data: hourlyActivity.map(h => h.count),
+                    backgroundColor: hourlyActivity.map(h => {
+                        const maxVal = Math.max(...hourlyActivity.map(x => x.count));
+                        const intensity = maxVal > 0 ? h.count / maxVal : 0;
+                        return `rgba(16, 185, 129, ${0.3 + intensity * 0.7})`;
+                    }),
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8', maxRotation: 45 }, grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // Tool Usage
+    if (toolUsage.length > 0) {
+        new Chart(document.getElementById('toolUsageChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: toolUsage.map(t => t.name),
+                datasets: [{
+                    label: 'Calls',
+                    data: toolUsage.map(t => t.count),
+                    backgroundColor: 'rgba(168, 85, 247, 0.7)',
+                    borderColor: '#a855f7',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Model Usage
+    if (modelData.length > 0) {
+        new Chart(document.getElementById('modelUsageChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: modelData.map(m => m.name),
+                datasets: [{
+                    data: modelData.map(m => m.sessions),
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(168, 85, 247, 0.8)',
+                        'rgba(251, 146, 60, 0.8)',
+                        'rgba(248, 113, 113, 0.8)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#1e293b'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    // Project Activity
+    if (projectData.length > 0) {
+        new Chart(document.getElementById('projectActivityChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: projectData.map(p => p.name),
+                datasets: [{
+                    label: 'Sessions',
+                    data: projectData.map(p => p.sessions),
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

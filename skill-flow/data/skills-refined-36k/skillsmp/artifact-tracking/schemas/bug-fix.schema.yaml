@@ -1,0 +1,240 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Bug Fix Tracking Artifact Schema"
+type: object
+description: "JSON Schema for bug fix tracking artifacts (YAML frontmatter validation)"
+
+required:
+  - type
+  - month
+  - year
+  - total_fixes
+
+properties:
+  type:
+    type: string
+    enum: ["bug-fixes"]
+    description: "Artifact type identifier"
+
+  month:
+    type: string
+    minLength: 1
+    maxLength: 2
+    pattern: "^(0[1-9]|1[0-2]|[1-9])$"
+    description: "Month number (1-12) as string"
+
+  year:
+    type: string
+    minLength: 4
+    maxLength: 4
+    pattern: "^[0-9]{4}$"
+    description: "Year in YYYY format (e.g., '2025')"
+
+  total_fixes:
+    type: integer
+    minimum: 0
+    maximum: 1000
+    description: "Total number of fixes in period"
+
+  severity_breakdown:
+    type: object
+    properties:
+      critical:
+        type: integer
+        minimum: 0
+        default: 0
+      high:
+        type: integer
+        minimum: 0
+        default: 0
+      medium:
+        type: integer
+        minimum: 0
+        default: 0
+      low:
+        type: integer
+        minimum: 0
+        default: 0
+    default: {}
+    description: "Count of fixes by severity level"
+
+  component_breakdown:
+    type: object
+    additionalProperties:
+      type: integer
+      minimum: 0
+    default: {}
+    description: "Count of fixes by component (e.g., {'editor': 4, 'blocks': 3})"
+
+  fixes_by_component:
+    type: object
+    additionalProperties:
+      type: array
+      maxItems: 500
+      items:
+        type: string
+        pattern: "^fix-[0-9]+$"
+    default: {}
+    description: "Fix IDs organized by component for efficient querying"
+
+  fixes_by_date:
+    type: object
+    additionalProperties:
+      type: array
+      maxItems: 500
+      items:
+        type: string
+        pattern: "^fix-[0-9]+$"
+    default: {}
+    description: "Fix IDs organized by date (YYYY-MM-DD) for range queries"
+
+  fixes_by_severity:
+    type: object
+    properties:
+      critical:
+        type: array
+        maxItems: 500
+        items:
+          type: string
+          pattern: "^fix-[0-9]+$"
+        default: []
+      high:
+        type: array
+        maxItems: 500
+        items:
+          type: string
+          pattern: "^fix-[0-9]+$"
+        default: []
+      medium:
+        type: array
+        maxItems: 500
+        items:
+          type: string
+          pattern: "^fix-[0-9]+$"
+        default: []
+      low:
+        type: array
+        maxItems: 500
+        items:
+          type: string
+          pattern: "^fix-[0-9]+$"
+        default: []
+    default: {}
+    description: "Fix IDs organized by severity level"
+
+  fixes:
+    type: object
+    additionalProperties:
+      type: object
+      required: ["id", "date", "severity", "component", "type", "status", "issue"]
+      properties:
+        id:
+          type: string
+          minLength: 2
+          maxLength: 16
+          pattern: "^fix-[0-9]+$"
+          description: "Fix identifier (e.g., 'fix-1')"
+
+        date:
+          type: string
+          format: "date-time"
+          description: "Date and time of fix in ISO 8601 format"
+
+        severity:
+          type: string
+          enum: ["critical", "high", "medium", "low"]
+          description: "Fix severity level"
+
+        component:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+          description: "Component affected (e.g., 'editor', 'blocks', 'api')"
+
+        type:
+          type: string
+          enum: ["bug", "performance", "security", "policy", "refactor", "other"]
+          description: "Type of fix"
+
+        status:
+          type: string
+          enum: ["completed", "in-progress", "reverted"]
+          default: "completed"
+          description: "Current status of fix"
+
+        issue:
+          type: string
+          minLength: 10
+          maxLength: 1024
+          description: "Description of the issue"
+
+        fix:
+          type: string
+          minLength: 10
+          maxLength: 2048
+          description: "Description of the fix"
+
+        root_causes:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 10
+            maxLength: 512
+          default: []
+          description: "Root causes of the issue"
+
+        files_modified:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            minLength: 5
+            maxLength: 256
+            pattern: "^[a-zA-Z0-9/_.-]+\\.([a-z]{2,})$"
+          default: []
+          description: "Files changed by this fix"
+
+        commit:
+          oneOf:
+            - type: "null"
+            - type: string
+              minLength: 7
+              maxLength: 40
+              pattern: "^[0-9a-f]{7,40}$"
+          default: null
+          description: "Git commit hash if available"
+
+        impact:
+          type: string
+          maxLength: 512
+          description: "Impact summary of the fix"
+
+        related_fixes:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            pattern: "^fix-[0-9]+$"
+          default: []
+          description: "Related fix IDs"
+
+        notes:
+          type: string
+          maxLength: 512
+          description: "Additional notes about the fix"
+
+    default: {}
+    description: "Detailed fix information indexed by fix ID"
+
+  updated:
+    type: string
+    format: "date-time"
+    description: "Last update timestamp in ISO 8601 format"
+
+  notes:
+    type: string
+    maxLength: 2048
+    description: "General notes about fixes in this period"
+
+additionalProperties: false

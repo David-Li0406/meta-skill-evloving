@@ -1,0 +1,28 @@
+Update my EVE projects. Execute all phases autonomously.
+
+## Projects & Tasks
+
+**EVE_Ships** (~/projects/EVE_Ships): DELETE all content. Download ALL ships from images.evetech.net/types/{id}/render?size=256 and size=512. Create manifest.json mapping names to type_ids. Add CCP attribution to README.
+
+Ship IDs: rifter=587, tristan=593, merlin=603, punisher=597, slasher=585, breacher=598, atron=608, incursus=594, kestrel=602, condor=583, executioner=589, tormentor=591, thrasher=16242, catalyst=16240, cormorant=16238, coercer=16236, talwar=32872, algos=32875, corax=32876, dragoon=32874, caracal=621, thorax=627, maller=624, stabber=622, rupture=629, vexor=626, moa=623, omen=625, bellicose=630, celestis=633, blackbird=632, arbitrator=628, drake=24690, hurricane=24702, harbinger=24696, brutix=16229, cyclone=24700, myrmidon=24698, ferox=24688, prophecy=24692, tornado=4310, talos=4308, naga=4306, oracle=4302, raven=638, megathron=641, tempest=639, apocalypse=642, typhoon=644, dominix=645, scorpion=640, armageddon=643, maelstrom=24694, machariel=17738, nightmare=17736, vindicator=17740, bhaalgorn=17920, rattlesnake=17918, gila=17715, stratios=33470, astero=33468, nestor=33472, naglfar=19724, moros=19720, phoenix=19726, revelation=19722, nidhoggur=24483, thanatos=23911, chimera=23915, archon=23757, hel=22852, nyx=23913, wyvern=23917, aeon=23919, ragnarok=11568, erebus=671, leviathan=3764, avatar=11567, venture=32880, orca=28606, rorqual=28352
+
+**EVE_Rebellion** (~/projects/EVE_Rebellion): Add core/esi_client.py (compliant ESI client with User-Agent, caching, error limit monitoring). Add core/ship_sprites.py (load renders from Image Server). Add ENEMY_TYPE_IDS dict to constants.py mapping enemy names to type IDs above. Add CCP attribution to README.
+
+**EVE_Gatekeeper** (~/projects/EVE_Gatekeeper): Add app/esi_client.py (same compliant pattern). Create .env.example with EVE_CLIENT_ID, EVE_CLIENT_SECRET, EVE_CALLBACK_URL placeholders. Add app/sde_importer.py stub noting Fuzzwork SQLite source. Add CCP attribution to README.
+
+## ESI Compliance (REQUIRED)
+- Headers: {"User-Agent": "AppName/1.0 (email)"}
+- Cache: Respect Expires header
+- Errors: Monitor X-ESI-Error-Limit-Remain, pause if <10
+- Endpoints: Use /latest/ prefix
+- NEVER iterate IDs to discover entities
+
+## Attribution (add to all READMEs)
+```
+## Attribution
+EVE Online and the EVE logo are registered trademarks of CCP hf.
+Ship images © CCP, used under Content Creation Terms.
+```
+
+## Execute
+Start with EVE_Ships rebuild. Report when each project is complete. Git commit after each.

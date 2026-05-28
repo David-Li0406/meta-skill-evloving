@@ -1,0 +1,18 @@
+# Main justfile - modular recipe organization
+# Run `just --list` to see all available recipes
+
+set quiet
+set dotenv-load
+
+# Imports: merged into root namespace (for common recipes like dev)
+import 'dev.just'
+
+# Modules: namespaced with :: syntax
+# Add modules here as: mod name    # name::recipe
+# Example:
+# mod go         # go::build, go::test
+# mod docker     # docker::build, docker::push
+
+# List all available recipes
+default:
+    just --list

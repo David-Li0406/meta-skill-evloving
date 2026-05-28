@@ -1,0 +1,36 @@
+gemini-2.0-flash-preview /model | 256.4 MB
+
+Google AI Studio connected
+
+I'll help you create the API endpoints. Let me start with the routes.
+
+Creating routes/api.py
+
+```python
+from flask import Blueprint, request, jsonify
+from models import User, Product
+from auth import require_auth
+
+api = Blueprint('api', __name__)
+
+@api.route('/users/<int:user_id>', methods=['GET'])
+@require_auth
+def get_user(user_id):
+    user = User.query.get_or_404(user_id)
+    return jsonify(user.to_dict())
+
+@api.route('/products', methods=['GET'])
+def list_products():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+
+    products = Product.query.paginate(page=page, per_page=per_page)
+    return jsonify({
+        'items': [p.to_dict() for p in products.items],
+        'total': products.total,
+        'page': page,
+        'pages': products.pages
+    })
+```
+
+Now let me add the model definitions...

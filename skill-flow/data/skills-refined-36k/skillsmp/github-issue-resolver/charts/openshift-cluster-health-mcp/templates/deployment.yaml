@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openshift-cluster-health-mcp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openshift-cluster-health-mcp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "openshift-cluster-health-mcp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "openshift-cluster-health-mcp.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "openshift-cluster-health-mcp.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: mcp-server
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        env:
+        - name: MCP_TRANSPORT
+          value: {{ .Values.transport | quote }}
+        - name: MCP_HTTP_PORT
+          value: {{ .Values.httpPort | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.logging.level | quote }}
+        - name: LOG_FORMAT
+          value: {{ .Values.logging.format | quote }}
+        {{- if .Values.integrations.coordinationEngine.enabled }}
+        - name: COORDINATION_ENGINE_URL
+          value: {{ .Values.integrations.coordinationEngine.url | quote }}
+        - name: ENABLE_COORDINATION_ENGINE
+          value: "true"
+        {{- end }}
+        {{- if .Values.integrations.kserve.enabled }}
+        - name: KSERVE_NAMESPACE
+          value: {{ .Values.integrations.kserve.namespace | quote }}
+        - name: KSERVE_PREDICTOR_PORT
+          value: {{ .Values.integrations.kserve.predictorPort | default 8080 | quote }}
+        - name: ENABLE_KSERVE
+          value: "true"
+        {{- end }}
+        {{- if .Values.integrations.prometheus.enabled }}
+        - name: PROMETHEUS_URL
+          value: {{ .Values.integrations.prometheus.url | quote }}
+        - name: ENABLE_PROMETHEUS
+          value: "true"
+        {{- end }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.httpPort }}
+          protocol: TCP
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 10 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 10 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /cache
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,203 @@
+/* ============================================
+ * Pixel Art Game - Base Styles
+ * ============================================ */
+
+/* Reset & Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #0a0a0f;
+  color: #e8e8e8;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ============================================
+ * Pixel Art Rendering
+ * ============================================ */
+
+.sprite,
+.pixel-art,
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ============================================
+ * Color Palette (12 colors)
+ * ============================================ */
+
+:root {
+  /* Background/UI */
+  --bg-darker: #0a0a0f;
+  --bg-dark: #1a1a2e;
+  --bg-medium: #2d2d44;
+  --text-muted: #a0a0a0;
+  --text-primary: #e8e8e8;
+
+  /* Accent Colors */
+  --accent-cyan: #00fff5;
+  --accent-green: #39ff14;
+  --accent-yellow: #ffd93d;
+  --accent-orange: #ff6b35;
+  --accent-pink: #ff1493;
+  --accent-purple: #9d4edd;
+  --accent-red: #ff4757;
+}
+
+/* ============================================
+ * Button Styles
+ * ============================================ */
+
+button {
+  cursor: pointer;
+  padding: 8px 16px;
+  border: 1px solid var(--bg-medium);
+  border-radius: 4px;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  background: var(--bg-medium);
+  border-color: var(--accent-cyan);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent-cyan);
+  color: var(--bg-darker);
+  border-color: var(--accent-cyan);
+}
+
+button.primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+/* ============================================
+ * Glow Animations by Rarity
+ * ============================================ */
+
+.glow-common {
+  /* No glow */
+}
+
+.glow-uncommon {
+  animation: glow-uncommon 2s ease-in-out infinite;
+}
+
+@keyframes glow-uncommon {
+  0%, 100% { filter: drop-shadow(0 0 2px var(--accent-green)); }
+  50% { filter: drop-shadow(0 0 4px var(--accent-green)); }
+}
+
+.glow-rare {
+  animation: glow-rare 2s ease-in-out infinite;
+}
+
+@keyframes glow-rare {
+  0%, 100% { filter: drop-shadow(0 0 3px var(--accent-cyan)); }
+  50% { filter: drop-shadow(0 0 6px var(--accent-cyan)); }
+}
+
+.glow-epic {
+  animation: glow-epic 2s ease-in-out infinite;
+}
+
+@keyframes glow-epic {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--accent-purple)); }
+  50% { filter: drop-shadow(0 0 8px var(--accent-purple)); }
+}
+
+.glow-legendary {
+  animation: glow-legendary 2s ease-in-out infinite;
+}
+
+@keyframes glow-legendary {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px var(--accent-yellow))
+            drop-shadow(0 0 10px var(--accent-yellow));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px var(--accent-yellow))
+            drop-shadow(0 0 15px var(--accent-yellow));
+  }
+}
+
+/* ============================================
+ * Panel / Card Styles
+ * ============================================ */
+
+.panel {
+  background: var(--bg-dark);
+  border: 1px solid var(--bg-medium);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panel-highlighted {
+  border-color: var(--accent-cyan);
+}
+
+/* ============================================
+ * Progress Bar
+ * ============================================ */
+
+.progress-bar {
+  background: var(--bg-medium);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  background: var(--accent-cyan);
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+/* ============================================
+ * Utility Classes
+ * ============================================ */
+
+.text-muted { color: var(--text-muted); }
+.text-cyan { color: var(--accent-cyan); }
+.text-green { color: var(--accent-green); }
+.text-yellow { color: var(--accent-yellow); }
+.text-red { color: var(--accent-red); }
+
+.bg-dark { background: var(--bg-dark); }
+.bg-darker { background: var(--bg-darker); }
+
+/* ============================================
+ * Scrollbar (Optional)
+ * ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

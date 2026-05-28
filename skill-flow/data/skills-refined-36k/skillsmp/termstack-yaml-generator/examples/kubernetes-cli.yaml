@@ -1,0 +1,868 @@
+version: v1
+
+app:
+  name: "Kubernetes TUI"
+  description: "Navigate Kubernetes resources with k9s-style interface"
+  theme: "default"
+
+# Start at namespaces view
+start: namespaces
+
+pages:
+  # ============================================================================
+  # NAMESPACES - List all namespaces
+  # ============================================================================
+  namespaces:
+    title: "Namespaces"
+    description: "List all Kubernetes namespaces"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args: ["get", "namespaces", "-o", "json"]
+      items: "$.items[*]"
+      timeout: "30s"
+      refresh_interval: "60s"
+    view:
+      type: table
+      columns:
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 40
+          style:
+            - default: true
+              color: cyan
+              bold: true
+        - path: "$.status.phase"
+          display: "Status"
+          width: 15
+          style:
+            - condition: "{{ value == 'Active' }}"
+              color: green
+              bold: true
+            - condition: "{{ value == 'Terminating' }}"
+              color: yellow
+            - default: true
+              color: red
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          width: 20
+          transform: "{{ value | timeago }}"
+          style:
+            - default: true
+              color: gray
+      sort:
+        column: "$.metadata.name"
+        order: asc
+      row_style:
+        - condition: "{{ status.phase == 'Terminating' }}"
+          dim: true
+    next:
+      page: pods
+      context:
+        namespace: "$.metadata.name"
+    actions:
+      - key: "p"
+        name: "Pods"
+        description: "View pods in namespace"
+        page: pods
+        context:
+          namespace: "$.metadata.name"
+      - key: "d"
+        name: "Deployments"
+        description: "View deployments in namespace"
+        page: deployments
+        context:
+          namespace: "$.metadata.name"
+      - key: "s"
+        name: "Services"
+        description: "View services in namespace"
+        page: services
+        context:
+          namespace: "$.metadata.name"
+      - key: "r"
+        name: "RBAC"
+        description: "View RBAC resources"
+        page: rbac_overview
+        context:
+          namespace: "$.metadata.name"
+
+  # ============================================================================
+  # PODS - List pods in selected namespace
+  # ============================================================================
+  pods:
+    title: "Pods - {{ namespaces.metadata.name }}"
+    description: "List all pods in namespace"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        ["get", "pods", "-n", "{{ namespaces.metadata.name }}", "-o", "json"]
+      items: "$.items[*]"
+      timeout: "30s"
+      refresh_interval: "5s"
+    view:
+      type: table
+      columns:
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 45
+          style:
+            - default: true
+              color: cyan
+        - path: "$.status.phase"
+          display: "Status"
+          width: 12
+          style:
+            - condition: "{{ value == 'Running' }}"
+              color: green
+              bold: true
+            - condition: "{{ value == 'Pending' }}"
+              color: yellow
+            - condition: "{{ value == 'Succeeded' }}"
+              color: blue
+            - condition: "{{ value == 'Failed' }}"
+              color: red
+              bold: true
+            - condition: "{{ value == 'Unknown' }}"
+              color: magenta
+            - default: true
+              color: white
+        - path: "$.status.conditions[?(@.type=='Ready')].status"
+          display: "Ready"
+          width: 8
+          style:
+            - condition: "{{ value == 'True' }}"
+              color: green
+            - condition: "{{ value == 'False' }}"
+              color: red
+            - default: true
+              color: yellow
+        - path: "$.spec.containers[*].name"
+          display: "Containers"
+          transform: "{{ value | length }}"
+          width: 12
+          style:
+            - default: true
+              color: blue
+        - path: "$.status.containerStatuses[?(@.ready==true)]"
+          display: "Ready/Total"
+          transform: "{{ value | length }}/{{ row.status.containerStatuses | length }}"
+          width: 12
+          style:
+            - condition: "{{ value | length == row.status.containerStatuses | length }}"
+              color: green
+            - default: true
+              color: yellow
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          transform: "{{ value | timeago }}"
+          width: 15
+          style:
+            - default: true
+              color: gray
+      row_style:
+        - condition: "{{ status.phase == 'Failed' }}"
+          color: red
+          dim: true
+        - condition: "{{ status.phase == 'Pending' }}"
+          dim: true
+        - condition: "{{ status.phase == 'Running' }}"
+          default: true
+    next:
+      page: pod_detail
+      context:
+        pod_name: "$.metadata.name"
+        namespace: "{{ namespaces.metadata.name }}"
+    actions:
+      - key: "l"
+        name: "Logs"
+        description: "View pod logs"
+        page: pod_logs
+        context:
+          pod_name: "$.metadata.name"
+          namespace: "{{ namespaces.metadata.name }}"
+      - key: "d"
+        name: "Delete"
+        description: "Delete pod"
+        confirm: "Delete pod {{ metadata.name }}?"
+        command: "kubectl"
+        args:
+          [
+            "delete",
+            "pod",
+            "{{ metadata.name }}",
+            "-n",
+            "{{ namespaces.metadata.name }}",
+          ]
+        notification:
+          on_success: "Pod '{{ metadata.name }}' deleted successfully"
+          on_failure: "Failed to delete pod '{{ metadata.name }}'"
+        refresh: true
+      - key: "e"
+        name: "Describe"
+        description: "Describe pod"
+        page: pod_describe
+
+  # ============================================================================
+  # POD DETAIL - Show detailed information about a pod
+  # ============================================================================
+  pod_detail:
+    title: "Pod - {{ pods.metadata.name }}"
+    description: "Detailed pod information"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "pod",
+          "{{ pods.metadata.name }}",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-o",
+          "yaml",
+        ]
+      items: "@this"
+      timeout: "30s"
+    view:
+      type: text
+      syntax: yaml
+      line_numbers: true
+    actions:
+      - key: "l"
+        name: "Logs"
+        description: "View logs"
+        page: pod_logs
+      - key: "y"
+        name: "YAML"
+        description: "View raw YAML"
+        builtin: yaml_view
+
+  # ============================================================================
+  # POD LOGS - Stream pod logs
+  # ============================================================================
+  pod_logs:
+    title: "Logs - {{ pods.metadata.name }}"
+    description: "Pod logs (streaming)"
+    data:
+      type: stream
+      command: "kubectl"
+      args:
+        [
+          "logs",
+          "-f",
+          "{{ pods.metadata.name }}",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "--tail=100",
+        ]
+      buffer_size: 100
+      buffer_time: "15m"
+      follow: true
+    view:
+      type: logs
+      follow: true
+      wrap: true
+      show_timestamps: false
+
+  # ============================================================================
+  # POD DESCRIBE - kubectl describe output
+  # ============================================================================
+  pod_describe:
+    title: "Describe - {{ pods.metadata.name }}"
+    description: "kubectl describe output"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "describe",
+          "pod",
+          "{{ pods.metadata.name }}",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+        ]
+      items: "@this"
+      timeout: "30s"
+    view:
+      type: text
+      line_numbers: true
+
+  # ============================================================================
+  # DEPLOYMENTS - List deployments in namespace
+  # ============================================================================
+  deployments:
+    title: "Deployments - {{ namespaces.metadata.name }}"
+    description: "List all deployments"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "deployments",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-o",
+          "json",
+        ]
+      items: "$.items[*]"
+      timeout: "30s"
+      refresh_interval: "10s"
+    view:
+      type: table
+      columns:
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 35
+          style:
+            - default: true
+              color: cyan
+              bold: true
+        - path: "$.spec.replicas"
+          display: "Desired"
+          width: 10
+          style:
+            - default: true
+              color: blue
+        - path: "$.status.availableReplicas"
+          display: "Available"
+          width: 12
+          style:
+            - condition: "{{ value == row.spec.replicas }}"
+              color: green
+              bold: true
+            - condition: "{{ value > 0 }}"
+              color: yellow
+            - default: true
+              color: red
+        - path: "$.status.readyReplicas"
+          display: "Ready"
+          width: 10
+          style:
+            - condition: "{{ value == row.spec.replicas }}"
+              color: green
+            - default: true
+              color: yellow
+        - path: "$.status.updatedReplicas"
+          display: "Updated"
+          width: 10
+          style:
+            - condition: "{{ value == row.spec.replicas }}"
+              color: green
+            - default: true
+              color: cyan
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          transform: "{{ value | timeago }}"
+          width: 15
+          style:
+            - default: true
+              color: gray
+      row_style:
+        - condition: "{{ status.availableReplicas != spec.replicas }}"
+          color: yellow
+    next:
+      page: deployment_detail
+      context:
+        deployment_name: "$.metadata.name"
+    actions:
+      - key: "s"
+        name: "Scale"
+        description: "Scale deployment"
+        command: "kubectl"
+        args:
+          [
+            "scale",
+            "deployment",
+            "{{ metadata.name }}",
+            "-n",
+            "{{ namespaces.metadata.name }}",
+            "--replicas=3",
+          ]
+        confirm: "Scale {{ metadata.name }} to 3 replicas?"
+        success_message: "Scaled {{ metadata.name }}"
+        refresh: true
+      - key: "r"
+        name: "Restart"
+        description: "Restart deployment"
+        command: "kubectl"
+        args:
+          [
+            "rollout",
+            "restart",
+            "deployment",
+            "{{ metadata.name }}",
+            "-n",
+            "{{ namespaces.metadata.name }}",
+          ]
+        confirm: "Restart {{ metadata.name }}?"
+        success_message: "Restarted {{ metadata.name }}"
+        refresh: true
+      - key: "d"
+        name: "Delete"
+        description: "Delete deployment"
+        confirm: "Delete deployment {{ metadata.name }}?"
+        command: "kubectl"
+        args:
+          [
+            "delete",
+            "deployment",
+            "{{ metadata.name }}",
+            "-n",
+            "{{ namespaces.metadata.name }}",
+          ]
+        success_message: "Deleted {{ metadata.name }}"
+        error_message: "Failed to delete"
+        refresh: true
+
+  # ============================================================================
+  # DEPLOYMENT DETAIL - Show deployment details
+  # ============================================================================
+  deployment_detail:
+    title: "Deployment - {{ deployments.metadata.name }}"
+    description: "Deployment details"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "deployment",
+          "{{ deployments.metadata.name }}",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-o",
+          "json",
+        ]
+      items: "@this"
+      timeout: "30s"
+    view:
+      type: text
+      syntax: json
+      line_numbers: true
+    actions:
+      - key: "p"
+        name: "Pods"
+        description: "View pods for this deployment"
+        page: deployment_pods
+
+  # ============================================================================
+  # DEPLOYMENT PODS - Show pods for a deployment
+  # ============================================================================
+  deployment_pods:
+    title: "Pods - {{ deployments.metadata.name }}"
+    description: "Pods managed by deployment"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "pods",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-l",
+          "app={{ deployments.metadata.labels.app }}",
+          "-o",
+          "json",
+        ]
+      items: "$.items[*]"
+      timeout: "30s"
+    view:
+      type: table
+      columns:
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 50
+          style:
+            - default: true
+              color: cyan
+        - path: "$.status.phase"
+          display: "Status"
+          width: 12
+          style:
+            - condition: "{{ value == 'Running' }}"
+              color: green
+              bold: true
+            - condition: "{{ value == 'Pending' }}"
+              color: yellow
+            - default: true
+              color: red
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          transform: "{{ value | timeago }}"
+          width: 15
+          style:
+            - default: true
+              color: gray
+    next:
+      page: pod_detail
+      context:
+        pod_name: "$.metadata.name"
+
+  # ============================================================================
+  # SERVICES - List services in namespace
+  # ============================================================================
+  services:
+    title: "Services - {{ namespaces.metadata.name }}"
+    description: "List all services"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "services",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-o",
+          "json",
+        ]
+      items: "$.items[*]"
+      timeout: "30s"
+    view:
+      type: table
+      columns:
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 30
+          style:
+            - default: true
+              color: cyan
+              bold: true
+        - path: "$.spec.type"
+          display: "Type"
+          width: 15
+          style:
+            - condition: "{{ value == 'LoadBalancer' }}"
+              color: magenta
+              bold: true
+            - condition: "{{ value == 'NodePort' }}"
+              color: yellow
+            - condition: "{{ value == 'ClusterIP' }}"
+              color: blue
+            - default: true
+              color: white
+        - path: "$.spec.clusterIP"
+          display: "Cluster IP"
+          width: 18
+          style:
+            - default: true
+              color: green
+        - path: "$.spec.ports[*].port"
+          display: "Ports"
+          width: 20
+          style:
+            - default: true
+              color: blue
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          transform: "{{ value | timeago }}"
+          width: 15
+          style:
+            - default: true
+              color: gray
+    next:
+      page: service_detail
+      context:
+        service_name: "$.metadata.name"
+    actions:
+      - key: "d"
+        name: "Delete"
+        description: "Delete service"
+        confirm: "Delete service {{ metadata.name }}?"
+        command: "kubectl"
+        args:
+          [
+            "delete",
+            "service",
+            "{{ metadata.name }}",
+            "-n",
+            "{{ namespaces.metadata.name }}",
+          ]
+        success_message: "Deleted service {{ metadata.name }}"
+        refresh: true
+
+  # ============================================================================
+  # SERVICE DETAIL - Show service details
+  # ============================================================================
+  service_detail:
+    title: "Service - {{ services.metadata.name }}"
+    description: "Service details"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "service",
+          "{{ services.metadata.name }}",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-o",
+          "yaml",
+        ]
+      items: "@this"
+      timeout: "30s"
+    view:
+      type: text
+      syntax: yaml
+      line_numbers: true
+
+  # ============================================================================
+  # RBAC OVERVIEW - Show RBAC resources
+  # ============================================================================
+  rbac_overview:
+    title: "RBAC - {{ namespaces.metadata.name }}"
+    description: "Role-Based Access Control resources"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "roles,rolebindings",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-o",
+          "json",
+        ]
+      items: "$.items[*]"
+      timeout: "30s"
+    view:
+      type: table
+      columns:
+        - path: "$.kind"
+          display: "Kind"
+          width: 15
+          style:
+            - condition: "{{ value == 'Role' }}"
+              color: yellow
+              bold: true
+            - condition: "{{ value == 'RoleBinding' }}"
+              color: magenta
+              bold: true
+            - default: true
+              color: cyan
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 40
+          style:
+            - default: true
+              color: cyan
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          transform: "{{ value | timeago }}"
+          width: 20
+          style:
+            - default: true
+              color: gray
+    next:
+      page: rbac_detail
+      context:
+        rbac_kind: "$.kind"
+        rbac_name: "$.metadata.name"
+    actions:
+      - key: "r"
+        name: "Roles"
+        description: "View roles only"
+        page: roles
+        context:
+          namespace: "{{ namespaces.metadata.name }}"
+      - key: "b"
+        name: "RoleBindings"
+        description: "View role bindings only"
+        page: rolebindings
+        context:
+          namespace: "{{ namespaces.metadata.name }}"
+      - key: "c"
+        name: "ClusterRoles"
+        description: "View cluster-wide roles"
+        page: clusterroles
+
+  # ============================================================================
+  # ROLES - List roles in namespace
+  # ============================================================================
+  roles:
+    title: "Roles - {{ namespaces.metadata.name }}"
+    description: "Namespace-scoped roles"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        ["get", "roles", "-n", "{{ namespaces.metadata.name }}", "-o", "json"]
+      items: "$.items[*]"
+      timeout: "30s"
+    view:
+      type: table
+      columns:
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 50
+          style:
+            - default: true
+              color: yellow
+              bold: true
+        - path: "$.rules[*]"
+          display: "Rules"
+          transform: "{{ value | length }}"
+          width: 10
+          style:
+            - default: true
+              color: blue
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          transform: "{{ value | timeago }}"
+          width: 20
+          style:
+            - default: true
+              color: gray
+    next:
+      page: rbac_detail
+      context:
+        rbac_kind: "Role"
+        rbac_name: "$.metadata.name"
+
+  # ============================================================================
+  # ROLEBINDINGS - List role bindings in namespace
+  # ============================================================================
+  rolebindings:
+    title: "RoleBindings - {{ namespaces.metadata.name }}"
+    description: "Namespace-scoped role bindings"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "rolebindings",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-o",
+          "json",
+        ]
+      items: "$.items[*]"
+      timeout: "30s"
+    view:
+      type: table
+      columns:
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 40
+          style:
+            - default: true
+              color: magenta
+              bold: true
+        - path: "$.roleRef.name"
+          display: "Role"
+          width: 30
+          style:
+            - default: true
+              color: yellow
+        - path: "$.subjects[*]"
+          display: "Subjects"
+          transform: "{{ value | length }}"
+          width: 10
+          style:
+            - default: true
+              color: blue
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          transform: "{{ value | timeago }}"
+          width: 20
+          style:
+            - default: true
+              color: gray
+    next:
+      page: rbac_detail
+      context:
+        rbac_kind: "RoleBinding"
+        rbac_name: "$.metadata.name"
+
+  # ============================================================================
+  # CLUSTERROLES - List cluster roles
+  # ============================================================================
+  clusterroles:
+    title: "ClusterRoles"
+    description: "Cluster-wide roles"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args: ["get", "clusterroles", "-o", "json"]
+      items: "$.items[*]"
+      timeout: "30s"
+    view:
+      type: table
+      columns:
+        - path: "$.metadata.name"
+          display: "Name"
+          width: 50
+          style:
+            - condition: "{{ value | startswith('system:') }}"
+              color: gray
+            - default: true
+              color: yellow
+              bold: true
+        - path: "$.rules[*]"
+          display: "Rules"
+          transform: "{{ value | length }}"
+          width: 10
+          style:
+            - default: true
+              color: blue
+        - path: "$.metadata.creationTimestamp"
+          display: "Age"
+          transform: "{{ value | timeago }}"
+          width: 20
+          style:
+            - default: true
+              color: gray
+    next:
+      page: clusterrole_detail
+      context:
+        clusterrole_name: "$.metadata.name"
+
+  # ============================================================================
+  # RBAC DETAIL - Show detailed RBAC resource information
+  # ============================================================================
+  rbac_detail:
+    title: "{{ rbac_overview.kind }} - {{ rbac_overview.metadata.name }}"
+    description: "RBAC resource details"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        [
+          "get",
+          "{{ rbac_overview.kind }}",
+          "{{ rbac_overview.metadata.name }}",
+          "-n",
+          "{{ namespaces.metadata.name }}",
+          "-o",
+          "yaml",
+        ]
+      items: "@this"
+      timeout: "30s"
+    view:
+      type: text
+      syntax: yaml
+      line_numbers: true
+
+  # ============================================================================
+  # CLUSTERROLE DETAIL - Show cluster role details
+  # ============================================================================
+  clusterrole_detail:
+    title: "ClusterRole - {{ clusterroles.metadata.name }}"
+    description: "Cluster role details"
+    data:
+      adapter: cli
+      command: "kubectl"
+      args:
+        ["get", "clusterrole", "{{ clusterroles.metadata.name }}", "-o", "yaml"]
+      items: "@this"
+      timeout: "30s"
+    view:
+      type: text
+      syntax: yaml
+      line_numbers: true

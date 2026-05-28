@@ -1,0 +1,237 @@
+{
+  "name": "local-repo-check",
+  "description": "Evaluations for the local-repo-check skill",
+  "testCases": [
+    {
+      "id": "no-config",
+      "name": "No repository configuration",
+      "input": "/local-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with no repos.json - test isolation issue",
+      "setup": {
+        "description": "No .entourage/repos.json file exists"
+      },
+      "expectedBehavior": "Returns message about missing configuration",
+      "expectedOutput": {
+        "contains": [
+          "No repository configuration found",
+          ".entourage/repos.json"
+        ]
+      }
+    },
+    {
+      "id": "invalid-path",
+      "name": "Invalid repository path",
+      "input": "/local-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with repos.json pointing to nonexistent path",
+      "setup": {
+        "config": {
+          "repos": [
+            {
+              "name": "bad-repo",
+              "path": "/nonexistent/path"
+            }
+          ]
+        }
+      },
+      "expectedBehavior": "Reports inaccessible repo, continues gracefully",
+      "expectedOutput": {
+        "contains": [
+          "not accessible"
+        ]
+      }
+    },
+    {
+      "id": "complete-high-confidence",
+      "name": "Complete status with code and tests",
+      "input": "/local-repo-check Auth",
+      "setup": {
+        "description": "Repo has Auth.tsx and Auth.test.tsx"
+      },
+      "expectedBehavior": "Returns Complete status with Medium-High confidence",
+      "expectedOutput": {
+        "status": "Complete",
+        "confidence": ["High", "Medium"]
+      }
+    },
+    {
+      "id": "in-progress-no-tests",
+      "name": "In Progress status - code without tests",
+      "input": "/local-repo-check Dashboard",
+      "status": "pending",
+      "pendingReason": "Needs fixture with code but no tests",
+      "setup": {
+        "description": "Repo has Dashboard.tsx but no test file"
+      },
+      "expectedBehavior": "Returns In Progress status with Medium confidence",
+      "expectedOutput": {
+        "status": "In Progress",
+        "confidence": "Medium"
+      }
+    },
+    {
+      "id": "feature-branch-only",
+      "name": "In Progress status - feature branch",
+      "input": "/local-repo-check payments",
+      "status": "pending",
+      "pendingReason": "Needs fixture with feature branch",
+      "setup": {
+        "description": "Feature branch 'feature/payments' exists with commits"
+      },
+      "expectedBehavior": "Returns In Progress status with Low confidence",
+      "expectedOutput": {
+        "status": "In Progress",
+        "confidence": "Low"
+      }
+    },
+    {
+      "id": "unknown-component",
+      "name": "Unknown component",
+      "input": "/local-repo-check nonexistent-feature",
+      "setup": {
+        "description": "No matching files, branches, or commits"
+      },
+      "expectedBehavior": "Returns Unknown status",
+      "expectedOutput": {
+        "status": "Unknown"
+      }
+    },
+    {
+      "id": "multi-component",
+      "name": "Multiple components query",
+      "input": "/local-repo-check auth dashboard payments",
+      "status": "pending",
+      "pendingReason": "Needs fixture with multiple component states",
+      "setup": {
+        "description": "auth=Complete, dashboard=In Progress, payments=Unknown"
+      },
+      "expectedBehavior": "Returns summary table with all three components",
+      "expectedOutput": {
+        "contains": [
+          "Summary",
+          "auth",
+          "dashboard",
+          "payments"
+        ]
+      }
+    },
+    {
+      "id": "pattern-matching-camel",
+      "name": "Pattern matching - CamelCase to snake_case",
+      "input": "/local-repo-check UserAuth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with snake_case files",
+      "setup": {
+        "description": "File exists as user_auth.tsx (snake_case). Skill converts UserAuth to user_auth pattern."
+      },
+      "expectedBehavior": "Converts CamelCase to snake_case and finds the file",
+      "expectedOutput": {
+        "contains": [
+          "user_auth"
+        ],
+        "patternsSearched": [
+          "**/*UserAuth*",
+          "**/*user_auth*",
+          "**/*user-auth*",
+          "**/*userauth*"
+        ]
+      }
+    },
+    {
+      "id": "tilde-expansion",
+      "name": "Tilde path expansion",
+      "input": "/local-repo-check component",
+      "status": "pending",
+      "pendingReason": "Needs fixture with tilde path in repos.json",
+      "setup": {
+        "config": {
+          "repos": [
+            {
+              "name": "home-repo",
+              "path": "~/code/repo"
+            }
+          ]
+        }
+      },
+      "expectedBehavior": "Expands ~ to home directory path",
+      "expectedOutput": {
+        "contains": [
+          "home-repo",
+          "/code/repo"
+        ],
+        "notContains": [
+          "~/code/repo"
+        ]
+      }
+    },
+    {
+      "id": "git-not-available",
+      "name": "Non-git directory fallback",
+      "input": "/local-repo-check component",
+      "status": "pending",
+      "pendingReason": "Needs fixture with non-git directory",
+      "setup": {
+        "description": "Configured path is not a git repository"
+      },
+      "expectedBehavior": "Falls back to file existence checks only",
+      "expectedOutput": {
+        "contains": [
+          "Could not access git history"
+        ]
+      }
+    },
+    {
+      "id": "auto-discovery",
+      "name": "Auto-discovery finds repos without paths.local.json",
+      "input": "/local-repo-check Auth",
+      "status": "pending",
+      "pendingReason": "Requires git repo with configured remote - manual test with scripts/discover-repos.sh",
+      "setup": {
+        "description": "repos.json has github field but no paths.local.json exists. A sibling directory contains a git repo with matching origin remote.",
+        "config": {
+          "repos": [
+            {
+              "name": "discovered-repo",
+              "github": "my-org/discovered-repo",
+              "mainBranch": "main"
+            }
+          ]
+        },
+        "manualSetup": [
+          "Create sibling directory ../discovered-repo",
+          "git init ../discovered-repo",
+          "git -C ../discovered-repo remote add origin git@github.com:my-org/discovered-repo.git",
+          "Add Auth.tsx to ../discovered-repo/src/"
+        ]
+      },
+      "expectedBehavior": "Discovers repo via git remote matching and finds Auth component",
+      "expectedOutput": {
+        "contains": [
+          "discovered-repo",
+          "Auth"
+        ],
+        "notContains": [
+          "No repository configuration found"
+        ]
+      }
+    },
+    {
+      "id": "auto-discovery-prompt-save",
+      "name": "Auto-discovery offers to save paths",
+      "input": "/local-repo-check Component",
+      "status": "pending",
+      "pendingReason": "Requires interactive prompt testing",
+      "setup": {
+        "description": "After successful discovery, skill should offer to save paths to paths.local.json"
+      },
+      "expectedBehavior": "Prompts user to save discovered paths for faster future scans",
+      "expectedOutput": {
+        "contains": [
+          "Save to",
+          "paths.local.json"
+        ]
+      }
+    }
+  ]
+}

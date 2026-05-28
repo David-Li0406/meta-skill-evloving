@@ -1,0 +1,24 @@
+# Shareable config approach (recommended for multi-repo setups)
+extends: "@USER/semantic-release-config"
+
+# Inline config approach (simple, single-repo)
+# branches:
+#   - main
+#   - name: beta
+#     prerelease: true
+#
+# plugins:
+#   - "@semantic-release/commit-analyzer"
+#   - "@semantic-release/release-notes-generator"
+#   - - "@semantic-release/changelog"
+#     - changelogFile: CHANGELOG.md
+#   - "@semantic-release/exec"
+#   - - "@semantic-release/git"
+#     - assets:
+#         - CHANGELOG.md
+#         - package.json
+#   # Push commit and tags after @semantic-release/git creates them
+#   # Belt-and-suspenders: ensures push happens even in --no-ci mode
+#   - - "@semantic-release/exec"
+#     - successCmd: "/usr/bin/env bash -c 'git push --follow-tags origin main'"
+#   - "@semantic-release/github"

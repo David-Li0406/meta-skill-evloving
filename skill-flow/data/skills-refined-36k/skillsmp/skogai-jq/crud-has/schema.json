@@ -1,0 +1,41 @@
+{
+  "name": "crud-has",
+  "description": "Check if a path exists in a JSON object",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to check (e.g., 'user.profile.name')"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "True if the path exists in the object, false otherwise"
+  },
+  "examples": [
+    {
+      "description": "Check for existing nested value",
+      "input": {"user": {"name": "skogix"}},
+      "args": {"path": "user.name"},
+      "output": true
+    },
+    {
+      "description": "Check for missing value",
+      "input": {"user": {"name": "test"}},
+      "args": {"path": "user.email"},
+      "output": false
+    },
+    {
+      "description": "Check for deeply nested value",
+      "input": {"data": {"user": {"profile": {"age": 30}}}},
+      "args": {"path": "data.user.profile.age"},
+      "output": true
+    }
+  ],
+  "tags": ["crud", "check", "object", "access"]
+}

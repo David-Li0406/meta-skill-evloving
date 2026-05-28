@@ -1,0 +1,125 @@
+version: 2
+updates:
+  # Main branch - OpenShift 4.18 (Kubernetes 1.31)
+  - package-ecosystem: "gomod"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    ignore:
+      # Pin k8s.io dependencies to v0.31.x for OpenShift 4.18
+      - dependency-name: "k8s.io/api"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.32.0"]
+      - dependency-name: "k8s.io/apimachinery"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.32.0"]
+      - dependency-name: "k8s.io/client-go"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.32.0"]
+    reviewers:
+      - "tosin2013"
+    labels:
+      - "dependencies"
+      - "go"
+      - "openshift-4.18"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Release/4.19 branch - OpenShift 4.19 (Kubernetes 1.32)
+  - package-ecosystem: "gomod"
+    directory: "/"
+    target-branch: "release-4.19"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    ignore:
+      # Pin k8s.io dependencies to v0.32.x for OpenShift 4.19
+      - dependency-name: "k8s.io/api"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.33.0"]
+      - dependency-name: "k8s.io/apimachinery"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.33.0"]
+      - dependency-name: "k8s.io/client-go"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.33.0"]
+    reviewers:
+      - "tosin2013"
+    labels:
+      - "dependencies"
+      - "go"
+      - "openshift-4.19"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Release/4.20 branch - OpenShift 4.20 (Kubernetes 1.33)
+  - package-ecosystem: "gomod"
+    directory: "/"
+    target-branch: "release-4.20"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    ignore:
+      # Pin k8s.io dependencies to v0.33.x for OpenShift 4.20
+      - dependency-name: "k8s.io/api"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.34.0"]
+      - dependency-name: "k8s.io/apimachinery"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.34.0"]
+      - dependency-name: "k8s.io/client-go"
+        update-types: ["version-update:semver-minor"]
+        versions: [">= 0.34.0"]
+    reviewers:
+      - "tosin2013"
+    labels:
+      - "dependencies"
+      - "go"
+      - "openshift-4.20"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # GitHub Actions (applies to all branches)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "tosin2013"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+  # Docker (applies to all branches)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "tosin2013"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"

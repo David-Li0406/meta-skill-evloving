@@ -1,0 +1,117 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Coupon Codes</h1>
+    <%= button_to "Create New Coupon", admin_coupon_codes_path, method: :post, class: "bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded" %>
+  </div>
+
+  <!-- Filter and Search Section -->
+  <div class="bg-white shadow rounded-lg p-4 mb-6">
+    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <!-- Status Filter Buttons -->
+      <div class="flex gap-2">
+        <%= link_to "All", admin_coupon_codes_path, class: "px-4 py-2 rounded #{params[:status].blank? ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+        <%= link_to "Unused", admin_coupon_codes_path(status: 'unused'), class: "px-4 py-2 rounded #{params[:status] == 'unused' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+        <%= link_to "Used", admin_coupon_codes_path(status: 'used'), class: "px-4 py-2 rounded #{params[:status] == 'used' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+      </div>
+
+      <!-- Search Form -->
+      <%= form_with url: admin_coupon_codes_path, method: :get, class: "flex gap-2" do |f| %>
+        <%= f.hidden_field :status, value: params[:status] if params[:status].present? %>
+        <%= f.text_field :search, value: params[:search], placeholder: "Search by code...", class: "px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        <%= f.submit "Search", class: "bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded cursor-pointer" %>
+        <% if params[:search].present? %>
+          <%= link_to "Clear", admin_coupon_codes_path(status: params[:status]), class: "bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded" %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Coupon Codes Table -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Associated Order</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% if @coupons.any? %>
+          <% @coupons.each do |coupon| %>
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm font-mono font-semibold text-gray-900"><%= coupon.code %></span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <% if coupon.unused? %>
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Unused
+                  </span>
+                <% else %>
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                    Used
+                  </span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <% if coupon.orders.any? %>
+                  <%= link_to "Order ##{coupon.orders.first.id}", order_path(coupon.orders.first), class: "text-blue-600 hover:text-blue-800" %>
+                <% else %>
+                  <span class="text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <% if coupon.unused? && coupon.orders.empty? %>
+                  <%= button_to "Delete", admin_coupon_code_path(coupon), method: :delete, class: "text-red-600 hover:text-red-900", form: { data: { turbo_confirm: "Are you sure you want to delete this coupon code?" } } %>
+                <% else %>
+                  <span class="text-gray-400">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+              No coupon codes found.
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <% if @coupons.any? %>
+    <div class="mt-6 flex justify-between items-center">
+      <div class="flex gap-2">
+        <% if params[:cursor].present? %>
+          <%= link_to "← Previous", admin_coupon_codes_path(
+            cursor: @coupons.first.id,
+            direction: 'prev',
+            status: params[:status],
+            search: params[:search]
+          ), class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded" %>
+        <% else %>
+          <span class="px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed">← Previous</span>
+        <% end %>
+
+        <% if @has_more %>
+          <%= link_to "Next →", admin_coupon_codes_path(
+            cursor: @coupons.last.id,
+            direction: 'next',
+            status: params[:status],
+            search: params[:search]
+          ), class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded" %>
+        <% else %>
+          <span class="px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed">Next →</span>
+        <% end %>
+      </div>
+
+      <div class="text-sm text-gray-600">
+        Showing <%= @coupons.size %> coupon<%= @coupons.size == 1 ? '' : 's' %>
+      </div>
+    </div>
+  <% end %>
+</div>

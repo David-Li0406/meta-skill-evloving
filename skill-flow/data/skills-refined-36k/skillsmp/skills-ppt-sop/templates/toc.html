@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table of Contents</title>
+<style>
+  :root {
+    --bg-main: #FFFFFF;
+    --bg-header: #000000;
+    --accent: #F85d42;
+    --gray: #74788d;
+    --aux1: #556EE6;
+    --aux2: #34c38f;
+    --aux3: #50a5f1;
+    --aux4: #f1b44c;
+    --gray-light: #F5F5F5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    width: 960px;
+    height: 540px;
+    background: var(--bg-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    color: #333;
+  }
+
+  .slide-container {
+    display: grid;
+    grid-template-rows: 60px 1fr;
+    height: 100%;
+    padding: 0 40px 40px 40px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-header);
+    color: white;
+    padding: 0 20px;
+    margin: 0 -40px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+  
+  .header h1 { font-size: 24px; font-weight: bold; }
+  .header .logo { font-size: 16px; color: var(--accent); }
+
+  .content {
+    padding: 20px 40px;
+  }
+
+  .toc-list {
+    list-style: none;
+  }
+
+  .toc-item {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    align-items: center;
+    height: 60px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .toc-number {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--accent);
+  }
+
+  .toc-text {
+    font-size: 24px;
+    color: #333;
+  }
+
+  @media (max-width: 960px) {
+    body {
+      transform-origin: top left;
+      transform: scale(calc(100vw / 960));
+      width: 960px;
+      height: 540px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+  <header class="header">
+    <h1>目录</h1>
+    <div class="logo">COMPANY LOGO</div>
+  </header>
+
+  <main class="content">
+    <ul class="toc-list">
+      <li class="toc-item">
+        <span class="toc-number">01</span>
+        <span class="toc-text">第一章标题</span>
+      </li>
+      <li class="toc-item">
+        <span class="toc-number">02</span>
+        <span class="toc-text">第二章标题</span>
+      </li>
+      <li class="toc-item">
+        <span class="toc-number">03</span>
+        <span class="toc-text">第三章标题</span>
+      </li>
+      <li class="toc-item">
+        <span class="toc-number">04</span>
+        <span class="toc-text">第四章标题</span>
+      </li>
+      <li class="toc-item">
+        <span class="toc-number">05</span>
+        <span class="toc-text">第五章标题</span>
+      </li>
+    </ul>
+  </main>
+</div>
+
+</body>
+</html>

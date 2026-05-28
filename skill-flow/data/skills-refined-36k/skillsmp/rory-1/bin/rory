@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Rory Wrapper Script
+# Ensures commands run within the virtual environment
+#
+set -e
+
+# Find the plugin directory (where this script lives)
+BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PLUGIN_DIR="$( dirname "$BIN_DIR" )"
+
+# Load .env file if it exists (export variables)
+if [ -f "$PLUGIN_DIR/.env" ]; then
+    set -a
+    source "$PLUGIN_DIR/.env"
+    set +a
+fi
+
+# Path to the virtual environment python
+VENV_PYTHON="$PLUGIN_DIR/.venv/bin/python"
+
+# If venv doesn't exist, try system python but warn
+if [ ! -f "$VENV_PYTHON" ]; then
+    echo "Warning: Virtual environment not found at $VENV_PYTHON. Using system python." >&2
+    VENV_PYTHON="python3"
+fi
+
+# Route commands
+COMMAND=$1
+shift
+
+cd "$PLUGIN_DIR"
+
+case $COMMAND in
+    help|--help|-h)
+        exec "$VENV_PYTHON" tools/help_display.py "$@"
+        ;;
+    init|login)
+        # Use python -c to call the interactive init function
+        exec "$VENV_PYTHON" -c "import sys; sys.path.append('tools'); from onboarding import interactive_init; interactive_init('$1')"
+        ;;
+    logout)
+        exec "$VENV_PYTHON" -c "import sys; sys.path.append('tools'); from onboarding import logout; logout()"
+        ;;
+    uninstall)
+        exec "$VENV_PYTHON" -c "import sys; sys.path.append('tools'); from onboarding import uninstall; uninstall()"
+        ;;
+    config|usage|sync|voice)
+        exec "$VENV_PYTHON" tools/robynn.py "$COMMAND" "$@"
+        ;;
+    status)
+        exec "$VENV_PYTHON" tools/robynn.py status "$@"
+        ;;
+    research)
+        exec "$VENV_PYTHON" research.py company "$@"
+        ;;
+    competitors)
+        exec "$VENV_PYTHON" research.py competitor "$@"
+        ;;
+    write)
+        exec "$VENV_PYTHON" tools/remote_cmo.py "write $*"
+        ;;
+    *)
+        if [ -z "$COMMAND" ]; then
+            exec "$VENV_PYTHON" tools/help_display.py
+        else
+            exec "$VENV_PYTHON" tools/remote_cmo.py "$COMMAND $*"
+        fi
+        ;;
+esac

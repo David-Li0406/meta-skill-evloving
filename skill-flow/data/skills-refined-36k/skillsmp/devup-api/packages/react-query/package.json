@@ -1,0 +1,37 @@
+{
+  "name": "@devup-api/react-query",
+  "version": "0.1.7",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && bun build --target node --outfile=dist/index.js src/index.ts --production --packages=external && bun build --target node --outfile=dist/index.cjs --format=cjs src/index.ts --production --packages=external"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@devup-api/fetch": "workspace:^",
+    "@tanstack/react-query": ">=5.90"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "@tanstack/react-query": "*"
+  },
+  "devDependencies": {
+    "@testing-library/react-hooks": "^8.0.1",
+    "@types/node": "^25.0",
+    "@types/react": "^19.2",
+    "happy-dom": "^20.0.11",
+    "typescript": "^5.9"
+  }
+}

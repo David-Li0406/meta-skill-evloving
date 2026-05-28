@@ -1,0 +1,109 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+# Gap Analyzer Configuration v2.0
+# Place this file in your project root or pass via --config flag
+
+rules:
+  # ID tracking analysis settings
+  id_tracking:
+    enabled: true
+    # Step types where ID tracking is NOT meaningful
+    exclude_step_types:
+      - idempotency
+      - drift
+      - refresh
+    # Minimum trackable steps before flagging missing tracking
+    min_trackable_steps: 2
+
+  # Hardcoded name detection settings
+  hardcoded_names:
+    enabled: true
+    # Domain-specific names that are NOT resource identifiers
+    # These are Linux/infrastructure constants, not test names
+    domain_allowlist:
+      # Linux network interface names
+      - eth0
+      - eth1
+      - eth2
+      - eth3
+      - eth4
+      - eth5
+      - ens0
+      - ens1
+      - ens2
+      - ens3
+      - enp0s0
+      - enp0s1
+      - enp0s2
+      - enp0s3
+      # Bond interfaces
+      - bond0
+      - bond1
+      - bond2
+      # BMC/IPMI interfaces (BCM-specific)
+      - ipmi0
+      - ipmi1
+      - ilo0
+      - ilo1
+      - cimc0
+      - cimc1
+      - drac0
+      - drac1
+      - rf0
+      - rf1
+      # Other common interfaces
+      - vlan0
+      - vlan1
+      - br0
+      - br1
+      - lo
+      - lo0
+      # Virtual interfaces
+      - virbr0
+      - docker0
+      - veth0
+    # Prefix patterns to allow (matches eth*, bond*, etc.)
+    prefix_allowlist:
+      - eth
+      - bond
+      - ipmi
+      - ilo
+      - cimc
+      - drac
+      - rf
+      - ens
+      - enp
+      - vlan
+      - br
+      - veth
+
+  # Legacy check detection settings
+  legacy_checks:
+    enabled: true
+    # Suppress legacy checks that have modern equivalents nearby
+    ignore_when_modern_exists: true
+    # Patterns that indicate functional legacy checks (not style issues)
+    functional_patterns:
+      - TestCheckResourceAttrWith
+
+  # Optional field coverage (disabled by default - over-testing concern)
+  optional_fields:
+    enabled: false
+    # Only report if more than this many fields are untested
+    report_threshold: 10
+
+  # Validation test coverage
+  validation_tests:
+    enabled: true
+    # Only check required fields with validators
+    required_only: true
+
+# Severity overrides for specific finding types
+severity_overrides:
+  # Partial ID tracking is informational, not a warning
+  partial_id_tracking: info
+  # Legacy checks with modern equivalents should be suppressed
+  legacy_with_modern: noise
+  # Domain-specific names should be suppressed entirely
+  domain_specific_names: noise

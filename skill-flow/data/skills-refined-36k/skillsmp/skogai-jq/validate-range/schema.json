@@ -1,0 +1,68 @@
+{
+  "name": "validate-range",
+  "description": "Validate that a numeric value falls within a specified range",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing a numeric field to validate"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the numeric field to validate (e.g., 'user.age')"
+    },
+    "min": {
+      "type": "string",
+      "required": false,
+      "description": "Minimum value (inclusive by default). Omit for unbounded lower range"
+    },
+    "max": {
+      "type": "string",
+      "required": false,
+      "description": "Maximum value (inclusive by default). Omit for unbounded upper range"
+    },
+    "exclusive": {
+      "type": "string",
+      "required": false,
+      "description": "'true' for exclusive bounds (< and >), 'false' for inclusive (≤ and ≥). Default: 'false'"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if value is within range or path doesn't exist, false if out of range or not a number"
+  },
+  "examples": [
+    {
+      "description": "Validate age is between 0 and 120 (inclusive)",
+      "input": {"user": {"age": 30}},
+      "args": {"path": "user.age", "min": "0", "max": "120"},
+      "output": true
+    },
+    {
+      "description": "Validate temperature is above 0 (exclusive)",
+      "input": {"sensor": {"temp": 0.1}},
+      "args": {"path": "sensor.temp", "min": "0", "exclusive": "true"},
+      "output": true
+    },
+    {
+      "description": "Validate score is exactly at boundary (inclusive)",
+      "input": {"test": {"score": 100}},
+      "args": {"path": "test.score", "min": "0", "max": "100"},
+      "output": true
+    },
+    {
+      "description": "Non-existent path returns true",
+      "input": {"user": {}},
+      "args": {"path": "user.age", "min": "0", "max": "120"},
+      "output": true
+    },
+    {
+      "description": "Non-numeric value returns false",
+      "input": {"user": {"age": "thirty"}},
+      "args": {"path": "user.age", "min": "0", "max": "120"},
+      "output": false
+    }
+  ],
+  "tags": ["validation", "range", "numeric", "bounds-checking"]
+}

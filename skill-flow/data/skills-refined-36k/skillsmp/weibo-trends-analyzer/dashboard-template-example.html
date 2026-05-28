@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博热搜创意产品分析报告 - Weibo Trends Product Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "SimHei", Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* Controls */
+        .controls {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .controls input, .controls select, .controls button {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .controls input:focus, .controls select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .controls button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        /* Section Headers */
+        .section-header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .section-header h2 {
+            color: #2c3e50;
+            font-size: 2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header p {
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        /* Product Cards Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        /* Product Card Base */
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        /* Tier-specific styling */
+        .score-tier-excellent {
+            border-left: 5px solid #FFD700;
+            background: linear-gradient(to right, #fff9e6 0%, white 100%);
+        }
+
+        .score-tier-good {
+            border-left: 5px solid #4A90E2;
+            background: linear-gradient(to right, #e6f2ff 0%, white 100%);
+        }
+
+        .score-tier-other {
+            border-left: 5px solid #95A5A6;
+        }
+
+        /* Trend Info */
+        .trend-info {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .trend-info h3 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .trend-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-rank {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .badge-heat {
+            background: #e67e22;
+            color: white;
+        }
+
+        /* Product Concept */
+        .product-concept h4 {
+            color: #34495e;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .total-score {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .score-badge {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .score-badge-excellent {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: white;
+        }
+
+        .score-badge-good {
+            background: linear-gradient(135deg, #4A90E2, #50C8E8);
+            color: white;
+        }
+
+        .score-badge-other {
+            background: #95A5A6;
+            color: white;
+        }
+
+        /* Details */
+        .details {
+            margin: 20px 0;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .details p {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .details strong {
+            color: #2c3e50;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        /* Score Breakdown */
+        .score-breakdown {
+            margin: 20px 0;
+        }
+
+        .score-breakdown h5 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .score-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .score-bar span:first-child {
+            min-width: 100px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .score-bar progress {
+            flex: 1;
+            height: 20px;
+            border-radius: 10px;
+        }
+
+        progress {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        progress::-webkit-progress-bar {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+        }
+
+        progress::-webkit-progress-value {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        .score-bar span:last-child {
+            min-width: 50px;
+            text-align: right;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* Analysis */
+        .analysis {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f7ff;
+            border-left: 4px solid #4A90E2;
+            border-radius: 5px;
+        }
+
+        .analysis h5 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .analysis p {
+            color: #555;
+            line-height: 1.8;
+        }
+
+        /* Research Summary */
+        .research-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff8f0;
+            border-radius: 10px;
+        }
+
+        .research-summary h5 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .research-summary ul {
+            list-style: none;
+        }
+
+        .research-summary li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #555;
+        }
+
+        .research-summary li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #e67e22;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .footer p {
+            color: #7f8c8d;
+            margin: 10px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .controls input, .controls select, .controls button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 微博热搜创意产品分析报告</h1>
+            <p class="subtitle">Weibo Trends Product Analysis Dashboard</p>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="number">15</div>
+                    <div class="label">热搜话题</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">23</div>
+                    <div class="label">产品创意</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">72.5</div>
+                    <div class="label">平均评分</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">5</div>
+                    <div class="label">优秀产品</div>
+                </div>
+            </div>
+            <p style="margin-top: 20px; color: #7f8c8d;">生成时间: 2026-01-11 14:30:00</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <input type="text" id="searchBox" placeholder="🔍 搜索关键词...">
+            <select id="tierFilter">
+                <option value="all">全部评级</option>
+                <option value="excellent">优秀 (≥80分)</option>
+                <option value="good">良好 (60-79分)</option>
+                <option value="other">其他 (<60分)</option>
+            </select>
+            <select id="sortBy">
+                <option value="score-desc">评分: 高到低</option>
+                <option value="score-asc">评分: 低到高</option>
+                <option value="rank">热搜排名</option>
+            </select>
+            <button onclick="resetFilters()">重置筛选</button>
+        </div>
+
+        <!-- Excellent Products Section -->
+        <div class="section-header">
+            <h2>🏆 优秀产品 (评分 ≥ 80)</h2>
+            <p>这些产品具有极高的市场潜力，建议优先开发</p>
+        </div>
+
+        <div class="products-grid">
+            <!-- Example Excellent Product Card -->
+            <div class="product-card score-tier-excellent">
+                <div class="trend-info">
+                    <h3>AI助手新功能发布</h3>
+                    <div class="trend-badges">
+                        <span class="badge badge-rank">热搜排名: #3</span>
+                        <span class="badge badge-heat">热度: 2,345,678</span>
+                    </div>
+                </div>
+
+                <div class="product-concept">
+                    <h4>🤖 AI灵感记事本</h4>
+                    <div class="score-display">
+                        <div class="total-score">85</div>
+                        <div class="score-badge score-badge-excellent">优秀</div>
+                    </div>
+
+                    <div class="details">
+                        <p><strong>市场赛道:</strong> 文创文具</p>
+                        <p><strong>目标人群:</strong> 18-35岁科技爱好者、内容创作者、学生群体</p>
+                        <p><strong>产品描述:</strong> 结合AI主题的创意记事本，封面采用镭射渐变设计，内页包含AI灵感提示语和思维导图模板，适合记录创意想法和学习笔记</p>
+                        <p><strong>生产特点:</strong> 胶版印刷+烫金工艺，MOQ 500本起订，单位成本8-12元，生产周期15天</p>
+                    </div>
+
+                    <div class="score-breakdown">
+                        <h5>📊 评分详情</h5>
+                        <div class="score-bar">
+                            <span>可发展度</span>
+                            <progress value="35" max="40"></progress>
+                            <span>35/40</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>有趣度</span>
+                            <progress value="17" max="20"></progress>
+                            <span>17/20</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>生活有用度</span>
+                            <progress value="18" max="20"></progress>
+                            <span>18/20</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>生产容易度</span>
+                            <progress value="15" max="20"></progress>
+                            <span>15/20</span>
+                        </div>
+                    </div>
+
+                    <div class="analysis">
+                        <h5>💡 分数分析</h5>
+                        <p>AI话题持续升温，目标用户群体庞大且消费意愿强。产品兼具实用性和收藏价值，适合小红书、抖音等平台推广。生产工艺成熟，成本可控，利润空间充足。建议推出限量款和联名款增加稀缺性。</p>
+                    </div>
+                </div>
+
+                <div class="research-summary">
+                    <h5>🔍 背景研究</h5>
+                    <ul>
+                        <li><strong>社交媒体:</strong> 微博讨论量超100万，用户普遍对AI新功能表示兴奋，年轻群体参与度高</li>
+                        <li><strong>新闻背景:</strong> 多家科技公司发布AI助手新功能，行业竞争激烈，用户关注度持续上升</li>
+                        <li><strong>用户洞察:</strong> 用户希望通过周边产品表达对科技的热爱，愿意为设计感强的文具付费</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Good Products Section -->
+        <div class="section-header">
+            <h2>⭐ 良好产品 (评分 60-79)</h2>
+            <p>这些产品具有一定市场潜力，可考虑开发</p>
+        </div>
+
+        <div class="products-grid">
+            <!-- Example Good Product Card -->
+            <div class="product-card score-tier-good">
+                <div class="trend-info">
+                    <h3>春节返乡潮</h3>
+                    <div class="trend-badges">
+                        <span class="badge badge-rank">热搜排名: #7</span>
+                        <span class="badge badge-heat">热度: 1,234,567</span>
+                    </div>
+                </div>
+
+                <div class="product-concept">
+                    <h4>🧳 智能行李牌套装</h4>
+                    <div class="score-display">
+                        <div class="total-score">68</div>
+                        <div class="score-badge score-badge-good">良好</div>
+                    </div>
+
+                    <div class="details">
+                        <p><strong>市场赛道:</strong> 旅行用品</p>
+                        <p><strong>目标人群:</strong> 25-45岁经常出差/旅行人群</p>
+                        <p><strong>产品描述:</strong> 带NFC功能的智能行李牌，扫码可显示失物招领信息，防水防摔设计，多种颜色可选</p>
+                        <p><strong>生产特点:</strong> 注塑成型+NFC芯片组装，MOQ 1000个，单位成本15-20元，生产周期20天</p>
+                    </div>
+
+                    <div class="score-breakdown">
+                        <h5>📊 评分详情</h5>
+                        <div class="score-bar">
+                            <span>可发展度</span>
+                            <progress value="26" max="40"></progress>
+                            <span>26/40</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>有趣度</span>
+                            <progress value="13" max="20"></progress>
+                            <span>13/20</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>生活有用度</span>
+                            <progress value="17" max="20"></progress>
+                            <span>17/20</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>生产容易度</span>
+                            <progress value="12" max="20"></progress>
+                            <span>12/20</span>
+                        </div>
+                    </div>
+
+                    <div class="analysis">
+                        <h5>💡 分数分析</h5>
+                        <p>春节季节性需求明显，但全年需求相对平稳。产品实用性强，但市场已有类似产品竞争。建议增加设计感和个性化定制服务提升竞争力。NFC功能增加生产成本，需评估目标用户支付意愿。</p>
+                    </div>
+                </div>
+
+                <div class="research-summary">
+                    <h5>🔍 背景研究</h5>
+                    <ul>
+                        <li><strong>社交媒体:</strong> 春运话题热度高，用户分享行李丢失经历，对智能防丢产品有需求</li>
+                        <li><strong>新闻背景:</strong> 今年春运预计客流量创新高，各地加强行李管理服务</li>
+                        <li><strong>用户洞察:</strong> 用户担心行李丢失，愿意为防丢功能付费，但价格敏感度较高</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other Products Section -->
+        <div class="section-header">
+            <h2>📋 其他产品 (评分 < 60)</h2>
+            <p>这些产品需要进一步优化或观望市场变化</p>
+        </div>
+
+        <div class="products-grid">
+            <!-- Example Other Product Card -->
+            <div class="product-card score-tier-other">
+                <div class="trend-info">
+                    <h3>某明星绯闻</h3>
+                    <div class="trend-badges">
+                        <span class="badge badge-rank">热搜排名: #15</span>
+                        <span class="badge badge-heat">热度: 567,890</span>
+                    </div>
+                </div>
+
+                <div class="product-concept">
+                    <h4>🌟 明星应援灯牌</h4>
+                    <div class="score-display">
+                        <div class="total-score">45</div>
+                        <div class="score-badge score-badge-other">其他</div>
+                    </div>
+
+                    <div class="details">
+                        <p><strong>市场赛道:</strong> 娱乐周边</p>
+                        <p><strong>目标人群:</strong> 粉丝群体（主要15-25岁）</p>
+                        <p><strong>产品描述:</strong> LED灯牌，可定制文字和图案，适合演唱会应援使用</p>
+                        <p><strong>生产特点:</strong> 亚克力板+LED灯组装，MOQ 200个，单位成本20-30元，生产周期10天</p>
+                    </div>
+
+                    <div class="score-breakdown">
+                        <h5>📊 评分详情</h5>
+                        <div class="score-bar">
+                            <span>可发展度</span>
+                            <progress value="12" max="40"></progress>
+                            <span>12/40</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>有趣度</span>
+                            <progress value="15" max="20"></progress>
+                            <span>15/20</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>生活有用度</span>
+                            <progress value="8" max="20"></progress>
+                            <span>8/20</span>
+                        </div>
+                        <div class="score-bar">
+                            <span>生产容易度</span>
+                            <progress value="10" max="20"></progress>
+                            <span>10/20</span>
+                        </div>
+                    </div>
+
+                    <div class="analysis">
+                        <h5>💡 分数分析</h5>
+                        <p>绯闻话题热度快速消退，产品生命周期短。虽然粉丝消费意愿强，但市场规模有限且高度依赖明星热度。版权和肖像权问题需谨慎处理。建议观望或转向通用型应援产品设计。</p>
+                    </div>
+                </div>
+
+                <div class="research-summary">
+                    <h5>🔍 背景研究</h5>
+                    <ul>
+                        <li><strong>社交媒体:</strong> 话题讨论以八卦为主，商业转化潜力有限</li>
+                        <li><strong>新闻背景:</strong> 娱乐新闻，热度预计持续1-3天</li>
+                        <li><strong>用户洞察:</strong> 核心粉丝可能购买，但大众市场兴趣不高</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <h3>📌 声明与建议</h3>
+            <p>本报告基于微博热搜数据和AI分析生成，评分仅供参考。热搜话题变化迅速，建议在实际投产前进行深入市场调研。</p>
+            <p>产品创意开发需考虑知识产权、生产资质、市场合规等因素。</p>
+            <p style="margin-top: 20px; font-size: 0.9em; color: #95a5a6;">
+                数据来源: 微博热搜API | 分析工具: Claude Code Weibo Trends Analyzer v1.0 | 生成时间: 2026-01-11
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.product-card');
+
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        });
+
+        // Tier filter
+        document.getElementById('tierFilter').addEventListener('change', function(e) {
+            const tier = e.target.value;
+            const cards = document.querySelectorAll('.product-card');
+
+            cards.forEach(card => {
+                if (tier === 'all') {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = card.classList.contains(`score-tier-${tier}`) ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Sort functionality
+        document.getElementById('sortBy').addEventListener('change', function(e) {
+            const sortBy = e.target.value;
+            const grids = document.querySelectorAll('.products-grid');
+
+            grids.forEach(grid => {
+                const cards = Array.from(grid.querySelectorAll('.product-card'));
+
+                cards.sort((a, b) => {
+                    if (sortBy === 'score-desc') {
+                        const scoreA = parseInt(a.querySelector('.total-score').textContent);
+                        const scoreB = parseInt(b.querySelector('.total-score').textContent);
+                        return scoreB - scoreA;
+                    } else if (sortBy === 'score-asc') {
+                        const scoreA = parseInt(a.querySelector('.total-score').textContent);
+                        const scoreB = parseInt(b.querySelector('.total-score').textContent);
+                        return scoreA - scoreB;
+                    } else if (sortBy === 'rank') {
+                        const rankA = parseInt(a.querySelector('.badge-rank').textContent.match(/\d+/)[0]);
+                        const rankB = parseInt(b.querySelector('.badge-rank').textContent.match(/\d+/)[0]);
+                        return rankA - rankB;
+                    }
+                });
+
+                cards.forEach(card => grid.appendChild(card));
+            });
+        });
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('searchBox').value = '';
+            document.getElementById('tierFilter').value = 'all';
+            document.getElementById('sortBy').value = 'score-desc';
+
+            const cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => card.style.display = 'block');
+        }
+    </script>
+</body>
+</html>

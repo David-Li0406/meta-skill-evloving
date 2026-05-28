@@ -1,0 +1,115 @@
+# Example: Strict Team Configuration
+#
+# Comprehensive configuration for teams with strict workflow requirements.
+# Place at: .claude/requirements.yaml (committed to version control)
+
+version: "1.0"
+enabled: true
+inherit: false    # Team controls everything, don't inherit global
+
+hooks:
+  stop:
+    verify_requirements: true
+    verify_scopes: [session]
+
+requirements:
+  # Commit Planning - Required before any code changes
+  commit_plan:
+    enabled: true
+    type: blocking
+    scope: session
+    trigger_tools:
+      - Edit
+      - Write
+      - MultiEdit
+    message: |
+      📋 **Commit Plan Required**
+
+      Before making code changes, create a brief plan documenting your approach.
+
+      **To proceed**: Run `req satisfy commit_plan` after creating a plan
+    checklist:
+      - "Identified the changes needed"
+      - "Determined atomic commit boundaries"
+      - "Planned commit sequence"
+      - "Considered rollback strategy"
+      - "Created plan file"
+
+  # ADR Review - Ensure architectural alignment
+  adr_reviewed:
+    enabled: true
+    type: blocking
+    scope: session
+    trigger_tools:
+      - Edit
+      - Write
+    message: |
+      📚 **ADR Review Checkpoint**
+
+      Have you reviewed relevant Architecture Decision Records?
+
+      **To satisfy**: `req satisfy adr_reviewed` after reviewing ADRs
+    checklist:
+      - "Found relevant ADRs"
+      - "Reviewed decision context"
+      - "Confirmed approach aligns with ADRs"
+
+  # Pre-commit Review - Code quality before each commit
+  pre_commit_review:
+    enabled: true
+    type: blocking
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "git\\s+commit"
+    message: |
+      📝 **Pre-commit Review Required**
+
+      Run `/requirements-framework:pre-commit` before committing.
+    auto_satisfy:
+      on_skill_complete:
+        - "requirements-framework:pre-commit"
+
+  # PR Quality Check - Comprehensive review before PR creation
+  pre_pr_review:
+    enabled: true
+    type: blocking
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "gh\\s+pr\\s+create"
+    message: |
+      🔍 **PR Quality Check Required**
+
+      Run `/requirements-framework:quality-check` for comprehensive review.
+    auto_satisfy:
+      on_skill_complete:
+        - "requirements-framework:quality-check"
+
+  # Branch Size Limit - Keep PRs manageable
+  branch_size_limit:
+    enabled: true
+    type: dynamic
+    scope: session
+    threshold: 400
+    calculation_cache_ttl: 30
+    message: |
+      📊 **Branch has {size} changes (threshold: {threshold})**
+
+      Consider splitting into smaller, focused branches for easier review.
+
+  # Protected Branch Guard - Prevent direct edits on main
+  protected_branch:
+    enabled: true
+    type: guard
+    branches:
+      - main
+      - master
+      - production
+    message: |
+      🚫 **Cannot edit files on protected branch**
+
+      Please create a feature branch:
+      ```bash
+      git checkout -b feature/your-feature
+      ```

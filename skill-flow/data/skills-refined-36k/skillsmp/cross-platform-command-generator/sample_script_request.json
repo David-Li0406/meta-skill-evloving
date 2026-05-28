@@ -1,0 +1,32 @@
+{
+  "mode": "script_generation",
+  "script_name": "system_health_check",
+  "description": "Automated system health monitoring script",
+  "target_platforms": ["linux", "windows"],
+  "features": [
+    "Check CPU usage",
+    "Check memory usage",
+    "Check disk space",
+    "Generate report",
+    "Email notification (optional)"
+  ],
+  "security_requirements": {
+    "input_validation": true,
+    "privilege_check": true,
+    "dangerous_operation_confirmation": false
+  },
+  "parameters": [
+    {
+      "name": "threshold",
+      "type": "integer",
+      "default": 80,
+      "description": "Alert threshold percentage for resource usage"
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "default": "",
+      "description": "Email address for notifications"
+    }
+  ]
+}

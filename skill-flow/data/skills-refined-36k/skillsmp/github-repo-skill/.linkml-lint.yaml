@@ -1,0 +1,27 @@
+---
+# LinkML Linter Configuration
+# https://linkml.io/linkml/howtos/linting.html
+#
+# All rules are configured as errors (failures).
+# Surgical excludes are used where needed with TODOs tracked in GitHub issues.
+
+rules:
+  canonical_prefixes:
+    level: disabled  # TODO(#33): Align DSMZ/ATCC with Biolink Model prefixes
+
+  standard_naming:
+    level: error
+    # Surgically exclude only the enum values that use scientific notation
+    # TODO(#32): Migrate these to camelCase (breaking change, requires data migration)
+    exclude:
+      - g_per_L        # ConcentrationUnit: grams per liter
+      - mg_per_L       # ConcentrationUnit: milligrams per liter
+      - ug_per_L       # ConcentrationUnit: micrograms per liter
+      - percent_w_v    # ConcentrationUnit: weight/volume percentage
+      - percent_v_v    # ConcentrationUnit: volume/volume percentage
+      - M              # ConcentrationUnit: molar
+      - mM             # ConcentrationUnit: millimolar
+      - uM             # ConcentrationUnit: micromolar
+      - mL             # VolumeUnit: milliliters
+      - L              # VolumeUnit: liters
+      - uL             # VolumeUnit: microliters

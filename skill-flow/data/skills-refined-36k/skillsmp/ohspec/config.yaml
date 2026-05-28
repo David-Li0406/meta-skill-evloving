@@ -1,0 +1,305 @@
+# OHSpec 配置文件
+# 通用配置，适用于各类大型项目的需求分析和设计
+
+# 专家配置
+experts:
+  # Persona 目录配置
+  persona_dirs:
+    core: "personas/core"      # 精简版（80-100 行，~700 tokens）
+    full: "personas/full"      # 完整版（原始文件）
+    default_mode: "core"       # 默认加载精简版
+
+  # 核心专家（始终加载）
+  core:
+    - name: "调度员"
+      persona: "personas/core/dispatcher-core.md"
+      role: "分析需求、评估复杂度、协调流程"
+    - name: "需求分析师"
+      persona: "personas/core/analyst-core.md"
+      role: "理解需求、澄清歧义、输出 §1-§2"
+    - name: "架构设计师"
+      persona: "personas/core/architect-core.md"
+      role: "设计契约、定义接口、输出 §3-§5"
+    - name: "质量审查员"
+      persona: "personas/core/auditor-core.md"
+      role: "DFX 检查、质量门禁、综合评分"
+
+  # 扩展专家（按需加载，由调度员决定）
+  extension:
+    - name: "外交官"
+      trigger: "跨子系统依赖"
+      role: "协调依赖方、定义集成契约"
+    - name: "API设计师"
+      trigger: "涉及 API/NAPI"
+      role: "设计开发者友好的 API"
+    - name: "原型师"
+      trigger: "技术不确定"
+      role: "Spike 验证可行性"
+
+# 阶段配置
+phases:
+  - id: "assess"
+    name: "代码库评估"
+    type: "automated"
+    outputs: ["扫描策略（写入 progress.json）"]
+    gate:
+      simple: "auto"       # 所有复杂度都自动执行
+      medium: "auto"
+      complex: "auto"
+    description: "评估代码库规模，决策最优扫描策略（直接/过滤/并行/摘要）"
+
+  - id: "dispatcher"
+    name: "基线扫描（scan-of-record）"
+    expert: "调度员"
+    outputs: ["findings.json confirmed.key_files/facts", "范围/事实对齐摘要"]
+    # Gate-1：范围/事实对齐确认（分析前，不冻结需求）
+    gate:
+      simple: "auto"
+      medium: "optional"
+      complex: "required"
+    description: "执行最小 scan-of-record，并在进入 analyze 前完成范围/事实对齐确认"
+
+  - id: "analyze"
+    name: "需求分析"
+    expert: "需求分析师"
+    outputs: ["rfc.md §1-§2", "findings.json"]
+    # 按复杂度配置用户确认门禁
+    # Gate-2：需求冻结确认（进入 design 前）
+    gate:
+      simple: "auto"       # SIMPLE: 自动通过，无需确认
+      medium: "optional"   # MEDIUM: 可选确认（默认自动）
+      complex: "required"  # COMPLEX: 必须用户确认
+    description: "输出 §1-§2 并完成澄清；COMPLEX 必须做需求冻结确认后才能进入 design"
+
+  - id: "design"
+    name: "方案设计"
+    expert: "架构设计师"
+    outputs: ["rfc.md §3-§5"]
+    gate:
+      simple: "auto"       # SIMPLE: 与 analyze 合并执行
+      medium: "optional"   # MEDIUM: 可选确认
+      complex: "optional"  # COMPLEX: 默认自动流转；仅在需要人工决策/变更范围时要求确认
+    description: "需求化设计（契约/矩阵/DFX/决策），默认自动流转到 precheck→audit；仅在存在未决项时阻断"
+
+  - id: "precheck"
+    name: "自动预检"
+    type: "automated"
+    outputs: ["预检报告"]
+    gate:
+      simple: "auto"       # 所有复杂度都自动执行
+      medium: "auto"
+      complex: "auto"
+    description: "在人工审查前自动检查结构完整性、场景覆盖和 DFX 清单"
+
+  - id: "audit"
+    name: "质量审查"
+    expert: "质量审查员"
+    outputs: ["审查报告"]
+    gate:
+      simple: "required"   # 所有复杂度都需要最终确认
+      medium: "required"
+      complex: "required"
+
+# 复杂度等级
+complexity:
+  simple:
+    description: "单文件、单接口、意图明确"
+    mode: "快速通道（合并 analyze+design）"
+    user_gates: 1          # 只有最终审批需确认
+    subagent_count: 1      # 单个 subagent 执行所有阶段
+  medium:
+    description: "多文件、单子系统"
+    mode: "标准流程"
+    user_gates: 2          # （典型）需求冻结确认 + 最终审批（其余 gate 视情况可选）
+    subagent_count: 2      # 可使用 resume 模式
+  complex:
+    description: "跨子系统、架构级改动"
+    mode: "完整流程 + 关键阶段用户确认"
+    user_gates: 3          # 范围/事实对齐 + 需求冻结 + 最终审批
+    subagent_count: 4      # 独立 subagent
+
+# 模型选择策略
+model_selection:
+  # 默认策略：按复杂度自动选择
+  default_strategy: "auto"  # auto | high_quality | fast
+
+  # 各阶段模型配置
+  dispatcher: "sonnet"      # 始终用 sonnet（决策关键）
+
+  analyze:
+    simple: "haiku"
+    medium: "sonnet"
+    complex: "sonnet"
+
+  design:
+    simple: "haiku"
+    medium: "sonnet"
+    complex: "sonnet"
+
+  audit: "sonnet"           # 始终用 sonnet（质量关键）
+
+  # 预设策略
+  strategies:
+    auto:
+      description: "按复杂度自动选择（默认）"
+      # 使用上面的 analyze/design 配置
+
+    high_quality:
+      description: "全部使用最高质量模型"
+      override_all: "sonnet"  # 或 "opus"
+
+    fast:
+      description: "全部使用最快模型（牺牲质量）"
+      override_all: "haiku"
+
+# DFX 检查规则（项目特定配置）
+# 通用 DFX 8 维度定义在 personas/core/auditor-core.md
+# 这里只配置项目特定的额外规则或覆盖
+dfx_rules:
+  # 项目特定的安全规则（如有）
+  security_custom: []
+  # 项目特定的性能规则（如有）
+  performance_custom: []
+  # 项目特定的其他规则（如有）
+  custom: []
+
+# 文件路径
+paths:
+  # 推荐：使用工具无关的项目目录，方便不同模型/不同运行器共用与查看
+  home: ".ohspec"
+  rfcs: ".ohspec/rfcs"
+  templates: ".ohspec/templates"
+  scripts: ".ohspec/scripts"
+  checkpoints: ".ohspec/checkpoints"
+
+  # 兼容：历史/Claude Code 布局（仍支持读取，但新产出默认写入 .ohspec）
+  legacy_home: ".claude/ohspec"
+  legacy_rfcs: ".claude/ohspec/rfcs"
+
+# 可用命令
+commands:
+  - name: "init"
+    workflow: "workflows/init.md"
+    description: "初始化权限配置（首次使用）"
+  - name: "list"
+    workflow: "workflows/list.md"
+    description: "列出所有 RFC"
+  - name: "resume"
+    workflow: "workflows/resume.md"
+    description: "恢复指定 RFC"
+  - name: "precheck"
+    workflow: "workflows/precheck.md"
+    description: "手动执行预检"
+  - name: "export"
+    workflow: "workflows/export.md"
+    description: "手动导出派生机读件（rfc.digest.json / tasks.json）"
+
+# 上下文管理配置（Manus 模式核心原则）
+context_management:
+  # 三文件架构（优先使用纯 JSON 模板，避免 JSONC 去注释导致 schema 漂移）
+  external_memory:
+    - name: "findings.json"
+      template: "templates/findings.json"
+      purpose: "代码扫描结果、用户决策、技术约束"
+    - name: "progress.json"
+      template: "templates/progress.json"
+      purpose: "执行时间线、任务状态、交互记录"
+    - name: "rfc.md"
+      template: "templates/rfc.md"
+      purpose: "最终交付物（增量生成）"
+
+  # 核心规则（详细定义见 workflows/）
+  rules:
+    - "2-Action Rule: 每 2 次代码扫描后必须更新 findings.json"
+    - "Read Before Decide: 每个专家启动前必须重读 findings.json 和 progress.json"
+    - "5-Question Reboot Test: 每个阶段开始前验证上下文充分性"
+    - "3-Strike Error Protocol: 错误处理协议，防止重复相同失败操作"
+
+# 项目上下文配置
+project_context:
+  enabled: true  # 启用项目上下文预制机制
+  file_path: ".claude/project-context.md"  # 上下文文件路径
+  generation:
+    mode: "assisted"  # 辅助生成模式（AI 扫描 + 用户补充）
+    auto_load: true   # 需求分析师自动加载上下文文件
+  benefits:
+    - "加速需求分析阶段（跳过重复的代码结构扫描）"
+    - "预制编码规范和模块信息"
+    - "减少首次扫描时间（小型项目 ~30s，大型项目 ~5min）"
+
+# 竞品分析配置
+competitive_analysis:
+  enabled: true
+
+  # 工具可用性检测
+  tool_availability:
+    check_on_startup: true          # 启动时预检
+    cache_duration: 300              # 缓存时长（秒）
+    fallback_strategy: "graceful"    # graceful | strict | skip
+
+  target_platforms:
+    - name: "Android"
+      priority: "high"
+      knowledge_base: ".claude/ohspec/knowledge-base/android/"
+      sources:
+        - type: "context7"
+          library: "android"
+        - type: "github"
+          repos: ["aosp-mirror/*", "android/*"]
+        - type: "firecrawl"
+          keywords: ["Android architecture", "AOSP design"]
+    - name: "iOS/macOS"
+      priority: "high"
+      knowledge_base: ".claude/ohspec/knowledge-base/ios-macos/"
+      sources:
+        - type: "context7"
+          library: "apple-developer"
+        - type: "github"
+          repos: ["apple/*"]
+    - name: "Windows"
+      priority: "medium"
+      knowledge_base: ".claude/ohspec/knowledge-base/windows/"
+  query_strategy:
+    max_results_per_platform: 3
+    timeout: 60
+    cache_ttl: 86400
+    fallback_on_error: true
+
+# Token 预算管理
+token_budget:
+  # 预算上限（tokens）
+  max_tokens: 200000
+
+  # 三级预警阈值
+  thresholds:
+    yellow: 0.50   # 50% - 黄色预警
+    orange: 0.70   # 70% - 橙色预警
+    red: 0.85      # 85% - 红色预警
+
+  # 各级别处理策略
+  actions:
+    yellow:
+      - "归档旧 RFC 到 findings.json"
+      - "压缩 findings 中的详细扫描结果"
+      - "移除冗余的代码片段引用"
+    orange:
+      - "只保留当前 RFC 相关上下文"
+      - "创建检查点（checkpoint）"
+      - "清理历史交互记录"
+    red:
+      - "切换到最小上下文模式"
+      - "建议用户开启新会话"
+      - "保存完整状态到 progress.json"
+
+  # 上下文压缩策略
+  compression:
+    # 优先保留的内容
+    preserve:
+      - "当前阶段的 RFC 内容"
+      - "关键决策记录"
+      - "未解决的约束和风险"
+    # 可压缩的内容
+    compressible:
+      - "历史代码扫描结果"
+      - "已完成阶段的详细日志"
+      - "冗余的文件内容引用"

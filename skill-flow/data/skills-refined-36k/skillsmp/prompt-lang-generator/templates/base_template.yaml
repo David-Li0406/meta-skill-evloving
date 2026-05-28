@@ -1,0 +1,90 @@
+# Prompt-Lang v2.0 Base Template
+# ================================
+# 全ての生成物のベースとなる骨格テンプレート
+# Phase 2 で可変部を LLM が埋める
+
+version: "2.0"
+schema: "prompt-lang/base/v1"
+
+# --- メタデータ（必須）---
+metadata:
+  name: ""           # スキル名（snake_case）
+  owner: ""          # 作成者/チーム
+  last_updated: ""   # YYYY-MM-DD
+  status: "draft"    # draft | review | production | deprecated
+
+# --- 必須ディレクティブ ---
+required:
+  role: |
+    # AI の役割を1-2文で定義
+    # 例: シニアコードレビューア（セキュリティ専門）
+    
+  goal: |
+    # タスクの目的を明確に記述
+    # 例: 提示されたコードの品質とセキュリティを評価し、改善提案を出す
+    
+  constraints:
+    # 制約条件（最低3個）
+    - ""  # 制約1
+    - ""  # 制約2
+    - ""  # 制約3
+    
+  format: |
+    # 出力構造を定義（JSON/Markdown/YAML など）
+    # 具体的なスキーマを記述
+    ```json
+    {
+      "key": "value type"
+    }
+    ```
+    
+  examples:
+    # 入出力例（最低1個）
+    - input: ""
+      output: ""
+
+# --- 推奨ディレクティブ ---
+optional:
+  rubric:
+    # 自己評価軸（推奨）
+    - name: ""
+      description: ""
+      scale: "1-5"  # 1-5 | 1-10 | binary | percent
+      
+  activation:
+    # トリガー条件（Skill用）
+    mode: "manual"  # always_on | manual | glob | model_decision
+    pattern: ""     # glob パターン
+    priority: 1     # 優先度（1-10）
+    
+  context:
+    # リソース参照
+    - type: "file"  # file | dir | conv | mcp | ki
+      path: ""
+      priority: "MEDIUM"  # HIGH | MEDIUM | LOW
+
+# --- 条件分岐テンプレート ---
+conditional:
+  # @if/@else ブロックのテンプレート
+  # 環境（prod/dev/staging）で分岐する場合に使用
+  env_based:
+    prod:
+      constraints:
+        - "本番環境のため、破壊的変更は禁止"
+    dev:
+      constraints:
+        - "開発環境のため、実験的提案も可"
+
+# --- エラーハンドリング（必須セクション） ---
+error_handling:
+  - condition: "入力が曖昧"
+    action: "REJECT + 追加質問"
+  - condition: "構文エラー"
+    action: "エラー箇所を明示"
+  - condition: "ドメイン外"
+    action: "対応外を明示 + 代替案"
+
+# --- 制限事項（必須セクション） ---
+limitations:
+  - ""  # 制限1
+  - ""  # 制限2

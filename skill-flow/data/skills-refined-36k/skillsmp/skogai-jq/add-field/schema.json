@@ -1,0 +1,51 @@
+{
+  "name": "add-field",
+  "description": "Add a new field to an object at a specified path, creating intermediate objects as needed",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the object where field should be added (use empty string for root level)"
+    },
+    "field_name": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the field to add"
+    },
+    "value": {
+      "type": "string",
+      "required": true,
+      "description": "Value to set for the new field"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Modified object with new field added at the specified path"
+  },
+  "examples": [
+    {
+      "description": "Add field to root level object",
+      "input": {"user": {"name": "alice"}},
+      "args": {"path": "", "field_name": "status", "value": "active"},
+      "output": {"user": {"name": "alice"}, "status": "active"}
+    },
+    {
+      "description": "Add field to nested object",
+      "input": {"user": {"name": "alice"}},
+      "args": {"path": "user", "field_name": "email", "value": "alice@example.com"},
+      "output": {"user": {"name": "alice", "email": "alice@example.com"}}
+    },
+    {
+      "description": "Create intermediate objects and add field",
+      "input": {},
+      "args": {"path": "user.profile", "field_name": "age", "value": "30"},
+      "output": {"user": {"profile": {"age": "30"}}}
+    }
+  ],
+  "tags": ["crud", "write", "object", "mutation", "field"]
+}

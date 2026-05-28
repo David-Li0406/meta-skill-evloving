@@ -1,0 +1,452 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://spencerbegg.gs/schemas/design-config/1.0.0/schema.json",
+	"title": "Design Documentation System Configuration",
+	"description": "Configuration schema for the design documentation system with modules, skills, and quality standards",
+	"type": "object",
+	"required": ["version", "project", "paths", "modules", "quality"],
+	"properties": {
+		"$schema": {
+			"type": "string",
+			"description": "JSON Schema reference"
+		},
+		"version": {
+			"type": "string",
+			"description": "Configuration schema version",
+			"pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+		},
+		"project": {
+			"type": "object",
+			"description": "Project metadata",
+			"required": ["name", "type", "maintainer"],
+			"properties": {
+				"name": {
+					"type": "string",
+					"description": "Project name (e.g., 'spencerbeggs/website')"
+				},
+				"type": {
+					"type": "string",
+					"description": "Project type",
+					"enum": ["monorepo", "package", "application"]
+				},
+				"repository": {
+					"type": "string",
+					"description": "Git repository URL",
+					"format": "uri"
+				},
+				"maintainer": {
+					"type": "string",
+					"description": "Primary maintainer name"
+				}
+			}
+		},
+		"paths": {
+			"type": "object",
+			"description": "Standard paths for documentation and configuration",
+			"required": ["designDocs", "skills", "context"],
+			"properties": {
+				"designDocs": {
+					"type": "string",
+					"description": "Root directory for design documentation",
+					"default": ".claude/design"
+				},
+				"plans": {
+					"type": "string",
+					"description": "Root directory for plan documents (Claude-managed)",
+					"default": ".claude/plans"
+				},
+				"skills": {
+					"type": "string",
+					"description": "Root directory for skills",
+					"default": ".claude/skills"
+				},
+				"context": {
+					"type": "string",
+					"description": "Root context file path",
+					"default": "CLAUDE.md"
+				},
+				"localContext": {
+					"type": "string",
+					"description": "Local context file path",
+					"default": "CLAUDE.local.md"
+				}
+			}
+		},
+		"modules": {
+			"type": "object",
+			"description": "Module definitions with design doc paths and categories",
+			"additionalProperties": {
+				"type": "object",
+				"required": ["path", "maintainer"],
+				"properties": {
+					"path": {
+						"type": "string",
+						"description": "Relative path to module directory"
+					},
+					"designDocsPath": {
+						"type": ["string", "null"],
+						"description": "Path to module's design documentation directory"
+					},
+					"categories": {
+						"type": "array",
+						"description": "Allowed design doc categories for this module",
+						"items": {
+							"type": "string",
+							"enum": [
+								"architecture",
+								"performance",
+								"observability",
+								"testing",
+								"integration",
+								"cross-linking",
+								"import-generation",
+								"source-mapping",
+								"meta",
+								"documentation",
+								"other"
+							]
+						},
+						"uniqueItems": true
+					},
+					"maintainer": {
+						"type": "string",
+						"description": "Module maintainer name"
+					},
+					"userDocs": {
+						"type": "object",
+						"description": "User documentation configuration",
+						"properties": {
+							"readme": {
+								"type": ["string", "null"],
+								"description": "Path to README.md (Level 1 docs)"
+							},
+							"repoDocs": {
+								"type": ["string", "null"],
+								"description": "Path to repository docs (Level 2 docs)"
+							},
+							"siteDocs": {
+								"type": ["string", "null"],
+								"description": "Path to site docs (Level 3 docs)"
+							}
+						}
+					}
+				}
+			}
+		},
+		"skills": {
+			"type": "object",
+			"description": "Skills configuration",
+			"properties": {
+				"baseNamespace": {
+					"type": "string",
+					"description": "Base namespace for skills",
+					"default": "/"
+				},
+				"enabled": {
+					"type": "array",
+					"description": "List of enabled skill names",
+					"items": {
+						"type": "string"
+					},
+					"uniqueItems": true
+				}
+			}
+		},
+		"quality": {
+			"type": "object",
+			"description": "Quality standards and requirements",
+			"required": ["designDocs"],
+			"properties": {
+				"designDocs": {
+					"type": "object",
+					"description": "Design documentation quality standards",
+					"required": ["maxLineLength", "requireFrontmatter", "requireTOC", "minSections"],
+					"properties": {
+						"maxLineLength": {
+							"type": "integer",
+							"description": "Maximum line length for design docs",
+							"minimum": 80,
+							"maximum": 200,
+							"default": 120
+						},
+						"requireFrontmatter": {
+							"type": "boolean",
+							"description": "Whether frontmatter is required",
+							"default": true
+						},
+						"requireTOC": {
+							"type": "boolean",
+							"description": "Whether table of contents is required",
+							"default": true
+						},
+						"minSections": {
+							"type": "array",
+							"description": "Minimum required sections",
+							"items": {
+								"type": "string"
+							},
+							"minItems": 1,
+							"default": ["Overview", "Current State", "Rationale"]
+						}
+					}
+				},
+				"userDocs": {
+					"type": "object",
+					"description": "User documentation quality standards",
+					"properties": {
+						"level1": {
+							"type": "object",
+							"description": "Level 1 (README) standards",
+							"properties": {
+								"targetWordCount": {
+									"type": "array",
+									"description": "Target word count range [min, max]",
+									"items": {
+										"type": "integer",
+										"minimum": 0
+									},
+									"minItems": 2,
+									"maxItems": 2
+								},
+								"maxLineLength": {
+									"type": "integer",
+									"description": "Maximum line length",
+									"minimum": 80,
+									"maximum": 120
+								},
+								"requireSections": {
+									"type": "array",
+									"description": "Required sections",
+									"items": {
+										"type": "string"
+									}
+								}
+							}
+						},
+						"level2": {
+							"type": "object",
+							"description": "Level 2 (repo docs) standards",
+							"properties": {
+								"maxLineLength": {
+									"type": "integer",
+									"minimum": 80,
+									"maximum": 150
+								},
+								"requireNavigation": {
+									"type": "boolean"
+								}
+							}
+						},
+						"level3": {
+							"type": "object",
+							"description": "Level 3 (site docs) standards",
+							"properties": {
+								"framework": {
+									"type": "string",
+									"enum": ["rspress", "docusaurus", "vitepress", "nextra"]
+								},
+								"requireMetadata": {
+									"type": "boolean"
+								},
+								"requireCodeExamples": {
+									"type": "boolean"
+								}
+							}
+						}
+					}
+				},
+				"context": {
+					"type": "object",
+					"description": "CLAUDE.md context file standards",
+					"properties": {
+						"rootMaxLines": {
+							"type": "integer",
+							"description": "Maximum lines for root CLAUDE.md",
+							"minimum": 100,
+							"maximum": 1000,
+							"default": 500
+						},
+						"childMaxLines": {
+							"type": "integer",
+							"description": "Maximum lines for package CLAUDE.md",
+							"minimum": 100,
+							"maximum": 500,
+							"default": 300
+						},
+						"requireDesignDocPointers": {
+							"type": "boolean",
+							"description": "Whether design doc references are required",
+							"default": true
+						}
+					}
+				},
+				"plans": {
+					"type": "object",
+					"description": "Plan document quality standards",
+					"properties": {
+						"maxLineLength": {
+							"type": "integer",
+							"description": "Maximum line length for plan documents",
+							"minimum": 80,
+							"maximum": 200,
+							"default": 120
+						},
+						"requireFrontmatter": {
+							"type": "boolean",
+							"description": "Whether frontmatter is required",
+							"default": true
+						},
+						"requiredFields": {
+							"type": "array",
+							"description": "Required frontmatter fields",
+							"items": {
+								"type": "string"
+							},
+							"default": ["name", "title", "created", "status", "progress"]
+						},
+						"validStatuses": {
+							"type": "array",
+							"description": "Valid plan status values",
+							"items": {
+								"type": "string"
+							},
+							"default": ["ready", "in-progress", "blocked", "completed", "abandoned"]
+						},
+						"progressRange": {
+							"type": "array",
+							"description": "Valid progress range [min, max]",
+							"items": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 100
+							},
+							"minItems": 2,
+							"maxItems": 2,
+							"default": [0, 100]
+						},
+						"stalenessThresholdDays": {
+							"type": "integer",
+							"description": "Days before plan is considered stale",
+							"minimum": 7,
+							"maximum": 180,
+							"default": 30
+						},
+						"archiveAfterDays": {
+							"type": "integer",
+							"description": "Days after completion before archival",
+							"minimum": 7,
+							"maximum": 365,
+							"default": 30
+						}
+					}
+				}
+			}
+		},
+		"integration": {
+			"type": "object",
+			"description": "Integration settings",
+			"properties": {
+				"ci": {
+					"type": "object",
+					"description": "CI/CD integration settings",
+					"properties": {
+						"enabled": {
+							"type": "boolean",
+							"default": false
+						},
+						"validateOnPR": {
+							"type": "boolean",
+							"default": false
+						},
+						"syncOnMerge": {
+							"type": "boolean",
+							"default": false
+						}
+					}
+				},
+				"git": {
+					"type": "object",
+					"description": "Git integration settings",
+					"properties": {
+						"trackDesignDocs": {
+							"type": "boolean",
+							"default": true
+						},
+						"requireReviewForChanges": {
+							"type": "boolean",
+							"default": false
+						}
+					}
+				},
+				"plans": {
+					"type": "object",
+					"description": "Plan integration settings",
+					"properties": {
+						"enabled": {
+							"type": "boolean",
+							"description": "Enable plan-design linking system",
+							"default": true
+						},
+						"bidirectionalLinking": {
+							"type": "boolean",
+							"description": "Enforce bidirectional plan-design links",
+							"default": true
+						},
+						"autoSyncProgress": {
+							"type": "boolean",
+							"description": "Auto-sync plan progress from implementation",
+							"default": false
+						},
+						"validateOnCommit": {
+							"type": "boolean",
+							"description": "Validate plans in pre-commit hook",
+							"default": true
+						},
+						"cacheMetadata": {
+							"type": "boolean",
+							"description": "Cache plan metadata for faster lookups",
+							"default": true
+						},
+						"cacheTTL": {
+							"type": "integer",
+							"description": "Cache TTL in seconds",
+							"minimum": 60,
+							"maximum": 3600,
+							"default": 300
+						}
+					}
+				}
+			}
+		},
+		"subagents": {
+			"type": "object",
+			"description": "Subagent configurations",
+			"additionalProperties": {
+				"type": "object",
+				"properties": {
+					"enabled": {
+						"type": "boolean"
+					},
+					"description": {
+						"type": "string"
+					},
+					"skills": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"tools": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"file": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}

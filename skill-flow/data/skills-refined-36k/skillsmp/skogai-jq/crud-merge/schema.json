@@ -1,0 +1,52 @@
+{
+  "name": "crud-merge",
+  "description": "Deep merge two objects recursively at specified paths",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing both source and target paths"
+  },
+  "args": {
+    "source_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to source object to merge from (e.g., 'data.source')"
+    },
+    "target_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to target object to merge into (e.g., 'data.target')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Modified object with source merged into target at target_path"
+  },
+  "examples": [
+    {
+      "description": "Merge nested objects",
+      "input": {
+        "source": {"a": 1, "b": {"c": 2}},
+        "target": {"b": {"d": 3}, "e": 4}
+      },
+      "args": {"source_path": "source", "target_path": "target"},
+      "output": {
+        "source": {"a": 1, "b": {"c": 2}},
+        "target": {"a": 1, "b": {"c": 2, "d": 3}, "e": 4}
+      }
+    },
+    {
+      "description": "Merge with conflicting keys (source wins)",
+      "input": {
+        "source": {"x": "new"},
+        "target": {"x": "old", "y": "kept"}
+      },
+      "args": {"source_path": "source", "target_path": "target"},
+      "output": {
+        "source": {"x": "new"},
+        "target": {"x": "new", "y": "kept"}
+      }
+    }
+  ],
+  "tags": ["crud", "merge", "deep-merge", "object"]
+}

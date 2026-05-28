@@ -1,0 +1,146 @@
+[
+  {
+    "ruleId": "",
+    "ruleTitle": "Exclude Auxiliary Files",
+    "type": "bad",
+    "code": "skill/\n├── README.md\n├── CHANGELOG.md\n├── INSTALL.md\n└── SKILL.md",
+    "language": "text",
+    "description": "cluttered"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Exclude Auxiliary Files",
+    "type": "good",
+    "code": "skill/\n└── SKILL.md",
+    "language": "text",
+    "description": "focused"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "SKILL.md Essentials",
+    "type": "bad",
+    "code": "# My Skill\n\nHere is how to use this skill...",
+    "language": "markdown",
+    "description": "missing frontmatter"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "SKILL.md Essentials",
+    "type": "good",
+    "code": "---\nname: my-skill\ndescription: Use this skill when...\n---\n\n# My Skill\n\nHere is how to use this skill...",
+    "language": "markdown",
+    "description": "valid frontmatter"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Standard Directory Structure",
+    "type": "bad",
+    "code": "my-skill/\n├── README.txt\n├── code.py\n├── doc.pdf\n└── skill_info.md",
+    "language": "text",
+    "description": "messy structure"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Standard Directory Structure",
+    "type": "good",
+    "code": "my-skill/\n├── SKILL.md (required)\n├── scripts/ (optional, executable code)\n├── references/ (optional, documentation)\n└── assets/ (optional, output files)",
+    "language": "text",
+    "description": "standard structure"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Use Assets for Output",
+    "type": "bad",
+    "code": "Generate a logo pixel by pixel...",
+    "language": "markdown",
+    "description": "generating from scratch"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Use Assets for Output",
+    "type": "good",
+    "code": "Use the brand logo from `assets/logo.png`.",
+    "language": "markdown",
+    "description": "using asset"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Use References for Knowledge",
+    "type": "bad",
+    "code": "# Database Schema\n\n[...500 lines of schema definition...]",
+    "language": "markdown",
+    "description": "bloated SKILL.md"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Use References for Knowledge",
+    "type": "good",
+    "code": "# Database Schema\n\nFor table definitions, see [references/schema.md](references/schema.md).",
+    "language": "markdown",
+    "description": "referenced schema"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Use Scripts for Determinism",
+    "type": "bad",
+    "code": "To rotate the PDF, first read the bytes, then look for the rotation matrix... [complex math instructions]",
+    "language": "markdown",
+    "description": "complex logic in text"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Use Scripts for Determinism",
+    "type": "good",
+    "code": "To rotate the PDF, run: `scripts/rotate_pdf.py input.pdf output.pdf`",
+    "language": "markdown",
+    "description": "delegated to script"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Concise is Key",
+    "type": "bad",
+    "code": "# Instructions\n\nIt is very important to understand that when you are writing code, you should make sure that the code is clean and readable. This is because clean code is easier to maintain and debug. If you write messy code, it will be hard for others to understand simple concepts. Therefore, always strive to write code that is simple and direct.",
+    "language": "markdown",
+    "description": "verbose explanation"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Concise is Key",
+    "type": "good",
+    "code": "# Instructions\n\nWrite clean, readable code. Prioritize maintainability and clarity.",
+    "language": "markdown",
+    "description": "concise directive"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Set Appropriate Degrees of Freedom",
+    "type": "bad",
+    "code": "<!-- High freedom for a fragile task -->\n\nTo deploy the database, just check the cloud console and try to find the right button. Maybe look for \"Deploy\" or \"Start\".",
+    "language": "markdown",
+    "description": "mismatched freedom"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Set Appropriate Degrees of Freedom",
+    "type": "good",
+    "code": "<!-- Low freedom for a fragile task -->\n\nTo deploy the database, run the specific script: `scripts/deploy_db.sh --env=prod`. Do not attempt manual deployment.",
+    "language": "markdown",
+    "description": "matched freedom"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Progressive Disclosure",
+    "type": "bad",
+    "code": "<!-- SKILL.md (10,000 lines) -->\n\n# Huge Manual\n\n[...entire content of API docs included directly in SKILL.md...]",
+    "language": "markdown",
+    "description": "flat structure"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Progressive Disclosure",
+    "type": "good",
+    "code": "<!-- SKILL.md (Concise) -->\n\n# API Guide\n\nFor detailed endpoint definitions, see [references/api_docs.md](references/api_docs.md).",
+    "language": "markdown",
+    "description": "progressive structure"
+  }
+]

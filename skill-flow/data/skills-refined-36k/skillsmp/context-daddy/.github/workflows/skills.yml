@@ -1,0 +1,15 @@
+name: Build Skills Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-skill:
+    uses: robtaylor/skills/.github/workflows/skill-ci.yml@add-skill-ci
+    with:
+      skill_path: "."
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

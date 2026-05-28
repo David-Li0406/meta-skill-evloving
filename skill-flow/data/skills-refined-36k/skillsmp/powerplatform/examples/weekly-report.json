@@ -1,0 +1,156 @@
+{
+  "properties": {
+    "displayName": "Weekly Summary Report",
+    "description": "Runs every Monday at 9 AM to collect items from the past week and email a summary",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "Recurrence": {
+          "type": "Recurrence",
+          "recurrence": {
+            "frequency": "Week",
+            "interval": 1,
+            "schedule": {
+              "weekDays": ["Monday"],
+              "hours": ["9"],
+              "minutes": ["0"]
+            },
+            "timeZone": "GMT Standard Time"
+          }
+        }
+      },
+      "actions": {
+        "Initialize_report_HTML": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "ReportHTML",
+                "type": "string",
+                "value": "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse: collapse;'><tr style='background-color: #4472C4; color: white;'><th>Title</th><th>Created</th><th>Status</th><th>Owner</th></tr>"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Initialize_item_count": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "ItemCount",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Get_items_from_last_week": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "{{SHAREPOINT_SITE_URL}}",
+              "table": "{{LIST_GUID}}",
+              "$filter": "Created ge '@{addDays(utcNow(), -7)}'",
+              "$orderby": "Created desc",
+              "$top": 500
+            }
+          },
+          "runAfter": {
+            "Initialize_report_HTML": ["Succeeded"],
+            "Initialize_item_count": ["Succeeded"]
+          }
+        },
+        "Apply_to_each_item": {
+          "type": "Foreach",
+          "foreach": "@body('Get_items_from_last_week')?['value']",
+          "actions": {
+            "Append_row_to_table": {
+              "type": "AppendToStringVariable",
+              "inputs": {
+                "name": "ReportHTML",
+                "value": "<tr><td>@{items('Apply_to_each_item')?['Title']}</td><td>@{formatDateTime(items('Apply_to_each_item')?['Created'], 'dd MMM yyyy HH:mm')}</td><td>@{coalesce(items('Apply_to_each_item')?['Status'], 'N/A')}</td><td>@{items('Apply_to_each_item')?['Author']?['DisplayName']}</td></tr>"
+              },
+              "runAfter": {}
+            },
+            "Increment_count": {
+              "type": "IncrementVariable",
+              "inputs": {
+                "name": "ItemCount",
+                "value": 1
+              },
+              "runAfter": {
+                "Append_row_to_table": ["Succeeded"]
+              }
+            }
+          },
+          "runAfter": {
+            "Get_items_from_last_week": ["Succeeded"]
+          }
+        },
+        "Close_table_tag": {
+          "type": "AppendToStringVariable",
+          "inputs": {
+            "name": "ReportHTML",
+            "value": "</table>"
+          },
+          "runAfter": {
+            "Apply_to_each_item": ["Succeeded"]
+          }
+        },
+        "Send_report_email": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_office365",
+              "operationId": "SendEmailV2",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+            },
+            "parameters": {
+              "emailMessage/To": "{{RECIPIENT_EMAIL}}",
+              "emailMessage/Subject": "Weekly Report - @{formatDateTime(utcNow(), 'dd MMM yyyy')}",
+              "emailMessage/Body": "<h2>Weekly Summary Report</h2><p><b>Report Period:</b> @{formatDateTime(addDays(utcNow(), -7), 'dd MMM yyyy')} - @{formatDateTime(utcNow(), 'dd MMM yyyy')}</p><p><b>Total Items:</b> @{variables('ItemCount')}</p><hr>@{variables('ReportHTML')}<hr><p><i>This report was generated automatically by Power Automate.</i></p>",
+              "emailMessage/Importance": "Normal"
+            }
+          },
+          "runAfter": {
+            "Close_table_tag": ["Succeeded"]
+          }
+        }
+      }
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared_sharepointonline",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified"
+      },
+      "shared_office365": {
+        "connectionName": "shared_office365",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "tier": "NotSpecified"
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  },
+  "schemaVersion": "1.0.0.0",
+  "_paiMetadata": {
+    "placeholders": {
+      "{{SHAREPOINT_SITE_URL}}": "Replace with your SharePoint site URL",
+      "{{LIST_GUID}}": "Replace with your SharePoint list GUID or name",
+      "{{RECIPIENT_EMAIL}}": "Replace with report recipient email address"
+    },
+    "requiredConnectors": ["SharePoint", "Office 365 Outlook"],
+    "schedule": "Every Monday at 9:00 AM GMT"
+  }
+}

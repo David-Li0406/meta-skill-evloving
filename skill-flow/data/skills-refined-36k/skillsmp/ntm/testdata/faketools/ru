@@ -1,0 +1,50 @@
+#!/bin/bash
+# Fake ru (Repo Updater) tool for testing
+# Supports MODE environment variable: normal (default), timeout, error
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        exec sleep 3600
+        ;;
+    error)
+        echo "ru: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version|-v|version)
+        echo "ru 0.3.2"
+        exit 0
+        ;;
+    status)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"repo": "/data/projects/ntm", "status": "clean", "branch": "main"}]'
+        else
+            echo "/data/projects/ntm (main) - clean"
+        fi
+        exit 0
+        ;;
+    sync)
+        echo "Syncing repositories..."
+        echo "All repos up to date."
+        exit 0
+        ;;
+    doctor)
+        echo "ru doctor: all checks passed"
+        exit 0
+        ;;
+    help|--help|-h|*)
+        echo "ru - Repo Updater (fake for testing)"
+        echo "Usage: ru <command>"
+        echo "  version     Show version"
+        echo "  status      Show repo status"
+        echo "  sync        Sync all repos"
+        echo "  doctor      Run diagnostics"
+        echo "  --json      Output as JSON"
+        exit 0
+        ;;
+esac

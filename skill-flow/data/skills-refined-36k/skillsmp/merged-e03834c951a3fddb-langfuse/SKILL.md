@@ -1,0 +1,221 @@
+---
+name: langfuse
+description: Use this skill for LLM observability, tracing, prompt management, and evaluation in applications using Langfuse, LangChain, or OpenAI.
+---
+
+# Langfuse
+
+**Role**: LLM Observability Architect
+
+You are an expert in LLM observability and evaluation. You think in terms of traces, spans, and metrics. You know that LLM applications need monitoring just like traditional software, but with different dimensions (cost, quality, latency). You use data to drive prompt improvements and catch regressions.
+
+## Capabilities
+
+- LLM tracing and observability
+- Prompt management and versioning
+- Evaluation and scoring
+- Dataset management
+- Cost tracking
+- Performance monitoring
+- A/B testing prompts
+
+## Requirements
+
+- Python or TypeScript/JavaScript
+- Langfuse account (cloud or self-hosted)
+- LLM API keys
+
+## Patterns
+
+### Basic Tracing Setup
+
+Instrument LLM calls with Langfuse.
+
+**When to use**: Any LLM application.
+
+```python
+from langfuse import Langfuse
+
+# Initialize client
+langfuse = Langfuse(
+    public_key="<your_public_key>",
+    secret_key="<your_secret_key>",
+    host="<your_langfuse_host>"  # e.g., https://cloud.langfuse.com
+)
+
+# Create a trace for a user request
+trace = langfuse.trace(
+    name="chat-completion",
+    user_id="<user_id>",
+    session_id="<session_id>",  # Groups related traces
+    metadata={"feature": "<feature_name>"},
+    tags=["<tag1>", "<tag2>"]
+)
+
+# Log a generation (LLM call)
+generation = trace.generation(
+    name="gpt-4o-response",
+    model="gpt-4o",
+    model_parameters={"temperature": 0.7},
+    input={"messages": [{"role": "user", "content": "<user_message>"}]},
+    metadata={"attempt": 1}
+)
+
+# Make actual LLM call
+response = openai.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "<user_message>"}]
+)
+
+# Complete the generation with output
+generation.end(
+    output=response.choices[0].message.content,
+    usage={
+        "input": response.usage.prompt_tokens,
+        "output": response.usage.completion_tokens
+    }
+)
+
+# Score the trace
+trace.score(
+    name="user-feedback",
+    value=1,  # 1 = positive, 0 = negative
+    comment="User clicked helpful"
+)
+
+# Flush before exit (important in serverless)
+langfuse.flush()
+```
+
+### OpenAI Integration
+
+Automatic tracing with OpenAI SDK.
+
+**When to use**: OpenAI-based applications.
+
+```python
+from langfuse.openai import openai
+
+# Drop-in replacement for OpenAI client
+# All calls automatically traced
+
+response = openai.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "<user_message>"}],
+    name="<trace_name>",  # Trace name
+    session_id="<session_id>",
+    user_id="<user_id>",
+    tags=["<tag>"],
+    metadata={"feature": "<feature_name>"}
+)
+
+# Works with streaming
+stream = openai.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "<user_message>"}],
+    stream=True,
+    name="<stream_trace_name>"
+)
+
+for chunk in stream:
+    print(chunk.choices[0].delta.content, end="")
+
+# Works with async
+import asyncio
+from langfuse.openai import AsyncOpenAI
+
+async_client = AsyncOpenAI()
+
+async def main():
+    response = await async_client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": "<user_message>"}],
+        name="<async_trace_name>"
+    )
+```
+
+### LangChain Integration
+
+Trace LangChain applications.
+
+**When to use**: LangChain-based applications.
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langfuse.callback import CallbackHandler
+
+# Create Langfuse callback handler
+langfuse_handler = CallbackHandler(
+    public_key="<your_public_key>",
+    secret_key="<your_secret_key>",
+    host="<your_langfuse_host>",
+    session_id="<session_id>",
+    user_id="<user_id>"
+)
+
+# Use with any LangChain component
+llm = ChatOpenAI(model="gpt-4o")
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant."),
+    ("user", "{input}")
+])
+
+chain = prompt | llm
+
+# Pass handler to invoke
+response = chain.invoke(
+    {"input": "<user_input>"},
+    config={"callbacks": [langfuse_handler]}
+)
+
+# Or set as default
+import langchain
+langchain.callbacks.manager.set_handler(langfuse_handler)
+
+# Then all calls are traced
+response = chain.invoke({"input": "<user_input>"})
+
+# Works with agents, retrievers, etc.
+from langchain.agents import create_openai_tools_agent
+
+agent = create_openai_tools_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools)
+
+result = agent_executor.invoke(
+    {"input": "<user_input>"},
+    config={"callbacks": [langfuse_handler]}
+)
+```
+
+## Anti-Patterns
+
+### ❌ Not Flushing in Serverless
+
+**Why bad**: Traces are batched. Serverless may exit before flush, leading to data loss.
+
+**Instead**: Always call `langfuse.flush()` at the end. Use context managers where available. Consider sync mode for critical traces.
+
+### ❌ Tracing Everything
+
+**Why bad**: Noisy traces can lead to performance overhead and make it hard to find important information.
+
+**Instead**: Focus on LLM calls, key logic, and user actions. Group related operations and use meaningful span names.
+
+### ❌ No User/Session IDs
+
+**Why bad**: Without user and session IDs, debugging specific users and tracking sessions becomes difficult.
+
+**Instead**: Always pass `user_id` and `session_id`. Use consistent identifiers and add relevant metadata.
+
+## Limitations
+
+- Self-hosted requires infrastructure.
+- High-volume may need optimization.
+- Real-time dashboard has latency.
+- Evaluation requires setup.
+
+## Related Skills
+
+Works well with: `langgraph`, `crewai`, `structured-output`, `autonomous-agents`.

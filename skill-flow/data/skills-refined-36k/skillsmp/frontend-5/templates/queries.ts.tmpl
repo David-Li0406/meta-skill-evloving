@@ -1,0 +1,59 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { orpc } from "@/lib/orpc-client";
+
+/**
+ * Grouped hook for {{EntityName}} CRUD operations.
+ * Usage: const { list, create, update, remove } = use{{EntityName}}();
+ */
+export function use{{EntityName}}(params: { status?: string } = {}) {
+  const { workspace } = useWorkspace();
+  const queryClient = useQueryClient();
+  const workspaceSlug = workspace.slug;
+
+  const invalidateList = () => {
+    queryClient.invalidateQueries({
+      queryKey: orpc.{{entityName}}.list.key({ input: { workspaceSlug } }),
+    });
+  };
+
+  return {
+    list: useQuery(
+      orpc.{{entityName}}.list.queryOptions({
+        input: { workspaceSlug, ...params },
+      })
+    ),
+
+    create: useMutation(
+      orpc.{{entityName}}.create.mutationOptions({
+        onSuccess: invalidateList,
+      })
+    ),
+
+    update: useMutation(
+      orpc.{{entityName}}.update.mutationOptions({
+        onSuccess: invalidateList,
+      })
+    ),
+
+    remove: useMutation(
+      orpc.{{entityName}}.remove.mutationOptions({
+        onSuccess: invalidateList,
+      })
+    ),
+  };
+}
+
+/**
+ * Hook for fetching a single {{EntityName}} by ID.
+ */
+export function use{{EntityName}}Detail(id: string, enabled = true) {
+  const { workspace } = useWorkspace();
+
+  return useQuery({
+    ...orpc.{{entityName}}.getById.queryOptions({
+      input: { workspaceSlug: workspace.slug, id },
+    }),
+    enabled: enabled && Boolean(id),
+  });
+}

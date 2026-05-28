@@ -1,0 +1,217 @@
+# Multi-Stack Integration Example
+
+這個範例展示兩個 stacks 如何整合：
+- Stack A (Provider): 提供 EventBridge bus 和 DynamoDB table
+- Stack B (Consumer): 使用這些資源
+
+## Stack A: Provider Stack (telegram-adapter.yaml)
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Provider Stack - 提供 EventBus 和共享資源
+
+Resources:
+  # EventBridge Bus
+  EventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub '${AWS::StackName}-events'
+
+  # Shared DynamoDB Table
+  SharedTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-shared-data'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+
+  # Webhook Receiver Lambda
+  ReceiverFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-receiver'
+      Handler: handler.lambda_handler
+      CodeUri: src/
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref EventBus
+          TABLE_NAME: !Ref SharedTable
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: events:PutEvents
+              Resource: !GetAtt EventBus.Arn
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SharedTable
+
+Outputs:
+  # Export EventBus 資訊
+  EventBusName:
+    Description: EventBridge bus name
+    Value: !Ref EventBus
+    Export:
+      Name: !Sub '${AWS::StackName}-EventBusName'
+  
+  EventBusArn:
+    Description: EventBridge bus ARN
+    Value: !GetAtt EventBus.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-EventBusArn'
+  
+  # Export Table 資訊
+  SharedTableName:
+    Description: Shared DynamoDB table name
+    Value: !Ref SharedTable
+    Export:
+      Name: !Sub '${AWS::StackName}-SharedTableName'
+  
+  SharedTableArn:
+    Description: Shared DynamoDB table ARN
+    Value: !GetAtt SharedTable.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-SharedTableArn'
+  
+  # Export Receiver 資訊
+  ReceiverFunctionArn:
+    Description: Receiver Lambda ARN
+    Value: !GetAtt ReceiverFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-ReceiverArn'
+```
+
+## Stack B: Consumer Stack (ai-processor.yaml)
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Consumer Stack - 使用 Provider Stack 的資源
+
+Parameters:
+  ProviderStackName:
+    Type: String
+    Description: Name of the provider stack
+    Default: agentcore-telegram-adapter
+
+Resources:
+  # Processor Lambda（使用 imported 資源）
+  ProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-processor'
+      Handler: processor.lambda_handler
+      CodeUri: src/
+      Timeout: 300
+      MemorySize: 1024
+      
+      # 使用 imported 環境變數
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !ImportValue
+            Fn::Sub: '${ProviderStackName}-EventBusName'
+          SHARED_TABLE_NAME: !ImportValue
+            Fn::Sub: '${ProviderStackName}-SharedTableName'
+      
+      # 使用 imported ARN 配置權限
+      Policies:
+        - Statement:
+            # EventBridge 權限
+            - Effect: Allow
+              Action: events:PutEvents
+              Resource: !ImportValue
+                Fn::Sub: '${ProviderStackName}-EventBusArn'
+            
+            # DynamoDB 權限
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Query
+              Resource: !ImportValue
+                Fn::Sub: '${ProviderStackName}-SharedTableArn'
+  
+  # EventBridge Rule（監聽 Provider 的事件）
+  MessageReceivedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub '${AWS::StackName}-message-received'
+      EventBusName: !ImportValue
+        Fn::Sub: '${ProviderStackName}-EventBusName'
+      EventPattern:
+        source:
+          - agentcore.telegram
+        detail-type:
+          - message.received
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt ProcessorFunction.Arn
+          Id: ProcessorTarget
+  
+  # Lambda Permission（EventBridge 調用）
+  ProcessorPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt MessageReceivedRule.Arn
+  
+  # CloudWatch Log Group
+  ProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ProcessorFunction}'
+      RetentionInDays: 14
+
+Outputs:
+  ProcessorFunctionArn:
+    Description: Processor Lambda ARN
+    Value: !GetAtt ProcessorFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-ProcessorArn'
+```
+
+## 部署順序
+
+```bash
+# 1. 先部署 Provider Stack
+cd telegram-adapter
+sam build
+sam deploy --stack-name agentcore-telegram-adapter --region us-west-2
+
+# 2. 再部署 Consumer Stack
+cd ../ai-processor
+sam build
+sam deploy \
+  --stack-name agentcore-ai-processor \
+  --parameter-overrides ProviderStackName=agentcore-telegram-adapter \
+  --region us-west-2
+```
+
+## 刪除順序（反向）
+
+```bash
+# 1. 先刪除 Consumer
+aws cloudformation delete-stack --stack-name agentcore-ai-processor
+
+# 2. 等待完成
+aws cloudformation wait stack-delete-complete --stack-name agentcore-ai-processor
+
+# 3. 再刪除 Provider
+aws cloudformation delete-stack --stack-name agentcore-telegram-adapter
+```
+
+## 關鍵學習點
+
+1. **Provider exports，Consumer imports**
+2. **Export 名稱使用 stack name prefix**
+3. **Consumer 需要 Lambda Permissions**
+4. **部署順序 = 依賴順序**
+5. **刪除順序 = 反向依賴順序**

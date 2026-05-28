@@ -1,0 +1,67 @@
+openapi: 3.1.1
+info:
+  title: Example API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /v1/items:
+    get:
+      summary: List items
+      parameters:
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - in: query
+          name: page_token
+          schema: { type: string }
+        - in: query
+          name: q
+          description: Free-text search (optional)
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Item" }
+                  next_page_token:
+                    type: string
+                required: [items]
+        "400":
+          $ref: "#/components/responses/ProblemDetails"
+        "500":
+          $ref: "#/components/responses/ProblemDetails"
+
+components:
+  responses:
+    ProblemDetails:
+      description: Error response in Problem Details format
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+
+  schemas:
+    Item:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+      required: [id, name]
+
+    ProblemDetails:
+      type: object
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string, format: uri }
+      required: [type, title, status]

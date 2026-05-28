@@ -1,0 +1,46 @@
+{
+  "name": "string-join",
+  "description": "Join array elements into a string with delimiter",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "JSON object containing an array at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'items' or 'data.list')"
+    },
+    "delimiter": {
+      "type": "string",
+      "required": true,
+      "description": "String to join array elements with (e.g., ',' or ' ')"
+    }
+  },
+  "output": {
+    "type": ["string", "null"],
+    "description": "String of joined array elements, or null if path doesn't exist or is not an array"
+  },
+  "examples": [
+    {
+      "description": "Join array of strings with comma",
+      "input": {"items": ["a", "b", "c"]},
+      "args": {"path": "items", "delimiter": ","},
+      "output": "a,b,c"
+    },
+    {
+      "description": "Join array of numbers with space",
+      "input": {"data": {"scores": [1, 2, 3]}},
+      "args": {"path": "data.scores", "delimiter": " "},
+      "output": "1 2 3"
+    },
+    {
+      "description": "Join array with multi-character delimiter",
+      "input": {"tags": ["foo", "bar", "baz"]},
+      "args": {"path": "tags", "delimiter": " :: "},
+      "output": "foo :: bar :: baz"
+    }
+  ],
+  "tags": ["string", "array", "join", "concatenate"]
+}

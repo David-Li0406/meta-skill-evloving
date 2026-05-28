@@ -1,0 +1,213 @@
+# Brand Configuration for Article Image Generator
+# This file makes the skill portable - any organization can use it with their own brand
+# Claude reads this configuration and applies it intelligently when creating prompts
+
+brand:
+  name: "Tallyfy"
+  tagline: "Workflow Management Made Simple"
+
+# =============================================================================
+# COLOR PALETTE
+# Each color has semantic meaning - not just aesthetic
+# =============================================================================
+colors:
+  primary:
+    hex: "#01803d"
+    rgb: [1, 128, 61]
+    name: "Dark Green"
+    meaning: "Authority, key elements, structural importance"
+    usage_examples:
+      - "Drawer handles and accent elements"
+      - "Person's tie or collar accent"
+      - "Key structural elements in illustrations"
+      - "Headers and important labels"
+
+  secondary:
+    hex: "#3fb65b"
+    rgb: [63, 182, 91]
+    name: "Green"
+    meaning: "Success, freshness, positive indicators, retained knowledge"
+    usage_examples:
+      - "Checkmarks on documents"
+      - "Glow effects indicating fresh/active content"
+      - "Success states and positive outcomes"
+      - "New or recently added elements"
+
+  problem:
+    hex: "#f26523"
+    rgb: [242, 101, 35]
+    name: "Orange"
+    meaning: "Problem indicator ONLY - used exclusively in solution indicator X"
+    usage_examples:
+      - "The X icon in solution indicator (ONLY use)"
+      - "NEVER use for general decoration"
+      - "NEVER use in main illustration"
+    restrictions:
+      - "MUST appear only in solution indicator"
+      - "Creates visual tension that logo resolves"
+
+  neutral:
+    hex: "#414042"
+    rgb: [65, 64, 66]
+    name: "Dark Grey"
+    meaning: "Text, outlines, structural elements, forgotten/faded content"
+    usage_examples:
+      - "Text labels and typography"
+      - "Outlines and borders"
+      - "Faded papers (showing forgotten knowledge)"
+      - "Structural scaffolding"
+
+  background:
+    hex: "#FFFFFF"
+    rgb: [255, 255, 255]
+    name: "White"
+    meaning: "MANDATORY pure white background - no exceptions"
+    restrictions:
+      - "NO grey tints"
+      - "NO cream or ivory tones"
+      - "NO gradients or atmospheric effects"
+      - "NO subtle shading behind elements"
+      - "Essential for light/dark mode website compatibility"
+
+# =============================================================================
+# TYPOGRAPHY
+# =============================================================================
+typography:
+  family: "Inter"
+  weights:
+    primary: "Bold"
+    secondary: "SemiBold"
+    body: "Medium"
+    subtle: "Regular"
+  usage:
+    headings: "Bold or SemiBold"
+    labels: "Medium"
+    annotations: "Regular"
+
+# =============================================================================
+# LOGO CONFIGURATION
+# =============================================================================
+logo:
+  url: "https://tallyfy.com/wp-content/uploads/Logo-padded@2000x.png"
+  local_path: "assets/logo.png"
+  width_px: 110
+  default_position: "bottom-right"
+  notes:
+    - "AI image generators CANNOT reproduce the logo accurately"
+    - "MUST be composited using logo_compositor.py after generation"
+    - "Always leave EMPTY SPACE in generated image for logo placement"
+
+# =============================================================================
+# SOLUTION INDICATOR
+# The visual signature connecting problem to Tallyfy solution
+# =============================================================================
+solution_indicator:
+  pattern: "[Orange X] → [Arrow] → [EMPTY SPACE FOR LOGO]"
+  position: "bottom-right corner"
+  width_percent: 15
+  height_percent: 10
+
+  components:
+    problem_x:
+      color: "#f26523"
+      style: "Small, elegant, not bold"
+      meaning: "The problem being solved"
+
+    arrow:
+      color: "#414042"
+      style: "Thin, elegant, pointing right"
+      meaning: "Transformation/solution"
+
+    logo_space:
+      width_px: 120
+      height_px: 50
+      meaning: "Reserved for real logo composite"
+
+  rules:
+    - "MUST be minimal and sophisticated"
+    - "MUST NOT compete with main illustration"
+    - "NO tagline text"
+    - "NO rounded rectangle background"
+    - "NO box or container around indicator"
+    - "Let it breathe on white background"
+    - "Orange X should be small and elegant, not attention-grabbing"
+
+# =============================================================================
+# STYLE GUIDELINES
+# HBR/Economist/McKinsey aesthetic
+# =============================================================================
+style:
+  aesthetic: "Harvard Business Review / The Economist / McKinsey Quarterly"
+  quality_target: "Absolute class - flagship imagery for SaaS documentation"
+  mood: "Contemplative, thought-provoking, intellectually sophisticated"
+
+  required:
+    - "Clean, crisp vector-like edges throughout"
+    - "Sophisticated color palette with intentional restraint"
+    - "Premium editorial illustration aesthetic"
+    - "Fine art quality, not clip art"
+    - "Subtle paper texture acceptable on document elements"
+    - "Elegant visual metaphors for abstract concepts"
+
+  prohibited:
+    - "Cartoonish elements or characters"
+    - "Clip art style illustrations"
+    - "Gradients (except subtle on specific elements)"
+    - "Drop shadows"
+    - "3D glossy effects"
+    - "Grey or cream background tints"
+    - "Busy or cluttered compositions"
+    - "Generic stock illustration style"
+    - "Overly literal representations"
+
+# =============================================================================
+# DIMENSIONS
+# =============================================================================
+dimensions:
+  width: 1200
+  height: 600
+  aspect_ratio: "2:1"
+  format: "JPEG"
+  composition:
+    main_illustration: "85% of image, left and center"
+    solution_indicator: "15% of image width, bottom-right"
+    white_space: "Generous margins to let concept breathe"
+
+# =============================================================================
+# EMOTIONAL NARRATIVE GUIDELINES
+# What viewers should FEEL when seeing the image
+# =============================================================================
+emotional_narrative:
+  primary_arc: "Problem frustration → Solution relief"
+  viewer_connection: "Immediate recognition of their own experience"
+  intellectual_appeal: "Sophisticated enough for executive audience"
+
+  effective_emotions:
+    - "Visceral recognition of the problem"
+    - "Intellectual curiosity about the metaphor"
+    - "Relief at seeing a solution indicated"
+    - "Trust in the professional quality"
+
+  avoid_emotions:
+    - "Condescension or oversimplification"
+    - "Anxiety or stress without resolution"
+    - "Confusion about the concept"
+    - "Cheap or untrustworthy feeling"
+
+# =============================================================================
+# PORTABILITY NOTES
+# How other organizations can adapt this configuration
+# =============================================================================
+portability:
+  to_customize:
+    - "Replace brand.name with your organization"
+    - "Update colors to your brand palette"
+    - "Maintain semantic color meanings for best results"
+    - "Update logo.url to your logo"
+    - "Adjust solution_indicator if needed"
+
+  keep_unchanged:
+    - "Style guidelines (HBR aesthetic works universally)"
+    - "Dimensions (optimized for web documentation)"
+    - "Emotional narrative principles"
+    - "Typography recommendations (Inter is universally available)"

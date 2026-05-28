@@ -1,0 +1,63 @@
+#!/bin/bash
+# Fake dcg tool for testing
+# Supports MODE environment variable: normal (default), timeout, error
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        exec sleep 3600
+        ;;
+    error)
+        echo "dcg: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version)
+        echo "dcg 0.1.0"
+        exit 0
+        ;;
+    status)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"enabled": true, "blocked_patterns": ["rm -rf", "git reset --hard"], "allowed_overrides": []}'
+        else
+            echo "DCG: enabled"
+            echo "Blocked patterns: rm -rf, git reset --hard"
+        fi
+        exit 0
+        ;;
+    check)
+        # Simulate blocking dangerous commands
+        if [[ "$*" == *"rm -rf"* ]] || [[ "$*" == *"git reset --hard"* ]]; then
+            if [[ "$*" == *"--json"* ]]; then
+                echo '{"command": "rm -rf", "reason": "dangerous command blocked"}'
+            else
+                echo "BLOCKED: dangerous command"
+            fi
+            exit 1
+        fi
+        # Command allowed
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"allowed": true}'
+        else
+            echo "OK: command allowed"
+        fi
+        exit 0
+        ;;
+    help|--help|-h)
+        echo "dcg - Destructive Command Guard (fake for testing)"
+        echo "Usage: dcg [command] [options]"
+        echo "  --version          Show version"
+        echo "  --json             Output in JSON format (robot mode)"
+        echo "  status             Show guard status"
+        echo "  check <command>    Check if command is blocked"
+        exit 0
+        ;;
+    *)
+        echo "dcg: unknown command: $1" >&2
+        exit 1
+        ;;
+esac

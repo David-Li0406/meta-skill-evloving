@@ -1,0 +1,83 @@
+# Docker Compose alternative for sandbox management
+# Simpler than bash scripts for some users
+
+version: '3.8'
+
+services:
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sandbox-${PROJECT_NAME:-myproject}
+
+    # Volume mounts
+    volumes:
+      # Workspace (source code)
+      - ./workspace:/workspace
+
+      # Language package caches
+      - ./.docker-cache/cargo:/root/.cargo
+      - ./.docker-cache/npm:/root/.npm
+      - ./.docker-cache/pip:/root/.cache/pip
+
+      # Claude Code config and cache
+      - ./.docker-cache/claude:/root/.claude
+
+      # Optional: Mount host git config
+      # - ~/.gitconfig:/root/.gitconfig:ro
+
+      # Optional: Mount SSH keys (for private repos)
+      # - ~/.ssh:/root/.ssh:ro
+
+    # Port forwarding
+    ports:
+      - "3000-3999:3000-3999"
+      # Or specific ports:
+      # - "3000:3000"
+      # - "8080:8080"
+
+    # Environment variables
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - NODE_ENV=development
+      # Add more from .env file
+
+    env_file:
+      - .env
+
+    # Resource limits (optional)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '4'
+    #       memory: 4G
+    #     reservations:
+    #       cpus: '2'
+    #       memory: 2G
+
+    # Network mode (default is fine)
+    # network_mode: bridge
+
+    # Keep container running
+    command: tail -f /dev/null
+
+    # Restart policy
+    restart: unless-stopped
+
+    # stdin_open: true  # docker run -i
+    # tty: true         # docker run -t
+
+# Usage:
+# Start:  docker-compose up -d
+# Shell:  docker-compose exec sandbox /bin/zsh
+# Run:    docker-compose exec sandbox <command>
+# Stop:   docker-compose down
+# Logs:   docker-compose logs -f sandbox
+# Rebuild: docker-compose up -d --build
+
+# Notes:
+# - Simpler than bash scripts for some users
+# - Declarative configuration
+# - Easy to customize per project
+# - Version controlled with project
+# - Can define multiple services (database, etc.)

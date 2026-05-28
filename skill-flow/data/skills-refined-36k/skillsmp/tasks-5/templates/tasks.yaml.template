@@ -1,0 +1,144 @@
+# tasks.yaml Template
+# 此模板定義 TASKS skill 的主要輸出格式
+#
+# 使用方式：
+# 1. 複製此模板
+# 2. 填入實際任務數據
+# 3. 存檔到 .claude/memory/tasks/{feature-id}/tasks.yaml
+
+version: "1.0.0"
+
+metadata:
+  feature_id: "{feature-id}"
+  source_plan: ".claude/memory/plans/{feature-id}/implementation-plan.md"
+  generated_at: "{timestamp}"
+  total_tasks: 0
+  estimated_duration: "0h"
+
+config:
+  parallel_execution: true
+  max_concurrent: 4
+  pass_at_k: 3
+  retry_on_failure: true
+
+milestones:
+  - id: M1
+    name: "里程碑 1"
+    tasks: []
+
+  - id: M2
+    name: "里程碑 2"
+    depends_on: [M1]
+    tasks: []
+
+tasks:
+  # ============================================
+  # 功能任務（來自 task-decomposer）
+  # ============================================
+
+  - id: T-F-001
+    type: feature
+    milestone: M1
+    name: "任務名稱"
+    description: |
+      任務詳細描述。
+
+    estimate:
+      duration: "30m"
+      complexity: M  # XS/S/M/L/XL
+
+    priority: P0  # P0 必做 / P1 應做 / P2 可延
+
+    dependencies:
+      blocked_by: []
+      blocks: []
+
+    acceptance_criteria:
+      - "驗收標準 1"
+      - "驗收標準 2"
+
+    files:
+      create: []
+      modify: []
+
+    supervision_hints:
+      tdd: ""
+      security: ""
+
+    status: pending
+
+  # ============================================
+  # 測試任務（來自 test-planner）
+  # ============================================
+
+  - id: TEST-001
+    type: test
+    milestone: M1
+    name: "測試任務名稱"
+    related_task: T-F-001
+
+    test_cases:
+      - scenario: "測試場景"
+        expected: "預期結果"
+
+    priority: P0
+
+    dependencies:
+      blocked_by: []
+      blocks: [T-F-001]  # TDD: 測試先於實作
+
+    acceptance_criteria:
+      - "測試檔案存在"
+      - "覆蓋率達標"
+
+    status: pending
+
+  # ============================================
+  # 風險任務（來自 risk-preventor）
+  # ============================================
+
+  - id: RISK-001
+    type: prevention
+    milestone: M1
+    name: "風險預防任務"
+    related_risk: "風險描述"
+
+    trigger: "觸發條件"
+
+    steps:
+      - "執行步驟 1"
+      - "執行步驟 2"
+
+    priority: P1
+
+    dependencies:
+      blocked_by: []
+      blocks: []
+
+    status: pending
+
+execution_plan:
+  waves:
+    - id: wave-1
+      tasks: [TEST-001, T-F-001]
+      sync_point: "M1 完成"
+
+    - id: wave-2
+      tasks: []
+      depends_on: [wave-1]
+
+  critical_path: []
+  estimated_total: "0h"
+
+summary:
+  by_type:
+    feature: 0
+    test: 0
+    prevention: 0
+  by_priority:
+    P0: 0
+    P1: 0
+    P2: 0
+  by_milestone:
+    M1: 0
+    M2: 0

@@ -1,0 +1,76 @@
+# =============================================================================
+# DOCKER COMPOSE FOR PRODUCTION
+# Services: API (optimized) + Health checks + Resource limits
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # FastAPI Application (Production)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: fastapi-prod
+    ports:
+      - "80:80"
+    environment:
+      # Database (use Neon pooled connection)
+      - DATABASE_URL=${DATABASE_URL}
+      # Security
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      # Environment
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - WORKERS=${WORKERS:-1}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:80/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    networks:
+      - app-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Database Migrations (Run separately)
+  # ---------------------------------------------------------------------------
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      # Use DIRECT connection for migrations (not pooled)
+      - DATABASE_URL=${DATABASE_URL_DIRECT}
+    networks:
+      - app-network
+    profiles:
+      - migrate
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  app-network:
+    driver: bridge

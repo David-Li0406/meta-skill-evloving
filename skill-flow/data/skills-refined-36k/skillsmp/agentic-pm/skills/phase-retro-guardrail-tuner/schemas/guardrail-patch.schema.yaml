@@ -1,0 +1,116 @@
+# Guardrail Patch Schema
+# Format for guardrail change proposals
+
+guardrail_patch:
+  type: object
+  required:
+    - target_file
+    - change_type
+    - patch_text
+    - rationale
+    - applies_to
+  properties:
+    id:
+      type: string
+      pattern: "^(GCP|TGP)-\\d+$"
+      description: Guardrail Change Proposal or Task Guideline Patch ID
+
+    title:
+      type: string
+      description: Brief title for the change
+
+    status:
+      type: string
+      enum: [proposed, approved, implemented, rejected]
+
+    pattern_addressed:
+      type: string
+      description: Name of the pattern this fixes
+
+    target_file:
+      type: string
+      description: Path to the file being modified
+
+    target_section:
+      type: string
+      description: Section within the file (if applicable)
+
+    change_type:
+      type: string
+      enum: [add, replace, remove]
+
+    patch_text:
+      type: string
+      description: |
+        Exact text change in diff format:
+        + lines to add
+        - lines to remove
+
+    context:
+      type: string
+      description: Surrounding context showing where change fits
+
+    rationale:
+      type: string
+      description: What failure this prevents
+
+    evidence:
+      type: array
+      items:
+        type: object
+        properties:
+          task:
+            type: string
+          issue:
+            type: string
+          quote:
+            type: string
+
+    applies_to:
+      type: string
+      description: |
+        Scope of applicability:
+        - "all tasks"
+        - "tasks touching <area>"
+        - "tasks with <characteristic>"
+
+    affected_files:
+      type: array
+      items:
+        type: string
+      description: Other files affected by this change
+
+    migration_required:
+      type: boolean
+      default: false
+
+    migration_notes:
+      type: string
+      description: How to update existing files (if migration required)
+
+    rollout:
+      type: string
+      enum: [immediate, next_phase, migration_required]
+
+    rollout_reason:
+      type: string
+      description: Why this rollout timing
+
+    success_metrics:
+      type: array
+      items:
+        type: string
+      description: How to measure if this change worked
+
+    approval:
+      type: object
+      properties:
+        pm_reviewed:
+          type: boolean
+        senior_engineer_reviewed:
+          type: boolean
+        approved_by:
+          type: string
+        approved_date:
+          type: string
+          format: date

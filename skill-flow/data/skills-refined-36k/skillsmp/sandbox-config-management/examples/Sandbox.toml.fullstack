@@ -1,0 +1,55 @@
+# Example Sandbox.toml for a fullstack monorepo
+# Rust backend + Python ML + React frontend
+
+[sandbox]
+name = "fullstack-app"
+location = "/Users/aaronbassett/Sandboxes/aaronbassett/fullstack-app"
+created = "2026-01-24T01:30:00Z"
+base_image = "ubuntu:24.04"
+
+[source]
+type = "github"
+repository = "aaronbassett/fullstack-app"
+branch = "main"
+
+[languages]
+rust = "stable"
+python = "current"
+nodejs = "lts"
+
+[languages.tools]
+rust = ["clippy", "rustfmt", "cargo-watch", "cargo-dist"]
+python = ["uv", "ruff", "mypy", "pytest"]
+nodejs = ["pnpm", "typescript", "eslint", "prettier"]
+
+[claude]
+marketplaces = [
+    "anthropics/claude-plugins-official",
+    "aaronbassett/aaronbassett-marketplace"
+]
+
+[claude.plugins]
+plugins = [
+    "rust-analyzer-lsp@claude-plugins-official",
+    "pyright-lsp@claude-plugins-official",
+    "typescript-lsp@claude-plugins-official",
+    "devs@aaronbassett-marketplace",
+    "git-lovely@aaronbassett-marketplace"
+]
+
+[network]
+# API backend, frontend dev server, ML service
+ports = [3000, 3001, 8000]
+
+[environment]
+NODE_ENV = "development"
+RUST_BACKTRACE = "1"
+PYTHONUNBUFFERED = "1"
+
+[shell]
+aliases = true
+starship_theme = "red_container"
+oh_my_zsh_plugins = ["git", "docker", "rust", "python", "node", "npm"]
+
+[tools]
+extra = ["bat", "delta", "hyperfine"]

@@ -1,0 +1,244 @@
+/* ========================================= */
+/* ELEMENTARY DESIGN SYSTEM                  */
+/* Inspired by Material Design principles    */
+/* ========================================= */
+
+/* prettier-ignore */
+:root {
+  /* --------------------------------------- */
+  /* 1. PRIMITIVES (The Warehouse)           */
+  /* --------------------------------------- */
+
+  /* --- COLOR (--c-) 050-950 --- */
+  --c-slate-050: oklch(98% 0.01 260);
+  --c-slate-100: oklch(96% 0.01 260);
+  --c-slate-200: oklch(92% 0.02 260);
+  --c-slate-300: oklch(87% 0.03 260);
+  --c-slate-400: oklch(70% 0.04 260);
+  --c-slate-500: oklch(55% 0.04 260);
+  --c-slate-600: oklch(45% 0.04 260);
+  --c-slate-700: oklch(37% 0.05 260);
+  --c-slate-800: oklch(28% 0.05 260);
+  --c-slate-900: oklch(20% 0.05 260);
+  --c-slate-950: oklch(15% 0.05 260);
+
+  --c-blue-050: oklch(98% 0.02 260);
+  --c-blue-400: oklch(70% 0.18 260);
+  --c-blue-500: oklch(62% 0.22 260);
+  --c-blue-950: oklch(15% 0.05 260);
+  --c-emerald-050: oklch(98% 0.02 150);
+  --c-emerald-400: oklch(75% 0.16 150);
+  --c-emerald-500: oklch(65% 0.18 150);
+  --c-emerald-950: oklch(15% 0.05 150);
+  --c-violet-400: oklch(70% 0.18 295);
+  --c-violet-500: oklch(62% 0.22 295);
+  --c-rose-050: oklch(98% 0.02 15);
+  --c-rose-400: oklch(70% 0.18 15);
+  --c-rose-500: oklch(62% 0.22 15);
+  --c-rose-950: oklch(15% 0.05 15);
+  --c-amber-050: oklch(98% 0.02 85);
+  --c-amber-400: oklch(80% 0.16 85);
+  --c-amber-500: oklch(70% 0.18 85);
+  --c-amber-950: oklch(15% 0.05 85);
+
+  --c-white: oklch(100% 0 0);
+  --c-black: oklch(0% 0 0);
+
+  /* --- SPACE (--s-) 0-9 --- */
+  --s-0: 0;
+  --s-1: 0.25rem;
+  /* 4px */
+  --s-2: 0.5rem;
+  /* 8px */
+  --s-3: 0.75rem;
+  /* 12px */
+  --s-4: 1rem;
+  /* 16px */
+  --s-5: 1.25rem;
+  /* 20px */
+  --s-6: 1.5rem;
+  /* 24px */
+  --s-7: 1.75rem;
+  /* 28px */
+  --s-8: 2rem;
+  /* 32px */
+  --s-9: 2.25rem;
+  /* 36px */
+  --s-12: 3rem;
+  /* 48px */
+
+  /* --- RADIUS (--r-) 0-6 --- */
+  --r-0: 0;
+  --r-1: 0.125rem;
+  /* 2px */
+  --r-2: 0.25rem;
+  /* 4px */
+  --r-3: 0.5rem;
+  /* 8px */
+  --r-4: 1rem;
+  /* 16px */
+  --r-5: 1.5rem;
+  /* 24px */
+  --r-6: 2rem;
+  /* 32px */
+
+  /* --- BORDER (--b-) 0-4 --- */
+  --b-0: 0;
+  --b-1: 1px;
+  --b-2: 2px;
+  --b-3: 3px;
+  --b-4: 4px;
+
+  /* --- FONT FAMILY (--ff-) --- */
+  --ff-sans: system-ui, sans-serif;
+  --ff-mono: 'Monaco', 'Courier New', monospace;
+
+  /* --- FONT WEIGHT (--fw-) --- */
+  --fw-400: 400;
+  --fw-600: 600;
+  --fw-700: 700;
+  --fw-900: 900;
+
+  /* --- FONT SIZE (--fs-) 1-9 --- */
+  --fs-1: 0.75rem/1.5;
+  --fs-2: 0.875rem/1.5;
+  --fs-3: 1rem/1.5;
+  --fs-4: 1.125rem/1.4;
+  --fs-5: 1.25rem/1.4;
+  --fs-6: 1.5rem/1.3;
+  --fs-7: 1.875rem/1.2;
+  --fs-8: 2.25rem/1.2;
+  --fs-9: 3rem/1.1;
+
+  /* --- Z-INDEX (--z-) 0-6 --- */
+  --z-0: 0;
+  --z-1: 10;
+  --z-2: 20;
+  --z-3: 30;
+  --z-4: 40;
+  --z-5: 50;
+  --z-6: 60;
+
+  /* --- ANIMATION (--a-) --- */
+  --a-fast: 0.1s;
+  --a-base: 0.2s;
+  --a-slow: 0.5s;
+  --a-ease: ease-in-out;
+
+  /* --- OPACITY (--o-) 0-9 --- */
+  --o-0: 0;
+  --o-1: 0.1;
+  --o-2: 0.2;
+  --o-3: 0.3;
+  --o-4: 0.4;
+  --o-5: 0.5;
+  --o-6: 0.6;
+  --o-7: 0.7;
+  --o-8: 0.8;
+  --o-9: 0.9;
+
+  /* --- EFFECTS (--x-) 0-5 --- */
+  --x-0: none;
+  --x-1: 0 1px 2px 0 light-dark(oklch(from var(--c-black) l c h / 0.05),
+      oklch(from var(--c-black) l c h / 0.2));
+  --x-2: 0 4px 6px -1px light-dark(oklch(from var(--c-slate-800) l c h / 0.1),
+      oklch(from var(--c-black) l c h / 0.4));
+  --x-3: 0 10px 15px -3px light-dark(oklch(from var(--c-slate-800) l c h / 0.1),
+      oklch(from var(--c-black) l c h / 0.5));
+  --x-4: 0 20px 25px -5px light-dark(oklch(from var(--c-slate-800) l c h / 0.15),
+      oklch(from var(--c-black) l c h / 0.6));
+  --x-5: 0 25px 50px -12px light-dark(oklch(from var(--c-slate-800) l c h / 0.25),
+      oklch(from var(--c-black) l c h / 0.7));
+
+  /* --------------------------------------- */
+  /* 2. GLOBAL SEMANTICS (The Blueprint)     */
+  /* --------------------------------------- */
+
+  /* INTENT-BASED TOKENS (Computed/Theme-aware values) */
+  --c-primary: light-dark(var(--c-blue-400), var(--c-emerald-400));
+  --c-primary-hover: light-dark(var(--c-blue-500), var(--c-emerald-500));
+  --c-on-primary: light-dark(var(--c-white), var(--c-slate-050));
+
+  --c-text: light-dark(var(--c-slate-800), var(--c-slate-050));
+  --c-text-secondary: light-dark(var(--c-slate-500), var(--c-slate-400));
+  --c-text-accent: light-dark(var(--c-blue-500), var(--c-emerald-400));
+  --c-muted: light-dark(var(--c-slate-500), var(--c-slate-400));
+  --c-border-default: light-dark(var(--c-slate-300), var(--c-slate-700));
+  --c-border-subtle: light-dark(var(--c-slate-200), var(--c-slate-800));
+
+  --bg-app: linear-gradient(135deg,
+      light-dark(var(--c-slate-050), var(--c-slate-900)),
+      light-dark(var(--c-slate-100), var(--c-slate-800)));
+  --bg-surface: light-dark(var(--c-white),
+      oklch(from var(--c-white) l c h / 0.1));
+  --bg-hover: light-dark(var(--c-slate-100), var(--c-slate-800));
+  --bg-muted: light-dark(var(--c-slate-100), var(--c-slate-900));
+  --bg-primary: light-dark(var(--c-blue-050), var(--c-blue-950));
+  --bg-success: light-dark(var(--c-emerald-050), var(--c-emerald-950));
+  --bg-warning: light-dark(var(--c-amber-050), var(--c-amber-950));
+  --bg-error: light-dark(var(--c-rose-050), var(--c-rose-950));
+
+  --b-standard: 1px solid light-dark(oklch(from var(--c-black) l c h / 0.1),
+      oklch(from var(--c-white) l c h / 0.1));
+
+  --x-primary-glow: 0 4px 6px -4px light-dark(transparent, var(--c-primary));
+
+  /* SIMPLE ALIASES (Direct mappings to numeric primitives) */
+  --x-card-shadow: var(--x-2);
+  --x-glass: blur(10px);
+
+  --fs-body: var(--fs-3);
+  --fs-heading: var(--fs-7);
+  --ff-body: var(--ff-sans);
+  --ff-code: var(--ff-mono);
+
+  /* TYPOGRAPHY PRESETS (--t-*) - Complete font declarations */
+  --t-body: var(--fw-400) var(--fs-3) var(--ff-sans);
+  --t-heading: var(--fw-700) var(--fs-7) var(--ff-sans);
+  --t-code: var(--fw-400) var(--fs-3) var(--ff-mono);
+
+  /* Radius */
+  --r-btn: var(--r-2);
+  --r-input: var(--r-2);
+  --r-card: var(--r-3);
+
+  /* Borders */
+  --b-focus: var(--b-2);
+  --b-subtle: var(--b-1) solid light-dark(oklch(from var(--c-black) l c h / 0.05), oklch(from var(--c-white) l c h / 0.05));
+
+  /* Padding */
+  --p-card: var(--s-8);
+  --p-btn: var(--s-4);
+  --p-input: var(--s-3);
+
+  /* Gaps */
+  --g-standard: var(--s-2);
+
+  /* Margins */
+  --m-stack: var(--s-6);
+  --m-gutter: var(--s-4);
+
+  /* Layout */
+  --w-container: 1200px;
+  --w-sidebar: 280px;
+  --w-prose: 65ch;
+  --h-header: 64px;
+  --h-hero: 60vh;
+  --h-screen-dvh: 100dvh;
+
+  /* Z-index */
+  --z-dropdown: var(--z-2);
+  --z-modal: var(--z-5);
+
+  /* Animation */
+  --a-hover: var(--a-fast);
+  --a-dropdown: var(--a-base);
+  --a-modal: var(--a-slow);
+  --a-skeleton: 2s cubic-bezier(0.4, 0, 0.6, 1);
+
+  /* Opacity */
+  --o-disabled: var(--o-5);
+  --o-placeholder: var(--o-5);
+  --o-overlay: var(--o-9);
+  --o-hover-darken: var(--o-1);
+}

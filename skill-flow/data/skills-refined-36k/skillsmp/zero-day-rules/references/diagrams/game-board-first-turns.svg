@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1500">
+  <!-- Full board background -->
+  <rect width="1100" height="1500" fill="#0D0F14"/>
+  
+  <!-- Main board area with subtle shadow effect -->
+  <rect x="50" y="50" width="1000" height="1400" fill="#151820"/>
+  
+  <!-- Filters for shadow effects -->
+  <defs>
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="2"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Gradient definitions -->
+    <linearGradient id="separatorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#44BBFF;stop-opacity:0.6"/>
+      <stop offset="50%" style="stop-color:#44BBFF;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#44BBFF;stop-opacity:0.6"/>
+    </linearGradient>
+    
+    <linearGradient id="separatorGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FF2244;stop-opacity:0.6"/>
+      <stop offset="50%" style="stop-color:#FF2244;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#FF2244;stop-opacity:0.6"/>
+    </linearGradient>
+    
+    <linearGradient id="purpleGradientHorizontal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#BB88FF;stop-opacity:0.6"/>
+      <stop offset="50%" style="stop-color:#BB88FF;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#BB88FF;stop-opacity:0.6"/>
+    </linearGradient>
+    
+    <linearGradient id="purpleGradientVertical" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#BB88FF;stop-opacity:0.6"/>
+      <stop offset="50%" style="stop-color:#BB88FF;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#BB88FF;stop-opacity:0.6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fine grid lines (40 unit spacing) -->
+  <g stroke="#222630" stroke-width="1" opacity="0.5">
+    <!-- Vertical lines -->
+    <path d="M90 50 L90 1450 M130 50 L130 1450 M170 50 L170 1450 M210 50 L210 1450
+             M290 50 L290 1450 M330 50 L330 1450 M370 50 L370 1450 M410 50 L410 1450
+             M490 50 L490 1450 M530 50 L530 1450 M570 50 L570 1450 M610 50 L610 1450
+             M690 50 L690 1450 M730 50 L730 1450 M770 50 L770 1450 M810 50 L810 1450
+             M890 50 L890 1450 M930 50 L930 1450 M970 50 L970 1450 M1010 50 L1010 1450"/>
+             
+    <!-- Horizontal lines -->
+    <path d="M50 90 L1050 90 M50 130 L1050 130 M50 170 L1050 170 M50 210 L1050 210
+             M50 290 L1050 290 M50 330 L1050 330 M50 370 L1050 370 M50 410 L1050 410
+             M50 490 L1050 490 M50 530 L1050 530 M50 570 L1050 570 M50 610 L1050 610
+             M50 690 L1050 690 M50 730 L1050 730 M50 770 L1050 770 M50 810 L1050 810
+             M50 890 L1050 890 M50 930 L1050 930 M50 970 L1050 970 M50 1010 L1050 1010
+             M50 1090 L1050 1090 M50 1130 L1050 1130 M50 1170 L1050 1170 M50 1210 L1050 1210
+             M50 1290 L1050 1290 M50 1330 L1050 1330 M50 1370 L1050 1370 M50 1410 L1050 1410"/>
+  </g>
+
+  <!-- Defense (Blue) tile spaces and tiles -->
+  <g>
+    <!-- Tile spaces -->
+    <rect x="50" y="50" width="200" height="200" fill="#151820" stroke="#44BBFF" stroke-width="2"/>
+    <rect x="250" y="50" width="200" height="200" fill="#151820" stroke="#44BBFF" stroke-width="2"/>
+    <rect x="450" y="50" width="200" height="200" fill="#151820" stroke="#44BBFF" stroke-width="2"/>
+    <rect x="650" y="50" width="200" height="200" fill="#151820" stroke="#44BBFF" stroke-width="2"/>
+    <rect x="850" y="50" width="200" height="200" fill="#151820" stroke="#44BBFF" stroke-width="2"/>
+    
+    <!-- Blue player's face-up tiles -->
+    <!-- Tile 1: game-tile-06 in first space -->
+    <g transform="translate(50,50)">
+      <rect width="200" height="200" fill="#151820"/>
+      <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 0 100 C 50 100, 100 50, 100 0" 
+            fill="none" stroke="#44BBFF" stroke-width="8" stroke-linecap="butt"/>
+      <path d="M 100 0 L 100 200" 
+            fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+      <path d="M 200 100 C 150 100, 100 50, 100 0" 
+            fill="none" stroke="#BB88FF" stroke-width="8" stroke-linecap="butt"/>
+    </g>
+    
+    <!-- Tile 2: game-tile-08 in second space -->
+    <g transform="translate(250,50)">
+      <rect width="200" height="200" fill="#151820"/>
+      <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 0 100 C 50 100, 100 50, 100 0" 
+            fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+      <path d="M 0 100 L 200 100" 
+            fill="none" stroke="#44BBFF" stroke-width="8" stroke-linecap="butt"/>
+      <path d="M 100 200 C 100 150, 150 100, 200 100" 
+            fill="none" stroke="#BB88FF" stroke-width="8" stroke-linecap="butt"/>
+    </g>
+    
+    <!-- Tile 3: game-tile-22 in third space -->
+    <g transform="translate(450,50)">
+      <rect width="200" height="200" fill="#151820"/>
+      <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 0 100 L 200 100" 
+            fill="none" stroke="#44BBFF" stroke-width="8" stroke-linecap="butt"/>
+      <path d="M 100 0 L 100 80 M 100 120 L 100 200" 
+            fill="none" stroke="#44BBFF" stroke-width="8" stroke-linecap="butt"/>
+    </g>
+  </g>
+
+  <!-- Attack (Red) tile spaces and tiles -->
+  <g>
+    <!-- Tile spaces -->
+    <rect x="50" y="1250" width="200" height="200" fill="#151820" stroke="#FF2244" stroke-width="2"/>
+    <rect x="250" y="1250" width="200" height="200" fill="#151820" stroke="#FF2244" stroke-width="2"/>
+    <rect x="450" y="1250" width="200" height="200" fill="#151820" stroke="#FF2244" stroke-width="2"/>
+    <rect x="650" y="1250" width="200" height="200" fill="#151820" stroke="#FF2244" stroke-width="2"/>
+    <rect x="850" y="1250" width="200" height="200" fill="#151820" stroke="#FF2244" stroke-width="2"/>
+    
+    <!-- Red player's face-up tiles -->
+    <!-- Tile 1: game-tile-05 in first space -->
+    <g transform="translate(50,1250)">
+      <rect width="200" height="200" fill="#151820"/>
+      <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 100 0 C 100 50, 150 100, 200 100" 
+            fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+      <path d="M 0 100 C 50 100, 100 150, 100 200" 
+            fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+    </g>
+    
+    <!-- Tile 2: game-tile-10 in second space -->
+    <g transform="translate(250,1250)">
+      <rect width="200" height="200" fill="#151820"/>
+      <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 0 100 L 80 100 M 120 100 L 200 100" 
+            fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+      <path d="M 100 0 L 100 200" 
+            fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+    </g>
+    
+    <!-- Tile 3: game-tile-04 in third space -->
+    <g transform="translate(450,1250)">
+      <rect width="200" height="200" fill="#151820"/>
+      <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+            stroke="#222630" stroke-width="1" opacity="0.5"/>
+      <path d="M 0 100 C 50 100, 100 50, 100 0" 
+            fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+      <path d="M 100 200 C 100 150, 150 100, 200 100" 
+            fill="none" stroke="#BB88FF" stroke-width="8" stroke-linecap="butt"/>
+    </g>
+  </g>
+
+  <!-- Tile space boundaries (purple with gradient) -->
+  <g stroke-width="2">
+    <!-- Left and Right boundaries -->
+    <rect x="49" y="250" width="2" height="1000" fill="url(#purpleGradientVertical)"/>
+    <rect x="1049" y="250" width="2" height="1000" fill="url(#purpleGradientVertical)"/>
+    
+    <!-- Internal Vertical boundaries -->
+    <rect x="249" y="250" width="2" height="1000" fill="url(#purpleGradientVertical)"/>
+    <rect x="449" y="250" width="2" height="1000" fill="url(#purpleGradientVertical)"/>
+    <rect x="649" y="250" width="2" height="1000" fill="url(#purpleGradientVertical)"/>
+    <rect x="849" y="250" width="2" height="1000" fill="url(#purpleGradientVertical)"/>
+    
+    <!-- Horizontal boundaries -->
+    <rect x="50" y="449" width="1000" height="2" fill="url(#purpleGradientHorizontal)"/>
+    <rect x="50" y="649" width="1000" height="2" fill="url(#purpleGradientHorizontal)"/>
+    <rect x="50" y="849" width="1000" height="2" fill="url(#purpleGradientHorizontal)"/>
+    <rect x="50" y="1049" width="1000" height="2" fill="url(#purpleGradientHorizontal)"/>
+  </g>
+
+  <!-- Starting tile in center position -->
+  <g transform="translate(450,650)">
+    <!-- Center Tile (game-tile-13-center) -->
+    <rect width="200" height="200" fill="#151820"/>
+    <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+          stroke="#222630" stroke-width="1" opacity="0.5"/>
+    <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+          stroke="#222630" stroke-width="1" opacity="0.5"/>
+    <path d="M 0 100 C 50 100, 100 50, 100 0" 
+          fill="none" stroke="#44BBFF" stroke-width="8" stroke-linecap="butt"/>
+    <path d="M 200 100 C 150 100, 100 50, 100 0" 
+          fill="none" stroke="#44BBFF" stroke-width="8" stroke-linecap="butt"/>
+    <path d="M 0 100 C 50 100, 100 150, 100 200" 
+          fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+    <path d="M 200 100 C 150 100, 100 150, 100 200" 
+          fill="none" stroke="#FF2244" stroke-width="8" stroke-linecap="butt"/>
+    <path d="M 0 100 L 200 100" 
+          fill="none" stroke="#BB88FF" stroke-width="8" stroke-linecap="butt"/>
+
+    <!-- Blue Attack Token at top edge node -->
+    <g transform="translate(100,0)">
+      <circle r="15" fill="#44BBFF"/>
+      <circle r="11" fill="#151820"/>
+      <circle r="7" fill="#44BBFF"/>
+      <rect x="-1" y="-15" width="2" height="30" fill="#44BBFF"/>
+      <rect x="-15" y="-1" width="30" height="2" fill="#44BBFF"/>
+    </g>
+
+    <!-- Red Attack Token at bottom edge node -->
+    <g transform="translate(100,200)">
+      <circle r="15" fill="#FF2244"/>
+      <circle r="11" fill="#151820"/>
+      <circle r="7" fill="#FF2244"/>
+      <rect x="-1" y="-15" width="2" height="30" fill="#FF2244"/>
+      <rect x="-15" y="-1" width="30" height="2" fill="#FF2244"/>
+    </g>
+  </g>
+
+  <!-- Blue player's first tile (left) - using game-tile-03 -->
+  <g transform="translate(250,650)">
+    <rect width="200" height="200" fill="#151820"/>
+    <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+          stroke="#222630" stroke-width="1" opacity="0.5"/>
+    <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+          stroke="#222630" stroke-width="1" opacity="0.5"/>
+    <path d="M 0 100 C 50 100, 100 50, 100 0" 
+          fill="none" stroke="#BB88FF" stroke-width="8" stroke-linecap="butt"/>
+    <path d="M 100 200 C 100 150, 150 100, 200 100" 
+          fill="none" stroke="#BB88FF" stroke-width="8" stroke-linecap="butt"/>
+  </g>
+
+  <!-- Red player's first tile (right) - using game-tile-07 rotated 90 degrees counter-clockwise -->
+  <g transform="translate(650,650)">
+    <rect width="200" height="200" fill="#151820"/>
+    <path d="M 0 40 L 200 40 M 0 80 L 200 80 M 0 120 L 200 120 M 0 160 L 200 160" 
+          stroke="#222630" stroke-width="1" opacity="0.5"/>
+    <path d="M 40 0 L 40 200 M 80 0 L 80 200 M 120 0 L 120 200 M 160 0 L 160 200" 
+          stroke="#222630" stroke-width="1" opacity="0.5"/>
+    <!-- Rotated paths for tile-07 -->
+    <path d="M 0 100 C 50 100, 100 50, 100 0" 
+          fill="none" stroke="#44BBFF" stroke-width="8" stroke-linecap="butt"/>
+    <path d="M 200 100 C 150 100, 100 150, 100 200" 
+          fill="none" stroke="#BB88FF" stroke-width="8" stroke-linecap="butt"/>
+  </g>
+</svg>

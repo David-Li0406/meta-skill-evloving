@@ -1,0 +1,108 @@
+{
+  "skill_id": "complete-process-orchestrator",
+  "skill_name": "Complete Process Orchestrator",
+  "version": "1.3.0",
+  "type": "orchestration",
+  "category": "workflow_automation",
+  "description": "Orchestrate end-to-end pseudo-code transformation workflows with automated validation, optimization, context-aware tree injection, and 60-80% context window reduction",
+  "depends_on": [
+    "prompt-structurer:1.0.0",
+    "requirement-validator:1.0.0",
+    "prompt-optimizer:1.0.0"
+  ],
+  "provides": [
+    "end_to_end_transformation",
+    "automated_validation",
+    "workflow_orchestration",
+    "pipeline_automation"
+  ],
+  "user_invocable": true,
+  "commands": [
+    "complete-process"
+  ],
+  "aliases": [
+    "/complete",
+    "/full-transform",
+    "/orchestrate"
+  ],
+  "requires_user_input": true,
+  "supports_background_execution": false,
+  "execution_modes": [
+    {
+      "mode": "quick",
+      "description": "Transform only - fast execution (5-15s)",
+      "steps": ["transform"],
+      "estimated_duration": "5-15s"
+    },
+    {
+      "mode": "complete",
+      "description": "Full pipeline - transform, validate, optimize (30-90s)",
+      "steps": ["transform", "validate", "optimize"],
+      "estimated_duration": "30-90s",
+      "recommended": true
+    }
+  ],
+  "features": [
+    "input_validation",
+    "progress_tracking",
+    "error_recovery",
+    "rollback_support",
+    "preference_persistence",
+    "timeout_protection",
+    "state_management",
+    "checkpoint_recovery",
+    "context_window_optimization",
+    "context_aware_tree_injection",
+    "mandatory_skill_tool_invocation",
+    "welcome_menu_system",
+    "menu_state_persistence",
+    "keyword_based_routing"
+  ],
+  "metadata": {
+    "author": "Elad Ariel",
+    "created": "2026-01-18",
+    "updated": "2026-01-20",
+    "plugin_version": "1.1.0"
+  },
+  "triggers": {
+    "keywords": [
+      "use pseudo-code prompting plugin",
+      "use pseudocode prompting plugin",
+      "invoke complete-process",
+      "run complete-process",
+      "full transformation workflow",
+      "show plugin menu"
+    ],
+    "patterns": [
+      "use.*pseudo.*code.*prompting.*plugin",
+      "use.*pseudocode.*prompting.*plugin",
+      "invoke.*complete.*process",
+      "show.*plugin.*menu"
+    ],
+    "contexts": [
+      "user explicitly requested plugin usage",
+      "full transformation pipeline needed",
+      "optimization and validation required",
+      "user wants to see available commands"
+    ],
+    "menu_keywords": [
+      "help",
+      "commands",
+      "transform",
+      "validate",
+      "optimize",
+      "compress",
+      "complete"
+    ]
+  },
+  "auto_invoke_on": [
+    "explicit_plugin_request"
+  ],
+  "references": {
+    "welcome_menu_system": "references/welcome-menu-system.md",
+    "context_aware_detection": "references/context-aware-detection.md",
+    "workflow_patterns": "references/workflow-patterns.md",
+    "mode_selection": "templates/mode-selection.md",
+    "token_tracking": "references/token-tracking.md"
+  }
+}

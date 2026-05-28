@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <!-- ========================================================= -->
+    <!-- darpan.party -->
+    <!-- ========================================================= -->
+
+    <entity entity-name="PartyType" package="darpan.party" use="configuration">
+        <description>Defines the type of party (person, organization, etc).</description>
+        <field name="partyTypeId" type="id" is-pk="true"/>
+        <field name="description" type="text-medium"/>
+    </entity>
+
+    <entity entity-name="Party" package="darpan.party" use="configuration">
+        <description>Base party record for a person or organization.</description>
+        <field name="partyId" type="id" is-pk="true"/>
+        <field name="partyTypeId" type="id"/>
+        <field name="partyName" type="text-medium"/>
+
+        <relationship type="one" related="darpan.party.PartyType">
+            <key-map field-name="partyTypeId"/></relationship>
+        <relationship type="one" related="darpan.party.Person" short-alias="person">
+            <key-map field-name="partyId"/></relationship>
+        <relationship type="one" related="darpan.party.Organization" short-alias="organization">
+            <key-map field-name="partyId"/></relationship>
+    </entity>
+
+    <entity entity-name="Person" package="darpan.party" use="configuration">
+        <description>Person-specific details for a party.</description>
+        <field name="partyId" type="id" is-pk="true"/>
+        <field name="firstName" type="text-medium"/>
+        <field name="lastName" type="text-medium"/>
+
+        <relationship type="one" related="darpan.party.Party">
+            <key-map field-name="partyId"/></relationship>
+    </entity>
+
+    <entity entity-name="Organization" package="darpan.party" use="configuration">
+        <description>Organization-specific details for a party.</description>
+        <field name="partyId" type="id" is-pk="true"/>
+        <field name="organizationName" type="text-medium"/>
+
+        <relationship type="one" related="darpan.party.Party">
+            <key-map field-name="partyId"/></relationship>
+    </entity>
+</entities>

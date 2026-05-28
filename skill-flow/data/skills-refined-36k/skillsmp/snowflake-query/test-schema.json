@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "description": "Snowflake PUBLICスキーマのテーブル定義",
+  "tables": {
+    "ttd_250730_pub_deal": {
+      "description": "TTD_250730_PUB_DEALテーブル",
+      "schema": "PUBLIC",
+      "columns": {
+        "date_utc": {
+          "type": "DATE",
+          "nullable": true,
+          "description": "DATE_UTCカラム"
+        },
+        "supplyvendor": {
+          "type": "VARCHAR(16777216)",
+          "nullable": true,
+          "description": "SUPPLYVENDORカラム"
+        },
+        "publisherid": {
+          "type": "NUMBER(38,0)",
+          "nullable": true,
+          "description": "PUBLISHERIDカラム"
+        },
+        "dealid": {
+          "type": "VARCHAR(16777216)",
+          "nullable": true,
+          "description": "DEALIDカラム"
+        },
+        "impressions": {
+          "type": "NUMBER(38,0)",
+          "nullable": true,
+          "description": "IMPRESSIONSカラム"
+        },
+        "revenueusd": {
+          "type": "NUMBER(38,8)",
+          "nullable": true,
+          "description": "REVENUEUSDカラム"
+        }
+      },
+      "sample_queries": [
+        "SELECT * FROM TTD_250730_PUB_DEAL LIMIT 100;",
+        "SELECT * FROM TTD_250730_PUB_DEAL ORDER BY date_utc DESC LIMIT 100;",
+        "SELECT date_utc, COUNT(*) FROM TTD_250730_PUB_DEAL GROUP BY date_utc LIMIT 10;"
+      ]
+    }
+  },
+  "notes": {
+    "usage": "このスキーマファイルはSnowflakeクエリ実行スキルが参照します。",
+    "generated_by": "generate-schema.py",
+    "data_types": [
+      "NUMBER(precision, scale) - 数値型",
+      "VARCHAR(length) - 可変長文字列",
+      "TEXT - 長い文字列",
+      "BOOLEAN - 真偽値",
+      "TIMESTAMP_NTZ - タイムゾーンなしタイムスタンプ",
+      "TIMESTAMP_LTZ - ローカルタイムゾーンタイムスタンプ",
+      "TIMESTAMP_TZ - タイムゾーン付きタイムスタンプ",
+      "DATE - 日付",
+      "TIME - 時刻",
+      "VARIANT - JSON等の半構造化データ",
+      "ARRAY - 配列型",
+      "OBJECT - オブジェクト型"
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+#cloud-config
+# =============================================================================
+# Node.js Application Server
+# =============================================================================
+#
+# Purpose: Node.js application server with systemd service management
+#
+# Features:
+# - Node.js 20.x LTS via NodeSource
+# - Dedicated service user (no login access)
+# - Secure environment file for configuration
+# - systemd automatic restart on failure
+#
+# How it works:
+# 1. Installs Node.js 20.x from NodeSource repository
+# 2. Creates systemd service unit file
+# 3. Creates service user and directories
+# 4. Configures permissions for deployment and runtime
+# 5. Registers service (but does not start - no app code yet)
+#
+# Configuration:
+# - Replace 'adminuser' with your cloud provider's default SSH user
+# - Environment variables go in /etc/node-app/environment
+#
+# Default SSH users by cloud provider:
+# - AWS (Amazon Linux): ec2-user
+# - AWS (Ubuntu AMI): ubuntu
+# - Azure: azureuser
+# - GCP: Your Google account username
+# - DigitalOcean: root
+#
+# =============================================================================
+package_update: true
+package_upgrade: true
+
+packages:
+  - curl
+
+write_files:
+  - path: /etc/systemd/system/node-app.service
+    content: |
+      [Unit]
+      Description=Node.js Application
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=node-app
+      Group=node-app
+      WorkingDirectory=/opt/node-app
+      EnvironmentFile=/etc/node-app/environment
+      ExecStart=/usr/bin/node /opt/node-app/server.js
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Install Node.js via NodeSource
+  - curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  - apt-get install -y nodejs
+
+  # Create service user
+  - useradd --system --shell /usr/sbin/nologin --no-create-home node-app
+
+  # Create directories
+  - mkdir -p /opt/node-app
+  - mkdir -p /etc/node-app
+
+  # Set permissions (replace 'adminuser' with your cloud provider's default SSH user)
+  - chown -R adminuser:node-app /opt/node-app
+  - chmod 775 /opt/node-app
+  - chown root:node-app /etc/node-app
+  - chmod 750 /etc/node-app
+  - touch /etc/node-app/environment
+  - chown root:node-app /etc/node-app/environment
+  - chmod 640 /etc/node-app/environment
+
+  # Register service
+  - systemctl daemon-reload

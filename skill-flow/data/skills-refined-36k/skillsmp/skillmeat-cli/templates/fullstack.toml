@@ -1,0 +1,161 @@
+# Full-Stack Development Template
+# Pre-curated artifact collection for full-stack web applications (React + Backend)
+
+[template]
+name = "fullstack"
+display_name = "Full-Stack Web Development"
+description = "Comprehensive skill collection for full-stack development with React frontend and Python/Node.js backend"
+version = "1.0.0"
+tags = ["fullstack", "frontend", "backend", "react", "api", "database"]
+
+# Frontend Development
+[[artifacts]]
+name = "frontend-design"
+type = "skill"
+source = "anthropics/skills/frontend-design"
+required = true
+description = "Modern UI component patterns, Tailwind CSS, and responsive design"
+
+# Frontend Testing
+[[artifacts]]
+name = "webapp-testing"
+type = "skill"
+source = "anthropics/skills/webapp-testing"
+required = false
+description = "Full-stack testing with Jest, Testing Library, and E2E testing"
+
+# API Development & Documentation
+[[artifacts]]
+name = "openapi-expert"
+type = "skill"
+source = "anthropics/skills/openapi-expert"
+required = true
+description = "OpenAPI/Swagger schema design for frontend-backend contract"
+
+# Database Management
+[[artifacts]]
+name = "postgresql-psql"
+type = "skill"
+source = "anthropics/skills/postgresql-psql"
+required = false
+description = "PostgreSQL database design, queries, and migrations"
+
+# Browser Automation & Debugging
+[[artifacts]]
+name = "chrome-devtools"
+type = "skill"
+source = "project:chrome-devtools"
+required = false
+description = "Browser debugging and network inspection for full-stack debugging"
+
+# Python Backend (if using Python)
+[[artifacts]]
+name = "python-package-manager"
+type = "skill"
+source = "project:python-package-manager"
+required = false
+description = "Python backend dependency management with pip/poetry/uv"
+
+# Node.js Package Management
+[[artifacts]]
+name = "npm-package-manager"
+type = "skill"
+source = "project:npm-package-manager"
+required = false
+description = "Frontend dependency management with NPM/Yarn"
+
+# Data Processing (optional)
+[[artifacts]]
+name = "data-processing"
+type = "skill"
+source = "project:data-processing"
+required = false
+description = "Data transformation between frontend and backend (CSV, JSON)"
+
+[dependencies]
+# Frontend
+node = ">=18.0.0"
+npm = ">=9.0.0"
+
+# Backend (Python)
+python = ">=3.9"
+pip = ">=21.0"
+
+# Database
+postgresql = ">=14.0"
+
+[recommendations]
+# Project structure
+monorepo_structure = """
+project/
+├── api/              # Backend (Python/FastAPI or Node/Express)
+│   ├── app/
+│   ├── tests/
+│   └── pyproject.toml (or package.json)
+├── web/              # Frontend (Next.js/React)
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   └── package.json
+└── shared/           # Shared types/schemas
+    └── openapi.yaml
+"""
+
+# Suggested development workflow
+workflow = [
+    "1. Start backend: cd api && uvicorn app.main:app --reload",
+    "2. Start frontend: cd web && npm run dev",
+    "3. Run tests: pytest (backend) && npm test (frontend)",
+    "4. Generate API client: openapi-generator from shared/openapi.yaml",
+]
+
+[stacks]
+# Recommended full-stack combinations
+
+[stacks.next_fastapi]
+name = "Next.js + FastAPI"
+frontend = "Next.js 15 + React 18 + TypeScript + Tailwind CSS"
+backend = "FastAPI + SQLAlchemy + Alembic + PostgreSQL"
+description = "Modern, type-safe full-stack with excellent DX"
+
+[stacks.next_express]
+name = "Next.js + Express"
+frontend = "Next.js 15 + React 18 + TypeScript + Tailwind CSS"
+backend = "Express + TypeScript + Prisma + PostgreSQL"
+description = "Full TypeScript stack with shared types"
+
+[stacks.react_django]
+name = "React + Django"
+frontend = "React SPA + TypeScript + Vite + Tailwind CSS"
+backend = "Django + Django REST Framework + PostgreSQL"
+description = "Django admin + REST API + React SPA"
+
+[notes]
+setup_guide = """
+This template is optimized for:
+- Monorepo structure with frontend and backend
+- Shared OpenAPI schema for type-safe API contracts
+- PostgreSQL for production data storage
+- JWT authentication (optional)
+- Docker for containerization (optional)
+
+Quick start:
+1. Apply template: skillmeat template apply fullstack
+2. Choose your stack (see [stacks] section)
+3. Set up backend:
+   - Python: cd api && python -m venv venv && pip install -e ".[dev]"
+   - Node.js: cd api && npm install
+4. Set up frontend: cd web && npm install
+5. Start development servers (see workflow above)
+
+API Contract Pattern:
+1. Define OpenAPI schema in shared/openapi.yaml
+2. Generate backend models/schemas from OpenAPI
+3. Generate frontend TypeScript client from OpenAPI
+4. Keep schema as single source of truth
+
+Testing Strategy:
+- Backend: Unit tests (pytest/jest) + Integration tests
+- Frontend: Component tests (Testing Library) + E2E tests
+- API Contract: OpenAPI validation + integration tests
+"""

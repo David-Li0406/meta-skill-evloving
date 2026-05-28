@@ -1,0 +1,275 @@
+#include "ParameterLayout.h"
+#include "ParameterIDs.h"
+
+namespace ParameterLayout
+{
+
+juce::AudioProcessorValueTreeState::ParameterLayout create()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    //==========================================================================
+    // Master Controls
+    //==========================================================================
+
+    // Master Volume (0-1, default 0.7)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::masterVolume, 1 },
+        "Master Volume",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.7f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(static_cast<int>(value * 100)) + "%"; },
+        nullptr));
+
+    // Master Pan (-1 to 1, default 0)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::masterPan, 1 },
+        "Master Pan",
+        juce::NormalisableRange<float>(-1.0f, 1.0f, 0.01f),
+        0.0f));
+
+    // Bypass
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID { ParameterIDs::bypass, 1 },
+        "Bypass",
+        false));
+
+    //==========================================================================
+    // Oscillator Parameters
+    //==========================================================================
+
+    // Waveform selection
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { ParameterIDs::oscWaveform, 1 },
+        "Waveform",
+        WaveformTypes::names,
+        0)); // Default: Sine
+
+    // Oscillator Tune (semitones, -24 to +24)
+    params.push_back(std::make_unique<juce::AudioParameterInt>(
+        juce::ParameterID { ParameterIDs::oscTune, 1 },
+        "Tune",
+        -24, 24, 0,
+        juce::String(),
+        [](int value, int) { return juce::String(value) + " st"; },
+        nullptr));
+
+    // Fine Tune (cents, -100 to +100)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::oscFineTune, 1 },
+        "Fine Tune",
+        juce::NormalisableRange<float>(-100.0f, 100.0f, 1.0f),
+        0.0f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(static_cast<int>(value)) + " ct"; },
+        nullptr));
+
+    // Oscillator Level
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::oscLevel, 1 },
+        "Osc Level",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        1.0f));
+
+    //==========================================================================
+    // Filter Parameters
+    //==========================================================================
+
+    // Filter Cutoff (20 Hz - 20 kHz, logarithmic skew)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::filterCutoff, 1 },
+        "Filter Cutoff",
+        juce::NormalisableRange<float>(20.0f, 20000.0f, 0.1f, 0.3f), // skew 0.3 = log
+        1000.0f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int)
+        {
+            if (value >= 1000.0f)
+                return juce::String(value / 1000.0f, 2) + " kHz";
+            return juce::String(static_cast<int>(value)) + " Hz";
+        },
+        nullptr));
+
+    // Filter Resonance (0.5 - 10)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::filterResonance, 1 },
+        "Resonance",
+        juce::NormalisableRange<float>(0.5f, 10.0f, 0.01f, 0.5f),
+        1.0f));
+
+    // Filter Type
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { ParameterIDs::filterType, 1 },
+        "Filter Type",
+        FilterTypes::names,
+        0)); // Default: Low Pass
+
+    // Filter Drive
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::filterDrive, 1 },
+        "Filter Drive",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.0f));
+
+    //==========================================================================
+    // Envelope Parameters (Amplitude ADSR)
+    //==========================================================================
+
+    // Attack (1ms - 10s, logarithmic)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::envAttack, 1 },
+        "Attack",
+        juce::NormalisableRange<float>(0.001f, 10.0f, 0.001f, 0.3f),
+        0.01f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int)
+        {
+            if (value < 1.0f)
+                return juce::String(static_cast<int>(value * 1000)) + " ms";
+            return juce::String(value, 2) + " s";
+        },
+        nullptr));
+
+    // Decay
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::envDecay, 1 },
+        "Decay",
+        juce::NormalisableRange<float>(0.001f, 10.0f, 0.001f, 0.3f),
+        0.1f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int)
+        {
+            if (value < 1.0f)
+                return juce::String(static_cast<int>(value * 1000)) + " ms";
+            return juce::String(value, 2) + " s";
+        },
+        nullptr));
+
+    // Sustain (0-1)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::envSustain, 1 },
+        "Sustain",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.7f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(static_cast<int>(value * 100)) + "%"; },
+        nullptr));
+
+    // Release
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::envRelease, 1 },
+        "Release",
+        juce::NormalisableRange<float>(0.001f, 10.0f, 0.001f, 0.3f),
+        0.3f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int)
+        {
+            if (value < 1.0f)
+                return juce::String(static_cast<int>(value * 1000)) + " ms";
+            return juce::String(value, 2) + " s";
+        },
+        nullptr));
+
+    //==========================================================================
+    // LFO Parameters
+    //==========================================================================
+
+    // LFO Rate (0.01 Hz - 30 Hz)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::lfoRate, 1 },
+        "LFO Rate",
+        juce::NormalisableRange<float>(0.01f, 30.0f, 0.01f, 0.4f),
+        1.0f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(value, 2) + " Hz"; },
+        nullptr));
+
+    // LFO Depth
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::lfoDepth, 1 },
+        "LFO Depth",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f));
+
+    // LFO Shape
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { ParameterIDs::lfoShape, 1 },
+        "LFO Shape",
+        LFOShapes::names,
+        0)); // Default: Sine
+
+    // LFO Target
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { ParameterIDs::lfoTarget, 1 },
+        "LFO Target",
+        LFOTargets::names,
+        0)); // Default: None
+
+    //==========================================================================
+    // Reverb Parameters
+    //==========================================================================
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::reverbMix, 1 },
+        "Reverb Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.3f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::reverbSize, 1 },
+        "Room Size",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::reverbDamping, 1 },
+        "Damping",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::reverbWidth, 1 },
+        "Stereo Width",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        1.0f));
+
+    //==========================================================================
+    // Delay Parameters
+    //==========================================================================
+
+    // Delay Time (1ms - 2000ms)
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::delayTime, 1 },
+        "Delay Time",
+        juce::NormalisableRange<float>(1.0f, 2000.0f, 1.0f, 0.4f),
+        300.0f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(static_cast<int>(value)) + " ms"; },
+        nullptr));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::delayFeedback, 1 },
+        "Feedback",
+        juce::NormalisableRange<float>(0.0f, 0.95f, 0.01f),
+        0.3f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID { ParameterIDs::delayMix, 1 },
+        "Delay Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.3f));
+
+    return { params.begin(), params.end() };
+}
+
+} // namespace ParameterLayout

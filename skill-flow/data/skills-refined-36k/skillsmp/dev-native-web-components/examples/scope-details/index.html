@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scoped FAQ Panel</title>
+    <meta
+      name="description"
+      content="FAQ panel using @scope and ::details-content with Declarative Shadow DOM."
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#fdfdfc, #0b0b0c);
+        --fg: light-dark(#171717, #ededed);
+        --panel: light-dark(#ffffff, #141517);
+        --border: light-dark(#e4e4e0, #2a2b2f);
+        --accent: light-dark(#1b6ef3, #8fb6ff);
+        --muted: light-dark(#5d5f66, #a7aab3);
+        --radius: 0.9rem;
+        --shadow: 0 0.8rem 2rem #00000012;
+        --space-xs: clamp(0.25rem, 0.6cqi, 0.5rem);
+        --space-sm: clamp(0.5rem, 1.2cqi, 0.9rem);
+        --space-md: clamp(0.9rem, 2cqi, 1.4rem);
+        --space-lg: clamp(1.3rem, 3cqi, 2rem);
+        --text-sm: clamp(0.9rem, 2cqi, 1rem);
+        --text-md: clamp(1rem, 2.6cqi, 1.15rem);
+        --text-lg: clamp(1.2rem, 3cqi, 1.5rem);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: var(--space-lg);
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+        line-height: 1.5;
+      }
+
+      main {
+        max-inline-size: 46rem;
+        margin-inline: auto;
+        display: grid;
+        gap: var(--space-md);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: var(--text-lg);
+        letter-spacing: 0.01em;
+      }
+
+      .lead {
+        margin: 0;
+        color: var(--muted);
+        font-size: var(--text-sm);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Scoped FAQ Panel</h1>
+        <p class="lead">
+          @scope keeps styles local, and ::details-content animates the FAQ.
+        </p>
+      </header>
+
+      <faq-panel>
+        <template shadowrootmode="open">
+          <style>
+            :host {
+              display: block;
+              background: var(--panel);
+              border: 1px solid var(--border);
+              border-radius: var(--radius);
+              box-shadow: var(--shadow);
+              padding: var(--space-lg);
+            }
+
+            @scope (.faq) {
+              :scope {
+                display: grid;
+                gap: var(--space-sm);
+              }
+
+              h2 {
+                margin: 0 0 var(--space-sm);
+                font-size: var(--text-md);
+                color: var(--fg);
+              }
+
+              details {
+                border: 1px solid var(--border);
+                border-radius: 0.7rem;
+                padding: var(--space-sm);
+                background: color-mix(in oklab, var(--panel) 80%, var(--bg));
+              }
+
+              summary {
+                cursor: pointer;
+                font-weight: 600;
+                list-style: none;
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: var(--space-xs);
+                align-items: center;
+              }
+
+              summary::marker {
+                display: none;
+              }
+
+              summary::after {
+                content: "+";
+                color: var(--accent);
+                font-size: 1.1em;
+                transition: rotate 0.2s ease;
+              }
+
+              details[open] > summary::after {
+                rotate: 45deg;
+              }
+
+              details::details-content {
+                block-size: 0;
+                overflow-y: clip;
+                opacity: 0;
+                transition: block-size 0.25s ease, opacity 0.2s ease;
+              }
+
+              details[open]::details-content {
+                block-size: auto;
+                opacity: 1;
+              }
+
+              .answer {
+                margin: var(--space-sm) 0 0;
+                color: var(--muted);
+                font-size: var(--text-sm);
+              }
+
+              .note {
+                color: var(--accent);
+                font-weight: 600;
+                font-size: var(--text-sm);
+              }
+            }
+          </style>
+
+          <section class="faq" aria-labelledby="faq-title">
+            <h2 id="faq-title">Shipping and warranty</h2>
+
+            <details name="faq">
+              <summary>Do you ship internationally?</summary>
+              <p class="answer">
+                Yes. Shipping times vary by region. We surface the latest ETA at
+                checkout.
+              </p>
+            </details>
+
+            <details name="faq">
+              <summary>What does the warranty cover?</summary>
+              <p class="answer">
+                Two years for manufacturing defects. Accidental damage is not
+                covered.
+              </p>
+            </details>
+
+            <details name="faq" open>
+              <summary>Can I return a custom build?</summary>
+              <p class="answer">
+                Custom builds are final, but we can still service or upgrade
+                parts if needed.
+              </p>
+              <p class="note">Tip: Keep your build sheet for faster support.</p>
+            </details>
+          </section>
+        </template>
+      </faq-panel>
+    </main>
+  </body>
+</html>

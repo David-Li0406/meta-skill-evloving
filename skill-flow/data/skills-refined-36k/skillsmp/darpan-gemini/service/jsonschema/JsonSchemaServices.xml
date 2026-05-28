@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="create" noun="JsonSchemaFromJson" type="script"
+            location="component://darpan/src/jsonschema/service/crud/createJsonSchemaFromJson.groovy">
+        <description>Create a JSON schema from an uploaded JSON file and save it to the DB.</description>
+        <in-parameters>
+            <parameter name="jsonFile" type="org.apache.commons.fileupload.FileItem" required="true"/>
+            <parameter name="schemaName"/>
+            <parameter name="description"/>
+            <parameter name="overwrite" type="Boolean" default-value="false"/>
+            <parameter name="strict" type="Boolean" default-value="false"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="schemaName"/>
+            <parameter name="filename"/><!-- Deprecated -->
+        </out-parameters>
+    </service>
+
+    <service verb="save" noun="JsonSchema" type="script"
+            location="component://darpan/src/jsonschema/service/crud/saveJsonSchema.groovy">
+        <description>Save an uploaded JSON schema file to the DB.</description>
+        <in-parameters>
+            <parameter name="schemaFile" type="org.apache.commons.fileupload.FileItem" required="true"/>
+            <parameter name="schemaName"/>
+            <parameter name="description"/>
+            <parameter name="overwrite" type="Boolean" default-value="false"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="schemaName"/>
+            <parameter name="filename"/><!-- Deprecated -->
+        </out-parameters>
+    </service>
+
+    <service verb="update" noun="JsonSchemaText" type="script"
+            location="component://darpan/src/jsonschema/service/crud/updateJsonSchemaText.groovy">
+        <description>Update an existing JSON schema in the DB.</description>
+        <in-parameters>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="filename"/><!-- Deprecated -->
+            <parameter name="schemaName"/>
+            <parameter name="jsonText" required="true" allow-html="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="jsonSchemaId"/>
+        </out-parameters>
+    </service>
+
+
+    <service verb="infer" noun="JsonSchema" type="script"
+            location="component://darpan/src/jsonschema/service/processing/inferJsonSchema.groovy">
+        <description>Infer a flattened schema structure from a JSON file for the Creation Wizard.</description>
+        <in-parameters>
+            <parameter name="jsonFile" required="true" type="org.apache.commons.fileupload.FileItem"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="resultList" type="List"/>
+            <parameter name="jsonSchemaString"/>
+        </out-parameters>
+    </service>
+
+    <service verb="save" noun="RefinedSchema" type="script"
+            location="component://darpan/src/jsonschema/service/crud/saveRefinedSchema.groovy">
+        <description>Save a schema from the refined field list to DB.</description>
+        <in-parameters>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="schemaName" required="true"/>
+            <parameter name="description"/>
+            <parameter name="fieldList" required="true" type="List"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="schemaName"/>
+            <parameter name="filename"/><!-- Deprecated -->
+        </out-parameters>
+    </service>
+
+    <service verb="validate" noun="JsonFileAgainstSchema" type="script"
+            location="component://darpan/src/jsonschema/service/validation/validateJsonFileAgainstSchema.groovy">
+        <description>Validate an uploaded JSON file against a saved JSON schema.</description>
+        <in-parameters>
+            <parameter name="jsonFile" type="org.apache.commons.fileupload.FileItem" required="true"/>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="filename"/><!-- Deprecated -->
+            <parameter name="schemaName"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="valid" type="Boolean"/>
+            <parameter name="errorCount" type="Integer"/>
+            <parameter name="errorMessages"><parameter name="errorMessage"/></parameter>
+        </out-parameters>
+    </service>
+    
+    <service verb="validate" noun="JsonLocationAgainstSchema" type="script"
+            location="component://darpan/src/jsonschema/service/validation/validateJsonLocationAgainstSchema.groovy">
+        <description>Validate a JSON file location against a saved JSON schema.</description>
+        <in-parameters>
+            <parameter name="jsonLocation" required="true"/>
+            <parameter name="schemaFileName" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="valid" type="Boolean"/>
+            <parameter name="errorCount" type="Integer"/>
+            <parameter name="errorMessages"><parameter name="errorMessage"/></parameter>
+        </out-parameters>
+    </service>
+
+    <service verb="resolve" noun="JsonPathForKey" type="script"
+            location="component://darpan/src/jsonschema/service/processing/resolveJsonPathForKey.groovy">
+        <description>Resolve a JSONPath from a key using a saved JSON schema.</description>
+        <in-parameters>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="schemaFileName"/> <!-- Valid filename or schemaName -->
+            <parameter name="filename"/> <!-- Deprecated -->
+            <parameter name="schemaName"/> 
+            <parameter name="key" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="resolvedJsonPath"/>
+            <parameter name="matchingPaths"><parameter name="jsonPath"/></parameter>
+            <parameter name="found" type="Boolean"/>
+        </out-parameters>
+    </service>
+    <service verb="delete" noun="JsonSchema" type="script"
+            location="component://darpan/src/jsonschema/service/crud/deleteJsonSchema.groovy">
+        <description>Delete a JSON schema from DB.</description>
+        <in-parameters>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="filename"/> <!-- Deprecated -->
+            <parameter name="schemaName"/>
+        </in-parameters>
+    </service>
+
+    <service verb="flatten" noun="JsonSchema" type="script" authenticate="false"
+            location="component://darpan/src/jsonschema/service/processing/flattenJsonSchema.groovy">
+        <description>Read a JSON schema from DB or file and flatten it into a list of fields.</description>
+        <in-parameters>
+            <parameter name="jsonSchemaId"/>
+            <parameter name="filename"/> <!-- Deprecated -->
+            <parameter name="schemaName"/>
+            <parameter name="schemaFile" type="org.apache.commons.fileupload.FileItem"/>
+            <parameter name="schemaFileName"/> <!-- Kept for backward compatibility if needed -->
+        </in-parameters>
+        <out-parameters>
+            <parameter name="fieldList" type="List"/>
+            <parameter name="jsonSchemaString"/>
+        </out-parameters>
+    </service>
+
+</services>

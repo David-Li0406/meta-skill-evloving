@@ -1,0 +1,431 @@
+#!/usr/bin/env python3
+"""
+notmcp - Local tool system for AI agents
+
+A stdlib-only CLI for managing executable tools that agents can discover,
+run, and extend. No pip install required.
+"""
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+# Resolve the skill directory (parent of bin/)
+SKILL_DIR = Path(__file__).resolve().parent.parent
+SCRIPTS_DIR = SKILL_DIR / "scripts"
+CREDENTIALS_FILE = SKILL_DIR / ".credentials"
+
+
+def parse_tool_header(script_path: Path) -> dict:
+    """Parse the YAML-like header from a tool's docstring."""
+    try:
+        content = script_path.read_text()
+    except Exception:
+        return {}
+
+    # Extract docstring (triple-quoted string at the start)
+    docstring_match = re.search(r'^[\s\S]*?"""([\s\S]*?)"""', content)
+    if not docstring_match:
+        docstring_match = re.search(r"^[\s\S]*?'''([\s\S]*?)'''", content)
+    if not docstring_match:
+        return {}
+
+    docstring = docstring_match.group(1).strip()
+
+    # Parse simple YAML-like format
+    result = {"_raw": docstring}
+    current_key = None
+    current_list = []
+
+    for line in docstring.split("\n"):
+        line = line.rstrip()
+
+        # Key: value pattern
+        match = re.match(r"^(\w+):\s*(.*)$", line)
+        if match:
+            # Save previous list if any
+            if current_key and current_list:
+                result[current_key] = current_list
+                current_list = []
+
+            key, value = match.groups()
+            current_key = key
+            if value:
+                result[key] = value
+            continue
+
+        # List item pattern (  - item)
+        match = re.match(r"^\s+-\s+(.+)$", line)
+        if match and current_key:
+            current_list.append(match.group(1))
+            continue
+
+    # Save final list if any
+    if current_key and current_list:
+        result[current_key] = current_list
+
+    return result
+
+
+def get_tools() -> list[dict]:
+    """Get all tools with their metadata."""
+    tools = []
+
+    if not SCRIPTS_DIR.exists():
+        return tools
+
+    for script in SCRIPTS_DIR.iterdir():
+        if script.is_file() and script.suffix in (".py", ".sh", ""):
+            header = parse_tool_header(script)
+            name = header.get("name", script.stem)
+            description = header.get("description", "No description")
+            credentials = header.get("credentials", [])
+
+            tools.append(
+                {
+                    "name": name,
+                    "description": description,
+                    "credentials": credentials,
+                    "path": str(script),
+                    "filename": script.name,
+                }
+            )
+
+    return sorted(tools, key=lambda t: t["name"])
+
+
+def load_credentials() -> dict:
+    """Load credentials from the credentials file."""
+    if not CREDENTIALS_FILE.exists():
+        return {}
+    try:
+        return json.loads(CREDENTIALS_FILE.read_text())
+    except (json.JSONDecodeError, Exception):
+        return {}
+
+
+def save_credentials(creds: dict) -> None:
+    """Save credentials to file with secure permissions."""
+    CREDENTIALS_FILE.write_text(json.dumps(creds, indent=2))
+    # Set file permissions to owner read/write only (chmod 600)
+    os.chmod(CREDENTIALS_FILE, 0o600)
+
+
+# =============================================================================
+# Commands
+# =============================================================================
+
+
+def cmd_list(args):
+    """List all available tools."""
+    tools = get_tools()
+
+    if not tools:
+        print("No tools installed.")
+        print(f"Create one with: {sys.argv[0]} create <tool-name>")
+        return
+
+    print(f"Available tools ({len(tools)}):\n")
+    for tool in tools:
+        print(f"  {tool['name']}")
+        print(f"    {tool['description']}")
+        if tool["credentials"]:
+            print(f"    credentials: {', '.join(tool['credentials'])}")
+        print()
+
+
+def cmd_search(args):
+    """Search tools by keyword."""
+    query = args.query.lower()
+    tools = get_tools()
+
+    matches = [
+        t
+        for t in tools
+        if query in t["name"].lower() or query in t["description"].lower()
+    ]
+
+    if not matches:
+        print(f"No tools matching '{args.query}'")
+        return
+
+    print(f"Tools matching '{args.query}':\n")
+    for tool in matches:
+        print(f"  {tool['name']}")
+        print(f"    {tool['description']}")
+        print()
+
+
+def cmd_run(args):
+    """Run a tool with credential injection."""
+    tools = get_tools()
+    tool = next((t for t in tools if t["name"] == args.tool), None)
+
+    if not tool:
+        print(f"Error: Tool '{args.tool}' not found", file=sys.stderr)
+        print(f"Run '{sys.argv[0]} list' to see available tools", file=sys.stderr)
+        sys.exit(1)
+
+    # Load credentials
+    creds = load_credentials()
+
+    # Check for missing credentials
+    required_creds = tool.get("credentials", [])
+    missing = [c for c in required_creds if c not in creds]
+
+    if missing:
+        print(f"Error: Missing credential(s): {', '.join(missing)}", file=sys.stderr)
+        print(f"Set them with:", file=sys.stderr)
+        for cred in missing:
+            print(
+                f"  echo 'value' | {sys.argv[0]} creds set {cred}", file=sys.stderr
+            )
+        sys.exit(1)
+
+    # Build environment with credentials
+    env = os.environ.copy()
+    for cred in required_creds:
+        env[cred] = creds[cred]
+
+    # Prepare input
+    input_data = args.input if args.input else ""
+
+    # Run the tool
+    script_path = tool["path"]
+    try:
+        result = subprocess.run(
+            [sys.executable, script_path],
+            input=input_data,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+
+        # Output stdout (the tool's JSON result)
+        if result.stdout:
+            print(result.stdout, end="")
+
+        # Output stderr (tool's logs/errors)
+        if result.stderr:
+            print(result.stderr, end="", file=sys.stderr)
+
+        sys.exit(result.returncode)
+
+    except Exception as e:
+        print(f"Error running tool: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def cmd_creds(args):
+    """Manage credentials."""
+    creds = load_credentials()
+
+    if args.creds_command == "list":
+        if not creds:
+            print("No credentials stored.")
+            return
+        print("Stored credentials:")
+        for key in sorted(creds.keys()):
+            # Show first few chars only
+            value = creds[key]
+            masked = value[:4] + "..." if len(value) > 4 else "***"
+            print(f"  {key}: {masked}")
+
+    elif args.creds_command == "get":
+        if args.key not in creds:
+            print(f"Error: Credential '{args.key}' not found", file=sys.stderr)
+            sys.exit(1)
+        print(creds[args.key])
+
+    elif args.creds_command == "set":
+        # Read value from stdin
+        if sys.stdin.isatty():
+            print(f"Enter value for {args.key}: ", end="", file=sys.stderr)
+        value = sys.stdin.read().strip()
+        if not value:
+            print("Error: No value provided", file=sys.stderr)
+            sys.exit(1)
+        creds[args.key] = value
+        save_credentials(creds)
+        print(f"Credential '{args.key}' saved.")
+
+    elif args.creds_command == "delete":
+        if args.key not in creds:
+            print(f"Error: Credential '{args.key}' not found", file=sys.stderr)
+            sys.exit(1)
+        del creds[args.key]
+        save_credentials(creds)
+        print(f"Credential '{args.key}' deleted.")
+
+
+def cmd_create(args):
+    """Create a new tool from template."""
+    name = args.name
+
+    # Validate name (kebab-case)
+    if not re.match(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$", name):
+        print(
+            "Error: Tool name must be kebab-case (e.g., 'my-tool', 'fetch-users')",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # Create scripts directory if needed
+    SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    script_path = SCRIPTS_DIR / f"{name}.py"
+
+    if script_path.exists():
+        print(f"Error: Tool '{name}' already exists at {script_path}", file=sys.stderr)
+        sys.exit(1)
+
+    template = f'''#!/usr/bin/env python3
+"""
+name: {name}
+description: TODO: Describe what this tool does
+credentials:
+  - EXAMPLE_API_KEY
+input:
+  param1: string (required)
+  param2: int (optional, default 10)
+output:
+  result: the result object
+"""
+
+import json
+import os
+import sys
+from urllib.request import urlopen, Request
+from urllib.error import URLError, HTTPError
+
+
+def main():
+    # Read JSON input from stdin
+    if sys.stdin.isatty():
+        inp = {{}}
+    else:
+        try:
+            inp = json.load(sys.stdin)
+        except json.JSONDecodeError:
+            inp = {{}}
+
+    # Get credentials from environment (injected by notmcp run)
+    api_key = os.environ.get("EXAMPLE_API_KEY")
+    if not api_key:
+        print(json.dumps({{"error": "Missing EXAMPLE_API_KEY"}}))
+        sys.exit(1)
+
+    # Get input parameters
+    param1 = inp.get("param1", "default")
+    param2 = inp.get("param2", 10)
+
+    # TODO: Implement your tool logic here
+    # Example: make an API call
+    # req = Request("https://api.example.com/endpoint")
+    # req.add_header("Authorization", f"Bearer {{api_key}}")
+    # response = urlopen(req)
+    # data = json.loads(response.read())
+
+    # Output JSON result
+    result = {{
+        "message": f"Hello from {name}!",
+        "param1": param1,
+        "param2": param2,
+    }}
+    print(json.dumps(result, indent=2))
+
+
+if __name__ == "__main__":
+    main()
+'''
+
+    script_path.write_text(template)
+    script_path.chmod(0o755)
+
+    print(f"Created tool: {script_path}")
+    print(f"\nNext steps:")
+    print(f"  1. Edit the script to implement your tool logic")
+    print(f"  2. Update the docstring header (description, credentials, input/output)")
+    print(f"  3. Test with: {sys.argv[0]} run {name} --input '{{\"param1\": \"test\"}}'")
+
+
+# =============================================================================
+# Main
+# =============================================================================
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="notmcp - Local tool system for AI agents",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  notmcp list                          List all tools
+  notmcp search gmail                  Find tools matching 'gmail'
+  notmcp run my-tool --input '{}'      Run a tool with JSON input
+  notmcp creds set MY_API_KEY          Store a credential
+  notmcp create my-new-tool            Create a new tool
+""",
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # list
+    subparsers.add_parser("list", help="List all available tools")
+
+    # search
+    search_parser = subparsers.add_parser("search", help="Search tools by keyword")
+    search_parser.add_argument("query", help="Search query")
+
+    # run
+    run_parser = subparsers.add_parser("run", help="Run a tool")
+    run_parser.add_argument("tool", help="Tool name")
+    run_parser.add_argument("--input", "-i", help="JSON input for the tool")
+
+    # creds
+    creds_parser = subparsers.add_parser("creds", help="Manage credentials")
+    creds_subparsers = creds_parser.add_subparsers(
+        dest="creds_command", help="Credential commands"
+    )
+
+    creds_subparsers.add_parser("list", help="List stored credentials")
+
+    creds_get = creds_subparsers.add_parser("get", help="Get a credential value")
+    creds_get.add_argument("key", help="Credential key")
+
+    creds_set = creds_subparsers.add_parser("set", help="Set a credential (reads value from stdin)")
+    creds_set.add_argument("key", help="Credential key")
+
+    creds_del = creds_subparsers.add_parser("delete", help="Delete a credential")
+    creds_del.add_argument("key", help="Credential key")
+
+    # create
+    create_parser = subparsers.add_parser("create", help="Create a new tool")
+    create_parser.add_argument("name", help="Tool name (kebab-case, e.g., 'my-tool')")
+
+    args = parser.parse_args()
+
+    if args.command == "list":
+        cmd_list(args)
+    elif args.command == "search":
+        cmd_search(args)
+    elif args.command == "run":
+        cmd_run(args)
+    elif args.command == "creds":
+        if not args.creds_command:
+            creds_parser.print_help()
+            sys.exit(1)
+        cmd_creds(args)
+    elif args.command == "create":
+        cmd_create(args)
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

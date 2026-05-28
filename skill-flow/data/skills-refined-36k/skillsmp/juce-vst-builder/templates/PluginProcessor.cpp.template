@@ -1,0 +1,159 @@
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
+#include "Parameters/ParameterLayout.h"
+
+//==============================================================================
+{{PLUGIN_NAME}}AudioProcessor::{{PLUGIN_NAME}}AudioProcessor()
+    : AudioProcessor(BusesProperties()
+#if !JucePlugin_IsMidiEffect
+#if !JucePlugin_IsSynth
+                         .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+                         .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+                         ),
+      apvts(*this, nullptr, "Parameters", createParameterLayout())
+{
+    // Cache parameter pointers for real-time access
+    params.masterVolume = apvts.getRawParameterValue(ParameterIDs::masterVolume);
+
+    // Add more parameter caching:
+    // params.filterCutoff = apvts.getRawParameterValue(ParameterIDs::filterCutoff);
+    // params.filterResonance = apvts.getRawParameterValue(ParameterIDs::filterResonance);
+}
+
+{{PLUGIN_NAME}}AudioProcessor::~{{PLUGIN_NAME}}AudioProcessor()
+{
+}
+
+//==============================================================================
+void {{PLUGIN_NAME}}AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+{
+    // Initialize DSP engine
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
+
+    engine.prepare(spec);
+}
+
+void {{PLUGIN_NAME}}AudioProcessor::releaseResources()
+{
+    // Release DSP resources if needed
+}
+
+bool {{PLUGIN_NAME}}AudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+{
+#if JucePlugin_IsMidiEffect
+    juce::ignoreUnused(layouts);
+    return true;
+#else
+    // Support mono or stereo output
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono() &&
+        layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        return false;
+
+    // For effects: input must match output
+#if !JucePlugin_IsSynth
+    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+        return false;
+#endif
+
+    return true;
+#endif
+}
+
+void {{PLUGIN_NAME}}AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
+                                                  juce::MidiBuffer& midiMessages)
+{
+    juce::ScopedNoDenormals noDenormals;
+
+    auto totalNumInputChannels = getTotalNumInputChannels();
+    auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    // Clear unused output channels
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear(i, 0, buffer.getNumSamples());
+
+    // Update engine parameters from cached atomic values
+    updateEngineFromParameters();
+
+#if JucePlugin_IsSynth
+    // For synthesizers: clear input and generate audio
+    buffer.clear();
+
+    // Process MIDI if needed
+    for (const auto metadata : midiMessages)
+    {
+        const auto msg = metadata.getMessage();
+        if (msg.isNoteOn())
+        {
+            // Handle note on
+            // engine.noteOn(msg.getNoteNumber(), msg.getVelocity() / 127.0f);
+        }
+        else if (msg.isNoteOff())
+        {
+            // Handle note off
+            // engine.noteOff(msg.getNoteNumber());
+        }
+    }
+#endif
+
+    // Process audio through DSP engine
+    engine.process(buffer);
+}
+
+//==============================================================================
+void {{PLUGIN_NAME}}AudioProcessor::updateEngineFromParameters()
+{
+    // Read atomic parameter values and update engine
+    // These calls are real-time safe (no locks)
+
+    if (params.masterVolume != nullptr)
+        engine.setMasterVolume(params.masterVolume->load());
+
+    // Add more parameter updates:
+    // if (params.filterCutoff != nullptr)
+    //     engine.setFilterCutoff(params.filterCutoff->load());
+}
+
+//==============================================================================
+juce::AudioProcessorEditor* {{PLUGIN_NAME}}AudioProcessor::createEditor()
+{
+    return new {{PLUGIN_NAME}}AudioProcessorEditor(*this);
+}
+
+//==============================================================================
+void {{PLUGIN_NAME}}AudioProcessor::getStateInformation(juce::MemoryBlock& destData)
+{
+    // Save plugin state
+    auto state = apvts.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, destData);
+}
+
+void {{PLUGIN_NAME}}AudioProcessor::setStateInformation(const void* data, int sizeInBytes)
+{
+    // Restore plugin state
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState != nullptr && xmlState->hasTagName(apvts.state.getType()))
+    {
+        apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
+    }
+}
+
+//==============================================================================
+juce::AudioProcessorValueTreeState::ParameterLayout
+{{PLUGIN_NAME}}AudioProcessor::createParameterLayout()
+{
+    return ParameterLayout::create();
+}
+
+//==============================================================================
+// This creates new instances of the plugin
+juce::AudioProcessor* JUCE_CALLTYPE createPluginInstance()
+{
+    return new {{PLUGIN_NAME}}AudioProcessor();
+}

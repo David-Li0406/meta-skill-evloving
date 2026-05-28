@@ -1,0 +1,72 @@
+{
+  "$schema": "../symbols-config-schema.json",
+  "projectName": "SkillMeat",
+  "symbolsDir": "{{SYMBOLS_DIR}}",
+  "domains": {
+    "web": {
+      "file": "symbols-web.json",
+      "description": "Next.js App Router application - Pages, layouts, route handlers, server and client components. Adjust directories for your app structure.",
+      "enabled": true
+    },
+    "ui": {
+      "file": "symbols-ui.json",
+      "description": "Shared UI components - Reusable React components, design system primitives, component library.",
+      "testFile": "symbols-ui-tests.json",
+      "enabled": true
+    },
+    "api": {
+      "file": "symbols-api.json",
+      "description": "API routes and handlers - Next.js API routes (app/api), server actions, route handlers.",
+      "enabled": true
+    },
+    "shared": {
+      "file": "symbols-shared.json",
+      "description": "Shared utilities and types - Type definitions, hooks, utilities, constants used across apps.",
+      "enabled": true
+    }
+  },
+  "extraction": {
+    "python": {
+      "directories": ["backend"],
+      "extensions": [".py"],
+      "excludes": ["__pycache__", "*.pyc"],
+      "excludeTests": true,
+      "excludePrivate": false
+    },
+    "typescript": {
+      "directories": [
+        "apps/web/app",
+        "apps/web/src",
+        "apps/web/lib",
+        "apps/web/components",
+        "packages/ui",
+        "packages/shared",
+        "packages/hooks",
+        "packages/utils"
+      ],
+      "extensions": [".ts", ".tsx", ".js", ".jsx"],
+      "excludes": [
+        "node_modules/",
+        "*.test.*",
+        "*.spec.*",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/__tests__/",
+        "dist/",
+        "build/",
+        ".next/",
+        "out/",
+        "coverage/",
+        ".turbo/",
+        "*.d.ts",
+        "*.stories.*"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "Template for Next.js App Router monorepo with shared UI packages. Common patterns: Server Components, Client Components, Server Actions, Route Handlers, React Server Components. Customize directories to match your monorepo structure (apps/*, packages/*)."
+  }
+}

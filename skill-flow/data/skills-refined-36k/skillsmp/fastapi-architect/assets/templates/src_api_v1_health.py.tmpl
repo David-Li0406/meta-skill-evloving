@@ -1,0 +1,10 @@
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
+
+
+router = APIRouter()
+
+
+@router.get("/health", summary="Check API health", description="Returns the API status.")
+async def health_check():
+    return JSONResponse(content={"status": "ok", "message": "API is up and running"})

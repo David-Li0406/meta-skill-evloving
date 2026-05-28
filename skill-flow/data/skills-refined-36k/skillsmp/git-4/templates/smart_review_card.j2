@@ -1,0 +1,54 @@
+{# smart_review_card.j2 - Smart Commit Review Card Template #}
+{# Variables: message, files, security_issues, lefthook_report, status, commit_hash #}
+
+{%- if status == "pending" -%}
+## 🛡️ Commit Review
+
+**Status**: ⏳ Waiting for approval
+**Message**: `{{ message }}`
+**Files**: {{ files|length }} staged
+
+{%- if security_issues %}
+⚠️ **Security Issues**: {{ security_issues|join(", ") }}
+{%- else %}
+🛡️ **Security**: Passed
+{%- endif %}
+
+{%- if lefthook_report %}
+{{ lefthook_report }}
+{%- endif %}
+
+---
+**Action Required**: Reply `Yes` to approve, `No` to cancel
+
+{%- elif status == "approved" -%}
+## ✅ Commit Approved
+
+**Message**: `{{ message }}`
+**Commit**: `{{ commit_hash }}`
+
+{%- elif status == "rejected" -%}
+## ❌ Commit Cancelled
+
+**Message**: `{{ message }}`
+
+🛑 You rejected this commit.
+
+{%- elif status == "security_violation" -%}
+## ⚠️ Security Issue Detected
+
+**Message**: `{{ message }}`
+
+⚠️ **Security Issues**: {{ security_issues|join(", ") }}
+
+**Action Required**: Fix security issues before committing.
+Remove sensitive files or add them to .gitignore.
+
+{%- elif status == "error" -%}
+## ❌ Error Occurred
+
+**Message**: `{{ message }}`
+
+**Error**: {{ error }}
+
+{%- endif -%}

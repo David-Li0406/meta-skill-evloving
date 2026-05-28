@@ -1,0 +1,78 @@
+# Skill Manifest - Progressive Disclosure Index
+# Token estimation: 1 token ≈ 0.75 words (or ~4 characters)
+# Content multipliers: prose 1.0x, code 1.2x, tables 1.3x, code-heavy 1.4x
+
+skill: test-execution
+version: "1.0"
+specification: agentskills.io/v1
+
+progressive_disclosure:
+  # ---------------------------------------------------------------------------
+  # LEVEL 1: METADATA (~120 tokens)
+  # Range: 80-150 | We use: 120
+  # Rationale: name (~10) + description (~100) + YAML overhead (~10)
+  # ---------------------------------------------------------------------------
+  metadata:
+    estimated_tokens: 120
+    fields: [name, description]
+
+  # ---------------------------------------------------------------------------
+  # LEVEL 2: INSTRUCTIONS (~1600 tokens)
+  # Range: 1000-2500 | We use: 1600
+  # Rationale: Test categories, quick commands, output format
+  # ---------------------------------------------------------------------------
+  instructions:
+    estimated_tokens: 1600
+    file: SKILL.md
+
+  resources:
+    # -------------------------------------------------------------------------
+    # TEST-PATTERNS.md (~2000 tokens)
+    # Range: 1600-2400 | We use: 2000
+    # Rationale:
+    #   - Very code-heavy (JavaScript/TypeScript examples)
+    #   - Code blocks tokenize at ~1.4x due to syntax
+    #   - ~180 lines, mostly test code examples
+    #   - Multiple complete test function examples
+    # -------------------------------------------------------------------------
+    - path: references/TEST-PATTERNS.md
+      purpose: Testing patterns, assertions, and test organization
+      estimated_tokens: 2000
+      load_when:
+        - Writing new tests
+        - User asks about test patterns
+        - Need testing best practices
+      keywords: [pattern, mock, stub, spy, assertion, arrange, act, assert]
+
+    # -------------------------------------------------------------------------
+    # COVERAGE-GUIDE.md (~1800 tokens)
+    # Range: 1400-2000 | We use: 1800
+    # Rationale:
+    #   - Mix of configuration (YAML/JSON) and prose
+    #   - Tables for coverage metrics
+    #   - CI/CD YAML examples
+    #   - ~150 lines with moderate code density
+    # -------------------------------------------------------------------------
+    - path: references/COVERAGE-GUIDE.md
+      purpose: Coverage metrics, configuration, and CI integration
+      estimated_tokens: 1800
+      load_when:
+        - Running coverage reports
+        - Coverage below threshold
+        - Configuring coverage tools
+      keywords: [coverage, threshold, lines, branches, lcov, report]
+
+loading_strategy:
+  recommendation: |
+    1. Start with SKILL.md for basic test execution
+    2. Load TEST-PATTERNS.md when writing tests
+    3. Load COVERAGE-GUIDE.md when analyzing coverage
+
+  fallback: |
+    SKILL.md contains essential test execution instructions.
+    Reference files provide detailed patterns and coverage guidance.
+
+token_summary:
+  metadata_only: 120
+  with_instructions: 1720
+  with_all_resources: 5520

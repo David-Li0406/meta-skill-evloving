@@ -1,0 +1,43 @@
+{
+  "id": "eval-101",
+  "name": "多文件功能增强",
+  "complexity": "medium",
+  "description": "跨多个文件实现新功能",
+  "requirement": "为音频服务添加音频焦点管理功能，支持多个应用竞争音频资源，包括焦点请求、焦点丢失通知、焦点恢复机制",
+  "context": {
+    "project_type": "音频服务",
+    "files_involved": 5,
+    "estimated_lines": 200,
+    "dependencies": ["音频服务核心", "事件管理", "权限管理"]
+  },
+  "expected_output": {
+    "rfc_sections": ["§1", "§2", "§3", "§4", "§5"],
+    "scenarios": {
+      "normal": 2,
+      "exception": 2,
+      "boundary": 2
+    },
+    "dfx_dimensions": 8
+  },
+  "acceptance_criteria": {
+    "execution_time_max": 1200,
+    "token_budget_max": 30000,
+    "user_interactions_max": 4,
+    "first_pass_rate": 0.80,
+    "quality_score_min": 85
+  },
+  "validation": {
+    "must_have": [
+      "焦点请求 API 定义",
+      "焦点优先级策略",
+      "焦点丢失回调机制",
+      "并发场景处理",
+      "状态机定义"
+    ],
+    "should_have": [
+      "焦点策略配置化",
+      "焦点历史记录",
+      "性能影响分析"
+    ]
+  }
+}

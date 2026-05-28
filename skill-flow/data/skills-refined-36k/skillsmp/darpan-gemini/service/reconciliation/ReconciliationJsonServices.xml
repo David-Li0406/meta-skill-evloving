@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="reconcile" noun="JsonFiles">
+        <description>Reconcile two JSON files using ID-based comparison and generate diff output with full objects (wrapper to unified comparator).</description>
+        <in-parameters>
+            <parameter name="json1Location" required="true"/>
+            <parameter name="json2Location" required="true"/>
+            <parameter name="schemaFileName" required="true"/>
+            <parameter name="compareJsonPath" required="true">
+                <description>JSONPath expression to extract ID field (e.g. $.id or $.data.orders.edges[*].node.legacyResourceId)</description>
+            </parameter>
+            <parameter name="schemaFileName2">
+                <description>Optional schema file for JSON 2 (defaults to schemaFileName)</description>
+            </parameter>
+            <parameter name="compareJsonPath2">
+                <description>Optional JSONPath for JSON 2 (defaults to compareJsonPath)</description>
+            </parameter>
+            <parameter name="json1Label" default-value="JSON 1"/>
+            <parameter name="json2Label" default-value="JSON 2"/>
+            <parameter name="outputLocation" default-value="tmp/reconciliation/json-diff/output"/>
+            <parameter name="outputFileName"/>
+            <parameter name="maxIdsReturned" type="Integer" default-value="1000"/>
+            <parameter name="sparkMaster" default-value="local[*]"/>
+            <parameter name="sparkAppName" default-value="ReconciliationJsonCompare"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="onlyInJson1"><parameter name="compareId"/></parameter>
+            <parameter name="onlyInJson2"><parameter name="compareId"/></parameter>
+            <parameter name="onlyInJson1Count" type="Integer"/>
+            <parameter name="onlyInJson2Count" type="Integer"/>
+            <parameter name="differenceCount" type="Integer"/>
+            <parameter name="diffLocation"/>
+            <parameter name="diffFileName"/>
+            <parameter name="validationPassed" type="Boolean"/>
+            <parameter name="validationErrors"><parameter name="errorMessage"/></parameter>
+        </out-parameters>
+        <actions>
+            <if condition="!json1Location || !json2Location">
+                <return error="true" message="json1Location and json2Location are required"/>
+            </if>
+
+            <script><![CDATA[
+                def normalize = { it?.toString()?.trim() }
+                def jsonPath1 = compareJsonPath
+                def jsonPath2 = compareJsonPath2 ?: compareJsonPath
+                def schema1 = schemaFileName
+                def schema2 = schemaFileName2 ?: schemaFileName
+
+                context.unifiedParams = [
+                        file1Location      : json1Location,
+                        file2Location      : json2Location,
+                        file1Type          : "JSON",
+                        file2Type          : "JSON",
+                        file1IdExpression  : normalize(jsonPath1),
+                        file2IdExpression  : normalize(jsonPath2),
+                        file1SchemaFileName: normalize(schema1),
+                        file2SchemaFileName: normalize(schema2),
+                        file1Label         : json1Label,
+                        file2Label         : json2Label,
+                        outputLocation     : outputLocation,
+                        outputFileName     : outputFileName,
+                        sparkMaster        : sparkMaster,
+                        sparkAppName       : sparkAppName
+                ]
+            ]]></script>
+
+            <service-call name="ReconciliationCoreServices.reconcile#UnifiedFiles"
+                    in-map="unifiedParams" out-map="unifiedOut"/>
+
+            <set field="diffLocation" from="unifiedOut.diffLocation"/>
+            <set field="diffFileName" from="unifiedOut.diffFileName"/>
+            <set field="differenceCount" from="unifiedOut.differenceCount"/>
+            <set field="onlyInJson1Count" from="unifiedOut.onlyInFile1Count"/>
+            <set field="onlyInJson2Count" from="unifiedOut.onlyInFile2Count"/>
+            <set field="validationPassed" from="!(unifiedOut.validationErrors &amp;&amp; !unifiedOut.validationErrors.isEmpty())"/>
+            <set field="validationErrors" from="unifiedOut.validationErrors"/>
+        </actions>
+    </service>
+
+    <service verb="run" noun="JsonReconciliation">
+        <description>Save uploaded JSON files and run JSON reconciliation with schema validation.</description>
+        <in-parameters>
+            <parameter name="json1File" type="org.apache.commons.fileupload.FileItem"/>
+            <parameter name="json2File" type="org.apache.commons.fileupload.FileItem"/>
+            <parameter name="schemaFileName" required="true"/>
+            <parameter name="compareJsonPath" required="true">
+                <description>JSONPath expression to extract ID field</description>
+            </parameter>
+            <parameter name="schemaFileName2">
+                <description>Optional schema file for JSON 2 (defaults to schemaFileName)</description>
+            </parameter>
+            <parameter name="compareJsonPath2">
+                <description>Optional JSONPath for JSON 2 (defaults to compareJsonPath)</description>
+            </parameter>
+            <parameter name="json1Label" default-value="JSON 1"/>
+            <parameter name="json2Label" default-value="JSON 2"/>
+            <parameter name="maxIdsReturned" type="Integer" default-value="1000"/>
+            <parameter name="sparkMaster" default-value="local[*]"/>
+            <parameter name="sparkAppName" default-value="ReconciliationJsonCompare"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="diffLocation"/>
+            <parameter name="diffFileName"/>
+            <parameter name="differenceCount" type="Integer"/>
+            <parameter name="onlyInJson1Count" type="Integer"/>
+            <parameter name="onlyInJson2Count" type="Integer"/>
+            <parameter name="validationPassed" type="Boolean"/>
+            <parameter name="validationErrors"><parameter name="errorMessage"/></parameter>
+        </out-parameters>
+        <actions>
+            <if condition="json1File == null || json2File == null">
+                <return error="true" message="Both JSON 1 and JSON 2 files are required"/>
+            </if>
+
+            <set field="baseDirRef" from="ec.resource.getLocationReference('runtime://tmp/reconciliation/json-diff')"/>
+            <set field="inputDirRef" from="baseDirRef.makeDirectory('input')"/>
+            <set field="outputDirRef" from="baseDirRef.makeDirectory('output')"/>
+
+            <set field="timestamp" from="ec.l10n.format(ec.user.nowTimestamp, 'yyyyMMdd-HHmmssSSS')"/>
+            <set field="json1SafeName" from="json1File.getName()?.replaceAll('[^A-Za-z0-9._-]', '_') ?: 'upload.json'"/>
+            <set field="json2SafeName" from="json2File.getName()?.replaceAll('[^A-Za-z0-9._-]', '_') ?: 'upload.json'"/>
+
+            <set field="json1FileRef" from="inputDirRef.makeFile(timestamp + '-json1-' + json1SafeName)"/>
+            <set field="json2FileRef" from="inputDirRef.makeFile(timestamp + '-json2-' + json2SafeName)"/>
+
+            <set field="ignoreJson1Write" from="json1FileRef.putStream(json1File.getInputStream())"/>
+            <set field="ignoreJson2Write" from="json2FileRef.putStream(json2File.getInputStream())"/>
+
+            <service-call name="ReconciliationJsonServices.reconcile#JsonFiles"
+                    in-map="[json1Location:json1FileRef.getLocation(), json2Location:json2FileRef.getLocation(),
+                    schemaFileName:schemaFileName, compareJsonPath:compareJsonPath,
+                    schemaFileName2:schemaFileName2, compareJsonPath2:compareJsonPath2,
+                    json1Label:json1Label, json2Label:json2Label,
+                    maxIdsReturned:maxIdsReturned,
+                    outputLocation:'runtime://tmp/reconciliation/json-diff/output',
+                    sparkMaster:sparkMaster, sparkAppName:sparkAppName]"
+                    out-map="reconcileOut"/>
+            <set field="diffLocation" from="reconcileOut.diffLocation"/>
+            <set field="diffFileName" from="reconcileOut.diffFileName"/>
+            <set field="differenceCount" from="reconcileOut.differenceCount"/>
+            <set field="onlyInJson1Count" from="reconcileOut.onlyInJson1Count"/>
+            <set field="onlyInJson2Count" from="reconcileOut.onlyInJson2Count"/>
+            <set field="validationPassed" from="reconcileOut.validationPassed"/>
+            <set field="validationErrors" from="reconcileOut.validationErrors"/>
+        </actions>
+    </service>
+</services>

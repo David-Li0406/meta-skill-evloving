@@ -1,0 +1,46 @@
+---
+// Component: ComponentName
+// Description: Brief description of what this component does
+export interface Props {
+  // Define component props here
+  title?: string;
+  className?: string;
+  variant?: 'default' | 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const {
+  title,
+  className,
+  variant = 'default',
+  size = 'md'
+} = Astro.props;
+
+// Variant styles using Tailwind classes
+const variantClasses = {
+  default: 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700',
+  primary: 'bg-blue-500 dark:bg-blue-600 text-white',
+  secondary: 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+};
+
+// Size styles using Tailwind classes
+const sizeClasses = {
+  sm: 'p-4',
+  md: 'p-6',
+  lg: 'p-8'
+};
+---
+
+<!-- Component template -->
+<div class={`
+  rounded-lg shadow-sm
+  ${variantClasses[variant]}
+  ${sizeClasses[size]}
+  ${className || ''}
+`}>
+  {title && <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">{title}</h2>}
+
+  <slot />
+
+  <!-- Add your component markup here -->
+</div>

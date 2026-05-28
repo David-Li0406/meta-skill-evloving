@@ -1,0 +1,144 @@
+{
+  "name": "Wan2.2 I2V Workflow",
+  "description": "Wan2.2 5Bモデルを使用したImage-to-Videoワークフロー",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "title": "Load Input Image",
+      "properties": {
+        "image": "input_image.png"
+      },
+      "notes": "入力画像。アスペクト比9:16または16:9を推奨"
+    },
+    {
+      "id": 2,
+      "type": "LoadDiffusionModel",
+      "title": "Load Wan2.2 5B Model",
+      "properties": {
+        "model_name": "wan2.2_ti2v_5B_fp16.safetensors"
+      },
+      "notes": "Wan2.2 5B fp16モデル。VRAM: 12-16GB"
+    },
+    {
+      "id": 3,
+      "type": "LoadCLIP",
+      "title": "Load Text Encoder",
+      "properties": {
+        "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "type": "wan"
+      },
+      "notes": "UMT5-XXL fp8"
+    },
+    {
+      "id": 4,
+      "type": "LoadCLIPVision",
+      "title": "Load CLIP Vision",
+      "properties": {
+        "clip_name": "clip_vision_h.safetensors"
+      }
+    },
+    {
+      "id": 5,
+      "type": "LoadVAE",
+      "title": "Load VAE",
+      "properties": {
+        "vae_name": "wan2.2_vae.safetensors"
+      },
+      "notes": "Wan2.2専用VAE（wan2.1_vaeも互換性あり）"
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "title": "Positive Prompt",
+      "properties": {
+        "text": "A gentle breeze moves through the scene, subtle natural motion, high quality, smooth animation"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      }
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "title": "Negative Prompt",
+      "properties": {
+        "text": "blurry, low quality, distorted, flickering, static, watermark"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      }
+    },
+    {
+      "id": 8,
+      "type": "CLIPVisionEncode",
+      "title": "Encode Image",
+      "inputs": {
+        "clip_vision": { "node": 4, "output": "CLIP_VISION" },
+        "image": { "node": 1, "output": "IMAGE" }
+      }
+    },
+    {
+      "id": 9,
+      "type": "WanVideoI2VSampler",
+      "title": "Video Sampler",
+      "properties": {
+        "width": 576,
+        "height": 1024,
+        "length": 81,
+        "cfg": 5.0,
+        "steps": 25,
+        "seed": -1
+      },
+      "inputs": {
+        "model": { "node": 2, "output": "MODEL" },
+        "positive": { "node": 6, "output": "CONDITIONING" },
+        "negative": { "node": 7, "output": "CONDITIONING" },
+        "clip_vision_output": { "node": 8, "output": "CLIP_VISION_OUTPUT" }
+      },
+      "notes": "Wan2.2はCFG 5.0で安定。5Bモデルはオフロードで8GBでも動作可能"
+    },
+    {
+      "id": 10,
+      "type": "VAEDecodeVideo",
+      "title": "VAE Decode",
+      "inputs": {
+        "vae": { "node": 5, "output": "VAE" },
+        "samples": { "node": 9, "output": "LATENT" }
+      }
+    },
+    {
+      "id": 11,
+      "type": "SaveVideo",
+      "title": "Save Video",
+      "properties": {
+        "filename_prefix": "wan22_i2v",
+        "fps": 24,
+        "format": "mp4"
+      },
+      "inputs": {
+        "images": { "node": 10, "output": "IMAGE" }
+      }
+    }
+  ],
+  "connections": [
+    { "from": [1, "IMAGE"], "to": [8, "image"] },
+    { "from": [2, "MODEL"], "to": [9, "model"] },
+    { "from": [3, "CLIP"], "to": [6, "clip"] },
+    { "from": [3, "CLIP"], "to": [7, "clip"] },
+    { "from": [4, "CLIP_VISION"], "to": [8, "clip_vision"] },
+    { "from": [5, "VAE"], "to": [10, "vae"] },
+    { "from": [6, "CONDITIONING"], "to": [9, "positive"] },
+    { "from": [7, "CONDITIONING"], "to": [9, "negative"] },
+    { "from": [8, "CLIP_VISION_OUTPUT"], "to": [9, "clip_vision_output"] },
+    { "from": [9, "LATENT"], "to": [10, "samples"] },
+    { "from": [10, "IMAGE"], "to": [11, "images"] }
+  ],
+  "recommended_settings": {
+    "vram_requirement": "12-16GB (8GB with offload)",
+    "resolution": "576×1024",
+    "frames": 81,
+    "estimated_time": "22-30秒 (RTX 4090)"
+  }
+}

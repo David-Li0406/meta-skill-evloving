@@ -1,0 +1,76 @@
+# Fix {{ title }} Bug
+
+Feature branch: `{{ featureBranch }}`
+Base branch: `{{ baseBranch }}`
+{% if linearIssueId -%}
+Linear Issue ID: `{{ linearIssueId }}`
+{% endif -%}
+{% if sentryIssueUrl -%}
+Sentry Issue: {{ sentryIssueUrl }}
+{% endif -%}
+
+## Overview
+
+<!-- Write a brief description of the bug. Be succinct. -->
+
+## Context
+
+<!-- Summarize changes on this branch that may have introduced the bug. -->
+
+## Reproduction Steps
+
+<!--
+Describe how to reproduce the bug. If reproduction steps are not yet known, describe what is known about when/how the bug occurs. Be succinct.
+
+Examples of what could be included:
+
+- Steps to reproduce the issue
+- Environment/conditions where it occurs
+- What is happening (actual behavior)
+- What should be happening (expected behavior)
+-->
+
+## Plan
+
+### Phase 1: Reproduce and Write Failing Test
+
+Reproduce the bug and write a test that demonstrates the failing behavior.
+
+Steps:
+
+- Confirm reproduction of the bug
+- Write test(s) that fail due to the bug
+- Verify the test failure matches the expected bug behavior
+
+<!-- Add any additional details or modify steps as needed for this specific bug -->
+
+### Phase 2: Fix Bug and Verify Test Passes
+
+Implement the minimal fix and verify the test now passes.
+
+Steps:
+
+- Investigate root cause
+- Implement the fix
+- Verify the test passes
+- Confirm the bug is resolved
+
+<!-- Add any additional details or modify steps as needed for this specific bug -->
+
+## Process
+
+<!-- Copy this Process section exactly as written, without modification: -->
+
+For each phase above (in order) do the following:
+
+1. Follow the steps outlined in the phase.
+2. If you cannot complete a step after 5 attempts, STOP and seek guidance from the user.
+3. Once the phase is complete, STOP and wait for user feedback.
+4. Once the user has finished giving feedback, append "(✅ Complete)" to the phase's header.
+
+Once the bug is fixed, document:
+
+- What the root cause was
+- Why the bug occurred
+- How the fix addresses the underlying issue
+- Any preventive measures to avoid similar bugs in the future

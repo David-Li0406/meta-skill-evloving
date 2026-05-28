@@ -1,0 +1,287 @@
+---
+name: PlaceholderAPI
+description: PlaceholderAPI - Minecraft plugin expansion system for placeholder text replacement
+---
+
+# PlaceholderAPI Skill
+
+PlaceholderAPI is a powerful placeholder system for Minecraft servers that allows dynamic text replacement through expansions. It enables plugins to provide and consume placeholder values like `%player_name%` or `%server_online%`.
+
+## When to Use This Skill
+
+This skill should be triggered when:
+- **Creating a PlaceholderExpansion** for your plugin (internal or external)
+- **Using PlaceholderAPI in code** to parse placeholders dynamically
+- **Configuring Maven/Gradle dependencies** for PlaceholderAPI integration
+- **Troubleshooting expansion issues** like class loading failures
+- **Setting up relational placeholders** between players
+- **Learning PlaceholderAPI commands** (parse, ecloud, etc.)
+- **Integrating with external plugins** that use placeholders
+
+## Quick Reference
+
+### 1. Maven Setup
+
+```xml
+<repositories>
+    <repository>
+        <id>placeholderapi</id>
+        <url>https://repo.extendedclip.com/releases/</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>me.clip</groupId>
+        <artifactId>placeholderapi</artifactId>
+        <version>2.11.6</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+### 2. Basic PlaceholderExpansion Structure
+
+Every expansion must extend `PlaceholderExpansion` and implement core methods:
+
+```java
+package at.helpch.placeholderapi.example.expansion;
+
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.NotNull;
+
+public class SomeExpansion extends PlaceholderExpansion {
+
+    @Override
+    @NotNull
+    public String getAuthor() {
+        return "Author"; // Required: Expansion author
+    }
+
+    @Override
+    @NotNull
+    public String getIdentifier() {
+        return "example"; // Required: Used as %example_param%
+    }
+
+    @Override
+    @NotNull
+    public String getVersion() {
+        return "1.0.0"; // Required: Expansion version
+    }
+
+    @Override
+    public String onRequest(OfflinePlayer player, @NotNull String params) {
+        // Handle %example_params% here
+        if (params.equalsIgnoreCase("placeholder1")) {
+            return "text1";
+        }
+        return null; // Invalid placeholder
+    }
+}
+```
+
+### 3. Internal Expansion with Plugin Integration
+
+Recommended pattern: Integrate expansion directly into your plugin:
+
+```java
+package at.helpch.placeholderapi.example.expansion;
+
+import at.helpch.placeholderapi.example.SomePlugin;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.NotNull;
+
+public class SomeExpansion extends PlaceholderExpansion {
+
+    private final SomePlugin plugin;
+
+    public SomeExpansion(SomePlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    @NotNull
+    public String getAuthor() {
+        return String.join(", ", plugin.getDescription().getAuthors());
+    }
+
+    @Override
+    @NotNull
+    public String getIdentifier() {
+        return "example";
+    }
+
+    @Override
+    @NotNull
+    public String getVersion() {
+        return plugin.getDescription().getVersion();
+    }
+
+    @Override
+    public boolean persist() {
+        return true; // Keep expansion loaded on reload
+    }
+
+    @Override
+    public String onRequest(OfflinePlayer player, @NotNull String params) {
+        if (params.equalsIgnoreCase("config_value")) {
+            return plugin.getConfig().getString("path.value", "default");
+        }
+        return null;
+    }
+}
+```
+
+### 4. Registering Internal Expansion
+
+Internal expansions require manual registration:
+
+```java
+package at.helpch.placeholderapi.example;
+
+import at.helpch.placeholderapi.example.expansion.SomeExpansion;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public class SomePlugin extends JavaPlugin {
+
+    @Override
+    public void onEnable() {
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            new SomeExpansion(this).register();
+        }
+    }
+}
+```
+
+### 5. Using PlaceholderAPI in Code
+
+Parse placeholders dynamically in your plugin:
+
+```java
+import me.clip.placeholderapi.PlaceholderAPI;
+
+// Parse with player context
+String parsed = PlaceholderAPI.setPlaceholders(player, "Hello %player_name%!");
+player.sendMessage(parsed);
+
+// Parse without player (server-level placeholders)
+String serverInfo = PlaceholderAPI.setPlaceholders(null, "Online: %server_online%");
+```
+
+### 6. plugin.yml Configuration
+
+Add soft dependency to ensure PlaceholderAPI loads first:
+
+```yaml
+name: MyPlugin
+version: 1.0.0
+main: com.example.MyPlugin
+author: Author
+softdepend:
+  - PlaceholderAPI
+```
+
+### 7. Common Error: Missing Dependency
+
+```
+[PlaceholderAPI] Failed to load Expansion class <expansion> (Is a dependency missing?)
+[PlaceholderAPI] Cause: NoClassDefFoundError <path>
+```
+
+**Solution**: Ensure all required dependencies are included in your plugin's `pom.xml` or `gradle.build`.
+
+### 8. Gradle Setup
+
+```groovy
+repositories {
+    maven { url 'https://repo.extendedclip.com/releases/' }
+}
+
+dependencies {
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+}
+```
+
+## Reference Files
+
+This skill includes comprehensive documentation in `references/`:
+
+- **api.md** - API documentation including common issues and troubleshooting
+- **developers.md** - Complete guide for creating expansions (internal, external, relational)
+- **users.md** - User-facing documentation with placeholder lists and commands
+
+## Key Concepts
+
+### Placeholder Syntax
+- **Percent format**: `%identifier_param%` - Standard format
+- **Bracket format**: `{identifier_param}` - Used within certain expansions (e.g., Animations)
+
+### Expansion Types
+1. **Internal Expansion**: Built into your plugin's JAR, requires manual registration
+2. **External Expansion**: Separate JAR in PlaceholderAPI/expansions folder, auto-loaded
+3. **Relational Expansion**: Compares values between two players (e.g., `%rel_factions_%`)
+
+### The onRequest Method
+- Called by PlaceholderAPI when a placeholder is parsed
+- `params` = text after the underscore (e.g., "param" in `%example_param%`)
+- Return `null` for invalid placeholders
+- Return empty string `""` for valid placeholders with no value
+
+## Working with This Skill
+
+### For Beginners
+1. Start with the Maven/Gradle setup examples above
+2. Create a basic PlaceholderExpansion following the structure example
+3. Register it in your plugin's onEnable()
+4. Test with `/papi parse me %youridentifier_param%`
+
+### For Plugin Developers
+- Use internal expansions for better integration
+- Always set `persist() = true` for internal expansions
+- Handle null players gracefully in onRequest()
+- Use `OfflinePlayer` instead of `Player` when possible
+
+### For Troubleshooting
+- Check console for NoClassDefFoundError messages
+- Verify Maven/Gradle dependencies include PlaceholderAPI
+- Ensure softdepend is set in plugin.yml
+- Use `/papi list` to see loaded expansions
+
+## Common Commands
+
+| Command | Description |
+|---------|-------------|
+| `/papi parse me <text>` | Parse placeholders for yourself |
+| `/papi bcparse <player> <text>` | Parse and broadcast to all players |
+| `/papi cmdparse <player> <command>` | Parse and execute as command |
+| `/papi ecloud download <expansion>` | Download expansion from eCloud |
+| `/papi list` | List all installed expansions |
+| `/papi info <expansion>` | View expansion information |
+| `/papi reload` | Reload PlaceholderAPI |
+
+## Resources
+
+### Official Links
+- **Wiki**: https://wiki.placeholderapi.com/
+- **Spigot**: https://www.spigotmc.org/resources/6245/
+- **GitHub**: https://github.com/PlaceholderAPI/PlaceholderAPI
+- **Discord**: https://discord.gg/placeholderapi
+- **eCloud**: https://extendedcloud.com/
+
+### Expansion Cloud (eCloud)
+The eCloud is a central repository for PlaceholderAPI expansions. Download expansions directly:
+```
+/papi ecloud download Player
+/papi ecloud download Server
+```
+
+## Notes
+
+- This skill was generated from official PlaceholderAPI documentation
+- Always use `compileOnly`/`provided` scope for dependencies (don't shade PAPI)
+- Internal expansions are recommended over external for plugin-specific features
+- Keep expansions lightweight and focused on specific functionality

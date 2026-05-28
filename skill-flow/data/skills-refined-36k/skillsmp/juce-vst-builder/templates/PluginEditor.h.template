@@ -1,0 +1,65 @@
+#pragma once
+
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+
+#include "PluginProcessor.h"
+#include "UI/{{PLUGIN_NAME}}LookAndFeel.h"
+
+//==============================================================================
+/**
+ * {{PLUGIN_NAME}}AudioProcessorEditor
+ *
+ * Main UI class for the {{PRODUCT_NAME}} plugin.
+ */
+class {{PLUGIN_NAME}}AudioProcessorEditor : public juce::AudioProcessorEditor
+{
+public:
+    explicit {{PLUGIN_NAME}}AudioProcessorEditor({{PLUGIN_NAME}}AudioProcessor&);
+    ~{{PLUGIN_NAME}}AudioProcessorEditor() override;
+
+    //==========================================================================
+    void paint(juce::Graphics&) override;
+    void resized() override;
+
+private:
+    //==========================================================================
+    // Reference to processor
+    {{PLUGIN_NAME}}AudioProcessor& processorRef;
+
+    //==========================================================================
+    // Custom look and feel
+    {{PLUGIN_NAME}}LookAndFeel lookAndFeel;
+
+    //==========================================================================
+    // UI Components
+
+    // Title
+    juce::Label titleLabel;
+
+    // Main controls - example rotary sliders
+    juce::Slider masterVolumeSlider;
+    juce::Label masterVolumeLabel;
+
+    // Add more controls as needed:
+    // juce::Slider filterCutoffSlider;
+    // juce::Label filterCutoffLabel;
+    // juce::ComboBox waveformSelector;
+
+    //==========================================================================
+    // Parameter Attachments (connect UI to APVTS)
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> masterVolumeAttachment;
+
+    // Add more attachments:
+    // std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterCutoffAttachment;
+    // std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> waveformAttachment;
+
+    //==========================================================================
+    // Helper methods
+    void setupSlider(juce::Slider& slider, juce::Label& label,
+                     const juce::String& labelText,
+                     const juce::String& suffix = "");
+
+    //==========================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR({{PLUGIN_NAME}}AudioProcessorEditor)
+};

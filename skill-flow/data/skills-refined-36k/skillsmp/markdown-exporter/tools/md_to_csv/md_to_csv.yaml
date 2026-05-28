@@ -1,0 +1,35 @@
+identity:
+  name: md_to_csv
+  author: bowenliang123
+  label:
+    en_US: Markdown tables ⮕ CSV
+    zh_Hans: Markdown 表格 ⮕ CSV
+description:
+  human:
+    en_US: Generate CSV file from Markdown tables
+    zh_Hans: 将 Markdown 表格转换为 CSV 文件的工具
+  llm: Generate CSV file from Markdown text
+parameters:
+  - name: md_text
+    type: string
+    required: true
+    label:
+      en_US: Markdown table text
+      zh_Hans: Markdown 表格文本
+    human_description:
+      en_US: Input text of single Markdown table
+      zh_Hans: 单个Markdown格式文本
+    form: llm
+  - name: output_filename
+    type: string
+    required: false
+    label:
+      en_US: Output Filename
+      zh_Hans: 输出文件名
+    human_description:
+      en_US: Optional custom output file name, and the filename suffix is not required.
+      zh_Hans: 可选的自定义输出文件名，后缀名无需指定
+    form: llm
+extra:
+  python:
+    source: tools/md_to_csv/md_to_csv.py

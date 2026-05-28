@@ -1,0 +1,34 @@
+# AGENTS.md
+
+This file contains configuration and verification commands for agents.
+
+## Verification Commands
+
+### General
+- `pytest tests/` - Run all Python tests
+- `npm test` - Run JavaScript test suite
+- `cargo test` - Run Rust tests
+
+### Linting
+- `ruff check .` - Python linting
+- `eslint .` - JavaScript linting
+- `go fmt ./...` - Go formatting check
+
+### Type Checking
+- `mypy .` - Python type checking
+- `tsc --noEmit` - TypeScript type checking
+
+## Project-Specific Commands
+
+### Database Migrations
+- `alembic upgrade head` - Apply database migrations
+- `python manage.py migrate` - Django migrations
+
+### Build
+- `npm run build` - Build JavaScript bundle
+- `go build ./...` - Build Go binaries
+
+## Notes
+
+Add your project-specific verification commands here. Agents will run ALL commands
+listed and expect them to pass before marking tasks as complete.

@@ -1,0 +1,66 @@
+<!-- Complete Post Card Component -->
+<!-- app/views/shared/components/_post_card.html.erb -->
+
+<%#
+Usage:
+<%= render "shared/components/post_card", post: @post %>
+
+Locals:
+- post: Post object
+%>
+
+<article class="bg-card rounded-xl p-6 border border-border hover:border-muted-foreground/20 transition-colors">
+  <!-- Author Info -->
+  <%= link_to profile_path(post.user_id), class: "flex items-start gap-3 mb-4 group" do %>
+    <div class="h-10 w-10 rounded-full ring-2 ring-background group-hover:ring-primary/20 transition-all overflow-hidden bg-secondary flex items-center justify-center">
+      <% if post.user.avatar_url.present? %>
+        <%= image_tag post.user.avatar_url, alt: post.user.name, class: "h-full w-full object-cover" %>
+      <% else %>
+        <span class="text-lg font-semibold"><%= post.user.name[0] %></span>
+      <% end %>
+    </div>
+    <div class="flex-1">
+      <div class="flex items-center gap-2">
+        <h3 class="font-semibold group-hover:text-primary transition-colors"><%= post.user.name %></h3>
+        <% if post.user.role_title.present? %>
+          <span class="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+            <%= post.user.role_title %>
+          </span>
+        <% end %>
+      </div>
+      <p class="text-xs text-muted-foreground"><%= time_ago_in_words(post.created_at) %> 전</p>
+    </div>
+  <% end %>
+
+  <!-- Post Content -->
+  <%= link_to post_path(post.id) do %>
+    <h2 class="text-lg font-semibold mb-2 hover:text-primary transition-colors cursor-pointer">
+      <%= post.title %>
+    </h2>
+    <p class="text-foreground mb-3 leading-relaxed hover:text-primary transition-colors cursor-pointer line-clamp-3">
+      <%= post.content %>
+    </p>
+  <% end %>
+
+  <!-- Actions -->
+  <div class="flex items-center gap-4 pt-3 border-t border-border">
+    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3"
+            aria-label="좋아요">
+      <%= render partial: "shared/icons/heart", locals: { css_class: "h-4 w-4" } %>
+      <span><%= post.likes_count %></span>
+    </button>
+    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3"
+            aria-label="댓글">
+      <%= render partial: "shared/icons/message_square", locals: { css_class: "h-4 w-4" } %>
+      <span><%= post.comments_count %></span>
+    </button>
+    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3"
+            aria-label="공유">
+      <%= render partial: "shared/icons/share", locals: { css_class: "h-4 w-4" } %>
+    </button>
+    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3 ml-auto"
+            aria-label="북마크">
+      <%= render partial: "shared/icons/bookmark", locals: { css_class: "h-4 w-4" } %>
+    </button>
+  </div>
+</article>

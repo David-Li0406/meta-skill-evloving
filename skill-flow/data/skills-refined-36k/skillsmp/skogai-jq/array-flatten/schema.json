@@ -1,0 +1,52 @@
+{
+  "name": "array-flatten",
+  "description": "Flatten nested arrays at specified path with optional depth control",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "JSON object containing a nested array at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'items' or 'data.nested')"
+    },
+    "depth": {
+      "type": "string",
+      "required": false,
+      "description": "Flattening depth: '1' (default) for one level, '-1' for complete flatten, or any positive number"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with flattened array at path, or original object if path doesn't exist or is not an array"
+  },
+  "examples": [
+    {
+      "description": "Flatten one level (default)",
+      "input": {"items": [[1, 2], [3, 4], [5]]},
+      "args": {"path": "items"},
+      "output": {"items": [1, 2, 3, 4, 5]}
+    },
+    {
+      "description": "Flatten completely (depth -1)",
+      "input": {"items": [[[1, 2]], [[3, [4, 5]]]]},
+      "args": {"path": "items", "depth": "-1"},
+      "output": {"items": [1, 2, 3, 4, 5]}
+    },
+    {
+      "description": "Flatten two levels",
+      "input": {"items": [[[1]], [[2]], [[3]]]},
+      "args": {"path": "items", "depth": "2"},
+      "output": {"items": [1, 2, 3]}
+    },
+    {
+      "description": "Mixed arrays and primitives",
+      "input": {"items": [1, [2, 3], 4, [5, [6, 7]]]},
+      "args": {"path": "items"},
+      "output": {"items": [1, 2, 3, 4, 5, [6, 7]]}
+    }
+  ],
+  "tags": ["array", "flatten", "nested", "depth"]
+}

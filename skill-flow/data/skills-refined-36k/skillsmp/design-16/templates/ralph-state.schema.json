@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ralph v2 State",
+  "type": "object",
+  "required": ["version", "current_step", "total_steps", "mode", "steps", "gates"],
+  "properties": {
+    "version": { "type": "string", "const": "2.0" },
+    "prp": { "type": ["string", "null"] },
+    "current_step": { "type": "integer", "minimum": 0 },
+    "total_steps": { "type": "integer", "minimum": 0 },
+    "mode": { "type": "string", "enum": ["default", "dangerous"] },
+    "steps": { "type": "object" },
+    "gates": { "type": "object" },
+    "dev_server": { "type": ["object", "null"] },
+    "learnings": { "type": "array" },
+    "regenerations": { "type": "integer", "minimum": 0 },
+    "max_regenerations": { "type": "integer", "minimum": 1 }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "is-uuid",
+  "description": "Check if a string at a specified path is a valid UUID (any version)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'user.id')"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if string is a valid UUID (8-4-4-4-12 format), false if invalid or path doesn't exist or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Valid UUID v4",
+      "input": {"id": "550e8400-e29b-41d4-a716-446655440000"},
+      "args": {"path": "id"},
+      "output": true
+    },
+    {
+      "description": "Invalid UUID (wrong format)",
+      "input": {"id": "not-a-uuid"},
+      "args": {"path": "id"},
+      "output": false
+    },
+    {
+      "description": "Valid UUID with uppercase",
+      "input": {"user": {"guid": "550E8400-E29B-41D4-A716-446655440000"}},
+      "args": {"path": "user.guid"},
+      "output": true
+    }
+  ],
+  "tags": ["string", "validation", "uuid", "guid", "identifier"]
+}

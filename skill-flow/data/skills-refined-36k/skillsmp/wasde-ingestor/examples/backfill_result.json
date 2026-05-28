@@ -1,0 +1,62 @@
+{
+  "operation": "backfill",
+  "commodity": "soybeans",
+  "scope": ["us", "world"],
+  "months_requested": 24,
+  "date_range": {
+    "start": "2023-01-01",
+    "end": "2024-12-31"
+  },
+  "success": true,
+  "releases_processed": 24,
+  "releases_details": [
+    {
+      "release_date": "2023-01-12",
+      "status": "success",
+      "rows_written": 6
+    },
+    {
+      "release_date": "2023-02-08",
+      "status": "success",
+      "rows_written": 6
+    },
+    {
+      "release_date": "2023-03-08",
+      "status": "success",
+      "rows_written": 6
+    }
+  ],
+  "summary": {
+    "total_releases": 24,
+    "successful": 24,
+    "failed": 0,
+    "skipped": 0,
+    "total_rows_written": 144
+  },
+  "revisions_detected": [
+    {
+      "release_date": "2023-06-09",
+      "commodity": "soybeans_us",
+      "field": "production",
+      "previous_value": 4276,
+      "revised_value": 4270,
+      "marketing_year": "2022/23"
+    },
+    {
+      "release_date": "2023-10-12",
+      "commodity": "soybeans_world",
+      "field": "ending_stocks",
+      "previous_value": 114.5,
+      "revised_value": 115.2,
+      "marketing_year": "2022/23"
+    }
+  ],
+  "timing_ms": {
+    "total": 145320,
+    "avg_per_release": 6055
+  },
+  "output_files": [
+    "./data/wasde/curated/soybeans_us_balance.parquet",
+    "./data/wasde/curated/soybeans_world_balance.parquet"
+  ]
+}

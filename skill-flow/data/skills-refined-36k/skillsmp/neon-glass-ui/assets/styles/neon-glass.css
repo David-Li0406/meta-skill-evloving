@@ -1,0 +1,489 @@
+/**
+ * Neon Glass UI — Global Styles
+ * Add to: src/styles/neon-glass.css
+ * Import in main.js: import './styles/neon-glass.css'
+ */
+
+/* ============================================
+   CSS VARIABLES — DESIGN TOKENS
+   ============================================ */
+
+:root {
+  /* Backgrounds (never pure black) */
+  --neon-bg-void: #050508;
+  --neon-bg-deep: #0A0A12;
+  --neon-bg-primary: #0D0D1A;
+  --neon-bg-secondary: #12121F;
+  --neon-bg-elevated: #1A1A2E;
+  --neon-bg-surface: #22223A;
+  
+  /* Glass Backgrounds */
+  --neon-glass-bg-light: rgba(40, 40, 65, 0.6);
+  --neon-glass-bg: rgba(30, 30, 50, 0.6);
+  --neon-glass-bg-dark: rgba(20, 20, 35, 0.7);
+  --neon-glass-bg-input: rgba(0, 0, 0, 0.3);
+  
+  /* Glass Borders */
+  --neon-glass-border: rgba(255, 255, 255, 0.08);
+  --neon-glass-border-light: rgba(255, 255, 255, 0.12);
+  --neon-glass-border-active: rgba(255, 255, 255, 0.18);
+  
+  /* Accent Colors — Neon Spectrum */
+  --neon-pink: #FF0080;
+  --neon-magenta: #FF00FF;
+  --neon-purple: #7209B7;
+  --neon-violet: #560BAD;
+  --neon-blue: #4361EE;
+  --neon-cyan: #00D9FF;
+  --neon-teal: #06D6A0;
+  --neon-green: #00FF88;
+  --neon-orange: #FF6B35;
+  --neon-yellow: #FFBE0B;
+  --neon-red: #FF3366;
+  
+  /* Text Colors */
+  --neon-text-primary: #FFFFFF;
+  --neon-text-secondary: #A0A0B8;
+  --neon-text-tertiary: #6B6B80;
+  --neon-text-disabled: #4A4A5A;
+  
+  /* State Colors */
+  --neon-success: #06D6A0;
+  --neon-warning: #FFBE0B;
+  --neon-error: #FF3366;
+  --neon-info: #00D9FF;
+  
+  /* Spacing */
+  --neon-space-xs: 4px;
+  --neon-space-sm: 8px;
+  --neon-space-md: 16px;
+  --neon-space-lg: 24px;
+  --neon-space-xl: 32px;
+  --neon-space-2xl: 48px;
+  
+  /* Border Radius */
+  --neon-radius-sm: 10px;
+  --neon-radius-md: 16px;
+  --neon-radius-lg: 24px;
+  --neon-radius-xl: 32px;
+  --neon-radius-pill: 100px;
+  
+  /* Blur */
+  --neon-blur-sm: 8px;
+  --neon-blur-md: 16px;
+  --neon-blur-lg: 24px;
+  --neon-blur-ambient: 80px;
+  
+  /* Animation */
+  --neon-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --neon-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --neon-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --neon-duration-fast: 150ms;
+  --neon-duration-normal: 300ms;
+  --neon-duration-slow: 500ms;
+}
+
+/* ============================================
+   IONIC OVERRIDES
+   ============================================ */
+
+ion-page.neon-app {
+  --background: var(--neon-bg-deep);
+}
+
+ion-page.neon-app ion-content {
+  --background: transparent;
+}
+
+/* ============================================
+   GLASS CARD UTILITY
+   ============================================ */
+
+.glass-card {
+  background: var(--neon-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--neon-glass-border);
+  border-radius: var(--neon-radius-lg);
+  padding: var(--neon-space-lg);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-card--sm {
+  padding: var(--neon-space-md);
+  border-radius: var(--neon-radius-md);
+}
+
+.glass-card--interactive {
+  cursor: pointer;
+  transition: all var(--neon-duration-normal) var(--neon-ease-smooth);
+}
+
+.glass-card--interactive:active {
+  transform: scale(0.98);
+  border-color: var(--neon-glass-border-active);
+  background: rgba(40, 40, 60, 0.7);
+}
+
+/* ============================================
+   BUTTON UTILITIES
+   ============================================ */
+
+.btn-gradient {
+  background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-blue) 50%, var(--neon-purple) 100%);
+  border: none;
+  border-radius: var(--neon-radius-pill);
+  padding: 16px 32px;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--neon-duration-fast) ease;
+}
+
+.btn-gradient::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: inherit;
+  border-radius: inherit;
+  z-index: -1;
+  filter: blur(15px);
+  opacity: 0.5;
+}
+
+.btn-gradient:active {
+  transform: scale(0.97);
+}
+
+.btn-gradient--warm {
+  background: linear-gradient(135deg, var(--neon-orange) 0%, var(--neon-pink) 100%);
+}
+
+.btn-gradient--cool {
+  background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-blue) 100%);
+}
+
+.btn-gradient--full {
+  width: 100%;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--neon-radius-pill);
+  padding: 16px 32px;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all var(--neon-duration-fast) ease;
+}
+
+.btn-outline:active {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(0.97);
+}
+
+.btn-outline--full {
+  width: 100%;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: none;
+  border-radius: var(--neon-radius-pill);
+  padding: 16px 32px;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all var(--neon-duration-fast) ease;
+}
+
+.btn-secondary:active {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(0.97);
+}
+
+/* ============================================
+   TYPOGRAPHY UTILITIES
+   ============================================ */
+
+.heading-xl {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--neon-text-primary);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.heading-lg {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--neon-text-primary);
+  margin: 0;
+}
+
+.heading-md {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--neon-text-primary);
+  margin: 0;
+}
+
+.label-caps {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--neon-text-secondary);
+  text-transform: uppercase;
+}
+
+.label-caps--sm {
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.body-text {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--neon-text-secondary);
+  line-height: 1.5;
+}
+
+.timer-display {
+  font-size: 96px;
+  font-weight: 700;
+  color: white;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.timer-display--lg {
+  font-size: 140px;
+}
+
+.timer-display--sm {
+  font-size: 56px;
+}
+
+/* ============================================
+   INPUT UTILITIES
+   ============================================ */
+
+.input-dark {
+  background: var(--neon-glass-bg-input);
+  border: none;
+  border-radius: var(--neon-radius-pill);
+  padding: 16px 24px;
+  font-size: 16px;
+  color: white;
+  outline: none;
+  width: 100%;
+  transition: box-shadow var(--neon-duration-fast) ease;
+}
+
+.input-dark::placeholder {
+  color: var(--neon-text-tertiary);
+}
+
+.input-dark:focus {
+  box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.3);
+}
+
+/* ============================================
+   AMBIENT GLOW COMPONENT
+   ============================================ */
+
+.ambient-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ambient-glow__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(var(--neon-blur-ambient));
+  opacity: 0.5;
+  animation: neon-float 8s ease-in-out infinite;
+}
+
+.ambient-glow__orb--pink {
+  background: radial-gradient(circle, var(--neon-pink) 0%, transparent 70%);
+}
+
+.ambient-glow__orb--blue {
+  background: radial-gradient(circle, var(--neon-blue) 0%, transparent 70%);
+}
+
+.ambient-glow__orb--purple {
+  background: radial-gradient(circle, var(--neon-purple) 0%, transparent 70%);
+}
+
+.ambient-glow__orb--cyan {
+  background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
+}
+
+.ambient-glow__orb--teal {
+  background: radial-gradient(circle, var(--neon-teal) 0%, transparent 70%);
+}
+
+.ambient-glow__orb--orange {
+  background: radial-gradient(circle, var(--neon-orange) 0%, transparent 70%);
+}
+
+.ambient-glow__orb--red {
+  background: radial-gradient(circle, var(--neon-red) 0%, transparent 70%);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes neon-float {
+  0%, 100% { 
+    transform: translate(0, 0) scale(1); 
+  }
+  33% { 
+    transform: translate(20px, -20px) scale(1.05); 
+  }
+  66% { 
+    transform: translate(-15px, 15px) scale(0.95); 
+  }
+}
+
+@keyframes neon-pulse {
+  0%, 100% { 
+    filter: blur(var(--neon-blur-ambient));
+    opacity: 0.4;
+  }
+  50% { 
+    filter: blur(100px);
+    opacity: 0.6;
+  }
+}
+
+@keyframes neon-breathe {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% { 
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes neon-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 217, 255, 0.6);
+  }
+}
+
+/* ============================================
+   SAFE AREA UTILITIES
+   ============================================ */
+
+.safe-top {
+  padding-top: calc(env(safe-area-inset-top) + 16px);
+}
+
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
+}
+
+.safe-all {
+  padding-top: calc(env(safe-area-inset-top) + 16px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* ============================================
+   LIST ITEM — GLASS SLIP
+   ============================================ */
+
+.glass-slip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: rgba(30, 30, 50, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  transition: all var(--neon-duration-normal) var(--neon-ease-smooth);
+}
+
+.glass-slip--interactive {
+  cursor: pointer;
+}
+
+.glass-slip--interactive:active {
+  transform: scale(0.98);
+  background: rgba(40, 40, 60, 0.6);
+}
+
+/* ============================================
+   COLOR UTILITIES
+   ============================================ */
+
+.text-white { color: var(--neon-text-primary); }
+.text-secondary { color: var(--neon-text-secondary); }
+.text-tertiary { color: var(--neon-text-tertiary); }
+.text-success { color: var(--neon-success); }
+.text-error { color: var(--neon-error); }
+.text-cyan { color: var(--neon-cyan); }
+.text-pink { color: var(--neon-pink); }
+
+.bg-deep { background: var(--neon-bg-deep); }
+.bg-elevated { background: var(--neon-bg-elevated); }
+
+/* ============================================
+   SPACING UTILITIES
+   ============================================ */
+
+.mt-xs { margin-top: var(--neon-space-xs); }
+.mt-sm { margin-top: var(--neon-space-sm); }
+.mt-md { margin-top: var(--neon-space-md); }
+.mt-lg { margin-top: var(--neon-space-lg); }
+.mt-xl { margin-top: var(--neon-space-xl); }
+
+.mb-xs { margin-bottom: var(--neon-space-xs); }
+.mb-sm { margin-bottom: var(--neon-space-sm); }
+.mb-md { margin-bottom: var(--neon-space-md); }
+.mb-lg { margin-bottom: var(--neon-space-lg); }
+.mb-xl { margin-bottom: var(--neon-space-xl); }
+
+.gap-sm { gap: var(--neon-space-sm); }
+.gap-md { gap: var(--neon-space-md); }
+.gap-lg { gap: var(--neon-space-lg); }
+
+/* ============================================
+   FLEX UTILITIES
+   ============================================ */
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.flex-1 { flex: 1; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }

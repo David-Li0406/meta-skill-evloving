@@ -1,0 +1,89 @@
+# ==============================================================================
+# Template Name: Start IIS Website (iis-start-website.yml)
+# Description: 
+#   This template is responsible for safely starting the specified IIS website.
+#   Includes self-check and repair mechanism:
+#   1. First check WAS and W3SVC service status, try to start if not running.
+#   2. Prioritize using PowerShell to start the website.
+#   3. If PowerShell fails (e.g. RPC error), automatically downgrade to use appcmd.exe to force start.
+# ==============================================================================
+
+parameters:
+  # Website Name (Display name in IIS)
+  - name: websiteName
+    type: string
+  
+  # Execution Condition
+  - name: runCondition
+    type: string
+    default: 'always()'
+
+steps:
+  # ----------------------------------------------------------------------------
+  # Execute PowerShell script to start IIS Website
+  # ----------------------------------------------------------------------------
+  - powershell: |
+      $websiteName = "${{ parameters.websiteName }}"
+      Write-Host "Attempting to start website: $websiteName"
+      
+      function Ensure-Service-Running {
+          param($Name)
+          try {
+              $svc = Get-Service -Name $Name -ErrorAction Stop
+              if ($svc.Status -ne 'Running') {
+                  Write-Warning "Service '$Name' is not running (Current Status: $($svc.Status)). Starting..."
+                  Start-Service -Name $Name
+                  
+                  # Wait for service start (Max 15 seconds)
+                  $timeout = 15
+                  $timer = [System.Diagnostics.Stopwatch]::StartNew()
+                  while ($svc.Status -ne 'Running' -and $timer.Elapsed.TotalSeconds -lt $timeout) {
+                      Start-Sleep -Seconds 1
+                      $svc.Refresh()
+                  }
+                  
+                  if ($svc.Status -eq 'Running') {
+                      Write-Host "Service '$Name' started successfully."
+                  } else {
+                      Write-Error "Unable to start service '$Name' (Timeout or Failed)."
+                  }
+              }
+          } catch {
+              Write-Warning "Exception occurred while checking service '$Name': $_"
+          }
+      }
+
+      function Start-Site-WithAppCmd {
+          param($Name)
+          Write-Host "Attempting to start website using appcmd.exe..."
+          $appCmd = "$env:systemroot\system32\inetsrv\appcmd.exe"
+          if (Test-Path $appCmd) {
+              $p = Start-Process -FilePath $appCmd -ArgumentList "start site /site.name:`"$Name`"" -Wait -PassThru -NoNewWindow
+              if ($p.ExitCode -eq 0) {
+                  Write-Host "appcmd: Website started."
+              } else {
+                  Write-Error "appcmd failed to start website (Exit Code: $($p.ExitCode))."
+                  exit 1
+              }
+          } else {
+              Write-Error "appcmd.exe not found."
+              exit 1
+          }
+      }
+
+      # 1. Ensure IIS Core Services (WAS, W3SVC) are functioning
+      # This is key to solving "RPC server is unavailable"
+      Ensure-Service-Running -Name "WAS"
+      Ensure-Service-Running -Name "W3SVC"
+
+      # 2. Attempt to start website
+      try {
+          Import-Module WebAdministration
+          Start-Website -Name $websiteName -ErrorAction Stop
+          Write-Host "Website '$websiteName' started successfully (PowerShell)."
+      } catch {
+          Write-Warning "Failed to start website using PowerShell: $_"
+          Start-Site-WithAppCmd -Name $websiteName
+      }
+    displayName: 'Start IIS Website'
+    condition: ${{ parameters.runCondition }}

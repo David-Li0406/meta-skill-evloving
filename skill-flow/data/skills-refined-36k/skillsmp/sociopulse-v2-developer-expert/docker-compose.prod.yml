@@ -1,0 +1,91 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    environment:
+      # --- LES INDISPENSABLES (Squelette) ---
+      - NODE_ENV=production
+      - PORT=4000
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL:-https://sociopulse.fr,https://medicopulse.fr,https://dash.sociopulse.fr}
+      # On a supprimé tout le reste (Stripe, S3, SMTP, LiveKit)
+
+    expose:
+      - '4000'
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=Host(`api.sociopulse.fr`)
+      - traefik.http.routers.api.entrypoints=websecure
+      - traefik.http.routers.api.tls=true
+      - traefik.http.routers.api.tls.certresolver=letsencrypt
+      - traefik.http.services.api.loadbalancer.server.port=4000
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4000/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  sociopulse-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_APP_MODE=SOCIAL
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.sociopulse.fr}
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    expose:
+      - '3000'
+    depends_on:
+      api:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.sociopulse.rule=Host(`sociopulse.fr`) || Host(`www.sociopulse.fr`) || Host(`dash.sociopulse.fr`)"
+      - traefik.http.routers.sociopulse.entrypoints=websecure
+      - traefik.http.routers.sociopulse.tls=true
+      - traefik.http.routers.sociopulse.tls.certresolver=letsencrypt
+      - traefik.http.services.sociopulse.loadbalancer.server.port=3000
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  medicopulse-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_APP_MODE=MEDICAL
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.sociopulse.fr}
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    expose:
+      - '3000'
+    depends_on:
+      api:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.medicopulse.rule=Host(`medicopulse.fr`) || Host(`www.medicopulse.fr`)"
+      - traefik.http.routers.medicopulse.entrypoints=websecure
+      - traefik.http.routers.medicopulse.tls=true
+      - traefik.http.routers.medicopulse.tls.certresolver=letsencrypt
+      - traefik.http.services.medicopulse.loadbalancer.server.port=3000
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s

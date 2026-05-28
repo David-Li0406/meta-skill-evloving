@@ -1,0 +1,76 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^http://localhost"
+    },
+    {
+      "pattern": "^https://localhost"
+    },
+    {
+      "pattern": "^http://127.0.0.1"
+    },
+    {
+      "pattern": "^https://example.com"
+    },
+    {
+      "pattern": "^https://api.example.com"
+    },
+    {
+      "pattern": "^https://dashboard.example.com"
+    },
+    {
+      "pattern": "^https://docs.example.com"
+    },
+    {
+      "pattern": "^http://example.com"
+    },
+    {
+      "pattern": "^/docs/"
+    },
+    {
+      "pattern": "^/guides/"
+    },
+    {
+      "pattern": "^/api/"
+    },
+    {
+      "pattern": "^/tutorials/"
+    },
+    {
+      "pattern": "^/concepts/"
+    },
+    {
+      "pattern": "^/pricing"
+    },
+    {
+      "pattern": "\\[placeholder\\]"
+    },
+    {
+      "pattern": "\\[url\\]"
+    },
+    {
+      "pattern": "\\[link\\]"
+    }
+  ],
+  "replacementPatterns": [
+    {
+      "pattern": "^/docs/",
+      "replacement": "{{BASEURL}}/docs/"
+    }
+  ],
+  "httpHeaders": [
+    {
+      "urls": [
+        "https://github.com"
+      ],
+      "headers": {
+        "Accept": "application/vnd.github.v3+json"
+      }
+    }
+  ],
+  "timeout": "10s",
+  "retryOn429": true,
+  "retryCount": 3,
+  "fallbackRetryDelay": "5s",
+  "aliveStatusCodes": [200, 206, 299]
+}

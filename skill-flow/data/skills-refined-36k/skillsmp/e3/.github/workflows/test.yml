@@ -1,0 +1,74 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - name: Generate app token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          repositories: e3,east-py
+
+      - name: Checkout e3 repository
+        uses: actions/checkout@v4
+        with:
+          path: e3
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Checkout east-py repository
+        uses: actions/checkout@v4
+        with:
+          repository: elaraai/east-py
+          path: east-py
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: 'e3/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: e3
+        run: make install
+
+      - name: Build packages
+        working-directory: e3
+        run: make build
+
+      - name: Link e3 CLI
+        working-directory: e3
+        run: make link
+
+      - name: Install East runners
+        run: |
+          npm install -g @elaraai/east-node-cli
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          export PATH="$HOME/.local/bin:$PATH"
+          cd east-py && make install-cli
+
+      - name: Run linters
+        working-directory: e3
+        run: make lint
+
+      - name: Run tests
+        working-directory: e3
+        run: make test

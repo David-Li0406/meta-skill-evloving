@@ -1,0 +1,141 @@
+@import './styles/design-tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: hsl(var(--color-background));
+    --foreground: hsl(var(--color-foreground));
+    --card: hsl(var(--color-card));
+    --card-foreground: hsl(var(--color-card-foreground));
+    --popover: hsl(var(--color-popover));
+    --popover-foreground: hsl(var(--color-popover-foreground));
+    --primary: hsl(var(--color-primary));
+    --primary-foreground: hsl(var(--color-primary-foreground));
+    --secondary: hsl(var(--color-secondary));
+    --secondary-foreground: hsl(var(--color-secondary-foreground));
+    --muted: hsl(var(--color-muted));
+    --muted-foreground: hsl(var(--color-muted-foreground));
+    --accent: hsl(var(--color-accent));
+    --accent-foreground: hsl(var(--color-accent-foreground));
+    --destructive: hsl(var(--color-destructive));
+    --destructive-foreground: hsl(var(--color-destructive-foreground));
+    --border: hsl(var(--color-border));
+    --input: hsl(var(--color-input));
+    --ring: hsl(var(--color-ring));
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--color-background));
+    color: hsl(var(--color-foreground));
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+    transition:
+      background-color var(--animation-duration) var(--animation-easing),
+      color var(--animation-duration) var(--animation-easing);
+  }
+
+  ::selection {
+    background-color: hsl(var(--color-primary));
+    color: hsl(var(--color-primary-foreground));
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  [role='button']:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid hsl(var(--color-ring));
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--color-muted-foreground)) hsl(var(--color-muted));
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: hsl(var(--color-muted));
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--color-muted-foreground));
+    border-radius: 3px;
+  }
+
+  .glass {
+    background-color: hsl(var(--glass-background) / var(--glass-opacity));
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--glass-border));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  body {
+    transition: none;
+  }
+}
+
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+.mermaid {
+  background: transparent;
+}
+
+.react-flow__node {
+  font-size: 12px;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+code {
+  border-radius: var(--radius-sm);
+  background-color: hsl(var(--color-muted));
+  padding: 0.25rem 0.375rem;
+  font-size: var(--font-size-sm);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+pre {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background-color: hsl(var(--color-muted));
+  padding: 1rem;
+}
+
+pre code {
+  background-color: transparent;
+  padding: 0;
+}

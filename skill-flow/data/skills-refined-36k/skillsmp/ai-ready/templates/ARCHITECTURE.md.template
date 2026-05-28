@@ -1,0 +1,99 @@
+# ARCHITECTURE.md Template
+
+Generate customized version based on discovered project structure.
+
+```markdown
+# Architecture Overview
+
+## System Context (C4 Level 1)
+
+{Project} is a {type} that {primary purpose}.
+
+### External Systems
+- **{System 1}:** {Interaction description}
+- **{System 2}:** {Interaction description}
+
+### Users
+- **{User Type 1}:** {What they do}
+- **{User Type 2}:** {What they do}
+
+## Container Diagram (C4 Level 2)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                     {System Name}                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
+│  │   Frontend  │  │   Backend   │  │  Database   │     │
+│  │   {tech}    │──│   {tech}    │──│   {tech}    │     │
+│  └─────────────┘  └─────────────┘  └─────────────┘     │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Component Architecture
+
+### {Component 1}
+- **Purpose:** {What it does}
+- **Key Files:** `{path}`
+- **Dependencies:** {What it depends on}
+
+### {Component 2}
+- **Purpose:** {What it does}
+- **Key Files:** `{path}`
+- **Dependencies:** {What it depends on}
+
+## Data Flow
+
+```
+{User Action}
+     │
+     ▼
+{Component 1} ──► {Component 2} ──► {Component 3}
+     │                                    │
+     ▼                                    ▼
+{Side Effect 1}                    {Side Effect 2}
+```
+
+## Key Design Decisions
+
+### {Decision 1}
+- **Context:** {Why decision needed}
+- **Decision:** {What was decided}
+- **Consequences:** {Trade-offs}
+
+## Module Dependencies
+
+```
+{Module A}
+    │
+    ├──► {Module B}
+    │        │
+    │        └──► {Module D}
+    │
+    └──► {Module C}
+```
+
+## API Boundaries
+
+### Public
+- `{endpoint 1}`: {Description}
+- `{endpoint 2}`: {Description}
+
+### Internal
+- `{internal 1}`: {Description}
+
+## Technology Choices
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| Language | {lang} | {why} |
+| Framework | {fw} | {why} |
+| Database | {db} | {why} |
+```
+
+## Template Variables
+
+Replace based on project analysis:
+- System/component names from directory structure
+- Technologies from dependencies
+- Data flow from import analysis
+- API boundaries from route/handler files

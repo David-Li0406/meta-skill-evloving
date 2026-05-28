@@ -1,0 +1,26 @@
+/*
+ * SYNTAX REFERENCE ONLY — Tailwind already provides these utilities
+ * Useful for understanding --value() modes, not for production
+ */
+
+/* z-index: use Tailwind's z-* instead */
+@utility layer-* {
+  z-index: --value(integer);
+}
+/* Tailwind: z-10, z-50, z-[999] */
+
+/* border-radius: use Tailwind's rounded-* instead */
+@utility curve-* {
+  border-radius: --value([length]);
+}
+/* Tailwind: rounded-md, rounded-lg, rounded-[1rem] */
+
+/* opacity: use Tailwind's opacity-* instead */
+@theme {
+  --opacity-50: 0.5;
+  --opacity-75: 0.75;
+}
+@utility alpha-* {
+  opacity: --value(--opacity-*, integer, [percentage]);
+}
+/* Tailwind: opacity-50, opacity-[80%] */

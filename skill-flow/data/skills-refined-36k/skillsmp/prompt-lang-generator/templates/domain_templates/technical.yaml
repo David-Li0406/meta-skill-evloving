@@ -1,0 +1,72 @@
+# Technical Domain Template
+# =========================
+# コードレビュー、API設計、システム設計など技術タスク向け
+
+domain: "technical"
+applicable_tasks:
+  - code_review
+  - api_design
+  - system_design
+  - debugging
+  - refactoring
+
+# --- ドメイン固有の制約 ---
+domain_constraints:
+  - "OWASP Top 10 に照らして指摘すること（セキュリティ関連）"
+  - "具体的なコード例または修正案を示すこと"
+  - "パフォーマンス影響がある場合は計算量を明示"
+  - "Breaking changes は明確に警告"
+
+# --- ドメイン固有の評価軸 ---
+domain_rubric:
+  - name: "correctness"
+    description: "コードの正確性・仕様整合性"
+    scale: "1-5"
+    criteria:
+      5: "バグなし、仕様完全準拠"
+      3: "軽微なバグまたは仕様との不整合"
+      1: "重大なバグ、仕様違反"
+      
+  - name: "security"
+    description: "セキュリティ脆弱性の有無"
+    scale: "1-5"
+    criteria:
+      5: "脆弱性なし"
+      3: "低リスクの脆弱性あり"
+      1: "高リスクの脆弱性あり（SQLi, XSS等）"
+      
+  - name: "maintainability"
+    description: "保守性・可読性"
+    scale: "1-5"
+
+# --- ドメイン固有のフォーマット ---
+domain_format: |
+  ```json
+  {
+    "summary": "レビュー概要",
+    "issues": [
+      {
+        "severity": "high | medium | low",
+        "location": "ファイル:行番号",
+        "category": "security | performance | style | logic",
+        "description": "問題の説明",
+        "suggestion": "修正案（コード例含む）"
+      }
+    ],
+    "evaluation": {
+      "correctness": 1-5,
+      "security": 1-5,
+      "maintainability": 1-5
+    }
+  }
+  ```
+
+# --- 条件分岐（環境依存） ---
+conditional:
+  prod:
+    constraints:
+      - "本番環境のため、破壊的変更は禁止"
+      - "デプロイ前にセキュリティレビュー必須"
+  dev:
+    constraints:
+      - "開発環境のため、実験的提案も可"

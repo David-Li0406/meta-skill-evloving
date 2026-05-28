@@ -1,0 +1,37 @@
+direction: down
+
+A: 成功标准
+B: 硬约束/边界
+C: 上下文已补齐?
+C1: 回到第 1 步 context-clarifier 补齐
+D: 假设(2-3) + 最小验证
+S: 系统思考(反馈回路 R/B)
+E: 关键断言(可证伪)
+F: 候选方案 A/B/C
+G: 用户已选方案?
+G1: 停在第 5 步 等待选择
+H: 已选方案
+I: 事前验尸
+J: 存在致命漏洞且无可接受降级?
+K: 回退到 1/2/5 输出 v2/v3
+L: 终稿 推荐 + 护栏 + 下一步
+
+C.shape: diamond
+G.shape: diamond
+J.shape: diamond
+
+A -> B
+B -> C
+C -> C1: 否
+C -> D: 是
+D -> S
+S -> E
+E -> F
+F -> G
+G -> G1: 否
+G -> H: 是
+H -> I
+I -> J
+J -> K: 是
+J -> L: 否
+K -> C: 回退后重试

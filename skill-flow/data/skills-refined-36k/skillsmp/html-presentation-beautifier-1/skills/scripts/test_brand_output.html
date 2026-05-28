@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「学童优选」品牌概述</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+/* McKinsey/BCG Style Presentation CSS */
+
+/* Color Variables */
+:root {
+    --primary-bg: #FFFFFF;
+    --header-bg: #000000;
+    --primary-accent: #F85d42;
+    --secondary-accent: #74788d;
+    --deep-blue: #556EE6;
+    --green: #34c38f;
+    --blue: #50a5f1;
+    --yellow: #f1b44c;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    --text-light: #FFFFFF;
+}
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Navigation Bar */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--header-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    z-index: 1000;
+}
+
+.nav-btn {
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #e04a31;
+}
+
+.nav-btn:disabled {
+    background-color: var(--secondary-accent);
+    cursor: not-allowed;
+}
+
+.slide-counter {
+    color: var(--text-light);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Presentation Container */
+.presentation-container {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    max-height: calc(100vh - 60px);
+}
+
+/* Slide Styles */
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 60px 80px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+}
+
+/* Title Slide */
+.title-slide {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.title {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--primary-accent);
+    margin-bottom: 20px;
+}
+
+.date {
+    font-size: 20px;
+    color: var(--secondary-accent);
+    font-weight: 400;
+}
+
+/* Header Bar */
+.header-bar {
+    background-color: var(--header-bg);
+    padding: 20px 40px;
+    margin: -60px -80px 40px -80px;
+}
+
+.slide-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: -0.5px;
+}
+
+/* Slide Content */
+.slide-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Key Points */
+.key-points {
+    list-style: none;
+    padding: 0;
+}
+
+.key-point {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 20px 0;
+    border-bottom: 2px solid var(--secondary-accent);
+    margin-bottom: 10px;
+}
+
+.key-point::before {
+    content: "✓ ";
+    color: var(--primary-accent);
+    margin-right: 15px;
+    font-weight: 700;
+}
+
+/* Two-Column Layout */
+.two-column {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+.column {
+    flex: 1;
+}
+
+.chart-container {
+    min-height: 400px;
+    max-height: 450px;
+    position: relative;
+}
+
+.chart-caption {
+    text-align: center;
+    font-size: 14px;
+    color: var(--secondary-accent);
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Section Header */
+.section-header {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.accent-text {
+    color: var(--primary-accent);
+}
+
+/* Body Text */
+.body-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+/* Bullet Points */
+.bullet-points {
+    list-style: none;
+    padding: 0;
+}
+
+.bullet-points li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 12px 0 12px 30px;
+    position: relative;
+}
+
+.bullet-points li::before {
+    content: "•";
+    color: var(--primary-accent);
+    font-size: 24px;
+    position: absolute;
+    left: 0;
+    top: 8px;
+}
+
+/* Conclusions Grid */
+.conclusions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.conclusion-card {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.card-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+/* Recommendations Box */
+.recommendations-box {
+    background-color: #fff3e0;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--yellow);
+    margin: 30px 0;
+}
+
+/* Numbered List */
+.numbered-list {
+    list-style: none;
+    counter-reset: recommendation-counter;
+    padding: 0;
+}
+
+.numbered-list li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 15px 0 15px 40px;
+    position: relative;
+    counter-increment: recommendation-counter;
+}
+
+.numbered-list li::before {
+    content: counter(recommendation-counter);
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Full-screen Button */
+.fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--header-bg);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: background-color 0.3s ease;
+}
+
+.fullscreen-btn:hover {
+    background-color: var(--secondary-accent);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .slide {
+        padding: 60px 40px;
+    }
+
+    .two-column {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .conclusions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .title {
+        font-size: 48px;
+    }
+
+    .slide-title {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 20px;
+    }
+
+    .slide {
+        padding: 40px 20px;
+    }
+
+    .title {
+        font-size: 36px;
+    }
+
+    .slide-title {
+        font-size: 28px;
+    }
+
+    .subtitle {
+        font-size: 24px;
+    }
+
+    .key-point {
+        font-size: 18px;
+    }
+}
+
+/* Scrollbar Styles */
+.slide::-webkit-scrollbar {
+    width: 8px;
+}
+
+.slide::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.slide::-webkit-scrollbar-thumb {
+    background: var(--secondary-accent);
+    border-radius: 4px;
+}
+
+.slide::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-accent);
+}
+
+/* Special Chart Type Styles */
+.chart-container.radar-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+.chart-container.bubble-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+.chart-container.polar-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Chart Type Badge */
+.chart-type-badge {
+    display: inline-block;
+    background-color: var(--secondary-accent);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* ===== Conceptual Visualization Styles ===== */
+
+/* Pyramid Container */
+.pyramid-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 400px;
+}
+
+.pyramid-level {
+    padding: 15px 30px;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    max-width: 80%;
+}
+
+.pyramid-level:hover {
+    transform: scale(1.05);
+}
+
+.pyramid-text {
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Progression/Step Container */
+.progression-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px 20px;
+    flex-wrap: wrap;
+}
+
+.progression-step {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--primary-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text-secondary);
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+}
+
+.step-arrow {
+    font-size: 32px;
+    color: var(--secondary-accent);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Emphasis Box Container */
+.emphasis-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.emphasis-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 25px 30px;
+    border-radius: 12px;
+    border-left: 6px solid var(--primary-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.emphasis-box:hover {
+    transform: translateX(10px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.emphasis-icon {
+    font-size: 36px;
+    color: var(--primary-accent);
+    flex-shrink: 0;
+}
+
+.emphasis-text {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Cycle/Circle Container */
+.cycle-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.cycle-center {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: var(--header-bg);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    z-index: 10;
+}
+
+.cycle-node {
+    position: absolute;
+    padding: 20px;
+    border-radius: 50%;
+    color: white;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+    max-width: 150px;
+}
+
+.cycle-node:hover {
+    transform: scale(1.15) !important;
+    z-index: 20;
+}
+
+.cycle-text {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Comparison Container */
+.comparison-container {
+    display: flex;
+    align-items: stretch;
+    gap: 30px;
+    padding: 40px 20px;
+    min-height: 400px;
+}
+
+.comparison-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.comparison-header {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-accent);
+    text-align: center;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.comparison-item {
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.comparison-item.left {
+    background-color: #e3f2fd;
+    border-left: 4px solid var(--blue);
+}
+
+.comparison-item.right {
+    background-color: #e8f5e9;
+    border-left: 4px solid var(--green);
+}
+
+.comparison-divider {
+    display: flex;
+    align-items: center;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--primary-accent);
+    padding: 0 20px;
+}
+
+/* Framework Container */
+.framework-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.framework-item {
+    display: flex;
+    gap: 20px;
+    padding: 25px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    border-top: 5px solid var(--deep-blue);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.framework-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.framework-label {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: var(--deep-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.framework-content {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Responsive adjustments for conceptual visualizations */
+@media (max-width: 1200px) {
+    .progression-container {
+        flex-direction: column;
+    }
+
+    .progression-step {
+        width: 100%;
+    }
+
+    .comparison-container {
+        flex-direction: column;
+    }
+
+    .comparison-divider {
+        transform: rotate(90deg);
+    }
+
+    .cycle-container {
+        height: 350px;
+    }
+
+    .framework-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← Previous</button>
+        <span class="slide-counter">Slide <span id="currentSlide">1</span> of <span id="totalSlides">1</span></span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+    </nav>
+
+    <!-- Slides Container -->
+    <div class="presentation-container">
+        <div class="slide active" data-slide="1">
+            <div class="title-slide">
+                <h1 class="title">「学童优选」品牌概述</h1>
+                <h2 class="subtitle">Data Analysis & Insights</h2>
+                <p class="date">Date: January 2026</p>
+            </div>
+        </div>
+        <div class="slide " data-slide="2">
+            <div class="header-bar">
+                <h1 class="slide-title">「学童优选」品牌概述</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">柱状图 (Bar Chart)</span>
+                    <canvas id="chart1" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">「学童优选」品牌概述 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>3-12 岁儿童成长全周期教育用品与开学准备一站式解决方案品牌 —— 以 "省心开学，科学成长" 为核心，聚焦效率导向型家长（核心）+ 成长型家长（拓展），通过 "年级分层 + 发展适配" 的双产品线（开学必备套装 + 阶段教育玩具），实现学校场景与家庭场景的无缝衔接，让家长省心完成开学准备、科学规划孩子成长，成为儿童学习与发展的专业伙伴。</li>
+                    <li>以 "年级分层设计 + 阶段难度适配" 为核心，构建开学必备用品与核心能力培养工具的协同体系，解决家长开学采购焦虑与能力培养盲目性痛点，实现学校场景与家庭场景的无缝衔接，为 3-12 岁儿童提供适配成长节奏的全周期支持，让开学更从容、成长更扎实。</li>
+                    <li>- **效率痛点**：采购繁琐、决策负担重、担心遗漏开学必需品（通过 "清单驱动 + 套装化 + 一键购买" 的学校用品线解决）；</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide " data-slide="3">
+            <div class="header-bar">
+                <h1 class="slide-title">2. 对标案例学习</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">柱状图 (Bar Chart)</span>
+                    <canvas id="chart2" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">2. 对标案例学习 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>属于品牌 "身份叙事" 板块：讲 2018 年创立的初衷（解决家长 / 老师采购学习用品的痛点）、2019 年推出 "Supply Your School" 项目的发展历程，帮用户理解品牌的诞生逻辑。</li>
+                    <li>属于品牌 "价值方向" 板块：明确创立目标是 "简化采购流程，助力良好学习环境"；后续包装部分的 "可持续理念" 也属于使命延伸（体现品牌社会责任）。</li>
+                    <li>属于品牌 "竞争亮点" 板块：比如 "免拥挤 / 免奔波的采购体验""产品内部质量测试""全年可订购 + 定制化""批量订购的价格优势"，直接讲用户选它的理由。</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+    <script>
+        let currentSlide = 1;
+        let totalSlides = 0;
+
+        function init() {
+            const slides = document.querySelectorAll('.slide');
+            totalSlides = slides.length;
+            document.getElementById('totalSlides').textContent = totalSlides;
+
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function navigate(direction) {
+            const newSlide = currentSlide + direction;
+
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = newSlide;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                navigate(-1);
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Chart.js configurations
+new Chart(document.getElementById('chart1'), {
+        type: 'bar',
+        data: {
+        "labels": [
+                "Data Point 1",
+                "Data Point 2",
+                "Data Point 3",
+                "Data Point 4",
+                "Data Point 5",
+                "Data Point 6",
+                "Data Point 7",
+                "Data Point 8",
+                "Data Point 9",
+                "Data Point 10"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                3.0,
+                                12.0,
+                                3.0,
+                                12.0,
+                                3.0,
+                                12.0,
+                                1.0,
+                                2.0,
+                                3.0,
+                                4.0
+                        ],
+                        "backgroundColor": [
+                                "#F85d42",
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#74788d",
+                                "#F85d42",
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1"
+                        ],
+                        "borderColor": [
+                                "#F85d42",
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#74788d",
+                                "#F85d42",
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1"
+                        ],
+                        "borderWidth": 2
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 12
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart2'), {
+        type: 'bar',
+        data: {
+        "labels": [
+                "Data Point 1",
+                "Data Point 2",
+                "Data Point 3",
+                "Data Point 4",
+                "Data Point 5",
+                "Data Point 6",
+                "Data Point 7",
+                "Data Point 8",
+                "Data Point 9",
+                "Data Point 10"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                2018.0,
+                                2019.0,
+                                5.0,
+                                1.0,
+                                2.0,
+                                3.0,
+                                4.0,
+                                5.0,
+                                5.0,
+                                1988.0
+                        ],
+                        "backgroundColor": [
+                                "#F85d42",
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#74788d",
+                                "#F85d42",
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1"
+                        ],
+                        "borderColor": [
+                                "#F85d42",
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#74788d",
+                                "#F85d42",
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1"
+                        ],
+                        "borderWidth": 2
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 12
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        }
+                }
+        }
+}
+    });
+    </script>
+</body>
+</html>

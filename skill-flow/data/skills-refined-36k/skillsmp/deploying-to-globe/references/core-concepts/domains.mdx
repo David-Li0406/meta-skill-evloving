@@ -1,0 +1,96 @@
+---
+title: Domains
+description: Configure custom domains for your Globe deployments with automatic HTTPS, DNS verification, and integration with production deployments.
+---
+
+A **domain** is the address used to access your Globe-hosted project. Each project is assigned a unique domain (e.g., `your-project.globeapp.dev`).
+
+You can also link your own **custom domain** (e.g., `your-app.com`) with built-in **HTTPS**, **DNS verification**, and integration with your production deployment.
+
+### Supported Domain Types
+
+| Domain Type                   | Description                                     | Example                      |
+| ----------------------------- | ----------------------------------------------- | ---------------------------- |
+| **Default Project Domain**    | Automatically assigned after deployment         | `your-project.globeapp.dev`  |
+| **Preview Deployment Domain** | Unique URLs for each preview deployment         | `random-string.globeapp.dev` |
+| **Custom Domains**            | Your own branded domains linked to your project | `your-app.com`               |
+
+## How to Add a Custom Domain
+
+### Step 1: Configure DNS with Your Registrar
+
+First, you must configure the DNS records with your domain registrar. The method depends on whether you are using a subdomain or a root domain.
+
+#### Connecting a Subdomain (e.g., `www.your-app.com`)
+
+This is the simplest and most universally supported method.
+
+1. Log in to your domain registrar (e.g., [Cloudflare](https://domains.cloudflare.com/), [Namecheap](https://www.namecheap.com/), etc.).
+2. Find the DNS management section for your domain.
+3. Add a `CNAME` record with the following values:
+   - **Type**: `CNAME`
+   - **Name / Host**: `www` (or `app`, `api`, etc.)
+   - **Value / Points to**: `domains.globeapp.dev`
+4. Save your changes.
+
+#### Connecting a Root Domain (e.g., `your-app.com`)
+
+Connecting a root domain requires your DNS provider to support [CNAME Flattening](https://developers.cloudflare.com/dns/cname-flattening/). Standard DNS rules do not allow `CNAME` records at the root level, so this feature is necessary.
+
+You must verify with your provider if they support this. If they do, create a `CNAME` record using `@` for the `Name / Host` field.
+
+- **Type**: `CNAME`
+- **Name / Host**: `@`
+- **Value / Points to**: `domains.globeapp.dev`
+
+**Workaround for Unsupported Providers**: If your registrar does not support CNAME flattening, you cannot point your root domain directly to Globe. You must either:
+
+- Use a subdomain instead (e.g., `www.your-app.com`).
+- Change your domain's nameservers to a provider that does, like [Cloudflare](https://developers.cloudflare.com/dns/zone-setups/full-setup/setup/), without transferring the domain itself.
+
+### Step 2: Add Your Domain in Globe
+
+Once your DNS records are configured:
+
+1. From your **Globe dashboard**, go to the **Domains** section
+2. Select **Add Domain**
+3. Enter your full domain name (e.g., `www.your-app.com` or `your-app.com`).
+4. Select the project you want to link to this domain
+5. Click **Next** and then **Create**
+
+<Image src="/assets/core-concepts/domains.png" />
+
+<Info>
+  DNS changes can take up to 24 hours to propagate globally, though most updates
+  happen within an hour.
+</Info>
+
+### Step 3: Verify Your Domain
+
+After adding your domain, Globe will attempt to verify it. The domain status may change as the setup progresses:
+
+- **Active:** Domain is linked, and **SSL** is enabled
+- **Pending Verification:** DNS changes are still updating.
+- **Verification Failed:** DNS records are missing or incorrect
+
+## How to Manage Domains
+
+To view and manage your domains:
+
+- Open the **Domains** tab in your project dashboard
+- Check the list of connected domains and their current status
+- You can add, update, or reassign domains at any time
+
+## Best Practices
+
+- Use a subdomain (`www`. or `app`.) for the simplest and most reliable configuration.
+- If using a root domain, confirm your registrar supports CNAME flattening before adding it to Globe.
+- Use descriptive domain names for better clarity and branding
+- Limit frequent DNS changes to avoid propagation delays
+
+## Related Topics
+
+- [GitHub Integration](/core-concepts/github-integration) - Automate deployments from your GitHub repository
+- [Deployments](/core-concepts/deployments) - Understand preview and production deployments
+- [Add a Custom Domain Guide](/guides/add-custom-domain) - Step-by-step guide for setting up custom domains
+- [Domain Troubleshooting](/troubleshooting/domains) - Troubleshoot domain verification and connection issues

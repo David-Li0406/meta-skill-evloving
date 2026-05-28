@@ -1,0 +1,1 @@
+../../../rules/api/architecture.md

@@ -1,0 +1,272 @@
+# GoReleaser configuration for NTM
+# https://goreleaser.com
+
+version: 2
+
+project_name: ntm
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - id: ntm
+    main: ./cmd/ntm
+    binary: ntm
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    goarm:
+      - "7"
+    ignore:
+      # Windows ARM64 not commonly used
+      - goos: windows
+        goarch: arm64
+      - goos: windows
+        goarch: arm
+      # FreeBSD ARM not commonly used
+      - goos: freebsd
+        goarch: arm
+      - goos: freebsd
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X github.com/Dicklesworthstone/ntm/internal/cli.Version={{.Version}}
+      - -X github.com/Dicklesworthstone/ntm/internal/cli.Commit={{.Commit}}
+      - -X github.com/Dicklesworthstone/ntm/internal/cli.Date={{.Date}}
+      - -X github.com/Dicklesworthstone/ntm/internal/cli.BuiltBy=goreleaser
+    flags:
+      - -trimpath
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+universal_binaries:
+  - id: ntm-universal
+    ids:
+      - ntm
+    replace: true
+    name_template: ntm
+
+# IMPORTANT: The archive name_template is part of the upgrade naming contract.
+# If you change this, you MUST also update:
+#   - internal/cli/upgrade.go (getAssetName/getArchiveAssetName)
+#   - internal/cli/cli_test.go (TestUpgradeAssetNamingContract)
+# See CONTRIBUTING.md "Release Infrastructure" section for full documentation.
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - README.md
+      - LICENSE*
+      - CHANGELOG*
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+  # Also create raw binaries for curl-based install
+  - id: binary
+    formats:
+      - binary
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Os }}_
+      {{- .Arch }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Performance
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Documentation
+      regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
+      order: 3
+    - title: Others
+      order: 999
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^style:"
+      - Merge pull request
+      - Merge branch
+      - Initial commit
+
+release:
+  github:
+    owner: Dicklesworthstone
+    name: ntm
+  prerelease: auto
+  mode: replace
+  draft: false
+  header: |
+    ## NTM {{ .Tag }}
+
+    **Named Tmux Manager** - Orchestrate AI coding agents in tmux sessions with beautiful TUI interfaces.
+
+    ### Quick Install
+
+    ```bash
+    # One-liner install (Linux/macOS)
+    curl -fsSL https://raw.githubusercontent.com/Dicklesworthstone/ntm/main/install.sh | bash
+
+    # Homebrew (macOS/Linux)
+    brew install dicklesworthstone/tap/ntm
+
+    # Go install
+    go install github.com/Dicklesworthstone/ntm/cmd/ntm@{{ .Tag }}
+    ```
+
+    ### Shell Integration
+
+    Add to your shell rc file:
+    ```bash
+    eval "$(ntm init zsh)"   # for zsh
+    eval "$(ntm init bash)"  # for bash
+    eval "$(ntm init fish)"  # for fish
+    ```
+
+  footer: |
+    ---
+
+    **Full Changelog**: https://github.com/Dicklesworthstone/ntm/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    **Container Image**: `ghcr.io/dicklesworthstone/ntm:{{ .Tag }}`
+
+homebrew_casks:
+  - name: ntm
+    ids:
+      - default  # Use only the tarball archives, not the binary archives
+    repository:
+      owner: Dicklesworthstone
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Casks
+    homepage: "https://github.com/Dicklesworthstone/ntm"
+    description: "Named Tmux Manager - Orchestrate AI coding agents in tmux sessions"
+    binaries:
+      - ntm
+    dependencies:
+      - formula: tmux
+    completions:
+      bash: ntm completion bash
+      zsh: ntm completion zsh
+      fish: ntm completion fish
+    caveats: |
+      To enable shell integration, add to your shell rc file:
+
+        eval "$(ntm init zsh)"   # for zsh
+        eval "$(ntm init bash)"  # for bash
+        eval "$(ntm init fish)"  # for fish
+
+      Run 'ntm tutorial' to get started!
+
+nfpms:
+  - id: packages
+    package_name: ntm
+    vendor: Dicklesworthstone
+    homepage: https://github.com/Dicklesworthstone/ntm
+    maintainer: Jeff Emanuel <jeff@dicklesworthstone.com>
+    description: |
+      Named Tmux Manager - Orchestrate AI coding agents in tmux sessions.
+      Features beautiful TUI interfaces, command palette, and session management.
+    license: MIT
+    formats:
+      - deb
+      - rpm
+      - apk
+      - archlinux
+    dependencies:
+      - tmux
+    recommends:
+      - fzf
+      - zsh
+    suggests:
+      - tmuxinator
+    bindir: /usr/bin
+    section: utils
+    priority: optional
+    contents:
+      - src: README.md
+        dst: /usr/share/doc/ntm/README.md
+        file_info:
+          mode: 0644
+    scripts:
+      postinstall: scripts/postinstall.sh
+
+# Scoop manifest for Windows users (via WSL)
+scoops:
+  - name: ntm
+    repository:
+      owner: Dicklesworthstone
+      name: scoop-bucket
+      token: "{{ .Env.SCOOP_GITHUB_TOKEN }}"
+    homepage: "https://github.com/Dicklesworthstone/ntm"
+    description: "Named Tmux Manager - Orchestrate AI coding agents in tmux sessions"
+    license: MIT
+    skip_upload: auto
+
+# Docker/Container images - disabled for now due to build context issues
+# TODO: Re-enable after fixing Dockerfile to work with GoReleaser's build context
+# dockers:
+#   - image_templates:
+#       - "ghcr.io/dicklesworthstone/ntm:{{ .Tag }}-amd64"
+#     dockerfile: Dockerfile
+#     use: buildx
+#     skip_push: auto
+
+# Software Bill of Materials
+sboms:
+  - artifacts: archive
+
+# Sign the checksums
+signs:
+  - cmd: cosign
+    env:
+      - COSIGN_EXPERIMENTAL=1
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--output-certificate=${certificate}"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
+
+# Announce releases
+announce:
+  skip: "{{ gt (len .Prerelease) 0 }}"

@@ -1,0 +1,83 @@
+# Rubric Standards
+# ================
+# @rubric で使用する標準評価軸の定義
+
+version: "1.0.0"
+schema: "prompt-lang/rubric/v1"
+
+# --- 共通評価軸（全ドメイン共通） ---
+common_rubrics:
+
+  completeness:
+    description: "必須セクションの網羅度"
+    scale: "0-10"
+    weight: 0.25
+    criteria:
+      10: "全必須ディレクティブ + Error Handling + Limitations"
+      8: "全必須ディレクティブ + 補助セクション1つ以上"
+      7: "全必須ディレクティブあり（@role, @goal, @constraints, @format, @examples）"
+      5: "必須ディレクティブの一部欠落"
+      3: "骨格のみ（@role, @goal のみ）"
+      0: "構造なし"
+
+  syntactic_correctness:
+    description: "Prompt-Lang v2.0 としてパース可能か"
+    scale: "binary"
+    weight: 0.30
+    criteria:
+      yes: "prompt_lang.py parse でエラーなし"
+      no: "パースエラーあり"
+    validation:
+      command: "python forge/prompt-lang/prompt_lang.py parse {file}"
+      expected: "exit code 0"
+
+  semantic_relevance:
+    description: "入力要件との適合度"
+    scale: "0-10"
+    weight: 0.25
+    criteria:
+      10: "要件を完全に反映、過不足なし"
+      8: "主要要件を反映、細部に独自解釈あり"
+      7: "主要要件を反映"
+      5: "部分的に反映、重要な欠落あり"
+      3: "表面的な対応のみ"
+      0: "要件と無関係"
+
+  practical_utility:
+    description: "実際に業務で使えるか"
+    scale: "0-10"
+    weight: 0.20
+    criteria:
+      10: "即座に本番利用可能"
+      8: "軽微な調整（文言修正程度）で利用可能"
+      7: "軽微な調整で利用可能"
+      5: "大幅な修正が必要"
+      3: "参考にはなるが実用不可"
+      0: "使用不可"
+
+# --- 複合スコア算出 ---
+composite_score:
+  formula: |
+    score = (completeness * 0.25) + (syntactic_correctness * 10 * 0.30) + 
+            (semantic_relevance * 0.25) + (practical_utility * 0.20)
+  passing_threshold: 7.0
+  excellence_threshold: 9.0
+
+# --- 自動チェック可能な項目 ---
+automated_checks:
+  - name: "構文検証"
+    command: "python forge/prompt-lang/prompt_lang.py parse {file}"
+    pass_condition: "exit code == 0"
+    
+  - name: "必須ディレクティブ存在"
+    pattern: ["@role:", "@goal:", "@constraints:", "@format:", "@examples:"]
+    pass_condition: "all patterns found"
+    
+  - name: "曖昧語検出"
+    forbidden_words: ["適切に", "うまく", "いい感じ", "必要に応じて", "などなど"]
+    pass_condition: "0 matches"
+    
+  - name: "@constraints 最低数"
+    pattern: "@constraints:"
+    count_items: true
+    pass_condition: "count >= 3"

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Summary Page</title>
+<style>
+  :root {
+    --bg-main: #FFFFFF;
+    --bg-header: #000000;
+    --accent: #F85d42;
+    --gray: #74788d;
+    --aux1: #556EE6;
+    --aux2: #34c38f;
+    --aux3: #50a5f1;
+    --aux4: #f1b44c;
+    --gray-light: #F5F5F5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    width: 960px;
+    height: 540px;
+    background: var(--bg-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    color: #333;
+  }
+
+  .slide-container {
+    display: grid;
+    grid-template-rows: 60px 1fr;
+    height: 100%;
+    padding: 0 40px 40px 40px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-header);
+    color: white;
+    padding: 0 20px;
+    margin: 0 -40px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+  
+  .header h1 { font-size: 24px; font-weight: bold; }
+  .header .logo { font-size: 16px; color: var(--accent); }
+
+  .content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    align-items: center;
+  }
+
+  .metric-card {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .metric-number {
+    font-size: 48px;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .metric-description {
+    font-size: 20px;
+    color: var(--gray);
+  }
+
+  @media (max-width: 960px) {
+    body {
+      transform-origin: top left;
+      transform: scale(calc(100vw / 960));
+      width: 960px;
+      height: 540px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+  <header class="header">
+    <h1>关键指标总结</h1>
+    <div class="logo">COMPANY LOGO</div>
+  </header>
+
+  <main class="content">
+    <div class="metric-card">
+      <div class="metric-number">1,234</div>
+      <div class="metric-description">指标一说明</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-number">56.7%</div>
+      <div class="metric-description">指标二说明</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-number">¥890万</div>
+      <div class="metric-description">指标三说明</div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

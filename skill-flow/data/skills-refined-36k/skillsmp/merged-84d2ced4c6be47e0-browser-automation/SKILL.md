@@ -1,0 +1,207 @@
+---
+name: browser-automation
+description: Use this skill for browser automation tasks such as navigating websites, verifying UI, testing web apps, scraping data, and capturing screenshots.
+---
+
+# Browser Automation
+
+Browser automation via Vercel's agent-browser CLI. Runs headless by default; use `--headed` for a visible window. Uses ref-based selection (@e1, @e2) from accessibility snapshots.
+
+## Setup
+
+```bash
+command -v agent-browser >/dev/null 2>&1 && echo "OK" || echo "MISSING: npm i -g agent-browser && agent-browser install"
+```
+
+## Core Workflow
+
+1. **Open** URL
+2. **Snapshot** to get refs
+3. **Interact** via refs
+4. **Re-snapshot** after DOM changes
+
+```bash
+agent-browser open <url>
+agent-browser snapshot -i              # Interactive elements with refs
+agent-browser click @e1
+agent-browser wait --load networkidle  # Wait for SPA to settle
+agent-browser snapshot -i              # Re-snapshot after change
+```
+
+## Essential Commands
+
+### Navigation
+
+```bash
+agent-browser open <url>       # Navigate
+agent-browser back             # Go back
+agent-browser forward          # Go forward
+agent-browser reload           # Reload
+agent-browser close            # Close browser
+```
+
+### Snapshots
+
+```bash
+agent-browser snapshot           # Full accessibility tree
+agent-browser snapshot -i        # Interactive only (recommended)
+agent-browser snapshot -i --json # JSON for parsing
+agent-browser snapshot -c        # Compact (remove empty)
+agent-browser snapshot -d 3      # Limit depth
+agent-browser snapshot -s "#main" # Scope to selector
+```
+
+### Interactions
+
+```bash
+agent-browser click @e1              # Click
+agent-browser dblclick @e1           # Double-click
+agent-browser fill @e1 "<text>"      # Clear + fill input
+agent-browser type @e1 "<text>"      # Type without clearing
+agent-browser press Enter            # Key press
+agent-browser press Control+a        # Key combination
+agent-browser hover @e1              # Hover
+agent-browser check @e1              # Check checkbox
+agent-browser uncheck @e1            # Uncheck
+agent-browser select @e1 "<option>"   # Dropdown
+agent-browser scroll down <pixels>   # Scroll direction + pixels
+agent-browser scrollintoview @e1     # Scroll element visible
+```
+
+### Get Info
+
+```bash
+agent-browser get text @e1       # Element text
+agent-browser get value @e1      # Input value
+agent-browser get html @e1       # Element HTML
+agent-browser get attr href @e1  # Attribute
+agent-browser get title          # Page title
+agent-browser get url            # Current URL
+agent-browser get count "<selector>" # Count matches
+```
+
+### Check State
+
+```bash
+agent-browser is visible @e1    # Check visibility
+agent-browser is enabled @e1    # Check enabled
+agent-browser is checked @e1    # Check checkbox state
+```
+
+### Wait
+
+```bash
+agent-browser wait @e1                 # Wait for element visible
+agent-browser wait <milliseconds>       # Wait milliseconds
+agent-browser wait --text "<text>"      # Wait for text
+agent-browser wait --url "<pattern>"    # Wait for URL pattern
+agent-browser wait --load networkidle    # Wait for network idle (SPAs)
+agent-browser wait --fn "<function>"     # Wait for JS condition
+```
+
+### Screenshots
+
+```bash
+agent-browser screenshot              # Viewport to stdout
+agent-browser screenshot <filename>   # Save to file
+agent-browser screenshot --full       # Full page
+agent-browser pdf <filename>          # Save as PDF
+```
+
+### Semantic Locators
+
+Alternative when you know the element (no snapshot needed):
+
+```bash
+agent-browser find role button click --name "<name>"
+agent-browser find text "<text>" click
+agent-browser find label "<label>" fill "<value>"
+agent-browser find placeholder "<placeholder>" fill "<query>"
+agent-browser find first "<selector>" click
+agent-browser find nth <index> "<selector>" text
+```
+
+## Sessions
+
+Parallel isolated browsers:
+
+```bash
+agent-browser --session <session_name> open <url>
+agent-browser session list
+```
+
+## JSON Output
+
+Add `--json` for machine-readable output:
+
+```bash
+agent-browser snapshot -i --json
+agent-browser get text @e1 --json
+agent-browser is visible @e1 --json
+```
+
+## Examples
+
+### Form Submission
+
+```bash
+agent-browser open <form_url>
+agent-browser snapshot -i
+# textbox "Email" [ref=e1], textbox "Password" [ref=e2], button "Submit" [ref=e3]
+agent-browser fill @e1 "<email>"
+agent-browser fill @e2 "<password>"
+agent-browser click @e3
+agent-browser wait --load networkidle
+agent-browser snapshot -i  # Verify result
+```
+
+### Auth with Saved State
+
+```bash
+# Login once
+agent-browser open <login_url>
+agent-browser snapshot -i
+agent-browser fill @e1 "<username>"
+agent-browser fill @e2 "<password>"
+agent-browser click @e3
+agent-browser wait --url "<dashboard_url>"
+agent-browser state save <filename>
+
+# Later: reuse saved auth
+agent-browser state load <filename>
+agent-browser open <dashboard_url>
+```
+
+### Token Auth (Skip Login)
+
+```bash
+# Headers scoped to origin only
+agent-browser open <api_url> --headers '{"Authorization": "Bearer <token>"}'
+agent-browser snapshot -i --json
+```
+
+## Debugging
+
+```bash
+agent-browser --headed open <url>  # Show browser window
+agent-browser console                # View console messages
+agent-browser errors                 # View page errors
+agent-browser highlight @e1          # Highlight element
+```
+
+## Troubleshooting
+
+**"Browser not launched" error**: Daemon stuck. Kill and retry:
+```bash
+pkill -f agent-browser && agent-browser open <url>
+```
+
+**Element not found**: Re-snapshot after page changes. DOM may have updated.
+
+## References
+
+| Topic | File |
+|-------|------|
+| Debugging, traces, common issues | [debugging.md](references/debugging.md) |
+| Auth, cookies, storage, state persistence | [auth.md](references/auth.md) |
+| Network mocking, tabs, frames, dialogs, settings | [advanced.md](references/advanced.md) |

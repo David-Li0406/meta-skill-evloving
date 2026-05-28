@@ -1,0 +1,108 @@
+<div class="container">
+  <h1>You have selected: <%= @promise_fitness_kit.name %></h1>
+
+  <div class="order-layout">
+    <div class="kit-info-sidebar">
+      <fieldset>
+        <legend>Your Kit</legend>
+        <%= image_tag "#{@promise_fitness_kit.name}.png", alt: @promise_fitness_kit.name, class: 'kit-image-large' %>
+        <div class="kit-details">
+          <h2><%= @promise_fitness_kit.name %></h2>
+          <p class="kit-description"><%= @promise_fitness_kit.description %></p>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="form-container">
+      <%= form_with model: @order, url: create_fitness_kit_order_path(slug: @promise_fitness_kit.slug), data: { turbo: true }, html: { class: 'order-form' } do |f| %>
+        <% if flash[:error] %>
+          <div class="alert alert-error" role="alert">
+            <%= flash[:error] %>
+          </div>
+        <% end %>
+
+        <% if @order.errors.any? %>
+          <div class="alert alert-error">
+            <h3><%= pluralize(@order.errors.count, "error") %> prohibited this order:</h3>
+            <ul>
+              <% @order.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <fieldset>
+          <legend>Personal Information</legend>
+
+          <div class="form-row">
+            <div class="field">
+              <%= f.label :first_name, 'First Name *' %>
+              <%= f.text_field :first_name, required: true %>
+            </div>
+
+            <div class="field">
+              <%= f.label :last_name, 'Last Name *' %>
+              <%= f.text_field :last_name, required: true %>
+            </div>
+          </div>
+
+          <div class="field">
+            <%= f.label :email, 'Email *' %>
+            <%= f.email_field :email, required: true, placeholder: 'user@example.com' %>
+          </div>
+
+          <div class="field">
+            <%= f.label :phone, 'Phone Number * (10 digits with area code)' %>
+            <%= f.text_field :phone, required: true, placeholder: '123-456-7890' %>
+            <small>Format: 123-456-7890</small>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Shipping Address</legend>
+
+          <div class="field">
+            <%= f.label :address1, 'Address Line 1 *' %>
+            <%= f.text_field :address1, required: true %>
+          </div>
+
+          <div class="field">
+            <%= f.label :address2, 'Address Line 2' %>
+            <%= f.text_field :address2 %>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <%= f.label :city, 'City *' %>
+              <%= f.text_field :city, required: true %>
+            </div>
+
+            <div class="field field-small">
+              <%= f.label :state, 'State * (2-letter code)' %>
+              <%= f.text_field :state, required: true, maxlength: 2, placeholder: 'CA' %>
+            </div>
+
+            <div class="field">
+              <%= f.label :zip, 'ZIP Code *' %>
+              <%= f.text_field :zip, required: true, placeholder: '12345' %>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Coupon Code*</legend>
+
+          <div class="field">
+            <%= text_field_tag 'order[coupon_code_input]', params[:order]&.dig(:coupon_code_input), required: true, placeholder: 'Enter your coupon code' %>
+          </div>
+        </fieldset>
+
+        <div class="actions">
+          <%= f.submit 'Place Order', class: 'btn btn-primary' %>
+          <%= link_to 'Cancel', root_path, class: 'btn btn-secondary' %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

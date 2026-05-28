@@ -1,0 +1,115 @@
+# Bridge Manifest Template
+# Copy this file and rename to <your_bridge_id>.yaml
+# Place in .scribe/config/bridges/
+
+# =============================================================================
+# REQUIRED FIELDS
+# =============================================================================
+
+bridge_id: your_bridge_id          # Unique ID (alphanumeric, hyphens, underscores)
+name: Your Bridge Name             # Human-readable name
+version: 1.0.0                     # Semantic version
+description: Description of what your bridge does
+author: Your Name                  # Author or organization
+
+# =============================================================================
+# PERMISSIONS
+# =============================================================================
+# Available permissions:
+#   - read:all_projects     Read any project's logs
+#   - read:own_projects     Read only bridge-owned projects
+#   - write:all_projects    Write to any project (admin)
+#   - write:own_projects    Write only to bridge-owned projects
+#   - create:projects       Create new projects
+
+permissions:
+  - read:all_projects
+  - write:own_projects
+  - create:projects
+
+# =============================================================================
+# PROJECT CONFIGURATION (optional)
+# =============================================================================
+# Controls how bridge creates and manages projects
+
+project_config:
+  can_create_projects: true        # Enable project creation
+  project_prefix: ""               # Prefix for created projects (e.g., "mybridge_")
+  auto_tag: []                     # Tags added to all created projects
+    # - automated
+    # - my-bridge
+  default_metadata: {}             # Metadata injected into all projects
+    # source: my_bridge
+    # environment: production
+
+# =============================================================================
+# HOOKS CONFIGURATION (optional)
+# =============================================================================
+# Define which lifecycle hooks your bridge will use
+# callback_type: sync|async|webhook
+# timeout_ms: Timeout in milliseconds
+# critical: If true, failure aborts operation (for pre-hooks only)
+
+hooks:
+  pre_append:
+    callback_type: async
+    timeout_ms: 5000
+    critical: false
+  post_append:
+    callback_type: async
+    timeout_ms: 5000
+    critical: false
+  # pre_rotate:
+  #   callback_type: async
+  #   timeout_ms: 10000
+  #   critical: false
+  # post_rotate:
+  #   callback_type: async
+  #   timeout_ms: 10000
+  #   critical: false
+  # pre_project_create:
+  #   callback_type: async
+  #   timeout_ms: 5000
+  #   critical: false
+  # post_project_create:
+  #   callback_type: async
+  #   timeout_ms: 5000
+  #   critical: false
+
+# =============================================================================
+# CUSTOM LOG TYPES (optional)
+# =============================================================================
+# Define additional log types beyond the default 'progress' log
+
+# log_config:
+#   custom_audit:
+#     log_type: custom_audit
+#     path_template: "{docs_dir}/CUSTOM_AUDIT.md"
+#     format: markdown  # markdown or jsonl
+#     metadata_requirements:
+#       - agent_id
+#     description: Custom audit log for tracking specific events
+
+# =============================================================================
+# VALIDATION (optional)
+# =============================================================================
+# Control validation strictness for data from your bridge
+
+validation:
+  mode: lenient                    # strict|lenient|custom
+  # schema: null                   # JSON Schema for custom validation
+  # custom_validator: null         # Path to custom validator module
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+# Use environment variables for sensitive data
+
+# api_key: ${YOUR_BRIDGE_API_KEY}  # Expands from environment variable
+
+# =============================================================================
+# COMPATIBILITY
+# =============================================================================
+
+min_scribe_version: "2.1.0"        # Minimum Scribe version required
+# max_scribe_version: null         # Maximum version supported (optional)

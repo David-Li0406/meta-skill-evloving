@@ -1,0 +1,18 @@
+/* Anchored container query: detect fallback position */
+
+.tooltip {
+  position: fixed;
+  position-anchor: --trigger;
+  position-area: block-end;
+  position-try-fallbacks: flip-block;
+  container-type: anchored;
+}
+
+/* Style when flipped to top */
+@container anchored(fallback: flip-block) {
+  .tooltip::before {
+    rotate: 180deg;
+    inset-block-start: auto;
+    inset-block-end: -0.5rem;
+  }
+}

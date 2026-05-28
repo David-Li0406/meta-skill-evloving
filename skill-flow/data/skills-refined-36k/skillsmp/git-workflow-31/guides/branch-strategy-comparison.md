@@ -1,0 +1,1541 @@
+# ブランチ戦略比較完全ガイド
+
+> **最終更新:** 2026-01-02
+> **対象読者:** テックリード、プロジェクトマネージャー、開発チームリーダー
+> **推定読了時間:** 60分
+
+## 📋 目次
+
+1. [ブランチ戦略とは](#ブランチ戦略とは)
+2. [主要なブランチ戦略](#主要なブランチ戦略)
+3. [GitHub Flow](#github-flow)
+4. [Git Flow](#git-flow)
+5. [Trunk-Based Development](#trunk-based-development)
+6. [GitLab Flow](#gitlab-flow)
+7. [戦略別詳細比較](#戦略別詳細比較)
+8. [プロジェクトタイプ別推奨](#プロジェクトタイプ別推奨)
+9. [チームサイズ別推奨](#チームサイズ別推奨)
+10. [技術スタック別考慮事項](#技術スタック別考慮事項)
+11. [移行戦略](#移行戦略)
+12. [実践ケーススタディ](#実践ケーススタディ)
+13. [よくある失敗パターン](#よくある失敗パターン)
+14. [ハイブリッド戦略](#ハイブリッド戦略)
+15. [意思決定フローチャート](#意思決定フローチャート)
+
+---
+
+## ブランチ戦略とは
+
+### 定義
+
+**ブランチ戦略（Branching Strategy）** は、チームがGitブランチをどのように作成・管理・マージするかを定めるルールセットです。
+
+### なぜ重要か
+
+```
+適切なブランチ戦略がないと:
+❌ マージコンフリクトが頻発
+❌ リリースプロセスが混乱
+❌ バグが本番環境に混入
+❌ チームの生産性が低下
+❌ デプロイが遅延
+
+適切なブランチ戦略があると:
+✅ スムーズなコラボレーション
+✅ 予測可能なリリース
+✅ 品質の担保
+✅ 高い生産性
+✅ 迅速なデプロイ
+```
+
+### 戦略選定の3つの軸
+
+```
+1. リリース頻度
+   - 継続的デプロイ（日次・時間単位）
+   - 定期リリース（週次・月次）
+   - イベント駆動リリース
+
+2. チームサイズ
+   - 小規模（1-5人）
+   - 中規模（6-20人）
+   - 大規模（21人以上）
+
+3. プロダクトタイプ
+   - Webアプリケーション
+   - モバイルアプリ
+   - ライブラリ・SDK
+   - エンタープライズソフトウェア
+```
+
+---
+
+## 主要なブランチ戦略
+
+### 戦略一覧
+
+| 戦略 | 複雑さ | リリース頻度 | チーム規模 | 学習コスト |
+|------|--------|------------|-----------|----------|
+| **GitHub Flow** | ⭐ シンプル | 高頻度 | 小〜中 | 低 |
+| **Git Flow** | ⭐⭐⭐ 複雑 | 定期的 | 中〜大 | 高 |
+| **Trunk-Based** | ⭐⭐ 中程度 | 超高頻度 | 小〜大 | 中 |
+| **GitLab Flow** | ⭐⭐ 中程度 | 柔軟 | 小〜中 | 中 |
+
+### クイック比較表
+
+| 項目 | GitHub Flow | Git Flow | Trunk-Based | GitLab Flow |
+|------|------------|----------|-------------|-------------|
+| **メインブランチ** | main | main, develop | trunk/main | main |
+| **長期ブランチ数** | 1 | 2 | 1 | 1-3 |
+| **featureブランチ** | ✅ | ✅ | ✅ (短命) | ✅ |
+| **releaseブランチ** | ❌ | ✅ | ❌ | ✅ (環境別) |
+| **hotfixブランチ** | ❌ | ✅ | ❌ | ❌ |
+| **CI/CD統合** | 必須 | 推奨 | 必須 | 必須 |
+| **適用事例** | GitHub, Vercel | WordPress, Linux | Google, Facebook | GitLab |
+
+---
+
+## GitHub Flow
+
+### 概要
+
+```
+最もシンプルなブランチ戦略
+→ mainブランチ + featureブランチのみ
+→ 継続的デプロイに最適
+```
+
+### ブランチ構成
+
+```
+main (production)
+├── feature/user-auth
+├── feature/dashboard
+└── bugfix/login-error
+```
+
+### ワークフロー
+
+```bash
+# 1. mainから分岐
+git checkout main
+git pull origin main
+git checkout -b feature/USER-123-add-profile
+
+# 2. 開発・コミット
+git add .
+git commit -m "feat(profile): add user profile page"
+git push -u origin feature/USER-123-add-profile
+
+# 3. PR作成・レビュー
+# （GitHub上で）
+
+# 4. mainにマージ
+# → 自動的に本番デプロイ
+
+# 5. ブランチ削除
+git branch -d feature/USER-123-add-profile
+git push origin --delete feature/USER-123-add-profile
+```
+
+### メリット
+
+```
+✅ 非常にシンプル（学習コスト低）
+✅ 継続的デプロイに最適
+✅ 小規模チームで効率的
+✅ PR中心の開発フロー
+✅ 迅速なフィードバック
+✅ デプロイリスクの最小化（小さい変更）
+```
+
+### デメリット
+
+```
+❌ 複数バージョンサポートが困難
+❌ リリース前の長期テストに不向き
+❌ hotfix専用フローなし
+❌ 大規模チームでコンフリクトが増える
+❌ プロダクション環境の状態とmainが同期している必要
+```
+
+### 適用ケース
+
+**最適:**
+- WebアプリケーションSaaS
+- 継続的デプロイ環境
+- 小〜中規模チーム（2-20人）
+- スタートアップ・アジャイル開発
+
+**不向き:**
+- モバイルアプリ（App Store審査待ち）
+- 複数バージョン並行サポート
+- 定期リリースサイクル（月次など）
+
+### 実装例
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Vercel
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+```
+
+---
+
+## Git Flow
+
+### 概要
+
+```
+最も構造化されたブランチ戦略
+→ 複数の長期ブランチを持つ
+→ 定期リリースに最適
+```
+
+### ブランチ構成
+
+```
+main (production releases only)
+develop (integration branch)
+├── feature/user-auth
+├── feature/dashboard
+├── release/1.2.0
+│   └── hotfix/1.2.1
+└── hotfix/critical-bug
+```
+
+### ブランチタイプ
+
+| ブランチ | 親ブランチ | マージ先 | ライフサイクル | 命名規則 |
+|---------|----------|---------|--------------|---------|
+| **main** | - | - | 永続 | `main` |
+| **develop** | main | - | 永続 | `develop` |
+| **feature** | develop | develop | 短期 | `feature/<name>` |
+| **release** | develop | main, develop | 短期 | `release/<version>` |
+| **hotfix** | main | main, develop | 短期 | `hotfix/<version>` |
+
+### ワークフロー：Feature開発
+
+```bash
+# 1. developから分岐
+git checkout develop
+git pull origin develop
+git checkout -b feature/USER-123-add-profile
+
+# 2. 開発
+git add .
+git commit -m "feat: add user profile"
+git push -u origin feature/USER-123-add-profile
+
+# 3. developにマージ
+git checkout develop
+git merge --no-ff feature/USER-123-add-profile
+git push origin develop
+
+# 4. ブランチ削除
+git branch -d feature/USER-123-add-profile
+```
+
+### ワークフロー：リリース
+
+```bash
+# 1. developからreleaseブランチ作成
+git checkout develop
+git checkout -b release/1.2.0
+
+# 2. バージョン番号更新
+vim package.json  # version: 1.2.0
+git commit -am "chore: bump version to 1.2.0"
+
+# 3. リリーステスト・バグ修正
+# （必要に応じて）
+
+# 4. mainにマージ
+git checkout main
+git merge --no-ff release/1.2.0
+git tag -a v1.2.0 -m "Release version 1.2.0"
+git push origin main --tags
+
+# 5. developにもマージ（バグ修正を反映）
+git checkout develop
+git merge --no-ff release/1.2.0
+git push origin develop
+
+# 6. ブランチ削除
+git branch -d release/1.2.0
+```
+
+### ワークフロー：Hotfix
+
+```bash
+# 1. mainから分岐
+git checkout main
+git checkout -b hotfix/1.2.1
+
+# 2. 緊急修正
+git add .
+git commit -m "fix: critical security patch"
+
+# 3. mainにマージ
+git checkout main
+git merge --no-ff hotfix/1.2.1
+git tag -a v1.2.1 -m "Hotfix 1.2.1"
+git push origin main --tags
+
+# 4. developにもマージ
+git checkout develop
+git merge --no-ff hotfix/1.2.1
+git push origin develop
+
+# 5. ブランチ削除
+git branch -d hotfix/1.2.1
+```
+
+### メリット
+
+```
+✅ 明確に定義されたフロー
+✅ 複数バージョン並行サポート
+✅ リリース前の長期テスト可能
+✅ hotfix専用フロー
+✅ 大規模チームでの並行開発
+✅ 予測可能なリリースサイクル
+```
+
+### デメリット
+
+```
+❌ 複雑で学習コストが高い
+❌ マージ作業が多い
+❌ ブランチ管理のオーバーヘッド
+❌ 継続的デプロイには不向き
+❌ developとmainの同期管理が必要
+```
+
+### 適用ケース
+
+**最適:**
+- 定期リリースサイクル（月次・四半期）
+- 複数バージョン並行サポート
+- 大規模チーム（20人以上）
+- モバイルアプリ（App Store審査期間）
+- パッケージソフトウェア・ライブラリ
+
+**不向き:**
+- 継続的デプロイ環境
+- 小規模チーム（オーバーヘッド大）
+- スタートアップ（スピード重視）
+
+### 実装例：Git Flow Helper
+
+```bash
+# Git Flow拡張のインストール
+brew install git-flow-avh
+
+# 初期化
+git flow init
+
+# Feature開発
+git flow feature start user-profile
+# ... 開発 ...
+git flow feature finish user-profile
+
+# Release作成
+git flow release start 1.2.0
+# ... テスト・修正 ...
+git flow release finish 1.2.0
+
+# Hotfix
+git flow hotfix start 1.2.1
+# ... 修正 ...
+git flow hotfix finish 1.2.1
+```
+
+---
+
+## Trunk-Based Development
+
+### 概要
+
+```
+超高頻度デプロイのための戦略
+→ 1つのメインブランチ（trunk/main）
+→ 短命のfeatureブランチ（1-2日）
+→ Feature Flagsで未完成機能を隠す
+```
+
+### ブランチ構成
+
+```
+main/trunk (常にデプロイ可能)
+├── feature/quick-fix (1日)
+├── feature/small-feature (2日)
+└── release/1.2.0 (オプション)
+```
+
+### 原則
+
+```
+1. 小さく頻繁なコミット（日次複数回）
+2. 短命のfeatureブランチ（max 2日）
+3. 直接mainへのコミット（上級者）
+4. Feature Flagsで機能管理
+5. 継続的インテグレーション必須
+6. 自動テストの徹底
+```
+
+### ワークフロー：小さいFeature
+
+```bash
+# 1. mainから分岐（短期間のみ）
+git checkout main
+git pull origin main
+git checkout -b feature/quick-improvement
+
+# 2. 開発（1-2日以内）
+git add .
+git commit -m "feat: add quick improvement"
+git push -u origin feature/quick-improvement
+
+# 3. 即座にPR・マージ
+# （レビュー・CI通過後すぐマージ）
+
+# 4. mainへマージ
+git checkout main
+git merge feature/quick-improvement
+git push origin main
+
+# ブランチ削除
+git branch -d feature/quick-improvement
+```
+
+### ワークフロー：大きいFeature（Feature Flags）
+
+```typescript
+// feature-flags.ts
+export const FEATURE_FLAGS = {
+  NEW_DASHBOARD: process.env.FEATURE_NEW_DASHBOARD === 'true',
+  BETA_SEARCH: process.env.FEATURE_BETA_SEARCH === 'true',
+};
+
+// App.tsx
+import { FEATURE_FLAGS } from './feature-flags';
+
+function App() {
+  return (
+    <div>
+      {FEATURE_FLAGS.NEW_DASHBOARD ? (
+        <NewDashboard />  // 開発中（本番では非表示）
+      ) : (
+        <OldDashboard />  // 既存
+      )}
+    </div>
+  );
+}
+```
+
+```bash
+# mainへ頻繁にマージ（Feature Flag OFF）
+git checkout main
+git pull origin main
+# ... 開発 ...
+git add .
+git commit -m "feat: add new dashboard (feature flag)"
+git push origin main
+
+# 開発環境でFeature Flag ON
+FEATURE_NEW_DASHBOARD=true npm run dev
+
+# 完成したらFeature Flag ON
+# → 段階的にロールアウト
+```
+
+### メリット
+
+```
+✅ 超高頻度デプロイ（時間単位）
+✅ マージコンフリクトが最小
+✅ シンプルなブランチ構成
+✅ 継続的インテグレーションが自然
+✅ コードレビューが高速
+✅ 本番環境との乖離が最小
+```
+
+### デメリット
+
+```
+❌ Feature Flagsの管理コスト
+❌ 高度な自動テストが必須
+❌ チーム全体の習熟が必要
+❌ 未完成コードがmainに混在
+❌ コード品質への高い要求
+❌ CI/CDインフラへの投資必要
+```
+
+### 適用ケース
+
+**最適:**
+- Google, Facebook級の高頻度デプロイ
+- 成熟したCI/CDパイプライン
+- 高度なテスト自動化環境
+- DevOpsカルチャーが浸透
+- エリートエンジニアチーム
+
+**不向き:**
+- CI/CDが未成熟
+- テスト自動化が不十分
+- 初心者中心のチーム
+- 定期リリースサイクル
+
+### 実装例：Feature Flags管理
+
+```typescript
+// feature-flag-service.ts
+import { LaunchDarkly } from 'launchdarkly-js-client-sdk';
+
+class FeatureFlagService {
+  private client: any;
+
+  async initialize() {
+    this.client = LaunchDarkly.initialize('YOUR_SDK_KEY', {
+      key: 'user-key',
+    });
+    await this.client.waitForInitialization();
+  }
+
+  isEnabled(flagKey: string): boolean {
+    return this.client.variation(flagKey, false);
+  }
+
+  async getAllFlags(): Promise<Record<string, boolean>> {
+    return this.client.allFlags();
+  }
+}
+
+export const featureFlags = new FeatureFlagService();
+
+// 使用例
+if (featureFlags.isEnabled('new-dashboard')) {
+  // 新機能を表示
+}
+```
+
+---
+
+## GitLab Flow
+
+### 概要
+
+```
+GitHub FlowとGit Flowの中間
+→ 環境別ブランチ（production, staging）
+→ シンプルさと柔軟性のバランス
+```
+
+### ブランチ構成（環境別）
+
+```
+main (開発用)
+├── feature/user-auth
+├── feature/dashboard
+├── staging (ステージング環境)
+└── production (本番環境)
+```
+
+### ワークフロー：環境ベース
+
+```bash
+# 1. mainで開発
+git checkout main
+git pull origin main
+git checkout -b feature/USER-123
+
+# 2. 開発・PR
+git add .
+git commit -m "feat: add feature"
+git push -u origin feature/USER-123
+
+# 3. mainにマージ
+git checkout main
+git merge feature/USER-123
+git push origin main
+# → 自動的に開発環境にデプロイ
+
+# 4. ステージング環境へ
+git checkout staging
+git merge main
+git push origin staging
+# → 自動的にステージング環境にデプロイ
+# → QAテスト実施
+
+# 5. 本番環境へ
+git checkout production
+git merge staging
+git push origin production
+# → 自動的に本番環境にデプロイ
+```
+
+### ブランチ構成（リリースベース）
+
+```
+main (開発用)
+├── feature/user-auth
+└── 1-2-stable (リリース1.2の保守ブランチ)
+    └── 1-3-stable (リリース1.3の保守ブランチ)
+```
+
+### メリット
+
+```
+✅ 環境ごとの明確な管理
+✅ GitHub Flowより柔軟
+✅ Git Flowよりシンプル
+✅ 段階的デプロイ可能
+✅ バージョン管理が容易
+✅ CI/CDとの統合が自然
+```
+
+### デメリット
+
+```
+❌ GitHub Flowより複雑
+❌ 環境ブランチの管理コスト
+❌ マージ作業が増える
+❌ チームへの説明が必要
+```
+
+### 適用ケース
+
+**最適:**
+- 複数の環境がある（dev/staging/prod）
+- 段階的デプロイが必要
+- バージョン管理が重要
+- 中規模チーム
+
+---
+
+## 戦略別詳細比較
+
+### リリースプロセス比較
+
+| 戦略 | リリース手順 | 所要時間 | 複雑さ |
+|------|------------|---------|--------|
+| **GitHub Flow** | mainマージ→自動デプロイ | 5分 | ⭐ |
+| **Git Flow** | release作成→テスト→main/developマージ→タグ付け | 1-2日 | ⭐⭐⭐ |
+| **Trunk-Based** | mainコミット→自動デプロイ | 1分 | ⭐⭐ |
+| **GitLab Flow** | main→staging→production | 1-4時間 | ⭐⭐ |
+
+### Hotfix対応比較
+
+| 戦略 | Hotfix手順 | 緊急度 | 複雑さ |
+|------|-----------|--------|--------|
+| **GitHub Flow** | mainから分岐→修正→マージ | 🔴 高速 | ⭐ |
+| **Git Flow** | hotfixブランチ→main/developマージ | 🟡 中速 | ⭐⭐⭐ |
+| **Trunk-Based** | mainで直接修正→デプロイ | 🔴 超高速 | ⭐ |
+| **GitLab Flow** | main修正→staging→production | 🟡 中速 | ⭐⭐ |
+
+### マージ頻度比較
+
+```
+Trunk-Based Development:
+├── main: 1日10-50回
+└── feature: 1-2日で削除
+
+GitHub Flow:
+├── main: 1日1-10回
+└── feature: 2-5日で削除
+
+GitLab Flow:
+├── main: 1日1-5回
+├── staging: 週1-2回
+└── production: 週1回
+
+Git Flow:
+├── develop: 1日1-5回
+├── main: 月1-2回
+└── feature: 1-2週で削除
+```
+
+### コンフリクト発生率比較
+
+```
+Trunk-Based: 低（頻繁なマージ）
+GitHub Flow: 低〜中（適度なマージ）
+GitLab Flow: 中（環境ブランチ間）
+Git Flow: 高（長期ブランチ多数）
+```
+
+---
+
+## プロジェクトタイプ別推奨
+
+### Webアプリケーション・SaaS
+
+**推奨: GitHub Flow / Trunk-Based**
+
+```
+理由:
+✅ 継続的デプロイに最適
+✅ 迅速なフィードバックループ
+✅ ユーザーへの価値提供が早い
+✅ A/Bテストが容易
+
+実装例:
+- Vercel: mainマージ→自動デプロイ
+- Netlify: mainマージ→自動デプロイ
+- AWS Amplify: mainマージ→自動デプロイ
+```
+
+### モバイルアプリ（iOS/Android）
+
+**推奨: Git Flow / GitLab Flow**
+
+```
+理由:
+✅ App Store審査期間を考慮
+✅ 複数バージョン並行サポート
+✅ リリース前の長期テスト
+✅ hotfix対応が明確
+
+実装例:
+main: v1.2.0（本番）
+develop: v1.3.0開発中
+release/1.3.0: 審査提出準備
+hotfix/1.2.1: 緊急バグ修正
+```
+
+### オープンソースライブラリ・SDK
+
+**推奨: Git Flow**
+
+```
+理由:
+✅ Semantic Versioningと相性良い
+✅ 複数バージョン保守が必要
+✅ Changelogが明確
+✅ 安定版・開発版の分離
+
+実装例:
+main: v2.3.0（安定版）
+develop: v2.4.0開発中
+hotfix/2.3.1: バグ修正
+feature/new-api: 新機能開発
+```
+
+### エンタープライズソフトウェア
+
+**推奨: Git Flow**
+
+```
+理由:
+✅ 厳格なリリースプロセス
+✅ 長期サポートバージョン
+✅ コンプライアンス要件
+✅ 複数環境での検証
+
+実装例:
+main: Production（四半期リリース）
+develop: 次期バージョン開発
+release/2024Q1: リリース準備
+support/2023Q4: 長期サポート
+```
+
+### スタートアップMVP
+
+**推奨: GitHub Flow**
+
+```
+理由:
+✅ スピード最優先
+✅ シンプルで学習コスト低
+✅ 小規模チーム向き
+✅ ピボット時の柔軟性
+
+実装例:
+main: 常に最新（デプロイ可能）
+feature/landing-page: 1日で完成
+feature/user-auth: 2日で完成
+```
+
+### マイクロサービス
+
+**推奨: Trunk-Based / GitHub Flow**
+
+```
+理由:
+✅ サービスごとに独立してデプロイ
+✅ 高頻度デプロイ
+✅ カナリアリリース対応
+✅ サービス間の疎結合
+
+実装例:
+各サービスで独立したリポジトリ
+service-a: main→自動デプロイ
+service-b: main→自動デプロイ
+service-c: main→自動デプロイ
+```
+
+---
+
+## チームサイズ別推奨
+
+### 1-5人（小規模）
+
+**推奨: GitHub Flow**
+
+```
+理由:
+✅ シンプルで全員が理解しやすい
+✅ オーバーヘッドが最小
+✅ コミュニケーションが密
+✅ 柔軟な対応が可能
+
+運用例:
+- PR必須、ただし緊急時はmain直コミットOK
+- レビュワー1人
+- mainマージ=デプロイ
+```
+
+### 6-20人（中規模）
+
+**推奨: GitHub Flow / GitLab Flow**
+
+```
+理由:
+✅ チーム分業に対応
+✅ レビュープロセスが確立
+✅ 適度な構造化
+✅ スケーラビリティ
+
+運用例:
+- PR必須、レビュー2人
+- フロント/バックエンドで並行開発
+- staging環境でQA
+```
+
+### 21-50人（大規模）
+
+**推奨: Git Flow / GitLab Flow**
+
+```
+理由:
+✅ 複数チーム並行開発
+✅ 明確なリリースプロセス
+✅ 品質ゲートの確立
+✅ コンフリクト管理
+
+運用例:
+- チームごとにfeatureブランチ
+- リリースマネージャー配置
+- 厳格なレビュープロセス
+- 自動テストゲート
+```
+
+### 51人以上（超大規模）
+
+**推奨: Git Flow + Monorepo**
+
+```
+理由:
+✅ 大規模並行開発の制御
+✅ コードベース全体の一貫性
+✅ 依存関係の一元管理
+✅ Atomic Changes
+
+運用例:
+- モノレポ（Nx, Turborepo）
+- CODEOWNERS設定
+- 自動テストスイート
+- リリーストレイン
+```
+
+---
+
+## 技術スタック別考慮事項
+
+### Next.js / React
+
+**推奨: GitHub Flow**
+
+```bash
+# Vercel自動デプロイ設定
+git checkout -b feature/new-page
+# ... 開発 ...
+git push origin feature/new-page
+# → Vercelが自動的にプレビューデプロイ
+
+# mainマージ
+git checkout main
+git merge feature/new-page
+git push origin main
+# → 本番自動デプロイ
+```
+
+**CI/CD例:**
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to Vercel
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+```
+
+### iOS / Swift
+
+**推奨: Git Flow**
+
+```bash
+# Feature開発
+git flow feature start user-profile
+# ... 開発 ...
+git flow feature finish user-profile
+
+# Release準備
+git flow release start 1.2.0
+# バージョン番号更新
+agvtool new-marketing-version 1.2.0
+# TestFlight配布
+fastlane beta
+# App Store申請
+fastlane release
+git flow release finish 1.2.0
+```
+
+**Fastlane統合:**
+
+```ruby
+# fastlane/Fastfile
+lane :release do
+  increment_build_number
+  build_app(scheme: "MyApp")
+  upload_to_app_store(
+    skip_metadata: false,
+    skip_screenshots: false,
+    submit_for_review: true
+  )
+end
+```
+
+### Python / FastAPI
+
+**推奨: GitHub Flow / Trunk-Based**
+
+```bash
+# Feature開発
+git checkout -b feature/new-endpoint
+# ... 開発 ...
+pytest tests/
+git push origin feature/new-endpoint
+
+# mainマージ→自動デプロイ
+# → Heroku/AWS/GCPへ自動デプロイ
+```
+
+**GitHub Actions例:**
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy API
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run tests
+        run: |
+          pip install -r requirements.txt
+          pytest
+
+      - name: Deploy to Heroku
+        run: |
+          heroku container:push web --app my-api
+          heroku container:release web --app my-api
+```
+
+### Node.js / Express
+
+**推奨: GitHub Flow**
+
+```bash
+# Feature開発
+git checkout -b feature/user-auth
+npm test
+git push origin feature/user-auth
+
+# PR→mainマージ→デプロイ
+```
+
+### Go / マイクロサービス
+
+**推奨: Trunk-Based**
+
+```bash
+# 直接mainで開発（小さい変更）
+git checkout main
+# ... 開発 ...
+make test
+git commit -am "feat: add health check endpoint"
+git push origin main
+# → Kubernetes自動デプロイ
+```
+
+**Kubernetes統合:**
+
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+      - name: user-service
+        image: myregistry/user-service:latest
+        imagePullPolicy: Always
+```
+
+---
+
+## 移行戦略
+
+### 現状把握
+
+```bash
+# 1. 現在のブランチ構成を確認
+git branch -a
+
+# 2. マージ頻度を分析
+git log --all --graph --oneline --since="1 month ago"
+
+# 3. チームサイズ・リリース頻度を確認
+```
+
+### 移行パターン
+
+#### パターン1: Git Flow → GitHub Flow
+
+**ステップ:**
+
+```bash
+# 1. developブランチの内容をmainにマージ
+git checkout main
+git merge develop
+
+# 2. developブランチを削除
+git branch -d develop
+git push origin --delete develop
+
+# 3. 全てのfeatureをmainから分岐に変更
+# （チームに通知）
+
+# 4. リリースプロセスを簡略化
+# release/hotfixブランチ廃止
+```
+
+**移行期間: 1-2週間**
+
+#### パターン2: GitHub Flow → Trunk-Based
+
+**ステップ:**
+
+```bash
+# 1. Feature Flags導入
+npm install launchdarkly-js-client-sdk
+
+# 2. featureブランチのライフサイクル短縮
+# 目標: 2日以内
+
+# 3. 自動テストの強化
+# カバレッジ80%以上
+
+# 4. CI/CDパイプライン高速化
+# 5分以内にデプロイ完了
+
+# 5. 直接mainコミットを許可（段階的）
+```
+
+**移行期間: 2-3ヶ月**
+
+#### パターン3: 個別リポジトリ → モノレポ
+
+**ステップ:**
+
+```bash
+# 1. モノレポツール選定（Nx, Turborepo）
+npx create-nx-workspace@latest myorg
+
+# 2. 既存リポジトリを移動
+cd myorg
+git subtree add --prefix=packages/service-a \
+  https://github.com/myorg/service-a.git main
+
+# 3. ビルドシステム統合
+nx build service-a
+nx test service-a
+
+# 4. CI/CD再構築
+# 変更があったパッケージのみビルド
+```
+
+**移行期間: 1-2ヶ月**
+
+### 移行時の注意点
+
+```
+✅ チーム全体への事前説明
+✅ ドキュメント更新
+✅ 段階的な移行（一気に変えない）
+✅ パイロットチームで先行実施
+✅ フィードバックループの確立
+✅ ロールバックプランの準備
+```
+
+---
+
+## 実践ケーススタディ
+
+### ケース1: スタートアップ（3人チーム）
+
+**背景:**
+- WebアプリケーションSaaS
+- 週次デプロイ→日次デプロイへ移行希望
+- エンジニア3人（フルスタック）
+
+**選択: GitHub Flow**
+
+**実装:**
+
+```bash
+# ブランチ命名規則
+feature/short-description
+
+# PR必須ルール
+- 最低1人のApprove
+- CI/CD全パス
+- mainマージ=自動デプロイ
+
+# 緊急時
+main直接コミットOK（事後報告）
+```
+
+**結果:**
+```
+✅ デプロイ頻度: 週1回→日3回
+✅ リードタイム: 3日→6時間
+✅ バグ率: 変化なし
+✅ 開発速度: 20%向上
+```
+
+### ケース2: モバイルアプリ（15人チーム）
+
+**背景:**
+- iOSアプリ
+- 月次リリース
+- フロント10人、バックエンド5人
+
+**選択: Git Flow**
+
+**実装:**
+
+```bash
+# ブランチ構成
+main: v1.2.0（App Store公開版）
+develop: v1.3.0開発中
+feature/: 各機能開発
+release/1.3.0: TestFlight配布・QA
+hotfix/: 緊急バグ修正
+
+# リリースサイクル
+月初: release/作成
+月中: QAテスト
+月末: App Store申請・リリース
+```
+
+**結果:**
+```
+✅ リリース品質: 向上（QA期間確保）
+✅ hotfix対応: 迅速化
+✅ 並行開発: スムーズ
+❌ 学習コスト: 初期に時間かかる
+```
+
+### ケース3: マイクロサービス（50人チーム）
+
+**背景:**
+- 10個のマイクロサービス
+- 各サービス独立してデプロイ
+- Kubernetes上で稼働
+
+**選択: Trunk-Based（サービスごと）+ Monorepo**
+
+**実装:**
+
+```bash
+# Monorepo構成
+/packages
+  /user-service
+  /payment-service
+  /notification-service
+  ...
+
+# 各サービス独立してデプロイ
+nx affected:build
+nx affected:test
+nx affected:deploy
+
+# Feature Flags活用
+if (featureFlags.isEnabled('new-payment-flow')) {
+  // 新フロー
+}
+```
+
+**結果:**
+```
+✅ デプロイ頻度: 日50回（全サービス合計）
+✅ 依存関係管理: 一元化
+✅ コード共有: 容易化
+❌ ビルド時間: 増加（キャッシュで対応）
+```
+
+---
+
+## よくある失敗パターン
+
+### 失敗1: 戦略を選ばずに開始
+
+**症状:**
+```
+❌ 各自が好きなブランチ名を使用
+❌ マージルールが不明確
+❌ コンフリクトが頻発
+❌ リリースプロセスが毎回異なる
+```
+
+**対策:**
+```
+✅ プロジェクト開始時に戦略を決定
+✅ BRANCHING.mdに文書化
+✅ チーム全員で合意
+✅ オンボーディング資料に含める
+```
+
+### 失敗2: 複雑すぎる戦略を採用
+
+**症状:**
+```
+❌ 5人チームでGit Flow採用
+❌ ブランチ管理のオーバーヘッド大
+❌ マージ作業に時間を取られる
+❌ 開発速度が低下
+```
+
+**対策:**
+```
+✅ チームサイズに合った戦略を選択
+✅ シンプルさを優先
+✅ 必要に応じて後で複雑化
+```
+
+### 失敗3: 長期間生存するfeatureブランチ
+
+**症状:**
+```
+❌ 2週間以上生存するブランチ
+❌ mainとの乖離が大きい
+❌ マージ時に大量のコンフリクト
+❌ レビューが困難
+```
+
+**対策:**
+```
+✅ featureブランチは3日以内にマージ
+✅ 大きい機能はPRを分割
+✅ Feature Flagsで段階的マージ
+✅ 毎日mainをrebase
+```
+
+### 失敗4: mainブランチが壊れている
+
+**症状:**
+```
+❌ mainでテストが失敗
+❌ ビルドが通らない
+❌ デプロイできない状態
+```
+
+**対策:**
+```
+✅ ブランチ保護ルール設定
+✅ CI/CD全パス必須
+✅ レビュー承認必須
+✅ 壊れたらすぐrevert
+```
+
+### 失敗5: hotfix手順が不明確
+
+**症状:**
+```
+❌ 緊急バグが発生
+❌ どのブランチから修正すべきか不明
+❌ パニック状態
+```
+
+**対策:**
+```
+✅ hotfixフローを文書化
+✅ 緊急時の連絡先を明確に
+✅ hotfix専用ブランチ（Git Flowの場合）
+✅ ロールバック手順も準備
+```
+
+---
+
+## ハイブリッド戦略
+
+### パターン1: GitHub Flow + 環境ブランチ
+
+```
+main（開発）
+├── feature/xxx
+├── staging（ステージング）
+└── production（本番）
+```
+
+**メリット:**
+- GitHub Flowのシンプルさ
+- 環境ごとの明確な管理
+- 段階的デプロイ
+
+**適用例:**
+```bash
+# 開発
+git checkout main
+git merge feature/xxx
+git push origin main
+# → dev環境に自動デプロイ
+
+# ステージングへ昇格
+git checkout staging
+git merge main
+git push origin staging
+# → staging環境に自動デプロイ
+
+# 本番へ昇格
+git checkout production
+git merge staging
+git push origin production
+# → 本番環境に自動デプロイ
+```
+
+### パターン2: Trunk-Based + Release Branches
+
+```
+main（常に最新）
+├── release/1.2.0（保守用）
+└── release/1.3.0（保守用）
+```
+
+**メリット:**
+- Trunk-Basedの高速性
+- 過去バージョンの保守が可能
+- モバイルアプリに適用可能
+
+**適用例:**
+```bash
+# 通常開発（main）
+git checkout main
+git commit -am "feat: new feature"
+git push origin main
+
+# リリース時
+git checkout -b release/1.2.0
+git push origin release/1.2.0
+# → App Store申請
+
+# 古いバージョンのhotfix
+git checkout release/1.2.0
+git commit -am "fix: critical bug"
+git push origin release/1.2.0
+# → 緊急リリース
+```
+
+### パターン3: Git Flow Light
+
+```
+main（本番）
+develop（開発）
+└── feature/xxx
+```
+
+**メリット:**
+- Git Flowより簡略
+- releaseブランチ不要（developから直接main）
+- hotfixはmainから直接
+
+**適用例:**
+```bash
+# Feature開発
+git checkout develop
+git checkout -b feature/xxx
+git merge develop
+# → developにマージ
+
+# リリース（releaseブランチ不要）
+git checkout main
+git merge develop
+git tag v1.2.0
+git push origin main --tags
+# → 本番デプロイ
+```
+
+---
+
+## 意思決定フローチャート
+
+```
+質問1: デプロイ頻度は？
+├─ 日次・時間単位 → 質問2へ
+└─ 週次・月次 → 質問4へ
+
+質問2: CI/CDは成熟している？
+├─ Yes → Trunk-Based Development
+└─ No → GitHub Flow
+
+質問3: Feature Flags使える？
+├─ Yes → Trunk-Based Development
+└─ No → GitHub Flow
+
+質問4: 複数バージョンサポート必要？
+├─ Yes → Git Flow
+└─ No → 質問5へ
+
+質問5: 複数環境ある？
+├─ Yes → GitLab Flow
+└─ No → GitHub Flow
+
+質問6: チームサイズは？
+├─ 1-10人 → GitHub Flow
+├─ 11-30人 → GitLab Flow
+└─ 31人以上 → Git Flow
+```
+
+### 意思決定マトリクス
+
+| リリース頻度 | チームサイズ | CI/CD成熟度 | 推奨戦略 |
+|------------|------------|-----------|---------|
+| 超高頻度 | 小〜大 | 高 | Trunk-Based |
+| 高頻度 | 小〜中 | 中〜高 | GitHub Flow |
+| 中頻度 | 小〜中 | 中 | GitLab Flow |
+| 定期的 | 中〜大 | 低〜中 | Git Flow |
+
+---
+
+## まとめ
+
+### ブランチ戦略選択の黄金律
+
+```
+1. シンプルさを優先
+   → 複雑さはチームの生産性を下げる
+
+2. チームの成熟度に合わせる
+   → 背伸びしすぎない
+
+3. プロダクトのニーズに合わせる
+   → 継続的デプロイ vs 定期リリース
+
+4. 後で変更可能
+   → 最初は簡単な戦略から始める
+
+5. 文書化必須
+   → チーム全員が理解できるように
+```
+
+### 推奨の第一歩
+
+```
+初めてのプロジェクト:
+→ GitHub Flow から始める
+
+スケールアップ時:
+→ GitLab Flow or Git Flow へ移行検討
+
+超高速デプロイ環境:
+→ Trunk-Based へ移行検討
+```
+
+### 次のステップ
+
+```
+□ チームでブランチ戦略を議論
+□ BRANCHING.mdを作成
+□ CI/CD設定
+□ チーム全員への説明会
+□ 1ヶ月後に振り返り
+```
+
+---
+
+## 参考リソース
+
+### 公式ドキュメント
+
+- [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/)
+- [GitHub Flow](https://guides.github.com/introduction/flow/)
+- [GitLab Flow](https://about.gitlab.com/topics/version-control/what-is-gitlab-flow/)
+- [Trunk Based Development](https://trunkbaseddevelopment.com/)
+
+### ツール
+
+- [git-flow-avh](https://github.com/petervanderdoes/gitflow-avh) - Git Flow CLI
+- [LaunchDarkly](https://launchdarkly.com/) - Feature Flags
+- [Nx](https://nx.dev/) - Monorepo Tool
+- [Turborepo](https://turbo.build/repo) - Monorepo Tool
+
+### 書籍
+
+- "Continuous Delivery" - Jez Humble, David Farley
+- "Accelerate" - Nicole Forsgren, Jez Humble, Gene Kim
+- "The DevOps Handbook" - Gene Kim, et al.
+
+---
+
+**このガイドは生きたドキュメントです。**
+**チームの経験を元に継続的に更新してください。**
+
+**文字数:** 約30,000文字

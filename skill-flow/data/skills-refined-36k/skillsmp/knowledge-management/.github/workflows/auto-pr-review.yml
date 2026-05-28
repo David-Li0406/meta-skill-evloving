@@ -1,0 +1,190 @@
+name: Auto PR Review Response
+
+on:
+  pull_request_review:
+    types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  respond-to-review:
+    # Only run on reviews that request changes or have comments
+    if: |
+      github.event.review.state == 'changes_requested' ||
+      github.event.review.state == 'commented' ||
+      github.event_name == 'pull_request_review_comment'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Get review details
+        id: review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "reviewer=${{ github.event.review.user.login || github.event.comment.user.login }}" >> $GITHUB_OUTPUT
+          echo "review_state=${{ github.event.review.state || 'commented' }}" >> $GITHUB_OUTPUT
+
+          # Get all review comments
+          gh api repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments \
+            --jq '[.[] | {path: .path, line: .line, body: .body, user: .user.login}]' > /tmp/comments.json
+
+          echo "=== Review Comments ==="
+          cat /tmp/comments.json
+
+      - name: Analyze with Claude
+        id: claude
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Skip if no API key
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "ANTHROPIC_API_KEY not set, skipping auto-response"
+            echo "should_respond=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Build prompt with review context
+          REVIEW_BODY="${{ github.event.review.body || github.event.comment.body }}"
+          COMMENTS=$(cat /tmp/comments.json)
+
+          # Get changed files
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+
+          PROMPT=$(cat <<'PROMPT_EOF'
+          You are a code review assistant. Analyze the following PR review feedback and determine the appropriate response.
+
+          ## Review State
+          ${{ steps.review.outputs.review_state }}
+
+          ## Reviewer
+          ${{ steps.review.outputs.reviewer }}
+
+          ## Review Body
+          ${REVIEW_BODY}
+
+          ## Review Comments
+          ${COMMENTS}
+
+          ## Changed Files
+          ${CHANGED_FILES}
+
+          ## Instructions
+
+          1. Analyze each comment/feedback
+          2. Determine if it requires:
+             - Code changes (provide specific file edits)
+             - Just a reply (provide response text)
+             - No action (acknowledge)
+
+          3. Output JSON format:
+          ```json
+          {
+            "summary": "Brief summary of required actions",
+            "actions": [
+              {
+                "type": "edit|reply|acknowledge",
+                "file": "path/to/file (if edit)",
+                "description": "What to do",
+                "content": "New content or reply text"
+              }
+            ],
+            "reply_to_review": "Overall response to the reviewer"
+          }
+          ```
+
+          Be concise and actionable.
+          PROMPT_EOF
+
+          # Call Claude API
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d "{
+              \"model\": \"claude-sonnet-4-20250514\",
+              \"max_tokens\": 4096,
+              \"messages\": [{
+                \"role\": \"user\",
+                \"content\": $(echo "$PROMPT" | jq -Rs .)
+              }]
+            }")
+
+          # Extract response
+          CLAUDE_RESPONSE=$(echo "$RESPONSE" | jq -r '.content[0].text // empty')
+
+          if [ -z "$CLAUDE_RESPONSE" ]; then
+            echo "Failed to get Claude response"
+            echo "$RESPONSE"
+            echo "should_respond=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "$CLAUDE_RESPONSE" > /tmp/claude_response.txt
+          echo "should_respond=true" >> $GITHUB_OUTPUT
+
+          echo "=== Claude Response ==="
+          cat /tmp/claude_response.txt
+
+      - name: Apply fixes and respond
+        if: steps.claude.outputs.should_respond == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ steps.review.outputs.pr_number }}
+
+          # Parse Claude response
+          RESPONSE=$(cat /tmp/claude_response.txt)
+
+          # Extract JSON from response (between ```json and ```)
+          JSON_RESPONSE=$(echo "$RESPONSE" | sed -n '/```json/,/```/p' | sed '1d;$d')
+
+          if [ -z "$JSON_RESPONSE" ]; then
+            echo "No JSON found in response, posting as comment"
+            gh pr comment $PR_NUMBER --body "## Auto-Review Analysis
+
+          $RESPONSE"
+            exit 0
+          fi
+
+          # Get reply to review
+          REPLY=$(echo "$JSON_RESPONSE" | jq -r '.reply_to_review // empty')
+
+          if [ -n "$REPLY" ]; then
+            gh pr comment $PR_NUMBER --body "## Auto-Response to Review
+
+          $REPLY
+
+          ---
+          *Analyzed by Claude*"
+          fi
+
+          # Check if there are edit actions
+          EDIT_COUNT=$(echo "$JSON_RESPONSE" | jq '[.actions[] | select(.type == "edit")] | length')
+
+          if [ "$EDIT_COUNT" -gt 0 ]; then
+            echo "Found $EDIT_COUNT edit actions - manual review recommended"
+            gh pr comment $PR_NUMBER --body "## Suggested Fixes
+
+          Found $EDIT_COUNT potential code changes needed. Please review the analysis above and apply fixes manually, or run \`/pr-review\` locally for assisted fixing."
+          fi
+
+      - name: Notify completion
+        if: always()
+        run: |
+          echo "=== Auto PR Review Complete ==="
+          echo "PR: #${{ github.event.pull_request.number }}"
+          echo "Reviewer: ${{ steps.review.outputs.reviewer }}"
+          echo "State: ${{ steps.review.outputs.review_state }}"

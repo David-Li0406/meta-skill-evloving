@@ -1,0 +1,53 @@
+{
+  "name": "has-code-block",
+  "description": "Check if a string at a specified path contains code blocks (``` delimited)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'data.content')"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if string contains code blocks (```), false if no code blocks, path doesn't exist, or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "String with code block returns true",
+      "input": {"content": "text ```js\\ncode\\n``` more"},
+      "args": {"path": "content"},
+      "output": true
+    },
+    {
+      "description": "String with multiple code blocks returns true",
+      "input": {"content": "```python\\nprint()\\n``` and ```js\\nconsole.log()\\n```"},
+      "args": {"path": "content"},
+      "output": true
+    },
+    {
+      "description": "String without code blocks returns false",
+      "input": {"content": "just plain text with `inline code`"},
+      "args": {"path": "content"},
+      "output": false
+    },
+    {
+      "description": "Empty string returns false",
+      "input": {"content": ""},
+      "args": {"path": "content"},
+      "output": false
+    },
+    {
+      "description": "Non-existent path returns false",
+      "input": {"other": "data"},
+      "args": {"path": "content"},
+      "output": false
+    }
+  ],
+  "tags": ["string", "markdown", "code", "validation", "boolean"]
+}

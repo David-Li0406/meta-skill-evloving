@@ -1,0 +1,58 @@
+{
+  "name": "array-prepend",
+  "description": "Prepend a value to the start of an array at a specified path",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing an array field to prepend to"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the array field (e.g., 'items' or 'data.items')"
+    },
+    "value": {
+      "type": "string",
+      "required": true,
+      "description": "JSON string of value to prepend (will be parsed as JSON if possible, otherwise treated as string)"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with the value prepended to the array at the specified path"
+  },
+  "examples": [
+    {
+      "description": "Prepend string to existing array",
+      "input": {"items": ["b", "c"]},
+      "args": {"array_path": "items", "value": "\"a\""},
+      "output": {"items": ["a", "b", "c"]}
+    },
+    {
+      "description": "Prepend object to array",
+      "input": {"users": [{"id": 2, "name": "bob"}]},
+      "args": {"array_path": "users", "value": "{\"id\":1,\"name\":\"alice\"}"},
+      "output": {"users": [{"id": 1, "name": "alice"}, {"id": 2, "name": "bob"}]}
+    },
+    {
+      "description": "Prepend to nested array path",
+      "input": {"data": {"items": [2, 3]}},
+      "args": {"array_path": "data.items", "value": "1"},
+      "output": {"data": {"items": [1, 2, 3]}}
+    },
+    {
+      "description": "Prepend to empty array",
+      "input": {"items": []},
+      "args": {"array_path": "items", "value": "\"first\""},
+      "output": {"items": ["first"]}
+    },
+    {
+      "description": "Create array if path doesn't exist",
+      "input": {},
+      "args": {"array_path": "items", "value": "\"new\""},
+      "output": {"items": ["new"]}
+    }
+  ],
+  "tags": ["array", "prepend", "add", "unshift"]
+}

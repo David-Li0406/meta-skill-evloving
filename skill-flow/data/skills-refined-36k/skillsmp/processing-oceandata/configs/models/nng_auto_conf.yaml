@@ -1,0 +1,33 @@
+# NNG Model Configuration - Autoregressive Version
+# Neural Network on Graphs for long-term ocean velocity prediction
+
+# Temporal configuration
+input_len: 7        # Number of input frames
+output_len: 1       # Always 1 for autoregressive mode
+in_channels: 2      # uo and vo components (ocean velocity)
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration
+mesh_level: 5       # Level of mesh refinement (higher = finer mesh)
+multimesh: true     # Use multi-resolution mesh hierarchy
+
+# Model architecture parameters
+hidden_dim: 128     # Hidden dimension for all MLPs
+processor_layers: 16  # Number of processor layers (graph message passing)
+aggregation: "sum"    # Aggregation method for edges ("sum" or "mean")
+
+# Optimization flags
+use_cugraphops: true  # Use CuGraphOps acceleration if available (GPU only)
+add_3d_dim: true      # Process 2D data as pseudo-3D (simulates depth dimension)
+
+# Autoregressive specific settings
+rollout_steps: 10   # Number of autoregressive prediction steps
+                    # Can be overridden at inference time
+
+# Training recommendations
+# - Start with small rollout_steps (1-2) and gradually increase
+# - Use teacher forcing ratio scheduling
+# - Monitor per-step prediction errors
+# - Consider using noise injection for robustness

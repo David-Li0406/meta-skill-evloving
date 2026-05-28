@@ -1,0 +1,189 @@
+{
+  "meta": {
+    "rfc_id": "{{RFC_ID}}",
+    "status": "DRAFT",
+    "created_at": "{{CREATED_AT}}",
+    "updated_at": "{{UPDATED_AT}}",
+    "completion": 0
+  },
+  "artifacts": {
+    "digest": {
+      "path": null,
+      "exported_at": null,
+      "stability": null,
+      "sources_sha256": {
+        "rfc_md": null,
+        "findings_json": null,
+        "progress_json": null
+      }
+    },
+    "tasks": {
+      "path": null,
+      "exported_at": null,
+      "stability": null,
+      "sources_sha256": {
+        "rfc_md": null,
+        "findings_json": null,
+        "progress_json": null
+      }
+    }
+  },
+  "observability": {
+    "trace_id": null,
+    "total_duration_sec": 0,
+    "total_wait_sec": 0,
+    "total_active_sec": 0,
+    "phase_metrics": {
+      "assess": { "duration_sec": 0, "wait_sec": 0, "active_sec": 0 },
+      "dispatcher": { "duration_sec": 0, "wait_sec": 0, "active_sec": 0 },
+      "analyze": { "duration_sec": 0, "wait_sec": 0, "active_sec": 0 },
+      "design": { "duration_sec": 0, "wait_sec": 0, "active_sec": 0 },
+      "precheck": { "duration_sec": 0, "wait_sec": 0, "active_sec": 0 },
+      "audit": { "duration_sec": 0, "wait_sec": 0, "active_sec": 0 }
+    },
+    "token_metrics": {
+      "total": { "input": 0, "output": 0, "total": 0 },
+      "by_phase": {
+        "assess": { "input": 0, "output": 0, "total": 0 },
+        "dispatcher": { "input": 0, "output": 0, "total": 0 },
+        "analyze": { "input": 0, "output": 0, "total": 0 },
+        "design": { "input": 0, "output": 0, "total": 0 },
+        "precheck": { "input": 0, "output": 0, "total": 0 },
+        "audit": { "input": 0, "output": 0, "total": 0 }
+      }
+    },
+    "tool_calls": []
+  },
+  "tooling": {
+    "search_tool": "",
+    "fallback_used": "",
+    "scan_scope": "",
+    "metrics": {
+      "total_searches": 0,
+      "total_time_sec": 0,
+      "avg_time_sec": 0
+    }
+  },
+  "audit_log": [],
+  "token_usage": {
+    "current": 0,
+    "max": 200000,
+    "usage_ratio": 0.0,
+    "alert_level": "none",
+    "alert_triggered_at": null,
+    "compression_actions": [],
+    "checkpoint": {
+      "created_at": null,
+      "phase": null,
+      "rfc_sections_completed": []
+    }
+  },
+  "state_machine": {
+    "current_state": "INIT",
+    "previous_state": null,
+    "transitions": [],
+    "rules": {
+      "INIT": ["DISPATCHING"],
+      "DISPATCHING": ["ANALYZING"],
+      "ANALYZING": ["DESIGNING", "INIT"],
+      "DESIGNING": ["PRECHECKING", "ANALYZING"],
+      "PRECHECKING": ["AUDITING", "DESIGNING"],
+      "AUDITING": ["APPROVED", "REJECTED", "DESIGNING"],
+      "APPROVED": [],
+      "REJECTED": ["INIT"]
+    },
+    "checkpoint": {
+      "last_completed_state": null,
+      "interrupted_state": null,
+      "interrupt_reason": null,
+      "interrupted_at": null,
+      "recovery_strategy": null,
+      "recovery_attempts": 0
+    }
+  },
+  "context_validation": {
+    "checksum": null,
+    "validation_status": "pending",
+    "validated_at": null,
+    "required_fields": {
+      "l0_meta": false,      
+      "l1_decisions": false, 
+      "l2_summary": false    
+    },
+    "recovery_log": []
+  },
+  "current": {
+    "phase": "",
+    "action": "",
+    "next": ""
+  },
+  "phases": {
+    "assess": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "summary": {
+        "total_files": null,
+        "keyword_matches": null,
+        "selected_strategy": null,
+        "max_files_to_read": null
+      }
+    },
+    "dispatcher": {
+      "status": "pending",
+      "subagent_id": null,
+      "started_at": null,
+      "completed_at": null,
+      "outputs": [],
+      "gate": {"type": "auto", "passed": false, "confirmed_at": null, "decision": null}
+    },
+    "analyze": {
+      "status": "pending",
+      "subagent_id": null,
+      "resume_from": null,
+      "started_at": null,
+      "completed_at": null,
+      "outputs": ["rfc.md §1-§2", "findings.json"],
+      "gate": {"type": "auto", "passed": false, "confirmed_at": null, "decision": null}
+    },
+    "design": {
+      "status": "pending",
+      "subagent_id": null,
+      "resume_from": null,
+      "started_at": null,
+      "completed_at": null,
+      "outputs": ["rfc.md §3-§5"],
+      "gate": {"type": "auto", "passed": false, "confirmed_at": null, "decision": null}
+    },
+    "precheck": {
+      "status": "pending",
+      "started_at": null,
+      "completed_at": null,
+      "result": {
+        "structure_complete": false,
+        "scenario_coverage": false,
+        "dfx_complete": false,
+        "no_vague_terms": false
+      },
+      "issues": []
+    },
+    "audit": {
+      "status": "pending",
+      "subagent_id": null,
+      "started_at": null,
+      "completed_at": null,
+      "score": null,
+      "decision": "pending",
+      "gate": {"type": "required", "passed": false}
+    }
+  },
+  "errors": [],
+  "reboot_check": {
+    "where_am_i": "",
+    "where_going": "",
+    "goal": "",
+    "learned": "",
+    "done": ""
+  },
+  "auto_fix_log": []
+}

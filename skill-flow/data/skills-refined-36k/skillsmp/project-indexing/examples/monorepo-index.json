@@ -1,0 +1,278 @@
+{
+  "schema_version": "1.0.0",
+  "indexed_at": "2026-01-22T16:00:00Z",
+  "project_root": "/home/ubuntu/qenex",
+  "languages": {
+    "Python": {
+      "file_count": 234,
+      "percentage": 38.2,
+      "primary": true,
+      "manifests": [
+        "requirements.txt",
+        "pyproject.toml",
+        "services/api/requirements.txt",
+        "services/analytics/requirements.txt"
+      ],
+      "entry_points": [
+        "services/api/main.py",
+        "services/analytics/processor.py",
+        "scripts/data_pipeline.py"
+      ]
+    },
+    "Rust": {
+      "file_count": 187,
+      "percentage": 30.5,
+      "primary": false,
+      "manifests": [
+        "Cargo.toml",
+        "services/trading-engine/Cargo.toml",
+        "libs/shared/Cargo.toml"
+      ],
+      "entry_points": [
+        "services/trading-engine/src/main.rs",
+        "services/risk-manager/src/main.rs",
+        "libs/shared/src/lib.rs"
+      ]
+    },
+    "Go": {
+      "file_count": 145,
+      "percentage": 23.7,
+      "primary": false,
+      "manifests": [
+        "go.work",
+        "services/gateway/go.mod",
+        "services/auth/go.mod",
+        "tools/cli/go.mod"
+      ],
+      "entry_points": [
+        "services/gateway/cmd/server/main.go",
+        "services/auth/cmd/server/main.go",
+        "tools/cli/main.go"
+      ]
+    },
+    "Julia": {
+      "file_count": 28,
+      "percentage": 4.6,
+      "primary": false,
+      "manifests": [
+        "services/quant/Project.toml"
+      ],
+      "entry_points": [
+        "services/quant/src/QuantAnalysis.jl"
+      ]
+    },
+    "JavaScript": {
+      "file_count": 18,
+      "percentage": 2.9,
+      "primary": false,
+      "manifests": [
+        "services/dashboard/package.json"
+      ],
+      "entry_points": [
+        "services/dashboard/src/index.js"
+      ]
+    }
+  },
+  "dependencies": {
+    "Python": {
+      "production": [
+        "fastapi",
+        "uvicorn",
+        "sqlalchemy",
+        "redis",
+        "celery",
+        "pandas",
+        "numpy",
+        "scikit-learn"
+      ],
+      "development": [
+        "pytest",
+        "pytest-asyncio",
+        "black",
+        "ruff"
+      ],
+      "total": 12
+    },
+    "Rust": {
+      "dependencies": [
+        "tokio",
+        "serde",
+        "serde_json",
+        "anyhow",
+        "thiserror",
+        "tracing",
+        "reqwest",
+        "sqlx",
+        "redis",
+        "dashmap"
+      ],
+      "dev_dependencies": [
+        "criterion",
+        "proptest"
+      ],
+      "total": 12
+    },
+    "Go": {
+      "production": [
+        "github.com/gin-gonic/gin",
+        "github.com/golang-jwt/jwt",
+        "gorm.io/gorm",
+        "github.com/redis/go-redis",
+        "github.com/spf13/cobra"
+      ],
+      "total": 5
+    },
+    "Julia": {
+      "production": [
+        "DataFrames",
+        "Statistics",
+        "Plots"
+      ],
+      "total": 3
+    },
+    "JavaScript": {
+      "dependencies": [
+        "react",
+        "react-router-dom",
+        "axios",
+        "chart.js"
+      ],
+      "devDependencies": [
+        "vite",
+        "eslint"
+      ],
+      "total": 6
+    },
+    "_total": 38
+  },
+  "key_files": {
+    "entry_points": [
+      "services/api/main.py",
+      "services/trading-engine/src/main.rs",
+      "services/gateway/cmd/server/main.go",
+      "services/quant/src/QuantAnalysis.jl",
+      "services/dashboard/src/index.js"
+    ],
+    "configs": [
+      ".env.example",
+      "config/production.yaml",
+      "config/development.yaml",
+      "docker-compose.yml",
+      "docker-compose.production.yml",
+      "Caddyfile",
+      "prometheus.yml"
+    ],
+    "documentation": [
+      "README.md",
+      "docs/architecture.md",
+      "docs/services/api.md",
+      "docs/services/trading-engine.md",
+      "docs/deployment.md",
+      "CLAUDE.md",
+      "services/api/README.md",
+      "services/trading-engine/README.md"
+    ],
+    "tests": [
+      "services/api/tests/",
+      "services/trading-engine/tests/",
+      "services/gateway/internal/handlers/handler_test.go"
+    ],
+    "build": [
+      "Dockerfile.api",
+      "Dockerfile.trading-engine",
+      "Dockerfile.gateway",
+      ".github/workflows/ci.yml",
+      ".github/workflows/deploy.yml",
+      "Makefile",
+      "scripts/deploy.sh"
+    ]
+  },
+  "structure": {
+    "architecture": "monorepo",
+    "root_dirs": [
+      "services",
+      "libs",
+      "tools",
+      "scripts",
+      "docs",
+      "config",
+      "tests",
+      "infrastructure"
+    ],
+    "depth": 8,
+    "total_files": 612,
+    "total_size_mb": 45.3,
+    "ignored_dirs": [
+      "node_modules",
+      "target",
+      "venv",
+      ".venv",
+      "__pycache__",
+      "dist",
+      "build",
+      ".next",
+      "zig-cache",
+      "deps",
+      "_build"
+    ]
+  },
+  "git": {
+    "branch": "master",
+    "has_changes": true,
+    "last_commit": "a34a001",
+    "remote": "git@github.com:qenex/platform.git",
+    "tags": [
+      "v3.0.0",
+      "v2.9.1",
+      "v2.9.0"
+    ]
+  },
+  "metadata": {
+    "name": "qenex-trading-platform",
+    "description": "High-frequency trading platform with 888 autonomous agents across multiple services",
+    "version": "3.0.0",
+    "license": "MIT",
+    "authors": [
+      "QENEX Infrastructure Team <ceo@qenex.ai>"
+    ],
+    "homepage": "https://qenex.ai",
+    "services": [
+      {
+        "name": "API Service",
+        "path": "services/api",
+        "language": "Python",
+        "port": 9000
+      },
+      {
+        "name": "Trading Engine",
+        "path": "services/trading-engine",
+        "language": "Rust",
+        "port": 8080
+      },
+      {
+        "name": "API Gateway",
+        "path": "services/gateway",
+        "language": "Go",
+        "port": 8000
+      },
+      {
+        "name": "Auth Service",
+        "path": "services/auth",
+        "language": "Go",
+        "port": 8081
+      },
+      {
+        "name": "Quant Analysis",
+        "path": "services/quant",
+        "language": "Julia",
+        "port": 8199
+      },
+      {
+        "name": "Dashboard",
+        "path": "services/dashboard",
+        "language": "JavaScript",
+        "port": 3000
+      }
+    ]
+  }
+}

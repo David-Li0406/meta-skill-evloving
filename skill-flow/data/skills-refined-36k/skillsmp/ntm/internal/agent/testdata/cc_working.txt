@@ -1,0 +1,36 @@
+Opus 4.5 · Claude Max · Personal
+
+I'll help you implement this feature. Let me create the file structure first.
+
+Writing to internal/handler/user.go
+
+```go
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+)
+
+type UserHandler struct {
+	db Database
+}
+
+func NewUserHandler(db Database) *UserHandler {
+	return &UserHandler{db: db}
+}
+
+func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
+	userID := r.PathValue("id")
+	user, err := h.db.GetUser(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(user)
+}
+```
+
+Now let me add the tests for this handler...
+
+Writing to internal/handler/user_test.go

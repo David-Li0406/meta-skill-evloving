@@ -1,0 +1,763 @@
+Tab {
+    width: 1fr;
+}
+Tab.-active {
+    color: $success;
+}
+.highlighted {
+  border-top:thick $warning;
+  border-title-align: center;
+}
+KanbanBoard{
+  width: 1fr;
+  border: $success;
+
+}
+KanbanTuiFooter {
+  height: 1;
+  dock: bottom;
+  color: $footer-foreground;
+  background:$primary-muted;
+
+  Horizontal {
+    width:90%;
+  }
+  & > FooterKey {
+    color: $footer-foreground;
+    background:$primary-muted;
+  }
+  Label {
+    width:1fr;
+    color: $footer-foreground;
+    background:$primary-muted;
+    content-align: left middle;
+    padding-left: 1;
+  }
+  Select {
+    color:$primary-muted;
+    width: 1fr;
+    height: 1;
+    max-height: 1;
+    content-align:center middle;
+    align:center middle;
+    border:none;
+    SelectOverlay {
+      background:$primary-muted;
+      height: 3;
+      content-align:center middle;
+    }
+  }
+}
+
+
+Column{
+  height:1fr;
+  width:1fr;
+  border-top:thick transparent;
+    }
+Column > Label {
+        width: 1fr;
+        height:auto;
+        text-align:center;
+}
+Column VerticalScroll {
+        hatch:left $panel;
+        width: 1fr;
+        height: 1fr;
+        margin:0 2 0 0;
+        scrollbar-gutter: stable;
+}
+TaskCard {
+  width: 1fr;
+  height: auto;
+  min-height: 4;
+  margin: 0 0 1 0;
+  border: tall transparent;
+  transition: height 200ms linear;
+  &.blinking {
+    border: tall $warning;
+  }
+}
+TaskCard:focus {
+        border: tall $success;
+        border-title-color:$success;
+        border-title-background:$background;
+        border-title-align:center;
+        border-subtitle-color:$error;
+        border-subtitle-background:$background;
+        border-subtitle-align:center;
+}
+
+
+TaskCard .label-title {
+        width:1fr;
+        height: auto;
+        color:auto;
+        text-align:center;
+        &:hover {
+            tint: 10%;
+        }
+}
+TaskCard .label-metadata {
+        width: 1fr;
+        height: auto;
+        color: auto;
+        text-align: left;
+        padding: 0 1;
+}
+TaskCard .label-infos {
+        width:1fr;
+        color:auto;
+}
+TaskCard .rules-taskinfo-separator {
+        color:auto;
+        margin:0;
+}
+TaskCard Markdown {
+        width: 1fr;
+        height: auto;
+        color:auto;
+        margin:0;
+}
+
+.task-field {
+  border:$success;
+  width:1fr;
+  height:auto;
+
+}
+.description-widgets {
+  border:none;
+  height: 10;
+  width: 1fr;
+  color: auto;
+  overflow-y: auto;
+}
+.date-container{
+  border:$success;
+  width:1fr;
+  height:1fr;
+  align:center middle;
+  Label {
+    width:1fr;
+    height:1fr;
+    text-align:center;
+  }
+}
+CustomDatePickerDialog {
+  border:$success;
+  margin:-30 55 0 0;
+}
+
+ModalTaskEditScreen {
+  align:center middle;
+
+  #vertical_modal {
+    width:70%;
+    border:$success;
+    height:75%;
+    align:center middle;
+    border-title-align:center;
+    content-align:center middle;
+
+    TaskAdditionalInfos {
+      height: auto;
+      Switch{
+          width:1fr;
+      }
+      TaskDueDateSelector{
+        Label{
+            padding: 1 0 0 0;
+        }
+      }
+      CustomDateSelect{
+          height:3;
+          width:1fr;
+      }
+      DateRow {
+        height:3;
+        min-height:3;
+        width:1fr;
+      }
+    }
+
+    TaskDependencyManager {
+      height: auto;
+
+      #add_dependency_section {
+        height: auto;
+        width: 1fr;
+
+        Label {
+          width: auto;
+          padding: 1 1 0 0;
+        }
+
+        DependencySelector {
+          height: auto;
+          width: 1fr;
+        }
+      }
+
+      #dependencies_table {
+        height: auto;
+        max-height: 10;
+        width: 1fr;
+      }
+    }
+
+
+    ButtonRow {
+      height: 3;
+      width: 1fr;
+      Button {
+        width: 1fr;
+        height: 3;
+        min-height: 3;
+      }
+    }
+}
+}
+
+ModalConfirmScreen {
+  align:center middle;
+  Vertical{
+    width:60%;
+    border:$success;
+    height: 7;
+    align:center middle;
+    content-align:center middle;
+
+    Label{
+      width:1fr;
+      height: 1fr;
+      text-align:center;
+    }
+    Horizontal{
+      height: auto;
+      Button {
+        width: 1fr;
+        height: 3;
+      }
+    }
+  }
+}
+
+ModalNewBoardScreen {
+    align:center middle;
+    Vertical{
+        width:60%;
+        border:$success;
+        height:auto;
+        align:center middle;
+        content-align:center middle;
+
+        Horizontal{
+            height:auto;
+        }
+        Label{
+            width:1fr;
+            height:auto;
+            background: $background;
+            align:center middle;
+            text-align:center;
+            padding: 1 0;
+        }
+
+        #input_board_icon{
+            width:3fr;
+            height: auto;
+            border: tall $success;
+            border-title-align:center;
+            text-align:center;
+        }
+        #input_board_name{
+            width:5fr;
+            height: auto;
+            border: tall $success;
+            border-title-align:center;
+            text-align:center;
+        }
+        #static_preview_icon{
+            width:2fr;
+            height: auto;
+            color: $text-disabled;
+            border: tall $success;
+            border-title-align:center;
+            text-align:center;
+            padding: 0 0 0 0;
+        }
+        Button {
+            width: 1fr;
+            height:auto;
+        }
+        ListView {
+            height: auto;
+        }
+    }
+}
+
+ModalAuthScreen {
+  align:center middle;
+  Vertical{
+      width:70%;
+      border:$success;
+      height:auto;
+      align:center middle;
+  }
+}
+AuthLabel{
+  margin: 0 0 1 0;
+  text-align:center;
+  width:1fr;
+}
+
+.auth-widgets{
+  height:auto;
+  margin: 0 0 1 0;
+  &:focus-within {
+    border-left: thick $primary-muted;
+  }
+  Input{
+    border: none;
+    width:1fr;
+    height: 1;
+    min-height: 1;
+    margin: 0 1 0 0;
+    &:focus {
+      border: none;
+    }
+  }
+}
+IconButton{
+  height: 1;
+  border-top: none;
+  border-bottom: none;
+  background: $error-muted;
+  width:6;
+  min-width:6;
+  margin: 0 1 0 0;
+  &:focus {
+      text-style: none;
+      background: $error;
+  }
+}
+ModalBoardOverviewScreen {
+    align:center middle;
+    Vertical{
+        width:70%;
+        border:$success;
+        height:60%;
+        align:center middle;
+        content-align:center middle;
+        #label_header{
+            width:1fr;
+            height: auto;
+            text-align:center;
+            padding:0 0 1 0;
+        }
+        Button {
+            width: 1fr;
+            height:auto;
+        }
+    }
+}
+BoardListItem{
+    height:3;
+    content-align:center middle;
+    Label{
+        width: 1fr;
+        padding:1 0;
+        text-align:left;
+    }
+    Rule{
+        height:auto;
+        color:$surface;
+    }
+}
+#horizontal_custom_columns Switch{
+    width:1fr;
+}
+#label_new_column_switch {
+    background: $boost;
+}
+CustomColumnList {
+    max-height:12;
+    height:auto;
+}
+NewColumnItem Input {
+    width:3fr;
+}
+NewColumnItem Button {
+    width:1fr;
+}
+
+ModalCategoryManageScreen{
+  align:center middle;
+  Vertical {
+    width:40%;
+    height:60%;
+    border:$success;
+    align:center middle;
+    content-align:center middle;
+    Label{
+      height:auto;
+      width:1fr;
+      text-align:center;
+    }
+    Button {
+      width:1fr;
+      text-align:center;
+      height:auto;
+    }
+  }
+}
+CategoryListItem{
+    height:1;
+    content-align:center middle;
+    Label{
+        width: 1fr;
+        color: auto;
+        text-align:left;
+    }
+}
+ModalNewCategoryScreen {
+  align:center middle;
+  Vertical{
+    width:60%;
+    border:$success;
+    height:auto;
+    align:center middle;
+    content-align:center middle;
+
+    Horizontal{
+        height:auto;
+    }
+    .input-container {
+      height: auto;
+      border-title-align: center;
+      border: $success;
+      &.invalid {
+        border: $error;
+      }
+      Input {
+        border: none;
+        height: 1;
+      }
+    }
+    Label{
+        width:1fr;
+        height:auto;
+        background: $background;
+        align:center middle;
+        text-align:center;
+        padding: 1 0;
+    }
+    Button {
+        width: 1fr;
+        height:auto;
+    }
+  }
+}
+
+FilterOverlay {
+    width: 40%;
+    transition: offset 500ms in_out_cubic;
+    layer: above;
+    dock:left;
+    &.-hidden{
+        offset-x: -100%;
+    }
+    &:focus-within {
+    offset: 0 0 !important;
+    }
+    DatePickerDialog {
+        border:$success;
+        margin-left:-5;
+    }
+    Placeholder {
+        height:1fr;
+    }
+    # WORK
+    CategoryFilter{
+        border:$success;
+
+        SelectionList{
+            height:1fr;
+            width:1fr;
+            align:center middle;
+        }
+    }
+    # WORK
+    Label{
+        text-align:center;
+        width: 1fr;
+    }
+    DateFilter {
+        border:$success;
+        height:auto;
+
+        Horizontal{
+            height:3;
+            Label{
+                text-align:center;
+                padding: 1 0 0 0;
+                width: 1fr;
+            }
+            DateSelect {
+                height:1fr;
+                width:3fr;
+            }
+        }
+    }
+    Button {
+        height:1fr;
+        color:$success;
+    }
+}
+
+#tabbed_content_boards {
+    border:$success;
+}
+
+SettingsView{
+  content-align:center middle;
+  height:1fr;
+  #horizontal_expand_movement{
+    height: auto;
+  }
+  #horizontal_color_column_selector{
+    height:2fr;
+  }
+}
+DataBasePathInput{
+    height: auto;
+    width:1fr;
+    Label{
+        padding:1 0 0 0 ;
+    }
+    Input{
+       width:1fr;
+    }
+
+}
+TaskAlwaysExpandedSwitch{
+  height:auto;
+  width:1fr;
+  Label{
+    width:1fr;
+    padding: 1 0 0 1;
+  }
+  Switch {
+      width:1fr;
+  }
+}
+TaskDefaultColorSelector{
+  height:auto;
+
+  Label{
+      width: 1fr;
+      padding:1 0 0 1;
+  }
+  Input{
+      color: auto;
+      width: 1fr;
+      height: 3;
+      border-title-align: right;
+  }
+}
+ColumnSelector{
+  background: $background;
+  height: auto;
+  max-height: 16;
+  width:1fr;
+  margin:0;
+  &:focus {
+      background-tint: $background;
+      & > ListItem.-highlight {
+          color: $block-cursor-foreground;
+          background: $primary-muted;
+          text-style: $block-cursor-text-style;
+      }
+    }
+}
+ModalUpdateColumnScreen {
+    align: center middle;
+    Vertical{
+        width: 30%;
+        height: auto;
+    }
+    Horizontal{
+        height:auto;
+    }
+    Button{
+        width:1fr;
+        height:auto;
+    }
+}
+OverViewPlot{
+    height:1fr;
+    align:center middle;
+
+    &>Horizontal {
+        height:auto;
+    }
+}
+OverViewPlot CategoryPlotFilter {
+    height:1fr;
+    width:1fr;
+    Switch {
+        width:1fr;
+    }
+}
+OverViewPlot TaskPlot {
+    border:$success;
+    height:1fr;
+    width:1fr;
+    PlotextPlot{
+        # width:200;
+    }
+}
+OverViewLog {
+    &>Horizontal {
+        height: auto;
+    }
+    LogTable {
+        border: $success;
+        height: 1fr;
+    }
+}
+
+# General Styles
+Switch > .switch--slider {
+        color: $error;
+    }
+
+Switch.-on > .switch--slider {
+        color: $success;
+    }
+
+
+* {
+    scrollbar-color: $warning;
+    scrollbar-size-vertical: 1;
+    scrollbar-color-active: $success;
+    scrollbar-color-hover: $success;
+    scrollbar-gutter: stable;
+}
+
+Rule{
+    margin:0;
+    align:center middle;
+    color:$success-lighten-3;
+}
+
+DatePicker DayLabel:focus {
+    text-style: bold reverse;
+    background:$success;
+    color:auto;
+}
+DatePicker MonthControl {
+  border: none;
+}
+
+ColumnListItem{
+  height:3;
+  content-align:center middle;
+  border:none;
+
+  VerticalGroup{
+    width:5;
+    margin-left:0;
+
+  }
+  RepositionButton{
+    margin:0 0 0 0;
+    background:transparent;
+    min-width:4;
+    width: 4;
+    border:none;
+    &:focus {
+      text-style: none;
+      background:transparent;
+    }
+    &.invisible {
+      visibility: hidden;
+    }
+  }
+
+  Label {
+    width: 2fr;
+    padding:1 0 0 1;
+    text-align:left;
+  }
+  IconButton{
+    margin:1 1 0 0;
+    &.shown {
+      background:$success-muted;
+    }
+  }
+}
+AddRule{
+  margin:0;
+  align:center middle;
+  color:$success-lighten-3;
+  Button {
+    width:auto;
+    min-width:5;
+    border:none;
+    height:1;
+    border-right: outer $success;
+    border-left: outer $success;
+  }
+}
+AddRule Button{
+}
+
+# Classes
+.setting-horizontal{
+  height: auto;
+}
+.setting-block {
+  height:auto;
+  border:$success;
+
+  Label {
+    width:1fr;
+    padding: 1 0 0 1;
+  }
+
+  &:focus-within {
+    border:$primary;
+  }
+
+}
+.overview-filter {
+    border:$success;
+    height: auto;
+
+    & > Horizontal {
+        height: auto;
+    }
+    Button {
+        min-width: 1;
+        width: 1fr;
+    }
+    Label{
+        width:1fr;
+        text-align:center;
+    }
+
+
+    &:focus-within {
+        border:$warning;
+    }
+}
+
+.hidden {
+    display:none;
+}
+
+#bla {
+    transition: background 500ms in_out_cubic, color 500ms in_out_cubic;
+}

@@ -1,0 +1,18 @@
+// {{MODULE_NAME}} database models
+// This file is collated into the main schema by libs/postgres-prisma
+
+model {{ModelName}} {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([createdAt])
+  @@map("{{table_name}}")
+}
+
+// Naming conventions:
+// - Model names: PascalCase (e.g., UserProfile, CaseDocument)
+// - Table names: singular snake_case via @@map (e.g., "user_profile")
+// - Field names: camelCase in TypeScript, snake_case in DB via @map
+// - Add @@index for frequently queried fields

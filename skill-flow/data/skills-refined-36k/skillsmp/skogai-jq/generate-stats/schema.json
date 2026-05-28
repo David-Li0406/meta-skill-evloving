@@ -1,0 +1,70 @@
+{
+  "name": "generate-stats",
+  "description": "Generate statistics for numeric array (min, max, avg, sum, count)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "JSON object containing an array at the specified path"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'items' or 'data.scores')"
+    },
+    "field": {
+      "type": "string",
+      "required": false,
+      "description": "Optional field to extract from array of objects before calculating stats"
+    }
+  },
+  "output": {
+    "type": ["object", "null"],
+    "description": "Object with stats {min, max, avg, sum, count}, or null if path doesn't exist or value is not an array. Returns null stats with count 0 for empty arrays or arrays with no numeric values."
+  },
+  "examples": [
+    {
+      "description": "Basic stats for number array",
+      "input": {"scores": [10, 20, 30, 40, 50]},
+      "args": {"array_path": "scores"},
+      "output": {"min": 10, "max": 50, "avg": 30, "sum": 150, "count": 5}
+    },
+    {
+      "description": "Extract field from objects",
+      "input": {"orders": [{"total": 100}, {"total": 200}, {"total": 150}]},
+      "args": {"array_path": "orders", "field": "total"},
+      "output": {"min": 100, "max": 200, "avg": 150, "sum": 450, "count": 3}
+    },
+    {
+      "description": "Empty array returns null stats",
+      "input": {"items": []},
+      "args": {"array_path": "items"},
+      "output": {"min": null, "max": null, "avg": null, "sum": null, "count": 0}
+    },
+    {
+      "description": "Single element",
+      "input": {"values": [42]},
+      "args": {"array_path": "values"},
+      "output": {"min": 42, "max": 42, "avg": 42, "sum": 42, "count": 1}
+    },
+    {
+      "description": "Negative numbers",
+      "input": {"temps": [-10, -5, 0, 5, 10]},
+      "args": {"array_path": "temps"},
+      "output": {"min": -10, "max": 10, "avg": 0, "sum": 0, "count": 5}
+    },
+    {
+      "description": "Decimal numbers",
+      "input": {"prices": [1.5, 2.75, 3.25]},
+      "args": {"array_path": "prices"},
+      "output": {"min": 1.5, "max": 3.25, "avg": 2.5, "sum": 7.5, "count": 3}
+    },
+    {
+      "description": "Array with nulls (skips nulls)",
+      "input": {"data": [10, null, 20, null, 30]},
+      "args": {"array_path": "data"},
+      "output": {"min": 10, "max": 30, "avg": 20, "sum": 60, "count": 3}
+    }
+  ],
+  "tags": ["array", "stats", "statistics", "aggregate", "min", "max", "avg", "sum", "count"]
+}

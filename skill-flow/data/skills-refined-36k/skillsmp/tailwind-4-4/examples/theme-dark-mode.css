@@ -1,0 +1,33 @@
+/* Dark mode with semantic tokens */
+
+/* 1. Define CSS variables in :root and .dark */
+:root {
+  --background: oklch(0.99 0.005 260);
+  --foreground: oklch(0.15 0.02 260);
+  --primary: oklch(0.55 0.2 250);
+  --primary-foreground: oklch(0.98 0.01 250);
+  --muted: oklch(0.95 0.01 260);
+  --border: oklch(0.9 0.02 260);
+}
+
+.dark {
+  --background: oklch(0.12 0.01 260);
+  --foreground: oklch(0.95 0.01 260);
+  --primary: oklch(0.65 0.2 250);
+  --primary-foreground: oklch(0.1 0.02 250);
+  --muted: oklch(0.2 0.01 260);
+  --border: oklch(0.25 0.02 260);
+}
+
+/* 2. Map to Tailwind with @theme inline */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+}
+
+/* 3. Use semantic classes - no dark: prefix needed */
+/* bg-background, text-foreground, bg-primary, border-border */

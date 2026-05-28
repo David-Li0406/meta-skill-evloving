@@ -1,0 +1,68 @@
+name: "agent-browser"
+version: "1.1.0"
+model: "haiku"
+color: "cyan"
+description: |
+  Automates browser interactions for web testing, form filling, screenshots,
+  and data extraction. Use when the user needs to navigate websites, interact
+  with web pages, fill forms, take screenshots, test web applications, or
+  extract information from web pages.
+
+  For Web3 dApps: Integrates with Anchor for wallet mocking, contract state
+  injection, and transaction flow testing without real chain interaction.
+
+triggers:
+  - "visual validation"
+  - "check touch targets"
+  - "test focus rings"
+  - "take screenshot"
+  - "verify accessibility"
+  - "web3 screenshot"
+  - "mock wallet"
+  - "test transaction flow"
+  - "PR screenshot"
+
+examples:
+  - input: "check if button is 44px"
+    output: "Opens browser, measures element, reports size"
+  - input: "test focus visibility"
+    output: "Tabs through elements, captures focus states"
+  - input: "screenshot the rewards card with mocked wallet"
+    output: "Opens browser with web3 mock, captures component screenshot"
+  - input: "test the claim flow UI states"
+    output: "Uses Anchor fork to simulate pending/success states, captures each"
+
+inputs:
+  - name: "url"
+    type: "string"
+    required: true
+    description: "URL to validate"
+  - name: "web3-mock"
+    type: "flag"
+    required: false
+    description: "Enable Web3 mock mode for wallet-dependent components"
+  - name: "address"
+    type: "string"
+    required: false
+    description: "Mock wallet address to inject"
+  - name: "mock-reads"
+    type: "string"
+    required: false
+    description: "Path to JSON file with mock contract read results"
+
+outputs:
+  - path: "grimoires/sigil/observations/*.png"
+    type: "file"
+    description: "Validation screenshots"
+  - path: "pr-assets/*.png"
+    type: "file"
+    description: "PR documentation screenshots"
+
+zones:
+  state:
+    read: ["grimoires/sigil/observations/"]
+    read-write: ["grimoires/sigil/observations/", "pr-assets/"]
+
+integrations:
+  - agent-browser
+  - anchor  # Anchor integration for Web3 state management

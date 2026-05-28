@@ -1,0 +1,120 @@
+{
+  "name": "compute-precious-miner-gross-margin",
+  "version": "0.1.0",
+  "displayName": "計算貴金屬礦業毛利率",
+  "description": "以公開金屬價格 + 礦業成本指標（AISC/All-in cost/現金成本）計算「黃金/白銀礦業毛利率代理值」，並判斷當前是否處於歷史高/低檔區間。",
+  "author": "Ricky Wang",
+  "license": "MIT",
+  "category": "commodity-sd",
+  "tags": [
+    "貴金屬",
+    "黃金",
+    "白銀",
+    "礦業",
+    "AISC",
+    "毛利率",
+    "成本分析",
+    "GDX",
+    "SIL"
+  ],
+  "dataLevel": "free-limit",
+  "dependencies": {
+    "python": ">=3.8",
+    "packages": [
+      "pandas>=1.5.0",
+      "numpy>=1.20.0",
+      "requests>=2.28.0",
+      "yfinance>=0.2.0",
+      "beautifulsoup4>=4.11.0",
+      "lxml>=4.9.0"
+    ],
+    "optional": [
+      "selenium>=4.0.0",
+      "webdriver-manager>=3.8.0"
+    ]
+  },
+  "entryPoints": {
+    "skill": "SKILL.md",
+    "mainScript": "scripts/margin_calculator.py"
+  },
+  "workflows": [
+    {
+      "id": "analyze",
+      "name": "完整情境分析",
+      "description": "自訂參數計算礦業毛利率代理值",
+      "file": "workflows/analyze.md"
+    },
+    {
+      "id": "data-research",
+      "name": "數據源研究",
+      "description": "了解如何獲取 AISC / 成本數據",
+      "file": "workflows/data-research.md"
+    },
+    {
+      "id": "signal-generation",
+      "name": "訊號生成",
+      "description": "將毛利率轉為交易/研究訊號",
+      "file": "workflows/signal-generation.md"
+    }
+  ],
+  "references": [
+    "references/data-sources.md",
+    "references/methodology.md",
+    "references/input-schema.md"
+  ],
+  "templates": [
+    "templates/output-json.md",
+    "templates/output-markdown.md"
+  ],
+  "examples": [
+    "examples/sample-output.json"
+  ],
+  "dataSources": [
+    {
+      "name": "LBMA Gold/Silver Price",
+      "type": "primary",
+      "url": "https://www.lbma.org.uk/prices-and-data",
+      "api": "歷史價格 CSV 下載或 API"
+    },
+    {
+      "name": "Yahoo Finance",
+      "type": "primary",
+      "url": "https://finance.yahoo.com",
+      "api": "yfinance 套件取得 GC=F / SI=F 期貨價"
+    },
+    {
+      "name": "公司投資人簡報",
+      "type": "primary",
+      "url": "各公司 IR 網站",
+      "api": "季報 PDF / 新聞稿 / 簡報檔"
+    },
+    {
+      "name": "SEC EDGAR",
+      "type": "secondary",
+      "url": "https://www.sec.gov/edgar",
+      "api": "10-Q / 10-K MD&A 章節"
+    }
+  ],
+  "defaultBaskets": {
+    "gold": {
+      "miners": [
+        "NEM",
+        "GOLD",
+        "AEM",
+        "FNV",
+        "WPM"
+      ],
+      "description": "主要黃金生產商與串流公司"
+    },
+    "silver": {
+      "miners": [
+        "CDE",
+        "HL",
+        "AG",
+        "PAAS",
+        "MAG"
+      ],
+      "description": "主要白銀生產商"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "../symbols-config-schema.json",
+  "projectName": "MyCustomProject",
+  "symbolsDir": "ai",
+  "domains": {
+    "backend": {
+      "file": "symbols-backend.json",
+      "description": "Backend API services",
+      "enabled": true
+    },
+    "frontend": {
+      "file": "symbols-frontend.json",
+      "description": "Frontend web application",
+      "enabled": true
+    }
+  },
+  "extraction": {
+    "python": {
+      "directories": [
+        "src/api",
+        "src/core"
+      ],
+      "extensions": [".py"],
+      "excludes": [
+        "__pycache__",
+        "*.pyc",
+        ".pytest_cache",
+        ".venv",
+        "venv"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    },
+    "typescript": {
+      "directories": [
+        "client/src",
+        "shared/components"
+      ],
+      "extensions": [".ts", ".tsx", ".js", ".jsx"],
+      "excludes": [
+        "node_modules/",
+        "*.test.*",
+        "dist/",
+        "build/"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "Example custom configuration showing flexible path configuration"
+  }
+}

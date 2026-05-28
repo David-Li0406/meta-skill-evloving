@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiro Usage Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0f1117; color: #e5e7eb; font-family: 'Segoe UI', sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; transition: transform 0.2s; }
+        .card:hover { border-color: #60a5fa; transform: translateY(-2px); }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
+        .stat-label { font-size: 0.875rem; color: #94a3b8; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-blue { background-color: #1e40af; color: #dbeafe; }
+        .badge-purple { background-color: #6b21a8; color: #f3e8ff; }
+        .badge-green { background-color: #166534; color: #dcfce7; }
+        .badge-cyan { background-color: #155e75; color: #cffafe; }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Header -->
+    <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Kiro Usage Dashboard</h1>
+            <p class="text-sm text-gray-500 mb-2">AI-powered development assistant analytics</p>
+            <div class="flex flex-wrap gap-2 mt-2">
+                <span class="badge badge-green">Thinking: {{THINKING_ENABLED}}</span>
+                <span class="badge badge-blue">Todo: {{TODO_ENABLED}}</span>
+                <span class="badge badge-purple">Tangent: {{TANGENT_ENABLED}}</span>
+                <span class="badge badge-cyan">Knowledge: {{KNOWLEDGE_ENABLED}}</span>
+            </div>
+        </div>
+        <div class="text-right text-gray-400 text-sm">Updated: {{TIMESTAMP}}</div>
+    </header>
+
+    <!-- Key Metrics Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+        <div class="card p-4"><div class="stat-label">Sessions</div><div class="stat-value">{{TOTAL_SESSIONS}}</div></div>
+        <div class="card p-4"><div class="stat-label">Duration</div><div class="stat-value text-blue-400">{{TOTAL_DURATION}}</div></div>
+        <div class="card p-4"><div class="stat-label">Messages</div><div class="stat-value text-green-400">{{TOTAL_MESSAGES}}</div></div>
+        <div class="card p-4"><div class="stat-label">Human</div><div class="stat-value text-purple-400">{{TOTAL_HUMAN}}</div></div>
+        <div class="card p-4"><div class="stat-label">Bot</div><div class="stat-value text-cyan-400">{{TOTAL_BOT}}</div></div>
+        <div class="card p-4"><div class="stat-label">Tool Calls</div><div class="stat-value text-orange-400">{{TOTAL_TOOL}}</div></div>
+        <div class="card p-4"><div class="stat-label">Est. Tokens</div><div class="stat-value">{{TOTAL_TOKENS}}</div></div>
+        <div class="card p-4"><div class="stat-label">Workspaces</div><div class="stat-value text-pink-400">{{UNIQUE_WORKSPACES}}</div></div>
+    </div>
+
+    <!-- Model Usage Over Time (primary chart) -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">IDE Model Usage Over Time <span class="text-gray-500 font-normal">(number of new sessions)</span></h3>
+        <canvas id="dailyModelsChart" height="80"></canvas>
+    </div>
+
+    <!-- CLI Requests by Model -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">CLI Requests by Model <span class="text-gray-500 font-normal">(per day)</span></h3>
+        <canvas id="cliModelsChart" height="80"></canvas>
+    </div>
+
+    <!-- Estimated Token Usage (equivalent to cost) -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Daily Estimated Tokens</h3>
+        <canvas id="tokenChart" height="80"></canvas>
+    </div>
+
+    <!-- Model Session Counts and Top Workspaces side by side -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Model Session Counts</h3>
+            <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-600">
+                    <tr>
+                        <th class="p-2 text-gray-400">Model</th>
+                        <th class="p-2 text-gray-400 text-right">Sessions</th>
+                        <th class="p-2 text-gray-400 text-right">%</th>
+                    </tr>
+                </thead>
+                <tbody id="modelTable"></tbody>
+            </table>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Top Workspaces</h3>
+            <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-600">
+                    <tr>
+                        <th class="p-2 text-gray-400">Workspace</th>
+                        <th class="p-2 text-gray-400 text-right">Sessions</th>
+                        <th class="p-2 text-gray-400 text-right">Messages</th>
+                    </tr>
+                </thead>
+                <tbody id="workspaceTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Sessions -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Recent Sessions</h3>
+        <table class="w-full text-left">
+            <thead class="border-b border-gray-600">
+                <tr>
+                    <th class="p-3 text-gray-400">Workflow</th>
+                    <th class="p-3 text-gray-400">Date</th>
+                    <th class="p-3 text-gray-400">Duration</th>
+                    <th class="p-3 text-gray-400">Messages</th>
+                    <th class="p-3 text-gray-400">Tokens</th>
+                    <th class="p-3 text-gray-400">Action</th>
+                </tr>
+            </thead>
+            <tbody>{{RECENT_SESSIONS_ROWS}}</tbody>
+        </table>
+    </div>
+
+    <footer class="mt-8 pt-4 border-t border-gray-700 text-center text-gray-500 text-sm">
+        <p>Dashboard generated on {{TIMESTAMP}}</p>
+        <p class="mt-1">Kiro - AI-powered development assistant</p>
+    </footer>
+
+<script>
+    const chartDates = {{CHART_DATES}};
+    const chartTokens = {{CHART_TOKENS}};
+    const modelData = {{MODEL_DATA}};
+    const dailyModelsData = {{DAILY_MODELS_DATA}};
+    const allModels = {{ALL_MODELS}};
+    const workspaceData = {{WORKSPACE_DATA}};
+    const cliDates = {{CLI_DATES}};
+    const cliModelsData = {{CLI_MODELS_DATA}};
+    const cliAllModels = {{CLI_ALL_MODELS}};
+
+    // Token Chart
+    if (chartDates.length > 0) {
+        new Chart(document.getElementById('tokenChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: chartDates,
+                datasets: [{
+                    label: 'Estimated Tokens',
+                    data: chartTokens,
+                    backgroundColor: 'rgba(74, 222, 128, 0.6)',
+                    borderColor: 'rgba(74, 222, 128, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { color: '#94a3b8', callback: v => (v/1000).toFixed(0) + 'K' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // Daily Models Stacked Bar Chart
+    if (chartDates.length > 0 && allModels.length > 0) {
+        const modelColors = [
+            'rgba(96, 165, 250, 0.8)',
+            'rgba(168, 85, 247, 0.8)',
+            'rgba(74, 222, 128, 0.8)',
+            'rgba(251, 146, 60, 0.8)',
+            'rgba(248, 113, 113, 0.8)',
+            'rgba(34, 211, 238, 0.8)',
+            'rgba(236, 72, 153, 0.8)',
+            'rgba(163, 230, 53, 0.8)',
+        ];
+        const datasets = allModels.map((model, idx) => ({
+            label: model,
+            data: dailyModelsData[model] || [],
+            backgroundColor: modelColors[idx % modelColors.length],
+            borderWidth: 1
+        }));
+        new Chart(document.getElementById('dailyModelsChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: chartDates,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12, font: { size: 10 } } } },
+                scales: {
+                    x: { stacked: true, ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { stacked: true, beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // CLI Models Stacked Bar Chart
+    if (cliDates.length > 0 && cliAllModels.length > 0) {
+        const cliModelColors = [
+            'rgba(251, 146, 60, 0.8)',
+            'rgba(96, 165, 250, 0.8)',
+            'rgba(168, 85, 247, 0.8)',
+            'rgba(74, 222, 128, 0.8)',
+            'rgba(248, 113, 113, 0.8)',
+            'rgba(34, 211, 238, 0.8)',
+            'rgba(236, 72, 153, 0.8)',
+            'rgba(163, 230, 53, 0.8)',
+        ];
+        const cliDatasets = cliAllModels.map((model, idx) => ({
+            label: model,
+            data: cliModelsData[model] || [],
+            backgroundColor: cliModelColors[idx % cliModelColors.length],
+            borderWidth: 1
+        }));
+        new Chart(document.getElementById('cliModelsChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: cliDates,
+                datasets: cliDatasets
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12, font: { size: 10 } } } },
+                scales: {
+                    x: { stacked: true, ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { stacked: true, beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // Model Table with percentage
+    const modelTable = document.getElementById('modelTable');
+    const totalModelCount = modelData.reduce((sum, m) => sum + m.count, 0);
+    modelData.forEach(m => {
+        const pct = totalModelCount > 0 ? ((m.count / totalModelCount) * 100).toFixed(1) : 0;
+        modelTable.innerHTML += `
+            <tr class="border-b border-gray-700 hover:bg-gray-800 transition-colors">
+                <td class="p-2 text-gray-300 font-mono text-xs">${m.name}</td>
+                <td class="p-2 text-blue-400 font-bold text-right">${m.count}</td>
+                <td class="p-2 text-gray-400 text-right">${pct}%</td>
+            </tr>
+        `;
+    });
+
+    // Workspace Table
+    const workspaceTable = document.getElementById('workspaceTable');
+    workspaceData.forEach(ws => {
+        workspaceTable.innerHTML += `
+            <tr class="border-b border-gray-700 hover:bg-gray-800 transition-colors">
+                <td class="p-2 text-gray-400 font-mono text-xs" title="${ws.fullHash}">${ws.hash}</td>
+                <td class="p-2 text-blue-400 font-bold text-right">${ws.sessions}</td>
+                <td class="p-2 text-green-400 text-right">${ws.messages}</td>
+            </tr>
+        `;
+    });
+</script>
+</body>
+</html>

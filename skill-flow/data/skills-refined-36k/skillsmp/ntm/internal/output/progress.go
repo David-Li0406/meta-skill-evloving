@@ -1,0 +1,399 @@
+package output
+
+import (
+	"fmt"
+	"io"
+	"os"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
+
+	"github.com/Dicklesworthstone/ntm/internal/tui/theme"
+)
+
+// StepStatus represents the outcome of a step.
+type StepStatus int
+
+const (
+	StepPending StepStatus = iota
+	StepRunning
+	StepSuccess
+	StepWarning
+	StepFailed
+	StepSkipped
+)
+
+// Step represents a single step in a multi-step operation.
+// Use for progress indication during long CLI operations.
+type Step struct {
+	name   string
+	w      io.Writer
+	status StepStatus
+}
+
+// Steps manages a sequence of steps for long operations.
+// Provides step-oriented progress output with consistent styling.
+type Steps struct {
+	w         io.Writer
+	current   *Step
+	completed int
+	total     int
+	useColor  bool
+	indent    string
+}
+
+// NewSteps creates a new step tracker for stdout.
+// Use for long operations like spawn, upgrade, quick.
+func NewSteps() *Steps {
+	return NewStepsWriter(os.Stdout)
+}
+
+// NewStepsWriter creates a step tracker writing to a specific writer.
+func NewStepsWriter(w io.Writer) *Steps {
+	useColor := false
+	if f, ok := w.(*os.File); ok {
+		useColor = term.IsTerminal(int(f.Fd())) && os.Getenv("NO_COLOR") == ""
+	}
+	return &Steps{
+		w:        w,
+		useColor: useColor,
+		indent:   "  ",
+	}
+}
+
+// SetTotal sets the expected total steps (for "1/N" display).
+func (s *Steps) SetTotal(n int) *Steps {
+	s.total = n
+	return s
+}
+
+// SetIndent sets the indentation prefix (default: "  ").
+func (s *Steps) SetIndent(indent string) *Steps {
+	s.indent = indent
+	return s
+}
+
+// Start begins a new step with the given name.
+// Prints "name..." and waits for Done/Fail/Skip.
+func (s *Steps) Start(name string) *Steps {
+	// Auto-complete previous step if still running
+	if s.current != nil && s.current.status == StepRunning {
+		s.Done()
+	}
+
+	s.current = &Step{name: name, w: s.w, status: StepRunning}
+
+	// Build step prefix
+	prefix := s.indent
+	if s.total > 0 {
+		s.completed++
+		prefix += fmt.Sprintf("[%d/%d] ", s.completed, s.total)
+	}
+
+	// Print step start
+	fmt.Fprintf(s.w, "%s%s... ", prefix, name)
+	return s
+}
+
+// Done marks the current step as successful.
+// Prints "✓" (or "[OK]" without color).
+func (s *Steps) Done() *Steps {
+	if s.current == nil {
+		return s
+	}
+	s.current.status = StepSuccess
+	s.printStatus("✓", "OK", s.successStyle())
+	return s
+}
+
+// Fail marks the current step as failed.
+// Prints "✗" (or "[FAIL]" without color).
+func (s *Steps) Fail() *Steps {
+	if s.current == nil {
+		return s
+	}
+	s.current.status = StepFailed
+	s.printStatus("✗", "FAIL", s.errorStyle())
+	return s
+}
+
+// Skip marks the current step as skipped.
+// Prints "⊘" (or "[SKIP]" without color).
+func (s *Steps) Skip() *Steps {
+	if s.current == nil {
+		return s
+	}
+	s.current.status = StepSkipped
+	s.printStatus("⊘", "SKIP", s.dimStyle())
+	return s
+}
+
+// Warn marks the current step as completed with warnings.
+// Prints "⚠" (or "[WARN]" without color).
+func (s *Steps) Warn() *Steps {
+	if s.current == nil {
+		return s
+	}
+	s.current.status = StepWarning
+	s.printStatus("⚠", "WARN", s.warnStyle())
+	return s
+}
+
+func (s *Steps) printStatus(icon, text string, style lipgloss.Style) {
+	if s.useColor {
+		fmt.Fprintln(s.w, style.Render(icon))
+	} else {
+		fmt.Fprintf(s.w, "[%s]\n", text)
+	}
+}
+
+// Status returns the current step's status.
+func (s *Steps) Status() StepStatus {
+	if s.current == nil {
+		return StepPending
+	}
+	return s.current.status
+}
+
+// Style helpers
+func (s *Steps) successStyle() lipgloss.Style {
+	t := theme.Current()
+	return lipgloss.NewStyle().Foreground(t.Success)
+}
+
+func (s *Steps) errorStyle() lipgloss.Style {
+	t := theme.Current()
+	return lipgloss.NewStyle().Foreground(t.Error)
+}
+
+func (s *Steps) warnStyle() lipgloss.Style {
+	t := theme.Current()
+	return lipgloss.NewStyle().Foreground(t.Warning)
+}
+
+func (s *Steps) dimStyle() lipgloss.Style {
+	t := theme.Current()
+	return lipgloss.NewStyle().Foreground(t.Overlay)
+}
+
+// ===========================================================================
+// One-shot progress messages
+// ===========================================================================
+
+// ProgressMsg prints a status message with consistent styling.
+// Use for reporting progress without step tracking.
+type ProgressMsg struct {
+	w        io.Writer
+	useColor bool
+	indent   string
+}
+
+// Progress returns a ProgressMsg for stdout.
+func Progress() *ProgressMsg {
+	return ProgressWriter(os.Stdout)
+}
+
+// ProgressWriter returns a ProgressMsg for a specific writer.
+func ProgressWriter(w io.Writer) *ProgressMsg {
+	useColor := false
+	if f, ok := w.(*os.File); ok {
+		useColor = term.IsTerminal(int(f.Fd())) && os.Getenv("NO_COLOR") == ""
+	}
+	return &ProgressMsg{w: w, useColor: useColor, indent: ""}
+}
+
+// SetIndent sets the indentation prefix.
+func (p *ProgressMsg) SetIndent(indent string) *ProgressMsg {
+	p.indent = indent
+	return p
+}
+
+// Success prints "✓ message".
+func (p *ProgressMsg) Success(msg string) {
+	p.printWithIcon("✓", msg, p.successStyle())
+}
+
+// Successf prints "✓ formatted message".
+func (p *ProgressMsg) Successf(format string, args ...any) {
+	p.Success(fmt.Sprintf(format, args...))
+}
+
+// Warning prints "⚠ message".
+func (p *ProgressMsg) Warning(msg string) {
+	p.printWithIcon("⚠", msg, p.warnStyle())
+}
+
+// Warningf prints "⚠ formatted message".
+func (p *ProgressMsg) Warningf(format string, args ...any) {
+	p.Warning(fmt.Sprintf(format, args...))
+}
+
+// Error prints "✗ message".
+func (p *ProgressMsg) Error(msg string) {
+	p.printWithIcon("✗", msg, p.errorStyle())
+}
+
+// Errorf prints "✗ formatted message".
+func (p *ProgressMsg) Errorf(format string, args ...any) {
+	p.Error(fmt.Sprintf(format, args...))
+}
+
+// Info prints "ℹ message".
+func (p *ProgressMsg) Info(msg string) {
+	p.printWithIcon("ℹ", msg, p.infoStyle())
+}
+
+// Infof prints "ℹ formatted message".
+func (p *ProgressMsg) Infof(format string, args ...any) {
+	p.Info(fmt.Sprintf(format, args...))
+}
+
+// Print prints a plain message (no icon).
+func (p *ProgressMsg) Print(msg string) {
+	fmt.Fprintf(p.w, "%s%s\n", p.indent, msg)
+}
+
+// Printf prints a formatted plain message (no icon).
+func (p *ProgressMsg) Printf(format string, args ...any) {
+	p.Print(fmt.Sprintf(format, args...))
+}
+
+func (p *ProgressMsg) printWithIcon(icon, msg string, style lipgloss.Style) {
+	if p.useColor {
+		fmt.Fprintf(p.w, "%s%s %s\n", p.indent, style.Render(icon), msg)
+	} else {
+		fmt.Fprintf(p.w, "%s%s %s\n", p.indent, icon, msg)
+	}
+}
+
+func (p *ProgressMsg) successStyle() lipgloss.Style {
+	t := theme.Current()
+	return lipgloss.NewStyle().Foreground(t.Success)
+}
+
+func (p *ProgressMsg) errorStyle() lipgloss.Style {
+	t := theme.Current()
+	return lipgloss.NewStyle().Foreground(t.Error)
+}
+
+func (p *ProgressMsg) warnStyle() lipgloss.Style {
+	t := theme.Current()
+	return lipgloss.NewStyle().Foreground(t.Warning)
+}
+
+func (p *ProgressMsg) infoStyle() lipgloss.Style {
+	t := theme.Current()
+	return lipgloss.NewStyle().Foreground(t.Info)
+}
+
+// ===========================================================================
+// Convenience functions (use default Progress())
+// ===========================================================================
+
+// PrintSuccess prints "✓ message" to stdout.
+func PrintSuccess(msg string) {
+	Progress().Success(msg)
+}
+
+// PrintSuccessf prints "✓ formatted message" to stdout.
+func PrintSuccessf(format string, args ...any) {
+	Progress().Successf(format, args...)
+}
+
+// PrintWarning prints "⚠ message" to stdout.
+func PrintWarning(msg string) {
+	Progress().Warning(msg)
+}
+
+// PrintWarningf prints "⚠ formatted message" to stdout.
+func PrintWarningf(format string, args ...any) {
+	Progress().Warningf(format, args...)
+}
+
+// PrintInfo prints "ℹ message" to stdout.
+func PrintInfo(msg string) {
+	Progress().Info(msg)
+}
+
+// PrintInfof prints "ℹ formatted message" to stdout.
+func PrintInfof(format string, args ...any) {
+	Progress().Infof(format, args...)
+}
+
+// ===========================================================================
+// Multi-step operation helpers
+// ===========================================================================
+
+// Operation represents a multi-step CLI operation.
+// Provides consistent progress output for long operations.
+type Operation struct {
+	name     string
+	steps    *Steps
+	errors   []string
+	warnings []string
+}
+
+// NewOperation creates a named operation for tracking multi-step progress.
+func NewOperation(name string) *Operation {
+	return &Operation{
+		name:  name,
+		steps: NewSteps(),
+	}
+}
+
+// Start begins a step within this operation.
+func (o *Operation) Start(stepName string) *Steps {
+	return o.steps.Start(stepName)
+}
+
+// AddError records an error (for summary at end).
+func (o *Operation) AddError(msg string) {
+	o.errors = append(o.errors, msg)
+}
+
+// AddWarning records a warning (for summary at end).
+func (o *Operation) AddWarning(msg string) {
+	o.warnings = append(o.warnings, msg)
+}
+
+// HasErrors returns true if any errors were recorded.
+func (o *Operation) HasErrors() bool {
+	return len(o.errors) > 0
+}
+
+// HasWarnings returns true if any warnings were recorded.
+func (o *Operation) HasWarnings() bool {
+	return len(o.warnings) > 0
+}
+
+// Summary prints a summary of the operation outcome.
+func (o *Operation) Summary() {
+	p := Progress()
+
+	if len(o.errors) > 0 {
+		p.Error(fmt.Sprintf("%s completed with %d error(s)", o.name, len(o.errors)))
+		for _, e := range o.errors {
+			fmt.Printf("  - %s\n", e)
+		}
+	} else if len(o.warnings) > 0 {
+		p.Warning(fmt.Sprintf("%s completed with %d warning(s)", o.name, len(o.warnings)))
+		for _, w := range o.warnings {
+			fmt.Printf("  - %s\n", w)
+		}
+	} else {
+		p.Success(fmt.Sprintf("%s completed successfully", o.name))
+	}
+}
+
+// FormatStepList formats a list of step names for display.
+func FormatStepList(steps []string) string {
+	if len(steps) == 0 {
+		return ""
+	}
+	var lines []string
+	for i, step := range steps {
+		lines = append(lines, fmt.Sprintf("%d. %s", i+1, step))
+	}
+	return strings.Join(lines, "\n")
+}

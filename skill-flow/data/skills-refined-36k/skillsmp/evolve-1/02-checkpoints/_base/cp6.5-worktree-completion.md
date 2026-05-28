@@ -1,0 +1,412 @@
+# Checkpoint 6.5: Worktree 完成 - 合併或清理
+
+> 🏁 **條件性檢查點** - 使用 Worktree 時必須執行
+>
+> 💡 **核心職責**：根據任務結果，正確處理 Worktree（合併/清理/保留）
+
+## 規則
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🏁 Worktree 完成（條件觸發）                                    │
+│                                                                 │
+│  當任務在 Worktree 中執行完畢，必須正確收尾：                    │
+│                                                                 │
+│  觸發條件：                                                     │
+│  • CP0.5 建立了 Worktree                                        │
+│  • 任務達到終止條件（成功/失敗/暫停）                           │
+│                                                                 │
+│  處理方式（依任務結果）：                                        │
+│  • ✅ 成功 → 合併到 main + 清理 Worktree                        │
+│  • ❌ 失敗 → CP5 驗屍 + 記錄教訓 + 刪除 Worktree                │
+│  • ⏸️ 暫停 → 保留 Worktree + 記錄狀態                           │
+│                                                                 │
+│  ✅ 必須：完成後清理資源，不留殘餘                               │
+│  ❌ 禁止：直接刪除有未提交變更的 Worktree（除非明確放棄）        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 觸發條件
+
+| 情況 | 是否觸發 |
+|------|----------|
+| 任務成功完成 | ✅ 觸發（合併流程） |
+| 任務失敗 | ✅ 觸發（清理流程） |
+| 任務暫停 | ✅ 觸發（保留流程） |
+| 未使用 Worktree | ❌ 跳過 |
+
+## 執行流程
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CP6.5 執行流程                               │
+│                                                                 │
+│              任務達到終止條件                                    │
+│                       ↓                                         │
+│               使用了 Worktree?                                  │
+│                       │                                         │
+│         ┌─────────────┴─────────────┐                           │
+│         ↓                           ↓                           │
+│        是                          否                           │
+│         ↓                           ↓                           │
+│   判斷任務結果                   跳過 CP6.5                      │
+│         │                           ↓                           │
+│    ┌────┼────┐                  結束流程                        │
+│    ↓    ↓    ↓                                                  │
+│  成功  失敗  暫停                                               │
+│    ↓    ↓    ↓                                                  │
+│  合併  清理  保留                                               │
+│  流程  流程  流程                                               │
+│    ↓    ↓    ↓                                                  │
+│    └────┴────┘                                                  │
+│         ↓                                                       │
+│    更新北極星                                                   │
+│         ↓                                                       │
+│    結束流程                                                     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 成功：合併流程
+
+### 步驟
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ✅ 任務成功 - 合併流程                                         │
+│                                                                 │
+│  1. 確認所有變更已提交                                          │
+│     git status  # 應該是 clean                                  │
+│                                                                 │
+│  2. 推送分支到遠端                                              │
+│     git push -u origin feature/{task-id}                        │
+│                                                                 │
+│  3. 建立並合併 PR（推薦使用 --rebase）                          │
+│     gh pr create --base main --head feature/{task-id}           │
+│     gh pr merge --rebase --delete-branch                        │
+│                                                                 │
+│  4. 切換回主目錄並同步                                          │
+│     cd /path/to/main/project                                    │
+│     git pull origin main                                        │
+│                                                                 │
+│  5. 清理 Worktree                                               │
+│     git worktree remove .worktrees/{task-id}                    │
+│     # 分支已被 --delete-branch 刪除                             │
+│                                                                 │
+│  6. 更新北極星                                                  │
+│     標記完成標準為 [x]                                          │
+│     更新健康檢查記錄                                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### PR 合併策略選擇
+
+| 策略 | 指令 | 歷史效果 | 適用場景 |
+|------|------|----------|----------|
+| **Rebase（推薦）** | `gh pr merge --rebase` | 線性歷史，無合併點 | 日常功能開發、小修復 |
+| Squash | `gh pr merge --squash` | 壓縮為單一 commit | 多個零散 commit 需整理 |
+| Merge | `gh pr merge --merge` | 保留分支歷史+合併點 | 大型功能需追蹤分支歷史 |
+
+```
+Rebase 效果（線性）：          Merge 效果（有合併點）：
+
+A─B─C─D─E (main)              A─B───────M (main)
+       ↑                           \   /
+    feature                         C─D (feature)
+```
+
+> 💡 **為何推薦 Rebase？**
+> - 產生乾淨的線性歷史
+> - `git log` 更易閱讀
+> - `git bisect` 更有效
+> - 沒有多餘的合併 commit
+
+### 指令序列
+
+```bash
+# 1. 確認變更已提交
+cd .worktrees/{task-id}
+git status
+# 若有未提交變更
+git add . && git commit -m "feat: complete {task-description}"
+
+# 2. 推送到遠端
+git push -u origin feature/{task-id}
+
+# 3. 建立 PR
+gh pr create --base main --head feature/{task-id} \
+  --title "feat: {task-description}" \
+  --body "## Summary
+- {變更摘要}
+
+## Test plan
+- [ ] {測試項目}"
+
+# 4. 合併 PR（選擇一種策略）
+gh pr merge --rebase --delete-branch     # 推薦：線性歷史
+# gh pr merge --squash --delete-branch   # 替代：壓縮 commits
+# gh pr merge --merge --delete-branch    # 替代：保留分支歷史
+
+# 5. 切換回主目錄並同步
+cd /path/to/main/project
+# 或
+cd $(git worktree list | grep -v ".worktrees" | head -1 | awk '{print $1}')
+git pull origin main
+
+# 6. 清理 Worktree
+git worktree remove .worktrees/{task-id}
+# 本地分支可能已被遠端刪除同步，若還在則手動刪除
+git branch -d feature/{task-id} 2>/dev/null || true
+
+# 7. 驗證
+git worktree list  # 應該不再顯示該 worktree
+git branch -a      # 確認分支已清理
+```
+
+### 直接合併（不建 PR）
+
+若專案不需要 PR 流程，可直接在本地合併：
+
+```bash
+# 切換回主目錄
+cd /path/to/main/project
+
+# 直接 merge（會產生合併點）
+git merge feature/{task-id} --no-ff -m "Merge feature/{task-id}: {描述}"
+
+# 或 rebase merge（線性歷史）
+git rebase feature/{task-id}
+
+# 清理
+git worktree remove .worktrees/{task-id}
+git branch -d feature/{task-id}
+```
+
+### 合併衝突處理
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⚠️ 合併衝突                                                    │
+│                                                                 │
+│  在合併 feature/{task-id} 到 main 時發生衝突：                  │
+│                                                                 │
+│  衝突檔案：                                                     │
+│  • src/auth/login.ts                                            │
+│  • src/api/routes.ts                                            │
+│                                                                 │
+│  處理方式：                                                     │
+│  A) 手動解決衝突（推薦）                                        │
+│  B) 使用 ours 策略（保留 main）                                 │
+│  C) 使用 theirs 策略（保留 feature）                            │
+│  D) 放棄合併，保留 Worktree                                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 失敗：清理流程
+
+### 步驟
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ❌ 任務失敗 - 清理流程                                         │
+│                                                                 │
+│  1. 執行 CP5 失敗驗屍                                           │
+│     分析失敗原因，記錄教訓                                      │
+│                                                                 │
+│  2. 確認是否要保留任何變更                                      │
+│     有價值的程式碼？部分成功的功能？                            │
+│                                                                 │
+│  3. 記錄教訓到 Memory                                           │
+│     .claude/memory/lessons/{date}-{task-id}.md                  │
+│                                                                 │
+│  4. 強制刪除 Worktree                                           │
+│     git worktree remove .worktrees/{task-id} --force            │
+│     git branch -D feature/{task-id}                             │
+│                                                                 │
+│  5. 更新北極星                                                  │
+│     記錄失敗，更新健康檢查記錄                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 指令序列
+
+```bash
+# 1. 執行 CP5（在 worktree 內）
+cd .worktrees/{task-id}
+# ... CP5 失敗驗屍流程 ...
+
+# 2. 若有部分有價值的程式碼，先 cherry-pick 或 patch
+git format-patch main..HEAD -o /tmp/patches/
+
+# 3. 切換回主目錄
+cd /path/to/main/project
+
+# 4. 強制刪除
+git worktree remove .worktrees/{task-id} --force
+git branch -D feature/{task-id}
+
+# 5. 若需要保留部分變更
+git apply /tmp/patches/*.patch  # 可選
+```
+
+### 失敗後詢問
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ❌ 任務失敗                                                    │
+│                                                                 │
+│  任務 {task-id} 無法完成。                                      │
+│                                                                 │
+│  失敗原因：{原因摘要}                                           │
+│  教訓已記錄：.claude/memory/lessons/{date}-{task-id}.md         │
+│                                                                 │
+│  Worktree 中有 3 個未提交的變更檔案：                           │
+│  • src/auth/login.ts (modified)                                 │
+│  • src/utils/helper.ts (new)                                    │
+│  • tests/auth.test.ts (modified)                                │
+│                                                                 │
+│  你想要：                                                       │
+│  A) 直接刪除（放棄所有變更）                                    │
+│  B) 保留 patches 後刪除                                         │
+│  C) 保留 Worktree（之後再處理）                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 暫停：保留流程
+
+### 步驟
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⏸️ 任務暫停 - 保留流程                                         │
+│                                                                 │
+│  1. 提交當前進度                                                │
+│     git add . && git commit -m "WIP: {進度描述}"                │
+│                                                                 │
+│  2. 推送到遠端（可選）                                          │
+│     git push -u origin feature/{task-id}                        │
+│                                                                 │
+│  3. 記錄暫停狀態                                                │
+│     更新北極星文件，記錄暫停原因和恢復條件                      │
+│                                                                 │
+│  4. 鎖定 Worktree（防止被 prune）                               │
+│     git worktree lock .worktrees/{task-id}                      │
+│                                                                 │
+│  5. 切換回主目錄                                                │
+│     cd /path/to/main/project                                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 指令序列
+
+```bash
+# 1. 提交進度
+cd .worktrees/{task-id}
+git add .
+git commit -m "WIP: {進度描述}
+
+暫停原因：{原因}
+恢復條件：{條件}"
+
+# 2. 推送（可選，建議做）
+git push -u origin feature/{task-id}
+
+# 3. 鎖定 worktree
+git worktree lock .worktrees/{task-id} --reason "任務暫停：{原因}"
+
+# 4. 切換回主目錄
+cd /path/to/main/project
+```
+
+### 恢復暫停的任務
+
+```bash
+# 解鎖 worktree
+git worktree unlock .worktrees/{task-id}
+
+# 切換到 worktree
+cd .worktrees/{task-id}
+
+# 繼續執行（從 CP1 開始）
+```
+
+## 完成信號
+
+### 成功合併
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ✅ Worktree 完成 - 已合併                                      │
+│                                                                 │
+│  任務：{task-id}                                                │
+│  分支：feature/{task-id} → main                                 │
+│  PR：#123                                                       │
+│  合併方式：rebase (線性歷史)                                    │
+│                                                                 │
+│  已清理：                                                       │
+│  • Worktree: .worktrees/{task-id}                               │
+│  • 本地分支: feature/{task-id}                                  │
+│  • 遠端分支: origin/feature/{task-id}                           │
+│                                                                 │
+│  北極星已更新 ✓                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 失敗清理
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ❌ Worktree 完成 - 已清理                                      │
+│                                                                 │
+│  任務：{task-id}                                                │
+│  結果：失敗                                                     │
+│  原因：{失敗原因}                                               │
+│                                                                 │
+│  已清理：                                                       │
+│  • Worktree: .worktrees/{task-id}                               │
+│  • 分支: feature/{task-id}                                      │
+│                                                                 │
+│  教訓已記錄：.claude/memory/lessons/{date}-{task-id}.md         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 暫停保留
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ⏸️ Worktree 完成 - 已保留                                      │
+│                                                                 │
+│  任務：{task-id}                                                │
+│  狀態：暫停                                                     │
+│  原因：{暫停原因}                                               │
+│                                                                 │
+│  保留中：                                                       │
+│  • Worktree: .worktrees/{task-id} (locked)                      │
+│  • 分支: feature/{task-id}                                      │
+│  • 遠端: origin/feature/{task-id}                               │
+│                                                                 │
+│  恢復方式：cd .worktrees/{task-id} && git worktree unlock .     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 與其他檢查點的關係
+
+```
+CP0 (北極星錨定)
+     ↓
+CP0.5 (Worktree 準備)
+     ↓
+CP1 ~ CP6 (在 Worktree 內執行)
+     ↓
+CP6.5 (Worktree 完成) ← 你在這裡
+     │
+     ├── 成功 → 合併 + 清理
+     ├── 失敗 → CP5 + 清理
+     └── 暫停 → 保留 + 鎖定
+```
+
+## 相關資源
+
+- [CP0.5: Worktree 準備](./cp0.5-worktree-setup.md)
+- [CP5: 失敗驗屍](./cp5-failure-postmortem.md)
+- [隔離環境概述](../../06-scaling/_base/isolated-environments.md)

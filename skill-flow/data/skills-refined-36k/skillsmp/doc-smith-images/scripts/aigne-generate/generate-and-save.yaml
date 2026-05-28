@@ -1,0 +1,44 @@
+type: team
+name: generateAndSave
+description: |
+  生成图片并保存到指定路径。
+  组合 generateImage 和 saveImage 两个步骤。
+
+mode: sequential
+
+skills:
+  - ./generate-image.yaml
+  - ./save-image.mjs
+
+input_schema:
+  type: object
+  properties:
+    desc:
+      type: string
+      description: 图片描述/生成提示词
+    documentContent:
+      type: string
+      description: 上下文信息（如文档内容）
+      default: ""
+    locale:
+      type: string
+      description: 图片中文字的语言
+      default: zh
+    aspectRatio:
+      type: string
+      description: 宽高比
+      enum: ["1:1", "5:4", "4:3", "3:2", "16:9", "21:9"]
+      default: "4:3"
+    savePath:
+      type: string
+      description: 输出文件路径
+  required:
+    - desc
+    - savePath
+
+output_schema:
+  type: object
+  properties:
+    message:
+      type: string
+      description: 执行结果的自然语言描述

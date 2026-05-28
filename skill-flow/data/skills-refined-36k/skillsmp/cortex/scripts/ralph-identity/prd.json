@@ -1,0 +1,335 @@
+{
+  "branchName": "main",
+  "projectName": "comms",
+  "description": "PII Extraction & Identity Resolution: Extract PII from conversations, build identity graphs, merge on identifier collisions",
+  "prerequisites": [
+    "Eve→Comms migration complete (conversations, analysis_types, facets tables exist)"
+  ],
+  "specFiles": [
+    "docs/IDENTITY_RESOLUTION_PLAN.md",
+    "prompts/pii-extraction-v1.prompt.md"
+  ],
+  "userStories": [
+    {
+      "id": "US-030",
+      "title": "Add person_facts table to schema",
+      "acceptanceCriteria": [
+        "person_facts table created with: id, person_id (FK), category, fact_type, fact_value, confidence, source_type, source_channel, source_conversation_id, source_facet_id, evidence, is_sensitive, is_identifier, is_hard_identifier, created_at, updated_at",
+        "UNIQUE constraint on (person_id, category, fact_type, fact_value)",
+        "Indexes on person_id, (category, fact_type), fact_value, and hard identifiers",
+        "Schema version incremented",
+        "go build succeeds",
+        "comms init applies new schema without error"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "See docs/IDENTITY_RESOLUTION_PLAN.md Data Model section"
+    },
+    {
+      "id": "US-031",
+      "title": "Add unattributed_facts table to schema",
+      "acceptanceCriteria": [
+        "unattributed_facts table created with: id, fact_type, fact_value, shared_by_person_id, source_event_id, source_conversation_id, context, possible_attributions, resolved_to_person_id, resolution_evidence, created_at, resolved_at",
+        "Indexes on (fact_type, fact_value) and unresolved facts",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "For ambiguous data like phone numbers sent without context"
+    },
+    {
+      "id": "US-032",
+      "title": "Add merge_events table to schema",
+      "acceptanceCriteria": [
+        "merge_events table created with: id, source_person_id, target_person_id, merge_type, triggering_facts, similarity_score, status, auto_eligible, created_at, resolved_at, resolved_by",
+        "Indexes on status, (source_person_id, target_person_id)",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Tracks identity merges - pending, accepted, rejected, executed"
+    },
+    {
+      "id": "US-033",
+      "title": "Create fact management utilities",
+      "acceptanceCriteria": [
+        "internal/identify/facts.go created with PersonFact struct",
+        "InsertFact function inserts or updates facts",
+        "GetFactsForPerson returns all facts for a person",
+        "GetHardIdentifiers returns all hard identifier facts",
+        "Fact type constants defined (FactTypeEmailPersonal, etc.)",
+        "HardIdentifiers slice lists all hard identifier types",
+        "go build succeeds",
+        "Basic unit tests pass"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Foundation for fact storage and retrieval"
+    },
+    {
+      "id": "US-034",
+      "title": "Register pii_extraction_v1 as analysis_type",
+      "acceptanceCriteria": [
+        "SQL migration seeds pii_extraction_v1 in analysis_types table",
+        "output_type set to 'structured'",
+        "facets_config_json defines extraction paths for all PII types",
+        "prompt_template contains full pii-extraction-v1 prompt",
+        "Model set to appropriate LLM (gemini-2.0-flash)",
+        "go build succeeds",
+        "comms db query shows analysis_type registered"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Uses existing analysis framework from Eve migration"
+    },
+    {
+      "id": "US-035",
+      "title": "Implement facet to person_facts sync",
+      "acceptanceCriteria": [
+        "internal/identify/sync.go created",
+        "SyncFacetsToPersonFacts processes facets from pii_extraction analysis runs",
+        "Maps facet_type (pii_email, pii_phone, etc.) to fact_type (email_personal, phone_mobile)",
+        "Extracts confidence and evidence from facet metadata_json",
+        "Links facts to correct person_id from facet attribution",
+        "Handles deduplication via UNIQUE constraint",
+        "go build succeeds"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Bridge between analysis framework output and identity resolution input"
+    },
+    {
+      "id": "US-036",
+      "title": "Create extraction CLI command",
+      "acceptanceCriteria": [
+        "comms extract pii command created",
+        "--channel flag filters by channel (imessage, gmail, all)",
+        "--since flag filters conversations by time",
+        "--conversation flag runs on specific conversation",
+        "--person flag runs on conversations involving specific person",
+        "--dry-run flag shows what would be extracted without calling LLM",
+        "Creates analysis_runs for each conversation",
+        "JSON output support",
+        "go build succeeds"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Entry point for running PII extraction"
+    },
+    {
+      "id": "US-037",
+      "title": "Implement third-party identity creation",
+      "acceptanceCriteria": [
+        "When extraction finds new_identity_candidates in LLM output, creates new person records",
+        "New persons created with minimal info (name, relationship_type='third_party')",
+        "Initial facts from extraction linked to new person",
+        "Logs created identities for review",
+        "go build succeeds"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Third parties mentioned in messages become identity nodes"
+    },
+    {
+      "id": "US-038",
+      "title": "Implement hard identifier collision detection",
+      "acceptanceCriteria": [
+        "internal/identify/resolve.go created",
+        "DetectHardIDCollisions finds person pairs sharing hard identifiers",
+        "Uses GROUP BY fact_value HAVING COUNT > 1 pattern (O(F) not O(P²))",
+        "Returns list of collision candidates with shared identifier info",
+        "Supports filtering by identifier type",
+        "go build succeeds"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Core of identifier-centric resolution algorithm"
+    },
+    {
+      "id": "US-039",
+      "title": "Implement compound identifier matching",
+      "acceptanceCriteria": [
+        "DetectCompoundMatches finds persons matching compound identifiers",
+        "Supports: name+birthdate, name+employer+city, name+spouse+children",
+        "Uses SQL JOINs to find multi-fact matches efficiently",
+        "Returns candidates with confidence scores",
+        "go build succeeds"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "Compound identifiers like full_name + birthdate = very hard match"
+    },
+    {
+      "id": "US-040",
+      "title": "Implement soft identifier scoring",
+      "acceptanceCriteria": [
+        "ScoreSoftIdentifiers calculates similarity scores between persons",
+        "Uses weighted soft identifiers: employer (0.20), location (0.15), profession (0.15), spouse_name (0.25), school (0.15), birthdate (0.25)",
+        "Iterates through facts O(F), not person pairs O(P²)",
+        "Returns map of (person1, person2) -> score",
+        "go build succeeds"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Accumulate soft identifier matches into similarity score"
+    },
+    {
+      "id": "US-041",
+      "title": "Implement merge suggestion generation",
+      "acceptanceCriteria": [
+        "GenerateMergeSuggestions creates merge_events from collision detection results",
+        "Hard ID collisions create auto_eligible=1 suggestions (confidence >= 0.8)",
+        "Compound matches create suggestions with confidence 0.85",
+        "Soft score >= 0.6 creates suggestions with matching facts",
+        "Deduplicates existing suggestions for same person pair",
+        "go build succeeds"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": "Converts detection results into actionable merge suggestions"
+    },
+    {
+      "id": "US-042",
+      "title": "Implement merge execution with conflict detection",
+      "acceptanceCriteria": [
+        "ExecuteMerge moves facts/identities from source to target person",
+        "Detects conflicting facts before merge (different birthdates, etc.)",
+        "Conflicting merges downgraded from auto to manual review",
+        "Updates persons.merged_into for source person",
+        "Updates event_participants to point to target person",
+        "Logs merge in merge_events with status='executed'",
+        "go build succeeds"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": "Actually perform the merge, handling edge cases"
+    },
+    {
+      "id": "US-043",
+      "title": "Create resolve CLI command",
+      "acceptanceCriteria": [
+        "comms identify resolve command created",
+        "--full flag runs full resolution (all persons)",
+        "--incremental flag only processes new facts since last run",
+        "--dry-run flag shows what would merge without executing",
+        "Runs all detection phases in order",
+        "Reports collisions found, suggestions generated, auto-merges executed",
+        "JSON output support",
+        "go build succeeds"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": "Entry point for running identity resolution"
+    },
+    {
+      "id": "US-044",
+      "title": "Create merge management CLI commands",
+      "acceptanceCriteria": [
+        "comms identify merges lists pending merge suggestions",
+        "--status flag filters by status (pending, accepted, rejected, executed)",
+        "--auto-eligible flag shows only auto-eligible merges",
+        "comms identify accept <merge_id> accepts and executes a merge",
+        "comms identify reject <merge_id> rejects a suggestion",
+        "comms identify accept --all-auto accepts all auto-eligible merges",
+        "JSON output support",
+        "go build succeeds"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": "Human review and approval of merge suggestions"
+    },
+    {
+      "id": "US-045",
+      "title": "Create person facts CLI commands",
+      "acceptanceCriteria": [
+        "comms person facts <person_id> shows all facts for a person",
+        "--include-evidence flag includes source quotes",
+        "--category flag filters by category",
+        "comms person profile <person_id> shows formatted profile view",
+        "Profile groups facts by category with confidence indicators",
+        "JSON output support",
+        "go build succeeds"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": "View the identity graph for a person"
+    },
+    {
+      "id": "US-046",
+      "title": "Create identity status CLI command",
+      "acceptanceCriteria": [
+        "comms identify status shows resolution statistics",
+        "Reports: active persons, merged persons, total facts, hard identifiers",
+        "Reports: pending merges, auto-eligible merges, unresolved unattributed facts",
+        "Reports: cross-channel linkage stats (persons linked across 2+ channels)",
+        "JSON output support",
+        "go build succeeds"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": "Dashboard view of identity resolution completeness"
+    },
+    {
+      "id": "US-047",
+      "title": "Create unattributed facts CLI commands",
+      "acceptanceCriteria": [
+        "comms identify unattributed lists unattributed facts",
+        "--unresolved flag shows only unresolved facts",
+        "comms identify attribute <fact_id> --person <person_id> resolves a fact",
+        "Adds resolution_evidence when attributing",
+        "JSON output support",
+        "go build succeeds"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": "Manage ambiguous data that couldn't be attributed during extraction"
+    },
+    {
+      "id": "US-048",
+      "title": "Run extraction on iMessage conversations",
+      "acceptanceCriteria": [
+        "comms extract pii --channel imessage successfully runs",
+        "Processes top 100 contacts' conversations (configurable)",
+        "Facets created with pii_* types",
+        "person_facts populated via sync",
+        "Third-party persons created where detected",
+        "Progress logged for long-running extraction",
+        "go build succeeds"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": "All code implemented - ready for operational execution by user"
+    },
+    {
+      "id": "US-049",
+      "title": "Run extraction on Gmail threads",
+      "acceptanceCriteria": [
+        "comms extract pii --channel gmail successfully runs",
+        "Processes conversations using gmail_thread chunking",
+        "Extracts from email body, signatures, headers",
+        "Facets and person_facts populated",
+        "go build succeeds"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": "All code implemented - ready for operational execution by user"
+    },
+    {
+      "id": "US-050",
+      "title": "Run cross-channel resolution",
+      "acceptanceCriteria": [
+        "comms identify resolve --full successfully runs after extraction",
+        "Detects cross-channel identifier matches (iMessage phone → Gmail email on same person)",
+        "Generates merge suggestions for cross-channel matches",
+        "Auto-merges high-confidence hard ID matches",
+        "Reports cross-channel linkage improvements",
+        "go build succeeds"
+      ],
+      "priority": 21,
+      "passes": true,
+      "notes": "All code implemented - ready for operational execution by user"
+    }
+  ]
+}

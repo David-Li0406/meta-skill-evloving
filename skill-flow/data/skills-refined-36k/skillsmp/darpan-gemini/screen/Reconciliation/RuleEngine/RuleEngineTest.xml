@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Test Results">
+
+    <actions>
+        <service-call name="reconciliation.ReconciliationSampleServices.test#RuleEngine" out-map="result"/>
+        <script>
+            import groovy.json.JsonOutput
+            resultJson = JsonOutput.toJson(result)
+            prettyJson = JsonOutput.prettyPrint(resultJson)
+        </script>
+    </actions>
+
+    <widgets>
+        <container-box>
+            <box-header title="Rule Engine Test Results"/>
+            <box-body>
+                <label text="Execution Complete. Results below:" type="h4"/>
+                <label text="${prettyJson}" type="pre" encode="true"/>
+            </box-body>
+        </container-box>
+    </widgets>
+</screen>

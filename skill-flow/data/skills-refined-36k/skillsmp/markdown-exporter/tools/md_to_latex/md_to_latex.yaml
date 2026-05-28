@@ -1,0 +1,35 @@
+identity:
+  name: md_to_latex
+  author: bowenliang123
+  label:
+    en_US: Markdown tables ⮕ LaTeX
+    zh_Hans: Markdown 表格 ⮕ LaTeX
+description:
+  human:
+    en_US: Generate LaTeX file from Markdown table
+    zh_Hans: 将 Markdown 表格转换为 LaTeX 文件的工具
+  llm: Generate LaTeX file from Markdown table
+parameters:
+  - name: md_text
+    type: string
+    required: true
+    label:
+      en_US: Markdown table text
+      zh_Hans: Markdown 表格文本
+    human_description:
+      en_US: Input text of single Markdown table
+      zh_Hans: 单个Markdown格式文本
+    form: llm
+  - name: output_filename
+    type: string
+    required: false
+    label:
+      en_US: Output Filename
+      zh_Hans: 输出文件名
+    human_description:
+      en_US: Optional custom output file name, and the filename suffix is not required.
+      zh_Hans: 可选的自定义输出文件名，后缀名无需指定
+    form: llm
+extra:
+  python:
+    source: tools/md_to_latex/md_to_latex.py

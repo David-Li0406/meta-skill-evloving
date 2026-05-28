@@ -1,0 +1,228 @@
+openapi: 3.1.0
+info:
+  title: AWS Credentials Management with Doppler
+  description: Complete workflow for secure AWS credential storage, rotation, and documentation using Doppler
+  version: 1.0.0
+
+components:
+  schemas:
+    DopplerProject:
+      type: object
+      description: Doppler project structure for AWS credentials
+      properties:
+        project_name:
+          type: string
+          example: "aws-credentials"
+        configs:
+          type: array
+          items:
+            type: string
+          example: ["dev", "staging", "production"]
+        secrets:
+          type: object
+          properties:
+            credentials:
+              type: array
+              items:
+                type: string
+              example:
+                - "AWS_ACCESS_KEY_ID"
+                - "AWS_SECRET_ACCESS_KEY"
+                - "AWS_DEFAULT_REGION"
+                - "AWS_ACCOUNT_ID"
+            archived:
+              type: array
+              items:
+                type: string
+              example:
+                - "AWS_ACCESS_KEY_ID_OLD"
+                - "AWS_SECRET_ACCESS_KEY_OLD"
+            documentation:
+              type: array
+              items:
+                type: string
+              example:
+                - "AWS_ACCESS_INVENTORY_REPORT"
+                - "AWS_ACCESS_SUMMARY"
+                - "AWS_LAST_AUDIT_DATE"
+
+    CredentialRotation:
+      type: object
+      description: Safe AWS credential rotation workflow
+      properties:
+        prerequisites:
+          type: object
+          properties:
+            max_keys_per_user:
+              type: integer
+              example: 2
+            current_key_count:
+              type: integer
+              example: 1
+            available_slots:
+              type: integer
+              example: 1
+        workflow:
+          type: array
+          items:
+            type: object
+            properties:
+              phase:
+                type: string
+              status:
+                type: string
+              actions:
+                type: array
+                items:
+                  type: string
+          example:
+            - phase: "Store Old Credentials"
+              status: "non-destructive"
+              actions:
+                - "Store old key as AWS_ACCESS_KEY_ID_OLD"
+                - "Add notes with exposure date and retention policy"
+            - phase: "Create New Credentials"
+              status: "zero-exposure"
+              actions:
+                - "aws iam create-access-key --output json"
+                - "Pipe directly to Doppler (never displayed)"
+                - "Securely delete temp files"
+            - phase: "Testing Period"
+              status: "both-keys-active"
+              actions:
+                - "Test new credential via Doppler"
+                - "Old credential remains functional"
+                - "Compare access side-by-side"
+            - phase: "Cleanup"
+              status: "user-approval-required"
+              actions:
+                - "Delete old AWS IAM key"
+                - "Update Doppler notes"
+
+    SecretDocumentation:
+      type: object
+      description: Doppler secret annotation and documentation
+      properties:
+        notes:
+          type: object
+          properties:
+            command:
+              type: string
+              example: "doppler secrets notes set <SECRET_NAME> \"<note>\" --project <project>"
+            purpose:
+              type: array
+              items:
+                type: string
+              example:
+                - "Historical context"
+                - "Retention policies"
+                - "Rotation dates"
+                - "Usage instructions"
+                - "Security notes"
+        activity_logs:
+          type: object
+          properties:
+            tracks:
+              type: array
+              items:
+                type: string
+              example:
+                - "Who made changes"
+                - "When changes occurred"
+                - "What was changed"
+            access:
+              type: string
+              example: "doppler activity --project <project>"
+        versioning:
+          type: object
+          properties:
+            retention:
+              type: string
+              example: "Lifetime of secret (until deleted)"
+            features:
+              type: array
+              items:
+                type: string
+              example:
+                - "Full change history"
+                - "Rollback capability"
+                - "Git-style versioning"
+
+    AccessAudit:
+      type: object
+      description: Read-only AWS access inventory and verification
+      properties:
+        safety_guarantees:
+          type: array
+          items:
+            type: string
+          example:
+            - "Only list/describe/get commands"
+            - "Zero write operations"
+            - "No resource modifications"
+            - "Pure inventory gathering"
+        services_audited:
+          type: array
+          items:
+            type: string
+          example:
+            - "IAM"
+            - "S3"
+            - "Lambda"
+            - "DynamoDB"
+            - "ECS/ECR"
+            - "CloudWatch"
+            - "SNS/SQS"
+            - "API Gateway"
+            - "CodeArtifact"
+            - "RDS"
+            - "EC2"
+        reports:
+          type: object
+          properties:
+            json_report:
+              type: string
+              description: "Machine-readable inventory"
+              example: "AWS_ACCESS_INVENTORY_REPORT"
+            summary:
+              type: string
+              description: "Human-readable summary"
+              example: "AWS_ACCESS_SUMMARY"
+            timestamp:
+              type: string
+              description: "Last audit date"
+              example: "AWS_LAST_AUDIT_DATE"
+
+    UsagePatterns:
+      type: object
+      description: Standard Doppler + AWS CLI usage patterns
+      properties:
+        basic_usage:
+          type: string
+          example: "doppler run --project aws-credentials --config dev -- aws <command>"
+        examples:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              command:
+                type: string
+          example:
+            - description: "List S3 buckets"
+              command: "doppler run --project aws-credentials --config dev -- aws s3 ls"
+            - description: "Get caller identity"
+              command: "doppler run --project aws-credentials --config dev -- aws sts get-caller-identity"
+            - description: "Run Python script with credentials"
+              command: "doppler run --project aws-credentials --config dev -- python script.py"
+        query_documentation:
+          type: array
+          items:
+            type: string
+          example:
+            - "doppler secrets --project aws-credentials --config dev"
+            - "doppler secrets get AWS_ACCESS_SUMMARY --plain"
+            - "doppler activity --project aws-credentials"
+
+paths: {}

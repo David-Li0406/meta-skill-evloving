@@ -1,0 +1,242 @@
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cmm_ai_automation"
+description = "AI-assisted automation for Critical Mineral Metabolism data curation"
+authors = [
+  {name = "Mark Miller", email = "MAM@lbl.gov"},
+]
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+requires-python = ">=3.12"
+dynamic = ["version"]
+
+dependencies = [
+  "linkml-runtime>=1.9.5",
+  "linkml-store[mongodb]>=0.2.12",
+  "duckdb>=1.4.0",
+  "kgx>=2.1.0",
+  "gspread >=6.0.0",
+  "google-auth >=2.0.0",
+  "google-auth-oauthlib >=1.0.0",
+  "pandas >=2.0.0",
+  "click >=8.0.0",
+  "requests >=2.28.0",
+  "python-dotenv>=1.0.0",
+  "pymongo>=4.15.5",
+  "chromadb>=1.3.6",
+  "tqdm>=4.67.1",
+  "openai>=2.9.0",
+  "beautifulsoup4>=4.14.3",
+  "bacdive>=1.0.0",
+  "linkml>=1.9.5",
+  "asteval>=1.0.6",
+  "deepdiff>=8.6.1",
+  "urllib3>=2.6.0",
+  "pyarrow>=17.0.0",
+  "filelock>=3.20.1", # CVE-2025-68146 fix
+  "bioregistry>=0.12.33",
+  "pydantic-ai>=1.30.1",
+  "pydantic>=2.12.5",
+  "neo4j>=4.4.13",
+  "aiohttp==3.13.3",
+  "PyYAML>=6.0.0",
+  "cachetools>=5.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "linkml>=1.9.5",
+    "mkdocs-material>=8.2.8",
+    "mkdocs-mermaid2-plugin>=1.1.1",
+    "mkdocs-pymdownx-material-extras>=2.5.6",
+    "jupyter>=1.0.0",
+    "mknotebooks>= 0.8.0",
+    "pip-audit>=2.10.0",
+    "pytest-asyncio>=1.3.0",
+    "jupyterlab>=4.5.0",
+    "ipykernel>=7.1.0",
+]
+qa = [
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "deptry>=0.21.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "pytest-xdist>=3.5.0",
+    "pre-commit>=4.0.0",
+    "pandas-stubs>=2.0.0",
+    "types-requests>=2.28.0",
+    "types-PyYAML>=6.0.0",
+]
+
+[project.scripts]
+download-sheets = "cmm_ai_automation.scripts.download_sheets:main"
+enrich-ingredients = "cmm_ai_automation.scripts.enrich_ingredients:main"
+enrich-to-store = "cmm_ai_automation.scripts.enrich_to_store:main"
+
+# See https://hatch.pypa.io/latest/config/build/#file-selection for how to
+# explicitly include files other than default into the build distributions.
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+# Ref.: https://github.com/ninoseki/uv-dynamic-versioning/
+[tool.uv-dynamic-versioning]
+vcs = "git"
+style = "pep440"
+fallback-version = "0.0.0"
+
+# Ref.: https://docs.pytest.org/en/stable/reference/reference.html#configuration-options
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: marks tests as integration tests (require network access)",
+    "mediadive: marks tests that require MediaDive API (blocks GitHub Actions IPs)",
+]
+# By default, run ALL tests locally (no exclusions)
+# CI will override with explicit -m flag to exclude problematic tests
+
+# Ref.: https://github.com/codespell-project/codespell
+[tool.codespell]
+skip = [
+  "LICENSE",
+  "pyproject.toml",
+  "uv.lock",
+  "project/*",
+  "src/cmm_ai_automation/datamodel/cmm_ai_automation_pydantic.py",
+  "src/cmm_ai_automation/datamodel/cmm_ai_automation.py",
+]
+ignore-words-list = "bu,linke,crossreference"
+
+# Reminder: words have to be lowercased for the ignore-words-list
+quiet-level = 3
+
+# Ref.: https://github.com/crate-ci/typos (spell checker)
+[tool.typos.default.extend-words]
+linke = "linke"
+[tool.typos.files]
+extend-exclude = [
+  "LICENSE",
+  "uv.lock",
+  "pyproject.toml",
+  "project/*",
+  "src/cmm_ai_automation/datamodel/cmm_ai_automation_pydantic.py",
+  "src/cmm_ai_automation/datamodel/cmm_ai_automation.py",
+]
+
+# Ref.: https://docs.astral.sh/ruff/configuration/
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = [
+  "project/*",
+  "src/cmm_ai_automation/datamodel/*",
+  "src/cmm_ai_automation/_version.py",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",      # pycodestyle errors
+  "W",      # pycodestyle warnings
+  "F",      # Pyflakes
+  "I",      # isort
+  "B",      # flake8-bugbear
+  "C4",     # flake8-comprehensions
+  "UP",     # pyupgrade
+  "ARG",    # flake8-unused-arguments
+  "SIM",    # flake8-simplify
+  "TCH",    # flake8-type-checking
+  "PTH",    # flake8-use-pathlib
+  "RUF",    # Ruff-specific rules
+]
+ignore = [
+  "E501",   # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["cmm_ai_automation"]
+
+# Ref.: https://mypy.readthedocs.io/en/stable/config_file.html
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+strict_optional = true
+exclude = [
+  "project/",
+  "src/cmm_ai_automation/datamodel/cmm_ai_automation\\.py$",
+  "src/cmm_ai_automation/datamodel/cmm_ai_automation_pydantic\\.py$",
+  # Utility scripts - type annotations to be added later
+  "src/cmm_ai_automation/scripts/edge_patterns_by_source\\.py$",
+  "src/cmm_ai_automation/scripts/edge_patterns_merged\\.py$",
+  "src/cmm_ai_automation/scripts/index_.*\\.py$",
+]
+
+[[tool.mypy.overrides]]
+module = [
+  "gspread.*",
+  "linkml_runtime.*",
+  "linkml_store.*",
+  "kgx.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "cmm_ai_automation.datamodel.*"
+follow_imports = "skip"
+
+# Ref.: https://deptry.com/configuration/
+[tool.deptry]
+exclude = [
+  ".venv",
+  "project",
+  "tests",
+  "tmp",  # temporary files from schema testing
+  "src/cmm_ai_automation/datamodel",  # auto-generated, imports transitive deps
+]
+ignore = [
+  "DEP002",  # transitive dependencies (common with linkml)
+]
+# Map import names to package names for packages where they differ
+[tool.deptry.package_module_name_map]
+python-dotenv = "dotenv"
+beautifulsoup4 = "bs4"
+google-auth = "google"
+PyYAML = "yaml"
+
+# Ref.: https://pytest-cov.readthedocs.io/
+[tool.coverage.run]
+source = ["src/cmm_ai_automation"]
+omit = [
+  "src/cmm_ai_automation/datamodel/*",
+  "src/cmm_ai_automation/_version.py",
+  # Google Sheets requires OAuth credentials
+  "src/cmm_ai_automation/gsheets.py",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+# Target coverage for all code including scripts
+# Changed from 60% to 27% (2025-12-20) when scripts were added to coverage
+# Previous threshold was for library code only - see issue #28
+# Scripts add ~5000 lines; incrementally raise as script tests are added
+fail_under = 27
+
+# Ref.: https://bandit.readthedocs.io/
+[tool.bandit]
+exclude_dirs = ["tests", "project", "src/cmm_ai_automation/datamodel"]
+# Skip B110 (try-except-pass) - intentional for resilient API handling in scripts
+# Skip B405/B314 (XML) - parsing trusted API responses (NCBI Entrez)
+skips = ["B110", "B405", "B314"]

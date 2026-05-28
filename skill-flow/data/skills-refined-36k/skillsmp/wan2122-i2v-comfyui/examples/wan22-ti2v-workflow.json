@@ -1,0 +1,164 @@
+{
+  "name": "Wan2.2 TI2V Workflow",
+  "description": "Wan2.2 5B TI2V (Text + Image to Video) ワークフロー",
+  "version": "1.0.0",
+  "features": [
+    "テキストと画像を組み合わせた動画生成",
+    "image_strengthで画像の影響度を調整可能",
+    "プロンプトで動きの方向性を指定"
+  ],
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "title": "Load Reference Image",
+      "properties": {
+        "image": "reference_image.png"
+      },
+      "notes": "参照画像。動画の開始フレームとして使用される"
+    },
+    {
+      "id": 2,
+      "type": "LoadDiffusionModel",
+      "title": "Load Wan2.2 5B TI2V",
+      "properties": {
+        "model_name": "wan2.2_ti2v_5B_fp16.safetensors"
+      },
+      "notes": "TI2V対応の5Bモデル。I2Vとの主な違いはtext+imageの組み合わせ"
+    },
+    {
+      "id": 3,
+      "type": "LoadCLIP",
+      "title": "Load Text Encoder",
+      "properties": {
+        "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "type": "wan"
+      }
+    },
+    {
+      "id": 4,
+      "type": "LoadCLIPVision",
+      "title": "Load CLIP Vision",
+      "properties": {
+        "clip_name": "clip_vision_h.safetensors"
+      }
+    },
+    {
+      "id": 5,
+      "type": "LoadVAE",
+      "title": "Load VAE",
+      "properties": {
+        "vae_name": "wan2.1_vae.safetensors"
+      }
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "title": "Positive Prompt",
+      "properties": {
+        "text": "The person in the image starts walking forward slowly, camera follows, cinematic movement, natural lighting transitions"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      },
+      "notes": "TI2Vでは動きの詳細な指示が効果的。'The person in the image'で参照画像を指定"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "title": "Negative Prompt",
+      "properties": {
+        "text": "static, frozen, no movement, blurry, distorted, flickering, watermark"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      }
+    },
+    {
+      "id": 8,
+      "type": "CLIPVisionEncode",
+      "title": "Encode Reference Image",
+      "inputs": {
+        "clip_vision": { "node": 4, "output": "CLIP_VISION" },
+        "image": { "node": 1, "output": "IMAGE" }
+      }
+    },
+    {
+      "id": 9,
+      "type": "WanVideoTI2VSampler",
+      "title": "TI2V Sampler",
+      "properties": {
+        "width": 576,
+        "height": 1024,
+        "length": 81,
+        "cfg": 5.0,
+        "steps": 25,
+        "seed": -1,
+        "image_strength": 0.7,
+        "motion_strength": 0.6
+      },
+      "inputs": {
+        "model": { "node": 2, "output": "MODEL" },
+        "positive": { "node": 6, "output": "CONDITIONING" },
+        "negative": { "node": 7, "output": "CONDITIONING" },
+        "clip_vision_output": { "node": 8, "output": "CLIP_VISION_OUTPUT" },
+        "image": { "node": 1, "output": "IMAGE" }
+      },
+      "notes": "image_strength: 0.7で画像を強く参照。motion_strength: 0.6で自然な動き"
+    },
+    {
+      "id": 10,
+      "type": "VAEDecodeVideo",
+      "title": "Decode Video",
+      "inputs": {
+        "vae": { "node": 5, "output": "VAE" },
+        "samples": { "node": 9, "output": "LATENT" }
+      }
+    },
+    {
+      "id": 11,
+      "type": "SaveVideo",
+      "title": "Save Output",
+      "properties": {
+        "filename_prefix": "wan22_ti2v",
+        "fps": 24,
+        "format": "mp4"
+      },
+      "inputs": {
+        "images": { "node": 10, "output": "IMAGE" }
+      }
+    }
+  ],
+  "connections": [
+    { "from": [1, "IMAGE"], "to": [8, "image"] },
+    { "from": [1, "IMAGE"], "to": [9, "image"] },
+    { "from": [2, "MODEL"], "to": [9, "model"] },
+    { "from": [3, "CLIP"], "to": [6, "clip"] },
+    { "from": [3, "CLIP"], "to": [7, "clip"] },
+    { "from": [4, "CLIP_VISION"], "to": [8, "clip_vision"] },
+    { "from": [5, "VAE"], "to": [10, "vae"] },
+    { "from": [6, "CONDITIONING"], "to": [9, "positive"] },
+    { "from": [7, "CONDITIONING"], "to": [9, "negative"] },
+    { "from": [8, "CLIP_VISION_OUTPUT"], "to": [9, "clip_vision_output"] },
+    { "from": [9, "LATENT"], "to": [10, "samples"] },
+    { "from": [10, "IMAGE"], "to": [11, "images"] }
+  ],
+  "parameter_guide": {
+    "image_strength": {
+      "0.3-0.5": "テキストプロンプトを重視、画像は参考程度",
+      "0.5-0.7": "バランス（推奨）",
+      "0.7-0.9": "画像を強く参照、テキストで動きを追加"
+    },
+    "motion_strength": {
+      "0.3-0.5": "微妙な動き、静止画に近い",
+      "0.5-0.7": "自然な動き（推奨）",
+      "0.7-1.0": "ダイナミックな変化"
+    }
+  },
+  "recommended_settings": {
+    "vram_requirement": "12-16GB",
+    "resolution": "576×1024",
+    "frames": 81,
+    "estimated_time": "25-35秒 (RTX 4090)"
+  }
+}

@@ -1,0 +1,107 @@
+# Turborepo CI/CD Pipeline
+# Optimized CI for Turborepo monorepos
+# Features: Remote caching, affected pipeline, parallel execution
+
+name: Turborepo CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  # Determine affected packages
+  affected:
+    name: Detect Affected Packages
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.turbo.outputs.apps }}
+      packages: ${{ steps.turbo.outputs.packages }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Turborepo
+        run: npm install turbo -g
+
+      - name: Determine affected apps
+        id: turbo
+        run: |
+          AFFECTED=$(turbo run build --dry-run --filter=[HEAD^1] --json=packages | jq -r '.packages[]' | jq -R -s -c 'split("\n")[:-1]')
+          echo "apps=$AFFECTED" >> $GITHUB_OUTPUT
+          echo "Affected apps: $AFFECTED"
+
+  # Build affected apps
+  build:
+    name: Build Affected
+    runs-on: ubuntu-latest
+    needs: affected
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web, api, mobile, admin]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build ${{ matrix.app }}
+        run: turbo run build --filter=${{ matrix.app }}...
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-build
+          path: apps/${{ matrix.app }}/dist
+          retention-days: 7
+
+  # Test affected packages
+  test:
+    name: Test Affected
+    runs-on: ubuntu-latest
+    needs: affected
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test affected
+        run: turbo run test --filter=[HEAD^1]
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests

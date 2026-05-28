@@ -1,0 +1,213 @@
+---
+name: dojo-deploy
+description: Deploy Dojo worlds to local Katana, testnet, or mainnet. Configure Katana sequencer and manage deployments with sozo. Use when deploying your game or starting local development environment.
+---
+
+# Dojo Deployment
+
+Deploy your Dojo world to local Katana sequencer, Sepolia testnet, or Starknet mainnet.
+
+## When to Use This Skill
+
+- "Deploy my world to Katana"
+- "Start Katana sequencer"
+- "Deploy to Sepolia testnet"
+- "Deploy to mainnet"
+
+## What This Skill Does
+
+Handles deployment workflows:
+- Start and configure Katana sequencer
+- Deploy worlds with `sozo migrate`
+- Verify deployments
+- Manage world addresses
+- Configure network settings
+
+## Quick Start
+
+**Local development:**
+```bash
+katana --dev --dev.no-fee
+```
+
+**Build and deploy:**
+```bash
+sozo build && sozo migrate
+```
+
+**Testnet deployment:**
+```bash
+sozo migrate --profile sepolia
+```
+
+**Mainnet deployment:**
+```bash
+sozo migrate --profile mainnet
+```
+
+## Deployment Workflow
+
+### 1. Local Development (Katana)
+
+**Start Katana:**
+```bash
+katana --dev --dev.accounts 10
+```
+
+**Verify:**
+```bash
+# Check manifest for addresses
+cat target/dev/manifest.json
+```
+
+### 2. Testnet Deployment (Sepolia)
+
+**Configure profile:**
+```toml
+# dojo_sepolia.toml
+[world]
+name = "My Game"
+seed = "my-game-sepolia"
+
+[env]
+rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
+account_address = "YOUR_ACCOUNT"
+private_key = "YOUR_KEY"
+```
+
+**Deploy:**
+```bash
+sozo migrate --profile sepolia
+```
+
+### 3. Mainnet Deployment
+
+**Configure profile:**
+```toml
+# dojo_mainnet.toml
+[world]
+name = "My Game"
+seed = "my-game-mainnet"
+
+[env]
+rpc_url = "https://api.cartridge.gg/x/starknet/mainnet"
+account_address = "YOUR_ACCOUNT"
+keystore_path = "~/.starknet_accounts/mainnet.json"
+```
+
+**Deploy:**
+```bash
+sozo migrate --profile mainnet
+```
+
+## Katana Configuration
+
+### Mining Modes
+
+**Instant (default):**
+```bash
+katana --dev --dev.no-fee
+```
+
+**Interval:**
+```bash
+katana --block-time 10000
+```
+
+### Network Forking
+
+**Fork Starknet mainnet:**
+```bash
+katana --fork.provider https://api.cartridge.gg/x/starknet/mainnet
+```
+
+## Sozo Commands
+
+### Build
+```bash
+sozo build
+```
+
+### Inspect (Preview Deployment)
+```bash
+sozo inspect
+```
+
+### Migrate (Deploy)
+```bash
+sozo migrate
+```
+
+### Execute System
+```bash
+sozo execute <CONTRACT_TAG> <FUNCTION> [ARGS...]
+```
+
+## Deployment Checklist
+
+### Pre-Deployment
+- [ ] All tests passing (`sozo test`)
+- [ ] Code reviewed (`dojo-review` skill)
+- [ ] Configuration set (`dojo-config` skill)
+- [ ] Target network funded (for gas)
+- [ ] Private key secured (not committed)
+
+### Deployment
+- [ ] Build succeeds (`sozo build`)
+- [ ] Inspect looks correct (`sozo inspect`)
+- [ ] Migration succeeds (`sozo migrate`)
+- [ ] Manifest generated (check `manifest_<profile>.json`)
+- [ ] World address recorded
+
+### Post-Deployment
+- [ ] Deployment verified (execute systems, query models)
+- [ ] Torii indexer configured (`dojo-indexer` skill)
+- [ ] Client connected (`dojo-client` skill)
+- [ ] World permissions verified (`dojo-world` skill)
+
+## Troubleshooting
+
+### "Account not found"
+- Ensure account is deployed on target network
+- Check account address in profile config
+- Verify account has funds for gas
+
+### "Class hash mismatch"
+- Run `sozo build` before migrating
+- Check Scarb.toml for correct Dojo version
+- Clear `target/` and rebuild
+
+### "Insufficient funds"
+- Fund account with ETH/STRK for gas
+- Use Sepolia faucet: https://faucet.starknet.io
+
+## Network Information
+
+### Katana (Local)
+- RPC: `http://localhost:5050`
+- Pre-funded accounts printed on startup
+
+### Sepolia (Testnet)
+- RPC: `https://api.cartridge.gg/x/starknet/sepolia`
+- Faucet: https://faucet.starknet.io
+- Explorer: https://sepolia.voyager.online
+
+### Mainnet
+- RPC: `https://api.cartridge.gg/x/starknet/mainnet`
+- Explorer: https://voyager.online
+
+## Next Steps
+
+After deployment:
+1. Use `dojo-indexer` skill to set up Torii
+2. Use `dojo-client` skill to connect frontend
+3. Use `dojo-world` skill to configure permissions
+4. Use `dojo-migrate` skill for updates
+
+## Related Skills
+
+- **dojo-config**: Configure deployment profiles
+- **dojo-migrate**: Update deployments
+- **dojo-indexer**: Index deployed world
+- **dojo-client**: Connect clients to deployment
+- **dojo-world**: Manage world permissions

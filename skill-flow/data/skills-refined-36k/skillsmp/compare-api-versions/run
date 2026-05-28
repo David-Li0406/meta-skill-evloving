@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+import json
+import sys
+import subprocess
+import tempfile
+import re
+from pathlib import Path
+
+REPO = "polytomic/fern-config"
+SPEC_PATH = "fern/apis/2024-02-08/openapi/openapi.json"
+
+def get_current_version():
+    """Extract polytomic-go version from go.mod"""
+    go_mod = Path(__file__).parent.parent.parent.parent / "go.mod"
+    if not go_mod.exists():
+        return None
+
+    content = go_mod.read_text()
+    match = re.search(r'github\.com/polytomic/polytomic-go\s+v?(\d+\.\d+\.\d+)', content)
+    if match:
+        return f"go@{match.group(1)}"
+    return None
+
+def fetch(ref):
+    """Fetch OpenAPI spec from fern-config repository"""
+    with tempfile.TemporaryDirectory() as d:
+        subprocess.run(
+            ['git','clone','--depth','1','--branch',ref,f'https://github.com/{REPO}.git',d],
+            check=True, capture_output=True, text=True
+        )
+        spec_file = Path(d) / SPEC_PATH
+        if not spec_file.exists():
+            print(f"❌ Error: OpenAPI spec not found at {SPEC_PATH} for {ref}")
+            sys.exit(1)
+        return json.loads(spec_file.read_text())
+
+def extract_endpoints(spec):
+    """Extract endpoint information from OpenAPI spec"""
+    endpoints = {}
+    for path, methods in spec.get('paths', {}).items():
+        for method, details in methods.items():
+            if method.upper() in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']:
+                key = f"{method.upper()} {path}"
+                endpoints[key] = {
+                    'operation_id': details.get('operationId', ''),
+                    'summary': details.get('summary', ''),
+                    'parameters': [p.get('name') for p in details.get('parameters', [])],
+                    'request_body': details.get('requestBody', {}).get('content', {}).keys(),
+                    'responses': list(details.get('responses', {}).keys())
+                }
+    return endpoints
+
+def compare_schemas(old_spec, new_spec):
+    """Compare schemas between two specs"""
+    old_schemas = old_spec.get('components', {}).get('schemas', {})
+    new_schemas = new_spec.get('components', {}).get('schemas', {})
+
+    old_keys = set(old_schemas.keys())
+    new_keys = set(new_schemas.keys())
+
+    added = new_keys - old_keys
+    removed = old_keys - new_keys
+    common = old_keys & new_keys
+
+    modified = []
+    for schema_name in common:
+        old_schema = old_schemas[schema_name]
+        new_schema = new_schemas[schema_name]
+
+        # Compare properties
+        old_props = set(old_schema.get('properties', {}).keys())
+        new_props = set(new_schema.get('properties', {}).keys())
+
+        if old_props != new_props:
+            added_props = new_props - old_props
+            removed_props = old_props - new_props
+            modified.append({
+                'name': schema_name,
+                'added_props': added_props,
+                'removed_props': removed_props
+            })
+        elif json.dumps(old_schema, sort_keys=True) != json.dumps(new_schema, sort_keys=True):
+            # Schema changed but same property names (type changes, etc)
+            modified.append({
+                'name': schema_name,
+                'added_props': set(),
+                'removed_props': set(),
+                'type_changed': True
+            })
+
+    return {
+        'added': sorted(added),
+        'removed': sorted(removed),
+        'modified': sorted(modified, key=lambda x: x['name'])
+    }
+
+def compare_endpoints(old_spec, new_spec):
+    """Compare endpoints between two specs"""
+    old_endpoints = extract_endpoints(old_spec)
+    new_endpoints = extract_endpoints(new_spec)
+
+    old_keys = set(old_endpoints.keys())
+    new_keys = set(new_endpoints.keys())
+
+    return {
+        'added': sorted(new_keys - old_keys),
+        'removed': sorted(old_keys - new_keys),
+        'common': sorted(old_keys & new_keys)
+    }
+
+def print_header(text):
+    """Print a formatted header"""
+    print(f"\n{'='*60}")
+    print(f"  {text}")
+    print(f"{'='*60}")
+
+def print_section(title, items, prefix="  "):
+    """Print a section with items"""
+    if items:
+        print(f"\n{title}:")
+        for item in items:
+            if isinstance(item, dict):
+                print(f"{prefix}• {item['name']}")
+                if item.get('added_props'):
+                    print(f"{prefix}  + Added: {', '.join(sorted(item['added_props']))}")
+                if item.get('removed_props'):
+                    print(f"{prefix}  - Removed: {', '.join(sorted(item['removed_props']))}")
+                if item.get('type_changed'):
+                    print(f"{prefix}  ~ Type/constraint changes")
+            else:
+                print(f"{prefix}• {item}")
+
+def main():
+    # Parse arguments
+    if len(sys.argv) == 1:
+        print("Usage: compare-api-versions [old-version] <new-version>")
+        print()
+        print("Examples:")
+        print("  compare-api-versions go@1.13.0              # Compare current version from go.mod to 1.13.0")
+        print("  compare-api-versions go@1.11.0 go@1.12.0   # Compare specific versions")
+        sys.exit(1)
+
+    # Determine versions
+    if len(sys.argv) == 2:
+        # One argument: use current version from go.mod as old version
+        old_ref = get_current_version()
+        if not old_ref:
+            print("❌ Error: Could not determine current version from go.mod")
+            print("   Please provide both old and new versions explicitly")
+            sys.exit(1)
+        new_ref = sys.argv[1]
+    else:
+        # Two arguments: use provided versions
+        old_ref = sys.argv[1]
+        new_ref = sys.argv[2]
+
+    print(f"📊 Comparing API versions: {old_ref} → {new_ref}")
+
+    # Fetch specs
+    print(f"\n⏳ Fetching {old_ref}...")
+    old_spec = fetch(old_ref)
+    print(f"⏳ Fetching {new_ref}...")
+    new_spec = fetch(new_ref)
+
+    # Compare schemas
+    print_header("Schema Changes")
+    schema_diff = compare_schemas(old_spec, new_spec)
+
+    if schema_diff['added']:
+        print_section(f"✅ {len(schema_diff['added'])} New Schemas", schema_diff['added'])
+
+    if schema_diff['removed']:
+        print_section(f"❌ {len(schema_diff['removed'])} Removed Schemas", schema_diff['removed'])
+
+    if schema_diff['modified']:
+        print_section(f"🔄 {len(schema_diff['modified'])} Modified Schemas", schema_diff['modified'])
+
+    if not any([schema_diff['added'], schema_diff['removed'], schema_diff['modified']]):
+        print("\n  No schema changes detected")
+
+    # Compare endpoints
+    print_header("Endpoint Changes")
+    endpoint_diff = compare_endpoints(old_spec, new_spec)
+
+    if endpoint_diff['added']:
+        print_section(f"✅ {len(endpoint_diff['added'])} New Endpoints", endpoint_diff['added'])
+
+    if endpoint_diff['removed']:
+        print_section(f"❌ {len(endpoint_diff['removed'])} Removed Endpoints", endpoint_diff['removed'])
+
+    if not any([endpoint_diff['added'], endpoint_diff['removed']]):
+        print("\n  No endpoint changes detected")
+
+    # Summary
+    print_header("Summary")
+    print(f"\n  Schemas:   {len(schema_diff['added'])} added, {len(schema_diff['removed'])} removed, {len(schema_diff['modified'])} modified")
+    print(f"  Endpoints: {len(endpoint_diff['added'])} added, {len(endpoint_diff['removed'])} removed")
+
+    # Provider impact
+    if any([schema_diff['removed'], endpoint_diff['removed'],
+            any(m.get('removed_props') for m in schema_diff['modified'])]):
+        print("\n  ⚠️  Breaking changes detected - review carefully!")
+
+    if schema_diff['added'] or endpoint_diff['added']:
+        print("\n  💡 New features available - consider adding provider support")
+
+    print()
+
+if __name__ == '__main__':
+    main()

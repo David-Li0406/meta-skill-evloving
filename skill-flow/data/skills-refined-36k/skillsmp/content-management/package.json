@@ -1,0 +1,33 @@
+{
+  "name": "@web-agency/skill-content-management",
+  "version": "1.0.0",
+  "description": "Content Management skill - Editorial workflow, content creation, assets, and localization",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:agents && npm run test:domains && npm run test:skill && npm run test:routing",
+    "test:agents": "node tests/validate-agents.test.js",
+    "test:domains": "node tests/validate-domains.test.js",
+    "test:skill": "node tests/validate-skill.test.js",
+    "test:routing": "node tests/validate-routing.test.js",
+    "test:ci": "npm test",
+    "lint": "npm run lint:markdown",
+    "lint:markdown": "markdownlint '**/*.md' --ignore node_modules",
+    "validate": "npm run lint && npm test",
+    "validate:quick": "npm run test:skill && npm run test:agents"
+  },
+  "keywords": [
+    "claude-skill",
+    "content-management",
+    "editorial",
+    "localization",
+    "assets"
+  ],
+  "author": "Web Agency IA",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "markdownlint-cli": "^0.38.0"
+  }
+}

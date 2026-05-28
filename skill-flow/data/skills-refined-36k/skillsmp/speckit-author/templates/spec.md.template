@@ -1,0 +1,296 @@
+# Specification: {{TITLE}}
+
+**Type:** {{WORKFLOW_TYPE}}
+**Slug:** {{SLUG}}
+**Date:** {{DATE}}
+**Author:** {{GH_USER}}
+
+## Overview
+
+[One paragraph describing what this feature does and why it's needed]
+
+## Requirements Reference
+
+See: `planning/{{SLUG}}/requirements.md` in main repository
+
+## Detailed Specification
+
+### Component 1: [Component Name]
+
+**File:** `src/path/to/file.py`
+
+**Purpose:** [What does this component do?]
+
+**Implementation:**
+
+```python
+# Example code structure
+
+class ExampleClass:
+    """Brief description of class purpose."""
+
+    def __init__(self, param1: str, param2: int):
+        """Initialize with parameters."""
+        self.param1 = param1
+        self.param2 = param2
+
+    def method_name(self, arg: str) -> dict:
+        """
+        Description of what this method does.
+
+        Args:
+            arg: Description of argument
+
+        Returns:
+            Dictionary with result data
+
+        Raises:
+            ValueError: When input is invalid
+        """
+        # Implementation details
+        pass
+```
+
+**Dependencies:**
+- [External library or module]
+- [Internal component]
+
+### Component 2: [Component Name]
+
+**File:** `src/path/to/another_file.py`
+
+[Similar structure as Component 1]
+
+## Data Models
+
+### Model: ExampleModel
+
+**File:** `src/models/example.py`
+
+```python
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
+class ExampleModel(Base):
+    """Database model for example data."""
+
+    __tablename__ = 'examples'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False, unique=True)
+    description = Column(String(500))
+    created_at = Column(DateTime, nullable=False)
+```
+
+## API Endpoints
+
+### POST /api/endpoint
+
+**Description:** [What this endpoint does]
+
+**Request:**
+```json
+{
+  "field1": "value",
+  "field2": 123
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "status": "success",
+  "data": {
+    "result": "value"
+  }
+}
+```
+
+**Response (400 Bad Request):**
+```json
+{
+  "error": "Validation failed",
+  "details": ["field1 is required"]
+}
+```
+
+**Implementation:**
+
+```python
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+router = APIRouter()
+
+class RequestModel(BaseModel):
+    field1: str
+    field2: int
+
+class ResponseModel(BaseModel):
+    id: int
+    status: str
+    data: dict
+
+@router.post("/api/endpoint", response_model=ResponseModel)
+async def endpoint_handler(request: RequestModel):
+    """Handle endpoint request."""
+    # Implementation
+    pass
+```
+
+### GET /api/endpoint/{id}
+
+**Description:** [What this endpoint does]
+
+[Similar structure as POST endpoint]
+
+## Testing Requirements
+
+### Unit Tests
+
+**File:** `tests/test_example.py`
+
+```python
+import pytest
+from src.module import ExampleClass
+
+def test_example_success():
+    """Test successful operation."""
+    instance = ExampleClass("test", 123)
+    result = instance.method_name("input")
+    assert result["status"] == "success"
+
+def test_example_validation_error():
+    """Test validation error handling."""
+    instance = ExampleClass("test", 123)
+    with pytest.raises(ValueError):
+        instance.method_name("")
+```
+
+### Integration Tests
+
+**File:** `tests/test_integration.py`
+
+```python
+from fastapi.testclient import TestClient
+from src.main import app
+
+client = TestClient(app)
+
+def test_endpoint_integration():
+    """Test API endpoint integration."""
+    response = client.post("/api/endpoint", json={
+        "field1": "value",
+        "field2": 123
+    })
+    assert response.status_code == 200
+    assert response.json()["status"] == "success"
+```
+
+## Quality Gates
+
+- [ ] Test coverage ≥ 80%
+- [ ] All tests passing
+- [ ] Linting clean (ruff check)
+- [ ] Type checking clean (mypy)
+- [ ] API documentation complete
+
+## Container Specifications
+
+### Containerfile
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY src/ src/
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+
+CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### podman-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Containerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+
+## Dependencies
+
+**pyproject.toml additions:**
+
+```toml
+[project]
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "sqlalchemy>=2.0.0",
+    "pydantic>=2.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.25.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+```
+
+## Implementation Notes
+
+### Key Considerations
+
+- [Important implementation detail]
+- [Potential gotcha or edge case]
+- [Performance consideration]
+
+### Error Handling
+
+- [How to handle specific error type]
+- [Validation strategy]
+- [Retry logic if applicable]
+
+### Security
+
+- [Input validation approach]
+- [Authentication requirements]
+- [Authorization checks]
+
+## References
+
+- [Link to external documentation]
+- [Related specifications]
+- [Design patterns used]

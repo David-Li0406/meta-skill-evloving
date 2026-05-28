@@ -1,0 +1,16 @@
+# Pangu Model Configuration - Full Version
+# Original architecture based on references_models/pangu.py
+# 2D+3D hybrid adapted for ocean velocity prediction
+input_len: 7
+output_len: 1
+in_channels: 2  # u and v components
+
+# 模型架构参数
+img_size: [240, 240]      # 输入图像大小
+patch_size: [2, 4, 4]     # 3D Patch大小 [depth, height, width]
+embed_dim: 192            # 嵌入维度
+num_heads: [6, 12, 12, 6] # 每个阶段的注意力头数
+window_size: [2, 6, 12]   # 3D窗口大小 [depth, height, width]
+
+# 训练参数
+drop_path_rate: 0.2       # DropPath比例

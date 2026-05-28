@@ -1,0 +1,86 @@
+# Gitleaks configuration for OpenShift Cluster Health MCP
+# Documentation: https://github.com/gitleaks/gitleaks
+
+title = "OpenShift Cluster Health MCP - Gitleaks Configuration"
+
+[extend]
+# Use default gitleaks rules as base
+useDefault = true
+
+[allowlist]
+description = "Allowlist for false positives and test fixtures"
+
+# Regex patterns to ignore
+regexes = [
+    # Placeholder tokens in documentation
+    '''sha256~YOUR_TOKEN''',
+    '''sha256~EXAMPLE''',
+    '''YOUR_TOKEN_WILL_BE''',
+    '''YOUR_TOKEN_HERE''',
+
+    # Test fixtures and examples
+    '''example\.com''',
+    '''localhost''',
+    '''127\.0\.0\.1''',
+
+    # GitHub Actions environment variable syntax
+    '''\$\{\{ secrets\.''',
+    '''\$\{\{ env\.''',
+]
+
+# Paths to ignore
+paths = [
+    # Test fixtures
+    '''.*_test\.go''',
+    '''testdata/''',
+    '''fixtures/''',
+
+    # Generated files
+    '''.*/go\.sum''',
+    '''.*/go\.mod''',
+
+    # Documentation examples
+    '''docs/examples/''',
+
+    # Build artifacts
+    '''bin/''',
+    '''dist/''',
+    '''build/''',
+
+    # Dependencies
+    '''vendor/''',
+    '''node_modules/''',
+]
+
+# Specific commits to ignore (if needed)
+commits = []
+
+[[rules]]
+id = "openshift-token-real"
+description = "OpenShift authentication token (real)"
+regex = '''sha256~[A-Za-z0-9_-]{43}'''
+tags = ["secret", "openshift", "token"]
+
+[[rules]]
+id = "kubernetes-token"
+description = "Kubernetes service account token"
+regex = '''eyJhbGciOiJSUzI1NiIsImtpZCI6[A-Za-z0-9_-]+'''
+tags = ["secret", "kubernetes", "token"]
+
+[[rules]]
+id = "aws-access-key"
+description = "AWS Access Key ID"
+regex = '''(?i)(aws_access_key_id|aws_secret_access_key|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY)\s*[:=]\s*['"]?[A-Za-z0-9/+=]{20,}['"]?'''
+tags = ["secret", "aws"]
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----'''
+tags = ["secret", "private-key"]
+
+[[rules]]
+id = "github-token"
+description = "GitHub Token"
+regex = '''gh[pousr]_[0-9a-zA-Z]{36}'''
+tags = ["secret", "github"]

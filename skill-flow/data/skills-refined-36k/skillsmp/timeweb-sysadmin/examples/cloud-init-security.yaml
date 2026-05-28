@@ -1,0 +1,65 @@
+#cloud-config
+# Ubuntu Server Security Hardening
+# Apply during server creation in Timeweb Cloud
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - fail2ban
+  - ufw
+  - unattended-upgrades
+  - htop
+  - vim
+  - curl
+  - wget
+
+# Create admin user with sudo
+users:
+  - name: admin
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh-authorized-keys:
+      - ssh-rsa YOUR_PUBLIC_KEY_HERE
+
+# Disable root password login
+ssh_pwauth: false
+
+# Configure firewall and fail2ban
+runcmd:
+  # Enable UFW
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow ssh
+  - ufw allow http
+  - ufw allow https
+  - ufw --force enable
+  
+  # Configure fail2ban for SSH
+  - |
+    cat > /etc/fail2ban/jail.local << 'EOF'
+    [sshd]
+    enabled = true
+    port = ssh
+    filter = sshd
+    logpath = /var/log/auth.log
+    maxretry = 3
+    bantime = 3600
+    findtime = 600
+    EOF
+  - systemctl enable fail2ban
+  - systemctl start fail2ban
+  
+  # Enable automatic security updates
+  - |
+    cat > /etc/apt/apt.conf.d/20auto-upgrades << 'EOF'
+    APT::Periodic::Update-Package-Lists "1";
+    APT::Periodic::Unattended-Upgrade "1";
+    APT::Periodic::AutocleanInterval "7";
+    EOF
+  
+  # Harden SSH
+  - sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -i 's/PermitRootLogin yes/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+  - systemctl restart sshd

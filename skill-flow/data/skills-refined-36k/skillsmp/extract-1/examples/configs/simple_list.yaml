@@ -1,0 +1,58 @@
+# Simple List Extraction Example
+# Use this template for flat, uniform lists like product listings, article lists, etc.
+
+version: "1.0"
+name: "product_list"
+description: "Extract product listings from an e-commerce page"
+
+source:
+  url: "https://example.com/products"
+  options:
+    headless: true
+
+output:
+  format: [json, csv]
+  path: "output/products"
+
+# No contexts needed - flat list structure
+
+items:
+  - name: product
+    selector: "div.product-card"
+    fields:
+      name:
+        selector: "h2.title"
+        extract: text
+      price:
+        selector: ".price"
+        extract: text
+      description:
+        selector: ".description"
+        extract: text
+      url:
+        selector: "a"
+        extract: href
+        transform: absolute_url
+      image:
+        selector: "img"
+        extract: src
+        transform: absolute_url
+      rating:
+        selector: ".rating"
+        extract: text
+
+# Optional: Define output schema to ensure consistent fields
+schema:
+  fields:
+    - name: name
+      required: true
+    - name: price
+      required: true
+    - name: description
+      required: false
+    - name: url
+      required: false
+    - name: image
+      required: false
+    - name: rating
+      required: false

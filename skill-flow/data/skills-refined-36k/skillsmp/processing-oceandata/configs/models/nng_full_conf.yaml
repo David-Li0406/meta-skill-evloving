@@ -1,0 +1,29 @@
+# NNG Model Configuration - Neural Network on Graphs for Ocean Velocity Prediction
+# Graph-based neural network adapted from weather prediction models
+
+# Temporal configuration - multi-frame input/output
+input_len: 7        # Number of input frames
+output_len: 1       # Number of output frames
+in_channels: 2      # uo and vo components (ocean velocity)
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration
+mesh_level: 5       # Level of mesh refinement (higher = finer mesh)
+multimesh: true     # Use multi-resolution mesh hierarchy
+
+# Model architecture parameters
+hidden_dim: 128     # Hidden dimension for all MLPs
+processor_layers: 16  # Number of processor layers (graph message passing)
+aggregation: "sum"    # Aggregation method for edges ("sum" or "mean")
+
+# Optimization flags
+use_cugraphops: true  # Use CuGraphOps acceleration if available (GPU only)
+add_3d_dim: true      # Process 2D data as pseudo-3D (simulates depth dimension)
+
+# Training hints (for reference, actual values set in training config)
+# - This model is computationally intensive due to graph operations
+# - Recommended batch_size: 1-2 for GPU training
+# - Requires DGL library and optionally pylibcugraphops for acceleration
+# - Memory usage scales with mesh_level and hidden_dim

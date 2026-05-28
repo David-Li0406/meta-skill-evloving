@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="run" noun="BomCycleCheck" type="script"
+            location="component://darpan/src/bom/runBomCycleCheck.groovy">
+        <description>Split a BOM CSV into importable rows and rows that create reciprocal (cyclic) product relationships.</description>
+        <in-parameters>
+            <parameter name="bomFile" type="org.apache.commons.fileupload.FileItem">
+                <description>Uploaded BOM CSV file; required when bomLocation is not provided</description>
+            </parameter>
+            <parameter name="bomLocation">
+                <description>Alternate BOM file location (component://, runtime://, or absolute path) used when bomFile is not provided</description>
+            </parameter>
+            <parameter name="hasHeader" type="Boolean" default-value="true">
+                <description>Whether the CSV contains a header row</description>
+            </parameter>
+            <parameter name="delimiter" default-value=",">
+                <description>CSV delimiter</description>
+            </parameter>
+            <parameter name="parentFieldName" default-value="product-sku">
+                <description>Column name containing the parent/assembly SKU</description>
+            </parameter>
+            <parameter name="componentFieldName" default-value="product-sku-to">
+                <description>Column name containing the component SKU</description>
+            </parameter>
+            <parameter name="parentColumnIndex" type="Integer" default-value="1">
+                <description>Fallback 1-based column index for parent when header is missing</description>
+            </parameter>
+            <parameter name="componentColumnIndex" type="Integer" default-value="2">
+                <description>Fallback 1-based column index for component when header is missing</description>
+            </parameter>
+            <parameter name="assocTypeFieldName" default-value="product-assoc-type-id">
+                <description>Column name for association type (used only when assocTypeFilter is provided)</description>
+            </parameter>
+            <parameter name="assocTypeFilter">
+                <description>Optional association type to include; other rows are skipped</description>
+            </parameter>
+            <parameter name="tempLocation" default-value="runtime://tmp/bom/cycle-check">
+                <description>Base temp directory for uploaded files</description>
+            </parameter>
+            <parameter name="outputLocation">
+                <description>Output directory for generated CSVs; defaults to {tempLocation}/output</description>
+            </parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="importableFileName"/>
+            <parameter name="problemFileName"/>
+            <parameter name="importableLocation"/>
+            <parameter name="problemLocation"/>
+            <parameter name="importableRowCount" type="Long"/>
+            <parameter name="problemRowCount" type="Long"/>
+            <parameter name="totalRowCount" type="Long"/>
+            <parameter name="cycleCount" type="Long"/>
+            <parameter name="skippedRowCount" type="Long"/>
+            <parameter name="cycleGroups" type="List"/>
+        </out-parameters>
+    </service>
+</services>

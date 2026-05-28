@@ -1,0 +1,347 @@
+# Database Architect - Sharp Edges
+
+## Missing Index Production
+
+### **Id**
+missing-index-production
+### **Summary**
+Adding index to large table locks production writes
+### **Severity**
+critical
+### **Situation**
+Adding index to table with millions of rows
+### **Why**
+  CREATE INDEX on a 100M row table takes minutes to hours. During this
+  time, all writes to the table are blocked. Your API returns 502s,
+  users see errors, and you can't cancel without leaving partial state.
+  
+### **Solution**
+  1. PostgreSQL: Use CONCURRENTLY (slower but no lock):
+     CREATE INDEX CONCURRENTLY idx_users_email ON users(email);
+  
+     Note: Cannot run in transaction, may fail and need cleanup
+  
+  2. MySQL: Use pt-online-schema-change:
+     pt-online-schema-change --alter "ADD INDEX idx_email (email)" D=db,t=users
+  
+  3. Plan indexes BEFORE deployment:
+     - Design indexes based on query patterns
+     - Deploy with migration before traffic hits
+  
+  4. For urgent fixes, consider:
+     - Blue-green deployment with pre-indexed replica
+     - Maintenance window with user notification
+  
+### **Symptoms**
+  - API timeouts during migration
+  - Lock wait timeout exceeded
+  - Database connection exhaustion
+### **Detection Pattern**
+CREATE INDEX(?!.*CONCURRENTLY)|ALTER TABLE.*ADD INDEX
+
+## N Plus One Orm
+
+### **Id**
+n-plus-one-orm
+### **Summary**
+ORM lazy loading causes N+1 queries
+### **Severity**
+high
+### **Situation**
+Loading related data through ORM
+### **Why**
+  users = User.objects.all()
+  for user in users:
+      print(user.orders.count())  # 1 query per user!
+  
+  100 users = 101 queries. 10,000 users = database meltdown.
+  ORMs default to lazy loading, which is convenient but deadly at scale.
+  
+### **Solution**
+  1. Use eager loading:
+     # Django
+     users = User.objects.prefetch_related('orders')
+  
+     # SQLAlchemy
+     users = session.query(User).options(joinedload(User.orders))
+  
+     # Prisma
+     const users = await prisma.user.findMany({
+       include: { orders: true }
+     });
+  
+  2. Use database views for complex reports:
+     CREATE VIEW user_order_stats AS
+     SELECT u.id, COUNT(o.id) as order_count
+     FROM users u LEFT JOIN orders o ON o.user_id = u.id
+     GROUP BY u.id;
+  
+  3. Monitor query counts per request:
+     Django Debug Toolbar, pg_stat_statements
+  
+### **Symptoms**
+  - Page loads get slower as data grows
+  - Database CPU spikes during list views
+  - Query logs show repeated similar queries
+### **Detection Pattern**
+for.*in.*:.*\..*\.|\.all\(\).*for
+
+## Select Star
+
+### **Id**
+select-star
+### **Summary**
+SELECT * fetches unnecessary data
+### **Severity**
+medium
+### **Situation**
+Querying tables with many columns or large fields
+### **Why**
+  SELECT * FROM articles includes the 50KB content blob even when
+  you just need titles. Network bandwidth, memory, and parsing time
+  all wasted. On a list of 1000 articles, that's 50MB unnecessarily.
+  
+### **Solution**
+  1. Always select only needed columns:
+     SELECT id, title, created_at FROM articles;
+  
+  2. Create projections/views for common cases:
+     CREATE VIEW article_list AS
+     SELECT id, title, author_id, created_at FROM articles;
+  
+  3. In ORMs, use field selection:
+     # Django
+     Article.objects.values('id', 'title', 'created_at')
+  
+     # Prisma
+     prisma.article.findMany({
+       select: { id: true, title: true, createdAt: true }
+     })
+  
+  4. Exception: When you actually need all columns
+  
+### **Symptoms**
+  - High network I/O between app and database
+  - Slow queries for "simple" operations
+  - Memory pressure in application
+### **Detection Pattern**
+SELECT \*|findMany\(\)|\.all\(\)
+
+## No Foreign Keys
+
+### **Id**
+no-foreign-keys
+### **Summary**
+Missing foreign keys allow orphaned data
+### **Severity**
+high
+### **Situation**
+Multi-table relationships without constraints
+### **Why**
+  Application bug deletes a user but not their orders. Now orders
+  reference user_id that doesn't exist. Your reports break, your
+  joins return wrong counts, your data is corrupt. And it's been
+  happening for months before you notice.
+  
+### **Solution**
+  1. Always define foreign keys:
+     CREATE TABLE orders (
+         id SERIAL PRIMARY KEY,
+         user_id INTEGER NOT NULL REFERENCES users(id)
+     );
+  
+  2. Choose ON DELETE behavior carefully:
+     - CASCADE: Delete children with parent (use for owned data)
+     - RESTRICT: Prevent parent deletion (use for referenced data)
+     - SET NULL: Nullify reference (rare, for optional relations)
+  
+  3. Add foreign keys to existing tables:
+     -- First, clean up orphans
+     DELETE FROM orders WHERE user_id NOT IN (SELECT id FROM users);
+  
+     -- Then add constraint
+     ALTER TABLE orders
+     ADD CONSTRAINT fk_orders_user
+     FOREIGN KEY (user_id) REFERENCES users(id);
+  
+  4. Monitor for constraint violations in logs
+  
+### **Symptoms**
+  - Joins return fewer rows than expected
+  - Reports show inconsistent totals
+  - NULL where data should exist
+### **Detection Pattern**
+CREATE TABLE(?!.*REFERENCES)|user_id.*INT(?!.*REFERENCES)
+
+## Uuid Random Index
+
+### **Id**
+uuid-random-index
+### **Summary**
+Random UUIDs cause index fragmentation
+### **Severity**
+medium
+### **Situation**
+Using UUIDv4 as primary key on high-write tables
+### **Why**
+  UUIDv4 is random. Each insert goes to a random place in the B-tree
+  index. The index becomes fragmented, requires more pages, more I/O.
+  Performance degrades over time. 100M rows with random UUIDs is
+  significantly slower than sequential IDs.
+  
+### **Solution**
+  1. Use UUIDv7 (time-ordered):
+     -- PostgreSQL 17+ has gen_random_uuid() for v4
+     -- For v7, use extension or application-side generation
+  
+  2. Use ULID (lexicographically sortable):
+     -- Similar benefits to UUIDv7
+  
+  3. For high-write tables, consider bigserial:
+     id BIGSERIAL PRIMARY KEY
+  
+  4. If you must use random UUID, use fill factor:
+     CREATE INDEX ... WITH (fillfactor = 70);
+  
+  5. Regularly REINDEX or rebuild indexes
+  
+### **Symptoms**
+  - Inserts get slower over time
+  - Index size larger than expected
+  - Full table scans faster than index scans
+### **Detection Pattern**
+gen_random_uuid\(\)|UUID.*PRIMARY KEY
+
+## Transaction Too Long
+
+### **Id**
+transaction-too-long
+### **Summary**
+Long transactions hold locks and block others
+### **Severity**
+high
+### **Situation**
+Complex operations in single transaction
+### **Why**
+  BEGIN; ... process 10,000 items ... COMMIT;
+  This transaction holds locks for minutes. Other queries wait,
+  connections pile up, timeouts cascade. One slow operation blocks
+  the entire database.
+  
+### **Solution**
+  1. Break into smaller transactions:
+     for batch in chunks(items, 100):
+         with db.transaction():
+             process_batch(batch)
+  
+  2. Set transaction timeout:
+     SET statement_timeout = '30s';
+  
+  3. Use advisory locks for coordination:
+     SELECT pg_try_advisory_lock(123);
+     -- Do work
+     SELECT pg_advisory_unlock(123);
+  
+  4. For long processes, use background jobs:
+     - Celery, Sidekiq, etc.
+     - Each job is short transaction
+  
+  5. Monitor long-running transactions:
+     SELECT * FROM pg_stat_activity
+     WHERE state != 'idle'
+     AND xact_start < NOW() - INTERVAL '1 minute';
+  
+### **Symptoms**
+  - Lock wait timeout errors
+  - Connection pool exhaustion
+  - Sudden spike in query latency
+### **Detection Pattern**
+BEGIN.*COMMIT|transaction.*for|\.atomic\(\).*for
+
+## Jsonb Overuse
+
+### **Id**
+jsonb-overuse
+### **Summary**
+JSONB for structured data loses query power
+### **Severity**
+medium
+### **Situation**
+Storing frequently-queried data in JSONB
+### **Why**
+  data JSONB contains {"user_id": 1, "status": "active", "amount": 100}
+  Every query needs to parse JSON. Indexes are complex. No referential
+  integrity. No type checking. You've built a document database inside
+  a relational database, with neither's advantages.
+  
+### **Solution**
+  1. Extract frequently queried fields to columns:
+     ALTER TABLE orders ADD COLUMN status TEXT;
+     UPDATE orders SET status = data->>'status';
+  
+  2. Keep JSONB for truly dynamic data:
+     CREATE TABLE products (
+         id SERIAL PRIMARY KEY,
+         name TEXT NOT NULL,
+         price NUMERIC NOT NULL,
+         metadata JSONB  -- Only for optional, varying attributes
+     );
+  
+  3. If you must query JSONB, add expression indexes:
+     CREATE INDEX idx_orders_status ON orders ((data->>'status'));
+  
+  4. Consider when to use JSONB:
+     - User preferences (read as whole)
+     - Plugin/extension data
+     - Schema-less by requirement
+  
+### **Symptoms**
+  - Slow queries on JSONB fields
+  - No foreign key errors (silent data issues)
+  - Complex query syntax
+### **Detection Pattern**
+JSONB(?=.*user_id|.*status|.*email)|->>['"]id
+
+## No Pagination
+
+### **Id**
+no-pagination
+### **Summary**
+Unbounded queries return millions of rows
+### **Severity**
+high
+### **Situation**
+API endpoints or reports without pagination
+### **Why**
+  GET /users returns ALL users. In development: 100 users, 10ms.
+  In production: 5 million users, 30 seconds (if it doesn't timeout),
+  gigabytes of JSON, crashed browser, dead API server.
+  
+### **Solution**
+  1. Always paginate:
+     SELECT * FROM users
+     ORDER BY created_at DESC
+     LIMIT 20 OFFSET 0;
+  
+  2. Use cursor pagination for large datasets:
+     -- Instead of OFFSET (slow for large pages)
+     SELECT * FROM users
+     WHERE created_at < $last_seen_timestamp
+     ORDER BY created_at DESC
+     LIMIT 20;
+  
+  3. Add reasonable maximums:
+     const limit = Math.min(args.limit || 20, 100);
+  
+  4. For exports, use streaming:
+     COPY (SELECT * FROM users) TO STDOUT WITH CSV HEADER;
+  
+  5. Cache counts separately (COUNT(*) is expensive):
+     -- Cache or estimate, don't compute on every page
+  
+### **Symptoms**
+  - Timeout on list endpoints
+  - Out of memory errors
+  - Slow page loads as data grows
+### **Detection Pattern**
+SELECT.*(?<!LIMIT).*;|findMany\(\)(?!.*take)

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# View PostgreSQL 17 replica logs on hal9000
+# Usage: pg17-logs [lines]
+set -euo pipefail
+
+LINES="${1:-50}"
+
+ssh hal9000 "sudo bash -c 'tail -${LINES} /storage-fast/pg_base/log/\$(ls -t /storage-fast/pg_base/log/ | head -1)'"

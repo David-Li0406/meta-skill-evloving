@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Show WAL archive status for PostgreSQL 17 replica on hal9000
+set -euo pipefail
+
+ssh hal9000 "
+echo '=== WAL Archive ==='
+sudo find /mnt/storage20tb/quantierra/wal -name '*.gz' -type f 2>/dev/null | wc -l
+echo 'compressed WAL files'
+sudo du -sh /mnt/storage20tb/quantierra/wal/ 2>/dev/null
+echo ''
+echo '=== Latest WAL Files ==='
+sudo find /mnt/storage20tb/quantierra/wal -name '*.gz' -type f 2>/dev/null | sort | tail -5
+"

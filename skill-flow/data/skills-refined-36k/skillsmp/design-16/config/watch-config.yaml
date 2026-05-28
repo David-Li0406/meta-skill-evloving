@@ -1,0 +1,202 @@
+# Design Ops Watch Mode Configuration
+# ===================================
+# Configure continuous validation behavior
+
+# General settings
+general:
+  # Default validation interval in seconds
+  interval: 30
+
+  # Output directory for validation results
+  output_dir: /tmp/design-ops-watch
+
+  # Log verbosity: debug, info, warn, error
+  log_level: info
+
+  # Maximum concurrent validations
+  max_concurrent: 3
+
+# Domain configurations
+domains:
+  api:
+    # Files to watch for API domain
+    patterns:
+      - "**/api-spec*.md"
+      - "**/openapi*.yaml"
+      - "**/swagger*.yaml"
+
+    # Invariant file
+    invariants: invariants/api.md
+
+    # Validation thresholds
+    thresholds:
+      confidence_warn: 70
+      confidence_critical: 50
+
+    # Additional checks
+    checks:
+      - endpoints_defined
+      - error_handling
+      - authentication
+      - rate_limiting
+
+  database:
+    patterns:
+      - "**/db-spec*.md"
+      - "**/schema*.md"
+      - "**/migration*.md"
+
+    invariants: invariants/database.md
+
+    thresholds:
+      confidence_warn: 75
+      confidence_critical: 55
+
+    checks:
+      - schema_defined
+      - migrations_planned
+      - indexes_considered
+      - backup_strategy
+
+  security:
+    patterns:
+      - "**/security-spec*.md"
+      - "**/auth-spec*.md"
+
+    invariants: invariants/security.md
+
+    thresholds:
+      confidence_warn: 80
+      confidence_critical: 60
+
+    checks:
+      - threats_identified
+      - encryption_addressed
+      - audit_logging
+      - access_control
+
+  ui:
+    patterns:
+      - "**/ui-spec*.md"
+      - "**/frontend-spec*.md"
+      - "**/component-spec*.md"
+
+    invariants: invariants/ui.md
+
+    thresholds:
+      confidence_warn: 65
+      confidence_critical: 45
+
+    checks:
+      - components_defined
+      - accessibility
+      - responsive_design
+
+  general:
+    patterns:
+      - "**/spec*.md"
+      - "**/design*.md"
+
+    invariants: invariants/general.md
+
+    thresholds:
+      confidence_warn: 60
+      confidence_critical: 40
+
+# Notification settings
+notifications:
+  # Enable/disable notifications
+  enabled: false
+
+  # Webhook URL for alerts
+  webhook_url: ""
+
+  # When to notify
+  triggers:
+    - critical_violation
+    - confidence_drop_10
+    - spec_file_missing
+
+  # Notification cooldown (don't spam)
+  cooldown_minutes: 15
+
+# Agent timeouts (seconds)
+timeouts:
+  spec_analyst: 30
+  validator: 60
+  prp_generator: 120
+  reviewer: 30
+  retrospective: 60
+
+# Thinking level thresholds
+thinking_levels:
+  normal:
+    max_invariants: 10
+    max_complexity: 2
+    description: "Standard analysis, straightforward changes"
+
+  think:
+    max_invariants: 20
+    max_complexity: 4
+    description: "Extended analysis, moderate complexity"
+
+  think_hard:
+    max_invariants: 30
+    max_complexity: 6
+    description: "Deep analysis, significant architectural impact"
+
+  ultrathink:
+    description: "Maximum analysis, critical system changes"
+    # No max - this is the ceiling
+
+# Dashboard settings
+dashboard:
+  # Refresh interval in seconds
+  refresh: 5
+
+  # Maximum width (0 = auto)
+  max_width: 100
+
+  # Show timestamps
+  show_timestamps: true
+
+  # History to retain
+  history_count: 10
+
+# File watching settings
+watch:
+  # Use native file watching if available (fswatch, inotify)
+  native_watch: true
+
+  # Fallback polling interval if native not available
+  poll_interval: 2
+
+  # Ignore patterns
+  ignore:
+    - "node_modules/**"
+    - ".git/**"
+    - "*.bak"
+    - "*~"
+    - ".DS_Store"
+
+# Integration settings
+integrations:
+  # Git integration
+  git:
+    enabled: false
+    # Validate on pre-commit
+    pre_commit_hook: false
+    # Require minimum confidence for commit
+    min_confidence: 60
+
+  # CI/CD integration
+  ci:
+    enabled: false
+    # Fail build on critical violations
+    fail_on_critical: true
+    # Fail build below confidence threshold
+    min_confidence: 50
+    # Generate artifacts
+    artifacts:
+      - validation.json
+      - analysis.json

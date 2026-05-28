@@ -1,0 +1,41 @@
+# Example: Single-Use Pre-commit Review
+#
+# Configuration for requiring code review before EVERY commit.
+# The single_use scope ensures the requirement resets after each commit.
+
+version: "1.0"
+enabled: true
+inherit: true
+
+requirements:
+  pre_commit_review:
+    enabled: true
+    type: blocking
+    scope: single_use     # KEY: Resets after each commit
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "git\\s+commit"
+    message: |
+      📝 **Pre-commit Review Required**
+
+      Each commit requires a code review.
+
+      **Options**:
+      1. Run `/requirements-framework:pre-commit` (auto-satisfies)
+      2. Manual: `req satisfy pre_commit_review`
+
+      **Workflow**:
+      ```
+      git commit → Blocked
+      /requirements-framework:pre-commit → Auto-satisfies
+      git commit → Success!
+      (requirement resets for next commit)
+      ```
+    auto_satisfy:
+      on_skill_complete:
+        - "requirements-framework:pre-commit"
+    checklist:
+      - "Code changes reviewed"
+      - "No debug statements left"
+      - "Error handling present"
+      - "Tests added or updated"

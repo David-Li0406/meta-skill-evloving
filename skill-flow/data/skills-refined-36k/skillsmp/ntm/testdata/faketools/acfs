@@ -1,0 +1,78 @@
+#!/bin/bash
+# Fake acfs tool for testing
+# Supports MODE environment variable: normal (default), timeout, error
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        exec sleep 3600
+        ;;
+    error)
+        echo "acfs: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version|-v|version)
+        echo "0.1.0"
+        exit 0
+        ;;
+    info)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"hostname": "test-host", "ip": "127.0.0.1", "uptime": "1 day", "progress": 100}'
+        else
+            echo "Hostname: test-host"
+            echo "IP: 127.0.0.1"
+            echo "Uptime: 1 day"
+        fi
+        exit 0
+        ;;
+    doctor|check)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"status": "healthy", "tools": {"tmux": true, "git": true}}'
+        else
+            echo "Status: healthy"
+            echo "Tools: tmux, git"
+        fi
+        exit 0
+        ;;
+    status|continue|progress)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"complete": true, "step": 10, "total_steps": 10}'
+        else
+            echo "Installation complete (10/10 steps)"
+        fi
+        exit 0
+        ;;
+    update)
+        echo "ACFS is up to date"
+        exit 0
+        ;;
+    session|sessions)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[]'
+        else
+            echo "No sessions"
+        fi
+        exit 0
+        ;;
+    dashboard|dash)
+        echo "Dashboard generated"
+        exit 0
+        ;;
+    help|--help|-h|*)
+        echo "ACFS - Agentic Coding Flywheel Setup (fake for testing)"
+        echo "Usage: acfs <command>"
+        echo "  version     Show ACFS version"
+        echo "  info        Quick system overview"
+        echo "  doctor      Check system health"
+        echo "  status      View installation progress"
+        echo "  update      Update ACFS tools"
+        echo "  session     List/export/import sessions"
+        echo "  dashboard   Generate HTML dashboard"
+        exit 0
+        ;;
+esac

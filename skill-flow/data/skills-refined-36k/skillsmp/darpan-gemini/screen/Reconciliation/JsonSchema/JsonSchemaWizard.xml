@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Schema Wizard"
+        default-menu-include="false"
+        require-authentication="false">
+
+    <parameter name="schemaName"/>
+
+    <!-- Transitions -->
+    <transition name="processUpload" begin-transaction="false">
+        <actions>
+            <script>
+                ec.logger.info("processUpload triggered. Params: ${context.keySet()}")
+                
+                // Check which file was uploaded
+                // Note: FileItem check might be needed for size > 0
+                def hasJson = jsonFile != null &amp;&amp; jsonFile.getSize() > 0
+                def hasSchema = schemaFile != null &amp;&amp; schemaFile.getSize() > 0
+
+                if (hasJson) {
+                    ec.logger.info("Processing JSON Sample upload")
+                    Map result = ec.service.sync().name("jsonschema.JsonSchemaServices.create#JsonSchemaFromJson")
+                        .parameters([jsonFile:jsonFile, schemaName:schemaName, overwrite:overwrite])
+                        .call()
+                    // Put output in context for response
+                    context.putAll(result)
+                } else if (hasSchema) {
+                    ec.logger.info("Processing Existing Schema upload")
+                    Map result = ec.service.sync().name("jsonschema.JsonSchemaServices.save#JsonSchema")
+                        .parameters([schemaFile:schemaFile, schemaName:schemaName, overwrite:overwrite])
+                        .call()
+                    context.putAll(result)
+                } else {
+                    ec.message.addError("Please upload either a Sample JSON file or an Existing Schema file.")
+                    return
+                }
+            </script>
+            
+            <message>Saved Schema ${schemaName}</message>
+        </actions>
+        <!-- If 'Refine Manually' (submitBtn) was clicked, go to Editor -->
+        <conditional-response url="../Editor">
+            <condition><expression>submitBtn</expression></condition>
+            <parameter name="schemaName" from="schemaName"/>
+            <parameter name="jsonSchemaId" from="jsonSchemaId"/>
+        </conditional-response>
+        <!-- Default: Go to Browse -->
+        <default-response url="../Browse">
+             <parameter name="activeTab" value="browse"/>
+        </default-response>
+    </transition>
+
+    <pre-actions>
+        <script>
+            // Clean up session state from previous wizard/editor runs
+            ec.web.session.removeAttribute("wizardResultList")
+            ec.web.session.removeAttribute("wizardSchemaName")
+            ec.web.session.removeAttribute("wizardSchemaId")
+        </script>
+    </pre-actions>
+
+    <widgets>
+        <container style="container">
+            <container style="page-header">
+                <label text="Schema Editor" type="h2"/>
+                <label text="Infer and refine JSON schemas from sample files." type="p" style="text-muted"/>
+            </container>
+
+            <container style="well">
+                <container>
+                    <label text="Step 1: Upload Sample JSON" type="h4" style="text-info"/>
+                    <form-single name="WizardStep1" transition="processUpload">
+                        <field name="jsonFile">
+                            <default-field title="Upload Sample JSON">
+                                <file size="40" accept=".json,application/json"/>
+                            </default-field>
+                        </field>
+                        <field name="schemaFile">
+                            <default-field title="Upload Existing Schema">
+                                <file size="40" accept=".json,.schema.json,application/schema+json"/>
+                            </default-field>
+                        </field>
+                        
+                        <field name="schemaName">
+                            <default-field title="Schema Name (Optional)">
+                                <text-line size="40" placeholder="e.g. My Schema Name"/>
+                            </default-field>
+                        </field>
+                        <field name="overwrite">
+                            <default-field title="">
+                                <check><option key="true" text="Overwrite if exists"/></check>
+                            </default-field>
+                        </field>
+
+                        <field name="submitGenerate">
+                            <default-field title="Generate &amp; Save">
+                                <submit btn-type="success"/>
+                            </default-field>
+                        </field>
+                        <field name="submitBtn">
+                            <default-field title="Refine">
+                                <submit btn-type="info"/>
+                            </default-field>
+                        </field>
+                        
+                        <field-layout>
+                             <field-row-big>
+                                 <field-ref name="jsonFile"/>
+                                 <field-ref name="schemaFile"/>
+                             </field-row-big>
+                             <field-row-big>
+                                 <field-ref name="schemaName"/>
+                                 <field-ref name="overwrite"/>
+                             </field-row-big>
+                             <field-row-big>
+                                 <field-ref name="submitGenerate"/>
+                                 <field-ref name="submitBtn"/>
+                             </field-row-big>
+                        </field-layout>
+                    </form-single>
+                </container>
+                
+
+            </container>
+        </container>
+    </widgets>
+</screen>

@@ -1,0 +1,64 @@
+{
+  "$schema": "../symbols-config-schema.json",
+  "projectName": "SkillMeat",
+  "symbolsDir": "{{SYMBOLS_DIR}}",
+  "domains": {
+    "ui": {
+      "file": "symbols-ui.json",
+      "description": "Vue components - Single File Components (.vue), composition functions, component library. Adjust to match your components directory.",
+      "testFile": "symbols-ui-tests.json",
+      "enabled": true
+    },
+    "web": {
+      "file": "symbols-web.json",
+      "description": "Vue application - Pages, views, layouts, router configuration. Customize for your app structure.",
+      "enabled": true
+    },
+    "shared": {
+      "file": "symbols-shared.json",
+      "description": "Shared composables and types - Composition API composables, Pinia stores, type definitions, utilities.",
+      "enabled": true
+    }
+  },
+  "extraction": {
+    "python": {
+      "directories": ["backend"],
+      "extensions": [".py"],
+      "excludes": ["__pycache__", "*.pyc"],
+      "excludeTests": true,
+      "excludePrivate": false
+    },
+    "typescript": {
+      "directories": [
+        "src/components",
+        "src/views",
+        "src/pages",
+        "src/composables",
+        "src/stores",
+        "src/utils",
+        "src/router",
+        "src/types"
+      ],
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".vue"],
+      "excludes": [
+        "node_modules/",
+        "*.test.*",
+        "*.spec.*",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/__tests__/",
+        "dist/",
+        "build/",
+        "out/",
+        "coverage/",
+        "*.d.ts"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "Template for Vue 3 + TypeScript application. Common patterns: Composition API, Pinia stores, Vue Router, composables, Single File Components. Note: TypeScript extractor will capture exports from .vue files but not template/style sections. Adjust directories to match your project structure."
+  }
+}

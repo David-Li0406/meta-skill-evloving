@@ -1,0 +1,189 @@
+# ==============================================================================
+# Template Name: Deploy to IIS on Machine Group (deploy-iis.yml)
+# Description:
+#   This template encapsulates the standard process for deploying a website to On-Premises IIS.
+#   Executed using Machine Group Agents (Environment).
+#   Includes three main steps:
+#   1. Download Artifact
+#   2. Manage IIS Website and Application Pool (Task) - Handles site creation, binding, and AppPool settings
+#   3. Deploy application physical files - Includes file cleanup and variable substitution
+# ==============================================================================
+
+parameters:
+  # Website Name (Display name in IIS)
+  - name: websiteName
+    type: string
+
+  # Website Physical Path (Absolute path on the server)
+  - name: websitePhysicalPath
+    type: string
+
+  # Site Binding Settings (JSON List)
+  # Format example: '[{"type":"http","port":80,"ip":"*","hostName":"sample.local"}]'
+  - name: bindings
+    type: string
+    default: "[]"
+
+  # Whether to create or update the Application Pool (AppPool)
+  - name: createOrUpdateAppPool
+    type: boolean
+    default: true
+
+  # Application Pool Name
+  - name: appPoolName
+    type: string
+
+  # AppPool .NET CLR Version (For .NET Core/5+, 'No Managed Code' is recommended)
+  - name: appPoolDotNetVersion
+    type: string
+    default: "No Managed Code"
+    values:
+      - "No Managed Code"
+      - "v4.0"
+      - "v2.0"
+
+  # ASP.NET Core Environment Variable (e.g., Development, Production)
+  - name: aspNetCoreEnvironment
+    type: string
+    default: "Production"
+
+  # Source Pipeline Name (used for downloading Artifacts)
+  - name: sourcePipeline
+    type: string
+    default: "current"
+
+  # Name of the Artifact to download
+  - name: artifactName
+    type: string
+    default: "drop"
+
+  # Whether to clean extra files in the destination folder (Recommended to keep environment clean, default true)
+  - name: cleanDestination
+    type: boolean
+    default: true
+
+  # Backup Path
+  - name: backupPath
+    type: string
+
+  # Backup Retention Count
+  - name: backupRetentionCount
+    type: number
+    default: 5
+
+steps:
+  # ----------------------------------------------------------------------------
+  # Step 1: Download Artifact
+  # ----------------------------------------------------------------------------
+  - download: ${{ parameters.sourcePipeline }}
+    artifact: ${{ parameters.artifactName }}
+    displayName: "Download Website Publish Files"
+
+  # ----------------------------------------------------------------------------
+  # Step 2: Extract Artifact (if it is a zip)
+  # This is to allow subsequent web.config modification and JSON variable substitution to work
+  # ----------------------------------------------------------------------------
+  - template: ../util/extract-artifact.yml
+    parameters:
+      artifactName: ${{ parameters.artifactName }}
+      sourcePipeline: ${{ parameters.sourcePipeline }}
+      runCondition: "succeeded()"
+
+  # ----------------------------------------------------------------------------
+  # Step 3: Pre-modify web.config (Set Environment Variables)
+  # Handle web.config modification through a separate Template to keep the main file clean.
+  # ----------------------------------------------------------------------------
+  - template: ../util/set-aspnetcore-env.yml
+    parameters:
+      aspNetCoreEnvironment: ${{ parameters.aspNetCoreEnvironment }}
+      packagePath: "$(WebDeployPackagePath)"
+      # Execution condition: succeeded + environment variable is not empty
+      runCondition: "and(succeeded(), ne('${{ parameters.aspNetCoreEnvironment }}', ''))"
+
+  # ----------------------------------------------------------------------------
+  # Step 4: Manage IIS Website (Create/Update)
+  # Create website and assign AppPool. For .NET Core/5+ apps, AppPool is recommended to be 'No Managed Code'.
+  # Execute PowerShell script using external template
+  # ----------------------------------------------------------------------------
+  - template: ../util/iis/iis-task.yml
+    parameters:
+      command: manage
+      websiteName: ${{ parameters.websiteName }}
+      websitePhysicalPath: ${{ parameters.websitePhysicalPath }}
+      appPoolName: ${{ parameters.appPoolName }}
+      appPoolDotNetVersion: ${{ parameters.appPoolDotNetVersion }}
+      bindings: ${{ parameters.bindings }}
+      runCondition: "succeeded()"
+
+  # ----------------------------------------------------------------------------
+  # Step 5: Mark Deployment Start
+  # ----------------------------------------------------------------------------
+  - powershell: Write-Host "##vso[task.setvariable variable=_IISDeploymentStarted]true"
+    displayName: "Mark Deployment Start (Set Deployment Flag)"
+  # ----------------------------------------------------------------------------
+  # Step 6: Stop IIS Website
+  # ----------------------------------------------------------------------------
+  - template: ../util/iis/iis-task.yml
+    parameters:
+      command: stop
+      websiteName: ${{ parameters.websiteName }}
+      runCondition: "and(succeeded(), eq(variables['_IISDeploymentStarted'], 'true'))"
+
+  # ----------------------------------------------------------------------------
+  # Step 7: Backup Old Website Content
+  # ----------------------------------------------------------------------------
+  - template: ../util/iis/iis-task.yml
+    parameters:
+      command: backup
+      websitePhysicalPath: ${{ parameters.websitePhysicalPath }}
+      backupPath: ${{ parameters.backupPath }}
+      backupRetentionCount: ${{ parameters.backupRetentionCount }}
+      # Execution condition: succeeded + deployment started + backup path is not empty
+      runCondition: "and(succeeded(), eq(variables['_IISDeploymentStarted'], 'true'), ne('${{ parameters.backupPath }}', ''))"
+
+  # ----------------------------------------------------------------------------
+  # Step 8: Deploy Application Files
+  # Copy Artifact to destination path.
+  # Execute Copy-Item using external template
+  # ----------------------------------------------------------------------------
+  - template: ../util/iis/iis-task.yml
+    parameters:
+      command: deploy
+      sourcePath: "$(WebDeployPackagePath)"
+      destinationPath: ${{ parameters.websitePhysicalPath }}
+      cleanDestination: ${{ parameters.cleanDestination }}
+      # Execution condition: succeeded + deployment started
+      runCondition: "and(succeeded(), eq(variables['_IISDeploymentStarted'], 'true'))"
+
+  # ----------------------------------------------------------------------------
+  # Step 9: Start IIS Website
+  # Execute PowerShell script using external template
+  # ----------------------------------------------------------------------------
+  - template: ../util/iis/iis-task.yml
+    parameters:
+      command: start
+      websiteName: ${{ parameters.websiteName }}
+      # Execution condition: succeeded + deployment started
+      runCondition: "and(succeeded(), eq(variables['_IISDeploymentStarted'], 'true'))"
+
+  # ----------------------------------------------------------------------------
+  # Step 10: Rollback Mechanism
+  # Execute restore and restart when deployment fails (any of Step 6~9 fails)
+  # ----------------------------------------------------------------------------
+  - template: ../util/iis/iis-task.yml
+    parameters:
+      command: rollback
+      websiteName: ${{ parameters.websiteName }}
+      websitePhysicalPath: ${{ parameters.websitePhysicalPath }}
+      # Execution condition: failed + deployment started
+      runCondition: "and(failed(), eq(variables['_IISDeploymentStarted'], 'true'))"
+
+  # ----------------------------------------------------------------------------
+  # Step 9: Clean Temporary Files
+  # Execute cleanup regardless of deployment success or failure to release space (Avoid Artifact accumulation in local IIS azagent folder)
+  # ----------------------------------------------------------------------------
+  - template: ../util/clean-artifact.yml
+    parameters:
+      artifactName: ${{ parameters.artifactName }}
+      sourcePipeline: ${{ parameters.sourcePipeline }}
+      runCondition: "always()"

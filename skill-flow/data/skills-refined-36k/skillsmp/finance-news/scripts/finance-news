@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# Finance News CLI - Main entry point
+# Usage: finance-news <command> [options]
+
+set -e
+
+# Resolve symlinks to find actual script directory
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+BASE_DIR="$( cd -P "${SCRIPT_DIR}/.." && pwd )"
+
+# NixOS Fix: Ensure libstdc++.so.6 is in LD_LIBRARY_PATH for numpy/yfinance
+if [[ -d "/nix/store" ]]; then
+  # Try to find libstdc++.so.6 in the store
+  LIBPATH=$(find /nix/store -maxdepth 2 -name "*-gcc-*-lib" -print -quit 2>/dev/null)/lib
+  if [[ -d "$LIBPATH" ]]; then
+    export LD_LIBRARY_PATH="$LIBPATH:$LD_LIBRARY_PATH"
+  fi
+fi
+
+# Auto-activate local venv if present (prevents missing deps in cron/gateway runs)
+VENV_DIR="${BASE_DIR}/venv"
+if [[ -z "${VIRTUAL_ENV:-}" && -x "${VENV_DIR}/bin/python3" ]]; then
+  export VIRTUAL_ENV="${VENV_DIR}"
+  export PATH="${VIRTUAL_ENV}/bin:${PATH}"
+else
+  if [[ ! -x "${VENV_DIR}/bin/python3" ]]; then
+    echo "⚠️ Local venv missing at ${VENV_DIR}; install deps to avoid runtime errors." >&2
+  fi
+fi
+
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+
+usage() {
+    cat << EOM
+📈 Finance News CLI
+
+Usage: finance-news <command> [options]
+
+Commands:
+  setup                           Interactive setup wizard
+  config                          Show current configuration
+  
+  briefing [--morning|--evening]  Generate market briefing
+  market                          Market overview (indices + headlines)
+  portfolio                       News for portfolio stocks
+  portfolio-only                  Top gainers/losers from portfolio with news
+  news <SYMBOL>                   News for specific ticker
+  
+  portfolio-list                  List portfolio stocks
+  portfolio-add <SYMBOL>          Add stock to portfolio
+  portfolio-remove <SYMBOL>       Remove stock from portfolio
+  portfolio-import <file.csv>     Import portfolio from CSV
+
+Options:
+  --lang <de|en>     Output language (default: de)
+  --json             Output as JSON
+  --send             Send to WhatsApp group
+  --deadline <sec>   Overall deadline in seconds
+  --fast             Fast mode (shorter timeouts, fewer items)
+  --help             Show this help
+
+Examples:
+  finance-news briefing --morning
+  finance-news market --lang en
+  finance-news news AAPL
+  finance-news portfolio-add NVDA --name "NVIDIA Corporation" --category Tech
+EOM
+}
+
+case "${1:-}" in
+  briefing)
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/briefing.py" "$@"
+    ;;
+  
+  market)
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/fetch_news.py" market "$@"
+    ;;
+  
+  portfolio)
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/fetch_news.py" portfolio "$@"
+    ;;
+
+  portfolio-only)
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/fetch_news.py" portfolio-only "$@"
+    ;;
+  
+  news)
+    shift
+    if [[ -z "$1" ]]; then
+      echo "❌ Usage: finance-news news <SYMBOL>"
+      exit 1
+    fi
+    # Fetch news for specific ticker
+    symbol="$1"
+    shift
+    "$PYTHON_BIN" -c "
+import sys
+sys.path.insert(0, '$SCRIPT_DIR')
+from fetch_news import fetch_ticker_news
+import json
+
+articles = fetch_ticker_news('$symbol', 10)
+print(f'\n📰 News for $symbol\n')
+for a in articles:
+    print(f\"• {a['title']}\")
+    print(f\"  {a['link']}\n\")
+"
+    ;;
+  
+  portfolio-list)
+    "$PYTHON_BIN" "$SCRIPT_DIR/portfolio.py" list
+    ;;
+  
+  portfolio-add)
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/portfolio.py" add "$@"
+    ;;
+  
+  portfolio-remove)
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/portfolio.py" remove "$@"
+    ;;
+  
+  portfolio-import)
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/portfolio.py" import "$@"
+    ;;
+  
+  portfolio-create)
+    "$PYTHON_BIN" "$SCRIPT_DIR/portfolio.py" create
+    ;;
+  
+  setup)
+    shift
+    "$PYTHON_BIN" "$SCRIPT_DIR/setup.py" "$@"
+    ;;
+  
+  setup-wizard)
+    "$PYTHON_BIN" "$SCRIPT_DIR/setup.py" wizard
+    ;;
+  
+  config)
+    "$PYTHON_BIN" "$SCRIPT_DIR/setup.py" show
+    ;;
+  
+  --help|-h|help|"")
+    usage
+    ;;
+  
+  *)
+    echo "❌ Unknown command: $1"
+    echo "Run 'finance-news --help' for usage."
+    exit 1
+    ;;
+esac

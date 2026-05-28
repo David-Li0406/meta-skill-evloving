@@ -1,0 +1,38 @@
+---
+name: branching-commits-prs
+description: Use this skill when making code changes to ensure all modifications are done through branches and grouped logically into commits.
+---
+
+# Branches and Commit Messages
+
+To ensure good history, all code changes need to be grouped together logically into commits, with good messages, and a branch should always be used rather than committing directly to main. Follow these guidelines to ensure we are following these practices.
+
+## Branch
+
+Before performing any commits, ensure a branch has been created for the work. This branch must never be `main`, but should be a branch created specifically for the changes taking place. If no branch is already created, create a new one with a good name based on the changes being made.
+
+## Commits
+
+When committing changes:
+
+1. Review all changes.
+2. Logically group the changes together.
+3. Create short commit messages for each group, then commit them.
+
+## Merging
+
+**NEVER** merge to main unless explicitly instructed to do so by the user.
+
+## Pull Request
+
+Before creating a pull request, ensure all tests pass.
+
+When creating a pull request:
+
+- Provide a clear title describing the changes which have been made.
+- In the body content of the PR:
+  - Start with a description of *why* the changes were made based on the conversation history.
+  - Include a quick list of changes as a bulleted list.
+  - Provide additional details grouped together logically, following good accessibility practices for headers.
+  - Include code snippets for important changes.
+  - Use the Playwright MCP server to create a screenshot of any UI updates, and include them in the PR.

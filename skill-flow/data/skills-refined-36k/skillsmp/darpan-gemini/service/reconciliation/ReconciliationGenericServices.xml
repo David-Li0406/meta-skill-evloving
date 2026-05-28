@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="reconcile" noun="GenericFiles" type="script"
+            location="component://darpan/src/reconciliation/generic/reconcileGenericFiles.groovy">
+        <description>
+            Generic file reconciliation that auto-detects file types (CSV/JSON) and routes appropriately.
+            Supports CSV-CSV, JSON-JSON, and mixed CSV-JSON comparisons.
+        </description>
+        <in-parameters>
+            <parameter name="file1" type="org.apache.commons.fileupload.FileItem" required="true">
+                <description>First file to compare (CSV or JSON)</description>
+            </parameter>
+            <parameter name="file2" type="org.apache.commons.fileupload.FileItem" required="true">
+                <description>Second file to compare (CSV or JSON)</description>
+            </parameter>
+            
+            <parameter name="file1SystemEnumId" required="true">
+                <description>System identifier for file 1</description>
+            </parameter>
+            <parameter name="file2SystemEnumId" required="true">
+                <description>System identifier for file 2</description>
+            </parameter>
+            <parameter name="reconciliationMappingId" required="true">
+                <description>Mapping that defines file types, schemas, and ID fields</description>
+            </parameter>
+            
+            <!-- CSV option - typically always true -->
+            <parameter name="hasHeader" type="Boolean" default-value="true">
+                <description>Whether CSV files have headers</description>
+            </parameter>
+            
+            <!-- Spark configuration -->
+            <parameter name="sparkMaster" default-value="local[*]"/>
+            <parameter name="sparkAppName" default-value="GenericReconciliation"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="file1Type">
+                <description>Detected file type: CSV or JSON</description>
+            </parameter>
+            <parameter name="file2Type">
+                <description>Detected file type: CSV or JSON</description>
+            </parameter>
+            <parameter name="reconciliationType">
+                <description>Type of reconciliation performed: CSV, JSON, or MIXED</description>
+            </parameter>
+            <parameter name="diffLocation">
+                <description>Location of generated diff file</description>
+            </parameter>
+            <parameter name="diffFileName">
+                <description>Name of generated diff file</description>
+            </parameter>
+            <parameter name="differenceCount" type="Integer">
+                <description>Total number of differences found</description>
+            </parameter>
+            <parameter name="onlyInFile1Count" type="Integer">
+                <description>Count of IDs only in file 1</description>
+            </parameter>
+            <parameter name="onlyInFile2Count" type="Integer">
+                <description>Count of IDs only in file 2</description>
+            </parameter>
+            <parameter name="validationErrors">
+                <parameter name="errorMessage"/>
+            </parameter>
+            <parameter name="processingWarnings">
+                <parameter name="warningMessage"/>
+            </parameter>
+        </out-parameters>
+    </service>
+</services>

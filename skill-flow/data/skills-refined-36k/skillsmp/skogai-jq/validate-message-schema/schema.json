@@ -1,0 +1,53 @@
+{
+  "name": "validate-message-schema",
+  "description": "Validate that an object matches the standard message schema (role, content, timestamp)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object to validate as a message"
+  },
+  "args": {},
+  "output": {
+    "type": "object",
+    "description": "Validation result with {valid: boolean, errors: [string]}. valid is true if message matches schema, errors contains list of validation failures."
+  },
+  "examples": [
+    {
+      "description": "Valid message with all required fields",
+      "input": {"role": "user", "content": "Hello world"},
+      "args": {},
+      "output": {"valid": true, "errors": []}
+    },
+    {
+      "description": "Valid message with optional timestamp",
+      "input": {"role": "assistant", "content": "Hi there", "timestamp": "2025-11-14T10:30:00Z"},
+      "args": {},
+      "output": {"valid": true, "errors": []}
+    },
+    {
+      "description": "Missing required field (content)",
+      "input": {"role": "user"},
+      "args": {},
+      "output": {"valid": false, "errors": ["Required field 'content' is missing"]}
+    },
+    {
+      "description": "Invalid role value",
+      "input": {"role": "admin", "content": "test"},
+      "args": {},
+      "output": {"valid": false, "errors": ["Field 'role' has invalid value 'admin' (must be one of: user, assistant, system)"]}
+    },
+    {
+      "description": "Wrong type for content field",
+      "input": {"role": "user", "content": 123},
+      "args": {},
+      "output": {"valid": false, "errors": ["Field 'content' has wrong type (expected string, got number)"]}
+    },
+    {
+      "description": "Extra unexpected fields",
+      "input": {"role": "user", "content": "test", "extra": "field"},
+      "args": {},
+      "output": {"valid": false, "errors": ["Unexpected fields: extra"]}
+    }
+  ],
+  "tags": ["validation", "message", "schema", "check", "chat"]
+}

@@ -1,0 +1,49 @@
+#!/bin/bash
+# Fake mcp-agent-mail tool for testing (Agent Mail MCP server binary)
+# This is the actual binary name the AMAdapter looks for
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        # Use exec to replace bash with sleep so the process can be killed properly
+        exec sleep 3600
+        ;;
+    error)
+        echo "mcp-agent-mail: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version)
+        echo "mcp-agent-mail 1.0.0 (fake)"
+        exit 0
+        ;;
+    status)
+        echo '{"running": true, "port": 8765, "projects": 1}'
+        exit 0
+        ;;
+    start)
+        echo "Agent Mail server starting on port 8765..."
+        exit 0
+        ;;
+    stop)
+        echo "Agent Mail server stopped"
+        exit 0
+        ;;
+    --help|-h)
+        echo "mcp-agent-mail - Agent Mail MCP server (fake for testing)"
+        echo "Usage: mcp-agent-mail [command] [options]"
+        echo "Commands:"
+        echo "  status    Check server status"
+        echo "  start     Start the server"
+        echo "  stop      Stop the server"
+        exit 0
+        ;;
+    *)
+        echo "mcp-agent-mail: unknown command: $1" >&2
+        exit 1
+        ;;
+esac

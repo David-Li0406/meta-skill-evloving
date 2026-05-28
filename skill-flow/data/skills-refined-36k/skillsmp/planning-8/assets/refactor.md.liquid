@@ -1,0 +1,68 @@
+# {{ title }} Refactor
+
+Feature branch: `{{ featureBranch }}`
+Base branch: `{{ baseBranch }}`
+{% if linearIssueId -%}
+Linear Issue ID: `{{ linearIssueId }}`
+{% endif -%}
+
+## Overview
+
+<!-- Write a brief description of what code is being refactored. Be succinct. -->
+
+## Context
+
+<!-- Summarize existing work and recent changes on the branch. -->
+
+## Scope
+
+<!--
+Define what code is being refactored. Be succinct.
+
+Examples of what could be included:
+
+- What's being changed
+- What's explicitly NOT changing (only if it clarifies scope)
+-->
+
+## Plan
+
+<!--
+Break down the refactoring into logical phases. Phases are partitions of work that do not require user input or review while running.
+
+For simple refactoring, a single phase will suffice. For each phase, break down the refactoring into specific steps with enough detail for independent implementation.
+-->
+
+### Phase 1: [Title]
+
+<!-- ... -->
+
+### Phase 2: [Title]
+
+<!-- ... -->
+
+## Safety
+
+<!-- Copy this Safety section exactly as written, without modification: -->
+
+To ensure safe refactoring:
+
+1. **Preserve existing tests:** Run tests related to the refactored code.
+2. **Maintain test coverage:** Keep tests passing throughout the refactoring process
+3. **Small incremental changes:** Make small, focused changes that can be easily reviewed and reverted
+4. **Validate after each phase:** Run tests for affected units and verify functionality after completing each phase
+5. **Document breaking changes:** If any API changes are needed, document them clearly
+
+## Process
+
+<!-- Copy this Process section exactly as written, without modification: -->
+
+For each phase above (in order) do the following:
+
+1. Run existing tests to ensure they pass before making changes (establish baseline).
+2. Make incremental refactoring changes while keeping tests green.
+3. Add new tests if the refactoring introduces new functionality or improves testability.
+4. Validate that the refactored code maintains the same external behavior.
+5. If refactoring becomes blocked or tests start failing, STOP and seek guidance from the user.
+6. Once the phase is complete, STOP and wait for user feedback.
+7. Once the user has finished giving feedback, append "(✅ Complete)" to the phase's header.

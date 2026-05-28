@@ -1,0 +1,47 @@
+{
+  "name": "is-empty-string",
+  "description": "Check if a value at a specified path is an empty string (exactly \"\")",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a field at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the field to check (e.g., 'user.name', 'data.text')"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if value at path is exactly empty string \"\", false for any other value (whitespace, null, false, 0, [], {}, missing field, or non-string type)"
+  },
+  "examples": [
+    {
+      "description": "Check if name field is empty string",
+      "input": {"user": {"name": ""}},
+      "args": {"path": "user.name"},
+      "output": true
+    },
+    {
+      "description": "Whitespace string is not empty",
+      "input": {"text": " "},
+      "args": {"path": "text"},
+      "output": false
+    },
+    {
+      "description": "Null value is not empty string",
+      "input": {"value": null},
+      "args": {"path": "value"},
+      "output": false
+    },
+    {
+      "description": "Missing field returns false",
+      "input": {"other": "data"},
+      "args": {"path": "missing"},
+      "output": false
+    }
+  ],
+  "tags": ["string", "validation", "empty", "check", "boolean"]
+}

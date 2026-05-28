@@ -1,0 +1,116 @@
+{
+  "scenario_outputs": {
+    "scenario_1": {
+      "status": "report_generated",
+      "requirement": "添加用户认证功能，包括登录、注册和密码重置",
+      "report_path": ".claude/code_refactor_report/添加用户认证功能包括登录注册和密码重置-2025-12-14.md",
+      "total_tasks": 15,
+      "priority_distribution": {
+        "high": 8,
+        "medium": 5,
+        "low": 2
+      },
+      "analysis_summary": {
+        "total_files": 7,
+        "total_lines": 15,
+        "summary": "找到 15 处可能需要修改的代码，分布在 7 个文件中。其中高优先级修改点占 53.3%。"
+      },
+      "next_step": "使用相同需求再次调用以检查完成情况"
+    },
+    "scenario_2": {
+      "status": "completion_checked",
+      "requirement": "添加用户认证功能，包括登录、注册和密码重置",
+      "report_info": {
+        "requirement": "添加用户认证功能，包括登录、注册和密码重置",
+        "generated_date": "2025-12-14 10:30:00",
+        "status": "进行中"
+      },
+      "completion_rate": 40.0,
+      "task_stats": {
+        "total": 15,
+        "completed": 6,
+        "in_progress": 2,
+        "pending": 7
+      },
+      "summary": "📊 完成过半 (6/15，40.0%)，继续努力"
+    },
+    "scenario_3": {
+      "status": "report_generated",
+      "requirement": "优化数据库查询性能，减少响应时间",
+      "report_path": ".claude/code_refactor_report/优化数据库查询性能减少响应时间-2025-12-14.md",
+      "total_tasks": 12,
+      "priority_distribution": {
+        "high": 3,
+        "medium": 7,
+        "low": 2
+      },
+      "analysis_summary": {
+        "total_files": 5,
+        "total_lines": 12,
+        "summary": "找到 12 处可能需要修改的代码，分布在 5 个文件中。其中高优先级修改点占 25.0%。"
+      }
+    }
+  },
+  "validation_patterns": {
+    "report_generated": {
+      "required_fields": ["status", "requirement", "report_path", "total_tasks"],
+      "status_value": "report_generated",
+      "report_path_pattern": ".claude/code_refactor_report/.*\\.md$"
+    },
+    "completion_checked": {
+      "required_fields": ["status", "requirement", "completion_rate", "task_stats"],
+      "status_value": "completion_checked",
+      "completion_rate_range": [0, 100]
+    },
+    "no_changes_needed": {
+      "required_fields": ["status", "requirement", "message"],
+      "status_value": "no_changes_needed"
+    },
+    "error": {
+      "required_fields": ["status", "error"],
+      "status_value": "error"
+    }
+  },
+  "text_output_examples": {
+    "report_generated": "✅ 已生成重构待办事项报告\n📋 需求: {requirement}\n📁 报告文件: {report_path}\n📊 分析摘要: {summary}\n📝 总任务数: {total_tasks}\n🚨 高优先级: {high_priority}\n⚠️  中优先级: {medium_priority}\n📋 低优先级: {low_priority}",
+    "completion_checked_high": "🎉 重构进度检查\n📋 需求: {requirement}\n📁 报告文件: {report_path}\n📅 生成日期: {date}\n📊 完成率: 100% (全部完成)\n\n📈 任务统计:\n  总任务数: {total}\n  已完成: {completed}\n  进行中: {in_progress}\n  未开始: {pending}",
+    "completion_checked_medium": "📊 重构进度检查\n📋 需求: {requirement}\n📁 报告文件: {report_path}\n📅 生成日期: {date}\n📊 完成率: 65% (完成过半)\n\n📈 任务统计:\n  总任务数: {total}\n  已完成: {completed}\n  进行中: {in_progress}\n  未开始: {pending}",
+    "no_changes_needed": "ℹ️  代码分析完成\n📋 需求: {requirement}\n📊 结果: 未找到需要修改的代码\n💡 建议:\n  - 提供更详细的需求描述\n  - 指定具体的功能或模块\n  - 检查是否已实现类似功能"
+  },
+  "performance_benchmarks": {
+    "analysis_time": {
+      "small_repo": "1-3 seconds",
+      "medium_repo": "3-10 seconds",
+      "large_repo": "10-30 seconds"
+    },
+    "memory_usage": {
+      "small_repo": "10-50 MB",
+      "medium_repo": "50-200 MB",
+      "large_repo": "200-500 MB"
+    },
+    "file_processing": {
+      "files_per_second": "10-50",
+      "max_files_per_run": 100
+    }
+  },
+  "quality_metrics": {
+    "keyword_extraction": {
+      "accuracy_target": "85%",
+      "recall_target": "90%",
+      "precision_target": "80%"
+    },
+    "priority_assignment": {
+      "high_correctness": "90%",
+      "medium_correctness": "85%",
+      "low_correctness": "80%"
+    },
+    "report_generation": {
+      "success_rate": "95%",
+      "error_rate": "<5%"
+    },
+    "completion_validation": {
+      "accuracy": "98%",
+      "false_positive_rate": "<2%"
+    }
+  }
+}

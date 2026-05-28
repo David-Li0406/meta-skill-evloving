@@ -1,0 +1,407 @@
+#!/bin/bash
+# memory - Helix Memory CLI wrapper
+# Usage: memory <command> [args]
+#
+# Commands:
+#   start               Start HelixDB (auto-starts Docker Desktop if needed)
+#   stop                Stop HelixDB
+#   restart             Restart HelixDB
+#   status              Check HelixDB status
+#   search <query>      Search memories by content
+#   list [--limit N]    List all memories
+#   store <content>     Store a new memory
+#   delete <id>         Delete memory by ID (supports prefix)
+#   tag <tag>           Find memories by tag
+#   recall <topic>      Alias for search (natural language)
+#   remember <content>  Quick store with auto-categorization
+#   show <id>           Show memory details by ID
+
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
+HELPER="$SCRIPT_DIR/scripts/memory_helper.py"
+CONFIG_FILE="$HOME/.helix-memory.conf"
+
+# Read config file if it exists
+if [ -f "$CONFIG_FILE" ]; then
+    HELIX_BIN=$(grep -E "^helix_bin\s*=" "$CONFIG_FILE" 2>/dev/null | cut -d'=' -f2 | tr -d ' ' | sed "s|~|$HOME|g")
+    HELIX_URL=$(grep -E "^url\s*=" "$CONFIG_FILE" 2>/dev/null | cut -d'=' -f2 | tr -d ' ')
+fi
+
+# Defaults if not in config
+HELIX_BIN="${HELIX_BIN:-$HOME/.local/bin/helix}"
+HELIX_URL="${HELIX_URL:-http://localhost:6969}"
+
+# Function to check if Docker is running
+docker_running() {
+    docker info &>/dev/null
+}
+
+# Function to start Docker Desktop if not running
+ensure_docker() {
+    if docker_running; then
+        return 0
+    fi
+
+    echo "Docker not running. Starting Docker Desktop..."
+    open -a "Docker Desktop"
+
+    # Wait for Docker to start (max 60 seconds)
+    local attempts=0
+    while ! docker_running; do
+        if [ $attempts -ge 30 ]; then
+            echo "ERROR: Docker Desktop failed to start within 60 seconds"
+            return 1
+        fi
+        sleep 2
+        attempts=$((attempts + 1))
+        printf "."
+    done
+    echo " Docker ready!"
+    return 0
+}
+
+# Function to check if HelixDB is running
+helix_running() {
+    curl -s --connect-timeout 2 "$HELIX_URL/GetAllMemories" -X POST -H "Content-Type: application/json" -d '{}' &>/dev/null
+}
+
+case "$1" in
+    start)
+        if helix_running; then
+            echo "HelixDB already running"
+            python3 "$HELPER" status
+            exit 0
+        fi
+
+        ensure_docker || exit 1
+
+        echo "Starting HelixDB..."
+
+        # Try helix push first, fall back to cached docker image if it fails
+        if cd "$SCRIPT_DIR" && "$HELIX_BIN" push dev 2>/dev/null; then
+            sleep 2
+        else
+            echo "Helix CLI failed, using cached docker image..."
+            # Remove any stale container
+            docker rm -f helix-memory-dev 2>/dev/null || true
+            # Start with correct data mount path
+            docker run -d --name helix-memory-dev -p 6969:6969 \
+                -v "$SCRIPT_DIR/.helix/.volumes/dev/user:/root/.helix/user" \
+                helix-helix-memory-dev:debug
+            sleep 2
+        fi
+
+        if helix_running; then
+            echo "HelixDB started successfully"
+            python3 "$HELPER" status
+        else
+            echo "HelixDB may still be starting... check 'memory status' in a moment"
+        fi
+        ;;
+    stop)
+        if ! helix_running; then
+            echo "HelixDB is not running"
+            exit 0
+        fi
+
+        echo "Stopping HelixDB..."
+        # Stop both helix-managed and our fallback container
+        cd "$SCRIPT_DIR" && "$HELIX_BIN" stop dev 2>/dev/null
+        docker stop helix-memory-dev 2>/dev/null
+        echo "HelixDB stopped"
+        ;;
+    restart)
+        $0 stop
+        sleep 2
+        $0 start
+        ;;
+    status|st)
+        python3 "$HELPER" status
+        ;;
+    search|s)
+        shift
+        python3 "$HELPER" search "$@"
+        ;;
+    list|ls)
+        shift
+        python3 "$HELPER" list "$@"
+        ;;
+    projects)
+        shift
+        python3 "$HELPER" projects "$@"
+        ;;
+    context|ctx|env)
+        shift
+        python3 "$HELPER" context "$@"
+        ;;
+    migrate)
+        shift
+        python3 "$HELPER" migrate "$@"
+        ;;
+    store|add)
+        shift
+        if [ -z "$1" ]; then
+            echo "Usage: memory store <content> [-t category] [-i importance] [-g tags]"
+            echo "  Arguments can be in any order. Use -- before content starting with -"
+            echo "  Examples:"
+            echo "    memory store \"user prefers X\" -t preference -i 8"
+            echo "    memory store -t fact -i 7 \"API key in .env\""
+            echo "    memory store -- \"-weird content\" -t fact"
+            exit 1
+        fi
+
+        # Robust argument parsing - accepts any order
+        content="" category="" importance="" tags=""
+        auto_categorize=true
+
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -c|--content)
+                    if [[ -n "$2" && "$2" != -* ]]; then
+                        content="$2"; shift 2
+                    else
+                        echo "Error: -c/--content requires a value"; exit 1
+                    fi
+                    ;;
+                -t|--category)
+                    if [[ -n "$2" && "$2" != -* ]]; then
+                        category="$2"; auto_categorize=false; shift 2
+                    else
+                        echo "Error: -t/--category requires a value"; exit 1
+                    fi
+                    ;;
+                -i|--importance)
+                    if [[ -n "$2" && "$2" != -* ]]; then
+                        importance="$2"; auto_categorize=false; shift 2
+                    else
+                        echo "Error: -i/--importance requires a value"; exit 1
+                    fi
+                    ;;
+                -g|--tags)
+                    if [[ -n "$2" && "$2" != -* ]]; then
+                        tags="$2"; shift 2
+                    else
+                        echo "Error: -g/--tags requires a value"; exit 1
+                    fi
+                    ;;
+                --)
+                    # Everything after -- is content
+                    shift
+                    content="$*"
+                    break
+                    ;;
+                -*)
+                    echo "Unknown flag: $1"
+                    echo "Valid flags: -c (content), -t (category), -i (importance), -g (tags)"
+                    exit 1
+                    ;;
+                *)
+                    # Non-flag argument = content
+                    if [ -z "$content" ]; then
+                        content="$1"
+                    else
+                        content="$content $1"
+                    fi
+                    shift
+                    ;;
+            esac
+        done
+
+        if [ -z "$content" ]; then
+            echo "Error: content is required"
+            echo "Usage: memory store <content> [-t category] [-i importance] [-g tags]"
+            exit 1
+        fi
+
+        # Auto-categorize if no explicit flags provided
+        if $auto_categorize; then
+            echo "Analyzing memory..."
+            json=$(python3 "$HELPER" categorize "$content" 2>/dev/null)
+            if [ -n "$json" ] && command -v jq >/dev/null; then
+                category=$(echo "$json" | jq -r '.category // "fact"')
+                importance=$(echo "$json" | jq -r '.importance // 5')
+                tags=$(echo "$json" | jq -r '.tags // ""')
+            elif [ -n "$json" ]; then
+                category=$(echo "$json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('category','fact'))" 2>/dev/null || echo "fact")
+                importance=$(echo "$json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('importance',5))" 2>/dev/null || echo "5")
+                tags=$(echo "$json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tags',''))" 2>/dev/null || echo "")
+            else
+                category="fact"; importance=5; tags=""
+            fi
+        fi
+
+        # Build command with normalized arguments
+        cmd=(python3 "$HELPER" store --content "$content")
+        [ -n "$category" ] && cmd+=(--category "$category")
+        [ -n "$importance" ] && cmd+=(--importance "$importance")
+        [ -n "$tags" ] && cmd+=(--tags "$tags")
+        cmd+=(--force)
+
+        "${cmd[@]}"
+        ;;
+    delete|del|rm)
+        shift
+        if [ -z "$1" ]; then
+            echo "Usage: memory delete <memory-id>"
+            exit 1
+        fi
+        python3 "$HELPER" delete "$1"
+        ;;
+    retag)
+        shift
+        if [ -z "$1" ]; then
+            printf 'Usage: memory retag <id> <new-tags>    # Replace all tags
+'
+            printf '       memory retag <id> --add <tag>   # Add a tag
+'
+            printf '       memory retag <id> --remove <tag> # Remove a tag
+'
+            exit 1
+        fi
+        python3 "$HELPER" retag "$@"
+        ;;
+    tag|by-tag)
+        shift
+        python3 "$HELPER" by-tag "$1"
+        ;;
+    creds|credentials)
+        shift
+        python3 "$HELPER" creds "$@"
+        ;;
+    migrate-creds)
+        shift
+        python3 "$HELPER" migrate-creds "$@"
+        ;;
+    recall|r)
+        shift
+        python3 "$HELPER" search "$*"
+        ;;
+    show|get|view)
+        shift
+        if [ -z "$1" ]; then
+            echo "Usage: memory show <memory-id>"
+            exit 1
+        fi
+        python3 "$HELPER" show "$1"
+        ;;
+    remember|rem)
+        # Alias for store (same behavior)
+        shift
+        exec "$0" store "$@"
+        ;;
+    health)
+        shift
+        python3 "$HELPER" health "$@"
+        ;;
+    garbage)
+        shift
+        python3 "$HELPER" garbage "$@"
+        ;;
+    link)
+        shift
+        python3 "$HELPER" link "$@"
+        ;;
+    merge)
+        shift
+        python3 "$HELPER" merge "$@"
+        ;;
+    curate)
+        shift
+        # Support: curate, curate analyze, curate review, curate apply
+        python3 "$HELPER" curate "$@"
+        ;;
+    dedup)
+        shift
+        python3 "$HELPER" dedup "$@"
+        ;;
+    graph)
+        shift
+        case "$1" in
+            build)
+                python3 "$HELPER" graph-build
+                ;;
+            clean)
+                shift
+                python3 "$HELPER" graph-clean "$@"
+                ;;
+            "")
+                echo "Usage: memory graph <subcommand>"
+                echo "  build       Build project graph from existing tags"
+                echo "  clean       Clean orphaned contexts (--apply to delete)"
+                echo "  <project>   Show memories linked to project via graph"
+                ;;
+            *)
+                python3 "$HELPER" graph-show "$@"
+                ;;
+        esac
+        ;;
+    help|--help|-h)
+        cat << 'EOF'
+Helix Memory CLI
+
+Usage: memory <command> [args]
+
+Service Commands:
+  start                   Start HelixDB (auto-starts Docker Desktop if needed)
+  stop                    Stop HelixDB
+  restart                 Restart HelixDB
+  status, st              Check HelixDB status and memory count
+
+Memory Commands:
+  search, s <query>       Search memories by content
+  creds [project]         List ALL credentials (or filter by project)
+  list, ls [options]      List all memories (sorted by importance)
+    --limit N               Limit to N results
+    --since DATE            Show memories after DATE (yesterday, 2026-01-10, "3 days ago")
+    --date DATE             Show memories on exact DATE
+  projects [options]      List projects worked on (cross-refs with p --list)
+    --since DATE            Show since DATE (default: yesterday)
+    --date DATE             Show on exact DATE
+    -v                      Show memory snippets
+  context/ctx/env [proj]  Show all paths/credentials/URLs for a project
+  store/add/remember/rem  Store memory (auto-categorizes; optional: -t -i -g)
+  delete, rm <id>         Delete memory by ID (prefix matching OK)
+  retag <id> <tags>       Replace all tags on a memory
+    --add <tag>             Add a single tag (keeps existing)
+    --remove <tag>          Remove a single tag
+  tag <tag>               Find memories by tag
+  recall, r <topic>       Search memories (alias)
+  show/get/view <id>      Show memory details by ID
+
+Curation Commands:
+  health [-v] [-t]        Memory health report (-t for thorough vector analysis)
+  garbage [-n] [-f]       Find/delete garbage memories (-n dry-run, -f force)
+  dedup [-n] [-f]         Find/delete duplicates
+  migrate-creds           Tag credentials missing 'credentials' tag (--dry-run, --apply)
+  link <from> <to> [-r]   Create edge between memories
+  merge <keep> <del...>   Merge duplicates (keep one, delete rest)
+  curate [analyze]        Analyze memories, save pending actions (background-safe)
+  curate review           Show pending curation actions
+  curate apply            Execute pending actions (--links-only, --deletes-only, --merges-only)
+
+Graph Commands:
+  graph build             Build project graph from existing memory tags
+  graph <project>         Show memories linked to project via graph traversal
+
+Examples:
+  memory creds            # List ALL credentials
+  memory creds wp-test    # Show only wp-test credentials
+  memory creds marriagemarket  # Show marriagemarket credentials
+  memory migrate-creds --dry-run  # Preview credentials to tag
+  memory migrate-creds --apply    # Add 'credentials' tag to untagged
+  memory start            # Start HelixDB (starts Docker if needed)
+  memory retag abc12 --add urgent   # Add a tag
+  memory health -v        # Detailed health report
+  memory graph build      # Create project contexts from tags
+  memory graph wp-test    # Show wp-test memories via graph
+
+Categories: preference, fact, context, decision, task, solution
+EOF
+        ;;
+    "")
+        python3 "$HELPER" status
+        ;;
+    *)
+        # Default: treat as search query (backward compatible)
+        python3 "$HELPER" search "$*"
+        ;;
+esac

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartographer - Map Any Codebase</title>
+    <style>
+        body {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .ascii-art {
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.2;
+            color: #60a5fa;
+            margin-bottom: 30px;
+            white-space: pre;
+        }
+        h1 {
+            text-align: center;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        .tagline {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #60a5fa;
+            border-bottom: 2px solid #475569;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .workflow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .step {
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .step-title {
+            color: #60a5fa;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .feature {
+            background: rgba(51, 65, 85, 0.3);
+            border-left: 4px solid #60a5fa;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        .model-support {
+            background: rgba(51, 65, 85, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #475569;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: rgba(96, 165, 250, 0.1);
+            color: #60a5fa;
+        }
+        .cta {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #60a5fa;
+            color: #0f172a;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .btn:hover {
+            background: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(96, 165, 250, 0.4);
+        }
+        .github-link {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #475569;
+        }
+        .github-link a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        .github-link a:hover {
+            text-decoration: underline;
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ascii-art">
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║                                                               ║
+    ║     ██████╗ █████╗ ██████╗ ████████╗ ██████╗  ██████╗         ║
+    ║    ██╔════╝██╔══██╗██╔══██╗╚══██╔══╝██╔═══██╗██╔════╝         ║
+    ║    ██║     ███████║██████╔╝   ██║   ██║   ██║██║  ███╗        ║
+    ║    ██║     ██╔══██║██╔══██╗   ██║   ██║   ██║██║   ██║        ║
+    ║    ╚██████╗██║  ██║██║  ██║   ██║   ╚██████╔╝╚██████╔╝        ║
+    ║     ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝  ╚═════╝         ║
+    ║                                                               ║
+    ║           🗺️  Map Any Codebase with Any LLM  🧭               ║
+    ║                                                               ║
+    ║         ┌─────────┐    ┌─────────┐    ┌─────────┐            ║
+    ║         │ Scan 📡 │───▶│ Analyze │───▶│ Map 📍  │            ║
+    ║         └─────────┘    └─────────┘    └─────────┘            ║
+    ║              │              │              │                  ║
+    ║              ▼              ▼              ▼                  ║
+    ║         File Tree     Subagents     CODEBASE_MAP.md          ║
+    ║                                                               ║
+    ╚═══════════════════════════════════════════════════════════════╝
+        </div>
+
+        <h1>Cartographer</h1>
+        <p class="tagline">Map any codebase with any LLM</p>
+
+        <div class="section">
+            <h2>🚀 What It Does</h2>
+            <p>Cartographer orchestrates multiple LLM subagents to analyze your entire codebase in parallel, then synthesizes their findings into comprehensive documentation and architecture maps.</p>
+            
+            <div class="feature-grid">
+                <div class="feature">
+                    <h3>📊 Architecture Maps</h3>
+                    <p>Generate detailed CODEBASE_MAP.md with file purposes, dependencies, and data flows</p>
+                </div>
+                <div class="feature">
+                    <h3>🔄 Parallel Processing</h3>
+                    <p>Multiple subagents analyze different modules simultaneously for faster mapping</p>
+                </div>
+                <div class="feature">
+                    <h3>🎯 Smart Analysis</h3>
+                    <p>AI-powered understanding of code structure, patterns, and conventions</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔄 How It Works</h2>
+            <div class="workflow">
+                <div class="step">
+                    <div class="step-title">📡 Scan</div>
+                    <p>Recursive file tree with token counting and .gitignore respect</p>
+                </div>
+                <div class="step">
+                    <div class="step-title">📋 Plan</div>
+                    <p>Group files by module and balance token budgets</p>
+                </div>
+                <div class="step">
+                    <div class="step-title">🤖 Analyze</div>
+                    <p>Spawn subagents in parallel to analyze assigned files</p>
+                </div>
+                <div class="step">
+                    <div class="step-title">📝 Synthesize</div>
+                    <p>Merge reports and build comprehensive documentation</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧠 Model Support</h2>
+            <div class="model-support">
+                <p>Works with any LLM, optimized for large context models:</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Context Window</th>
+                            <th>Tokens per Subagent</th>
+                            <th>Recommended</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>MiniMax-M2.1</strong> ⭐</td>
+                            <td>1,000,000</td>
+                            <td>500,000</td>
+                            <td>🔥 Best Choice</td>
+                        </tr>
+                        <tr>
+                            <td>Claude Sonnet</td>
+                            <td>1,000,000</td>
+                            <td>500,000</td>
+                            <td>✅ Excellent</td>
+                        </tr>
+                        <tr>
+                            <td>Gemini 1.5 Pro</td>
+                            <td>2,000,000</td>
+                            <td>800,000</td>
+                            <td>✅ Excellent</td>
+                        </tr>
+                        <tr>
+                            <td>GPT-4 Turbo</td>
+                            <td>128,000</td>
+                            <td>60,000</td>
+                            <td>⚠️ Limited</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚡ Quick Start</h2>
+            <p>Get your codebase mapped in minutes:</p>
+            
+            <div class="feature">
+                <h3>1️⃣ Scan Your Codebase</h3>
+                <code>python3 cartographer/scripts/scan-codebase.py . --format tree</code>
+                
+                <h3>2️⃣ Follow Workflow</h3>
+                <p>Check the <strong>SKILL.md</strong> for complete orchestration workflow</p>
+                
+                <h3>3️⃣ Get Your Map</h3>
+                <p>Receive detailed <code>docs/CODEBASE_MAP.md</code> with:</p>
+                <ul>
+                    <li>System architecture diagrams (Mermaid)</li>
+                    <li>Directory structure with annotations</li>
+                    <li>Module-by-module documentation</li>
+                    <li>Data flow diagrams</li>
+                    <li>Navigation guides</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cta">
+            <a href="https://github.com/MeepTheTendie/cartographer4all" class="btn">
+                📦 View on GitHub
+            </a>
+            <a href="https://github.com/MeepTheTendie/cartographer4all/blob/main/SKILL.md" class="btn">
+                📖 Read Documentation
+            </a>
+        </div>
+
+        <div class="github-link">
+            <p>
+                <span class="emoji">⭐</span> 
+                Cartographer is open-source and available on GitHub
+                <span class="emoji">⭐</span>
+            </p>
+            <p>
+                <a href="https://github.com/MeepTheTendie/cartographer4all">
+                    github.com/MeepTheTendie/cartographer4all
+                </a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

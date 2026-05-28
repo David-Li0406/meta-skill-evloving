@@ -1,0 +1,134 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, claude/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  python-tests:
+    name: Python Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+
+    - name: Run Python tests
+      run: |
+        python -m pytest tests/test_universal_axiom.py tests/test_axiom_benchmarking.py -v
+
+    - name: Run performance regression tests
+      run: |
+        python -m pytest tests/test_performance_regression.py -v
+
+  javascript-tests:
+    name: JavaScript Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build TypeScript
+      run: npx tsc
+
+    - name: Run JavaScript tests
+      run: npx jest tests/universal-axiom.test.js
+
+  rust-tests:
+    name: Rust Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+
+    - name: Run Rust tests
+      working-directory: src/rust
+      run: cargo test --verbose
+
+  julia-tests:
+    name: Julia Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Julia
+      uses: julia-actions/setup-julia@v1
+      with:
+        version: '1.9'
+
+    - name: Install Julia dependencies
+      run: |
+        julia -e 'using Pkg; Pkg.add("JSON")'
+
+    - name: Run Julia tests
+      run: julia tests/test_universal_axiom.jl
+
+  cross-language-verification:
+    name: Cross-Language Output Verification
+    runs-on: ubuntu-latest
+    needs: [python-tests, javascript-tests, rust-tests, julia-tests]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Set up Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install JavaScript dependencies
+      run: npm install
+
+    - name: Build TypeScript
+      run: npx tsc
+
+    - name: Build Rust library
+      working-directory: src/rust
+      run: cargo build --release
+
+    - name: Run cross-language verification
+      run: |
+        python verify_outputs.py --verbose
+
+    - name: Check for formula drift
+      if: failure()
+      run: |
+        echo "::error::Formula drift detected! Different implementations produce different outputs."
+        echo "::error::Please review the verification output above and sync all implementations."
+        exit 1

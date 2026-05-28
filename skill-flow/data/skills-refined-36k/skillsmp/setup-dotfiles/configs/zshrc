@@ -1,0 +1,56 @@
+# Cross-platform dotfiles for macOS & Linux
+# Shell: Zsh | Editor: Neovim | Terminal: Ghostty
+
+# ============================================================================
+# Platform Detection
+# ============================================================================
+if [[ "$(uname)" == "Darwin" ]]; then
+    IS_MACOS=true
+    alias ls='ls -G'
+else
+    IS_MACOS=false
+    alias ls='ls --color=auto'
+fi
+
+# ============================================================================
+# Aliases
+# ============================================================================
+alias la='ls -A'
+alias ll='ls -lA'
+alias pog='nvim $(fzf-tmux)'
+alias lsa='eza --long'
+alias con="tmux attach-session -t"
+alias v='nvim'
+alias g='git'
+
+# ============================================================================
+# Prompt
+# ============================================================================
+PROMPT='%F{167}ϟ%f %B%F{240}%1~ %f%b'
+
+# ============================================================================
+# Environment
+# ============================================================================
+export EDITOR="nvim"
+export VISUAL="nvim"
+
+# Add local bin to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Zig (if installed)
+[[ -d "$HOME/.local/share/zig" ]] && export PATH="$PATH:$HOME/.local/share/zig"
+
+# ============================================================================
+# Functions
+# ============================================================================
+# Git log with fzf preview
+gsl() {
+    git log --pretty=oneline --abbrev-commit | \
+    fzf --preview-window down:70% --preview 'echo {} | cut -f 1 -d " " | xargs git show --color=always'
+}
+
+# Quick cd with fzf
+fcd() {
+    local dir
+    dir=$(find ${1:-.} -type d 2>/dev/null | fzf) && cd "$dir"
+}

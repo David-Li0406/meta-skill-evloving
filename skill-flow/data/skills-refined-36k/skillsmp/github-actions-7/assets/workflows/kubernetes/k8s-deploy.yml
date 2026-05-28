@@ -1,0 +1,313 @@
+# Kubernetes Deployment Workflow
+# Deploy applications to Kubernetes clusters
+# Features: kubectl configuration, Helm chart deployment, health checks
+
+name: Kubernetes Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'k8s/**'
+      - 'helm/**'
+      - 'Dockerfile'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build and push Docker image
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to development environment
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: build
+
+    environment:
+      name: development
+      url: https://dev.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_DEV }}
+
+      - name: Verify cluster connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/app \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --namespace=development
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=development --timeout=5m
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods --namespace=development -l app=app
+
+  # Deploy to staging environment
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, deploy-dev]
+
+    environment:
+      name: staging
+      url: https://staging.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Verify cluster connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/app \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --namespace=staging
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=staging --timeout=5m
+
+      - name: Run smoke tests
+        run: |
+          kubectl run smoke-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://staging.example.com/health || exit 1
+
+  # Deploy to production environment
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, deploy-staging]
+    if: github.ref == 'refs/heads/main'
+
+    environment:
+      name: production
+      url: https://example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PROD }}
+
+      - name: Verify cluster connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Create deployment backup
+        run: |
+          kubectl get deployment app --namespace=production -o yaml > deployment-backup.yaml
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/app \
+            app=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --namespace=production
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=production --timeout=10m
+
+      - name: Verify deployment health
+        run: |
+          # Check if pods are ready
+          kubectl wait --for=condition=ready pod -l app=app --namespace=production --timeout=5m
+
+          # Run health check
+          kubectl run health-check --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://example.com/health || exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          kubectl apply -f deployment-backup.yaml
+          echo "Rolled back to previous version"
+
+  # Deploy using Helm
+  helm-deploy:
+    name: Helm Deploy
+    runs-on: ubuntu-latest
+    needs: build
+
+    strategy:
+      matrix:
+        environment: [development, staging, production]
+        exclude:
+          - environment: production
+            # Only deploy to production on main branch
+            when: github.ref != 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.13.0'
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install app ./helm/app \
+            --namespace ${{ matrix.environment }} \
+            --create-namespace \
+            --set image.tag=${{ github.sha }} \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --values helm/app/values-${{ matrix.environment }}.yaml \
+            --wait \
+            --timeout 10m
+
+      - name: Verify Helm release
+        run: |
+          helm status app --namespace ${{ matrix.environment }}
+          helm test app --namespace ${{ matrix.environment }}
+
+  # Run integration tests
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Run integration tests
+        run: |
+          # Port-forward to staging service
+          kubectl port-forward svc/app 8080:80 --namespace=staging &
+          PF_PID=$!
+          sleep 5
+
+          # Run tests
+          npm run test:integration || \
+          python -m pytest tests/integration/ || \
+          echo "Integration tests completed"
+
+          # Cleanup
+          kill $PF_PID
+
+  # Post-deployment monitoring
+  monitor:
+    name: Monitor Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-prod]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PROD }}
+
+      - name: Monitor pod health
+        run: |
+          for i in {1..10}; do
+            READY_REPLICAS=$(kubectl get deployment app --namespace=production -o jsonpath='{.status.readyReplicas}')
+            DESIRED_REPLICAS=$(kubectl get deployment app --namespace=production -o jsonpath='{.spec.replicas}')
+
+            if [ "$READY_REPLICAS" -eq "$DESIRED_REPLICAS" ]; then
+              echo "All pods are ready"
+              exit 0
+            fi
+
+            echo "Waiting for pods... ($i/10)"
+            sleep 30
+          done
+
+          echo "Timeout waiting for pods"
+          exit 1
+
+      - name: Check logs for errors
+        run: |
+          kubectl logs --namespace=production --selector=app=app --tail=100 | grep -i error || echo "No errors found in logs"
+
+      - name: Create deployment summary
+        run: |
+          echo "### Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** production" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Success" >> $GITHUB_STEP_SUMMARY

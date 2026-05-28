@@ -1,0 +1,40 @@
+# example of a lmbda function to handle Tavili search requests from Bedrock agents
+**user intent** provide a lambda function that can be invoked by Bedrock agents to perform web searches using the Tavili API
+
+**this is JUST an example, must be changed to fit project, report steps taken and status**  
+
+
+import { Handler } from 'aws-lambda';
+import axios from 'axios';
+
+export const handler: Handler = async (event) => {
+  const query = event.inputText; // Bedrock passes the search query here
+  const apiKey = process.env.TAVILY_API_KEY;
+
+  try {
+    const response = await axios.post('https://api.tavily.com/search', {
+      api_key: apiKey,
+      query: query,
+      search_depth: "advanced",
+      max_results: 5
+    });
+
+    // Format for Bedrock Action Group response
+    return {
+      messageVersion: "1.0",
+      response: {
+        actionGroupName: event.actionGroup,
+        apiPath: event.apiPath,
+        httpMethod: event.httpMethod,
+        httpStatusCode: 200,
+        responseBody: {
+          "application/json": {
+            body: JSON.stringify(response.data.results)
+          }
+        }
+      }
+    };
+  } catch (error) {
+    return { httpStatusCode: 500, body: "Search failed" };
+  }
+};

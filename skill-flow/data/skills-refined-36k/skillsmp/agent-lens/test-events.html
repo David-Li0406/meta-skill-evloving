@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Event Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .events { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; }
+        .event { margin: 5px 0; padding: 5px; background: #f8f9fa; border-left: 3px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Event Flow Test</h1>
+    <div id="status" class="status">Connecting...</div>
+    <div>
+        <button onclick="testServer()">Test Server Connection</button>
+        <button onclick="testWebSocket()">Test WebSocket</button>
+        <button onclick="clearEvents()">Clear Events</button>
+    </div>
+    <h2>Events (<span id="count">0</span>)</h2>
+    <div id="events" class="events"></div>
+
+    <script>
+        let eventCount = 0;
+        const status = document.getElementById('status');
+        const events = document.getElementById('events');
+        const count = document.getElementById('count');
+
+        function updateStatus(message, isError = false) {
+            status.textContent = message;
+            status.className = `status ${isError ? 'error' : 'connected'}`;
+        }
+
+        function addEvent(event) {
+            eventCount++;
+            count.textContent = eventCount;
+
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event';
+            eventDiv.innerHTML = `
+                <strong>${event.hook_event_type}</strong> - ${event.source_app}<br>
+                <small>Time: ${new Date(event.timestamp).toLocaleString()}</small><br>
+                <small>Session: ${event.session_id.slice(0, 8)}...</small>
+            `;
+            events.appendChild(eventDiv);
+            events.scrollTop = events.scrollHeight;
+        }
+
+        function testServer() {
+            fetch('http://localhost:4000/health')
+                .then(response => response.json())
+                .then(data => {
+                    updateStatus(`✅ Server OK: ${data.websocketClients} WebSocket clients, ${data.ingestion.eventsInMemory} events in memory`);
+                })
+                .catch(err => {
+                    updateStatus(`❌ Server Error: ${err.message}`, true);
+                });
+        }
+
+        function testWebSocket() {
+            const ws = new WebSocket('ws://localhost:4000/stream');
+
+            ws.onopen = () => {
+                updateStatus('✅ WebSocket Connected');
+            };
+
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+
+                if (data.type === 'initial') {
+                    updateStatus(`✅ Received ${data.data.length} initial events`);
+                    data.data.forEach(event => addEvent(event));
+                } else if (data.type === 'event') {
+                    addEvent(data.data);
+                }
+            };
+
+            ws.onerror = (e) => {
+                updateStatus(`❌ WebSocket Error: ${e}`, true);
+            };
+
+            ws.onclose = () => {
+                updateStatus('❌ WebSocket Disconnected', true);
+            };
+        }
+
+        function clearEvents() {
+            events.innerHTML = '';
+            eventCount = 0;
+            count.textContent = '0';
+        }
+
+        // Auto-test server on load
+        setTimeout(testServer, 500);
+    </script>
+</body>
+</html>

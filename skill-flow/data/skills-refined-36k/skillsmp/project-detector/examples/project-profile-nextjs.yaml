@@ -1,0 +1,39 @@
+# Example: Next.js Project Profile with Supabase
+# This is what a detected Next.js + Supabase project profile looks like
+
+project:
+  name: "my-nextjs-app"
+  type: "fullstack"
+
+stack:
+  language: "typescript/javascript"
+  framework: "next.js"
+  package_manager: "pnpm"
+
+database:
+  provider: "supabase"
+  orm: "none"
+  mcp_available: true
+  schema_source: "mcp"
+
+commands:
+  test: "pnpm test"
+  lint: "pnpm run lint"
+  typecheck: "pnpm run typecheck"
+  build: "pnpm run build"
+  dev: "pnpm run dev"
+
+verification:
+  required:
+    - typecheck
+    - lint
+    - test
+  optional:
+    - build
+
+patterns:
+  source: "src/"
+  tests: "**/*.test.ts, **/*.test.tsx"
+  components: "src/components/"
+  pages: "src/app/"
+  api: "src/app/api/"

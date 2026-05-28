@@ -1,0 +1,351 @@
+# Modern CI/CD Pipeline for Concourse v8.0+
+# Demonstrates best practices: oci-build-task, across modifier, build_log_retention
+#
+# Usage:
+# fly -t target set-pipeline -p my-app -c modern-ci-cd.yml \
+#   -l vars.yml
+
+################################################
+# Reusable YAML Anchors
+################################################
+
+git-source: &git-source
+  uri: ((git.uri))
+  username: ((git.username))
+  password: ((git.token))
+
+registry-source: &registry-source
+  repository: ((registry.repository))
+  username: ((registry.username))
+  password: ((registry.password))
+
+# Modern notification anchor
+notify-success: &notify-success
+  put: notify
+  params:
+    alert_type: success
+
+notify-failure: &notify-failure
+  put: notify
+  params:
+    alert_type: failed
+
+# Build log retention policy
+log-retention: &log-retention
+  build_log_retention:
+    days: 14
+    builds: 50
+    minimum_succeeded_builds: 1
+
+################################################
+# Resource Types
+################################################
+
+resource_types:
+# Modern Slack notifications with structured alerts
+- name: slack-alert
+  type: registry-image
+  source:
+    repository: arbourd/concourse-slack-alert-resource
+
+################################################
+# Resources
+################################################
+
+resources:
+# Source code - triggers on code changes only
+- name: source
+  type: git
+  icon: gitlab
+  check_every: 2m
+  source:
+    <<: *git-source
+    branch: main
+    ignore_paths:
+    - "*.md"
+    - docs/**
+    - ci/**
+
+# Source code for CI changes
+- name: ci-config
+  type: git
+  icon: cog
+  check_every: 5m
+  source:
+    <<: *git-source
+    branch: main
+    paths:
+    - ci/**
+
+# Container image (using modern registry-image)
+- name: app-image
+  type: registry-image
+  icon: docker
+  source:
+    <<: *registry-source
+
+# Notifications
+- name: notify
+  type: slack-alert
+  icon: bell
+  source:
+    url: ((slack.webhook_url))
+    channel: "#ci-builds"
+
+# Scheduled maintenance
+- name: weekly
+  type: time
+  icon: clock-outline
+  source:
+    start: 3:00 AM
+    stop: 4:00 AM
+    location: UTC
+    days: [Sunday]
+
+################################################
+# Groups
+################################################
+
+groups:
+- name: all
+  jobs: ["*"]
+- name: build
+  jobs: [build-and-test]
+- name: deploy
+  jobs: [deploy-*]
+- name: maintenance
+  jobs: [update-dependencies]
+
+################################################
+# Jobs
+################################################
+
+jobs:
+#-----------------------------------------
+# Build and Test (Modern oci-build-task)
+#-----------------------------------------
+- name: build-and-test
+  <<: *log-retention
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      trigger: true
+    - get: ci-config
+      trigger: true
+
+  # Run tests first
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: node
+          tag: 20-slim
+      inputs:
+      - name: source
+      caches:
+      - path: source/node_modules
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          cd source
+          npm ci
+          npm test
+
+  # Build image using modern oci-build-task
+  - task: build-image
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/oci-build-task
+      inputs:
+      - name: source
+      outputs:
+      - name: image
+      params:
+        CONTEXT: source
+        DOCKERFILE: source/Dockerfile
+        # Build arguments
+        BUILD_ARG_NODE_VERSION: "20"
+        BUILD_ARG_BUILD_DATE: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        # Multi-platform support (optional)
+        # IMAGE_PLATFORM: linux/amd64,linux/arm64
+      caches:
+      - path: cache
+      run:
+        path: build
+
+  # Push to registry
+  - put: app-image
+    params:
+      image: image/image.tar
+      additional_tags: source/.git/short_ref
+    get_params:
+      skip_download: true
+
+  on_success:
+    <<: *notify-success
+  on_failure:
+    <<: *notify-failure
+
+#-----------------------------------------
+# Multi-Environment Deploy (using across)
+#-----------------------------------------
+- name: deploy-all-envs
+  <<: *log-retention
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [build-and-test]
+    - get: app-image
+      passed: [build-and-test]
+      trigger: true
+      params:
+        skip_download: true
+
+  # Deploy to each environment sequentially
+  - task: deploy
+    across:
+    - var: env
+      values: [dev, staging]
+      max_in_flight: 1
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: bitnami/kubectl
+          tag: latest
+      inputs:
+      - name: source
+      params:
+        KUBECONFIG_CONTENT: ((k8s.((.:env))_kubeconfig))
+        NAMESPACE: ((.:env))
+        IMAGE_TAG: ((.:image_tag))
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+          export KUBECONFIG=/tmp/kubeconfig
+
+          # Apply manifests
+          kubectl -n $NAMESPACE apply -f source/k8s/
+
+          # Wait for rollout
+          kubectl -n $NAMESPACE rollout status deployment/app --timeout=300s
+
+  on_success:
+    <<: *notify-success
+  on_failure:
+    <<: *notify-failure
+
+#-----------------------------------------
+# Production Deploy (Manual Gate)
+#-----------------------------------------
+- name: deploy-prod
+  <<: *log-retention
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [deploy-all-envs]
+    - get: app-image
+      passed: [deploy-all-envs]
+      # No trigger - manual promotion
+      params:
+        skip_download: true
+
+  - task: deploy-production
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: bitnami/kubectl
+          tag: latest
+      inputs:
+      - name: source
+      params:
+        KUBECONFIG_CONTENT: ((k8s.prod_kubeconfig))
+        NAMESPACE: production
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+          export KUBECONFIG=/tmp/kubeconfig
+
+          kubectl -n $NAMESPACE apply -f source/k8s/
+          kubectl -n $NAMESPACE rollout status deployment/app --timeout=600s
+
+  on_success:
+    <<: *notify-success
+  on_failure:
+    <<: *notify-failure
+
+#-----------------------------------------
+# Scheduled Dependency Updates
+#-----------------------------------------
+- name: update-dependencies
+  <<: *log-retention
+  serial: true
+  plan:
+  - get: weekly
+    trigger: true
+  - get: source
+
+  - task: update
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: node
+          tag: 20-slim
+      inputs:
+      - name: source
+      outputs:
+      - name: source-updated
+      params:
+        GIT_AUTHOR_EMAIL: ci@example.com
+        GIT_AUTHOR_NAME: "CI Bot"
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          cp -r source/. source-updated/
+          cd source-updated
+
+          # Check for updates
+          npm outdated || true
+
+          # Update dependencies
+          npm update
+
+          # Commit if changes
+          if ! git diff --quiet package-lock.json; then
+            git config user.email "$GIT_AUTHOR_EMAIL"
+            git config user.name "$GIT_AUTHOR_NAME"
+            git add package.json package-lock.json
+            git commit -m "chore: update npm dependencies"
+          fi
+
+  - put: source
+    params:
+      repository: source-updated
+      rebase: true
+
+  on_failure:
+    <<: *notify-failure

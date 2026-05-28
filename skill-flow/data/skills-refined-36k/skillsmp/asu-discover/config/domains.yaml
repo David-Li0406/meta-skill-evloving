@@ -1,0 +1,2357 @@
+# ASU Domain Taxonomy for Smart Keyword Expansion
+# Used by discover.sh to expand queries with domain-specific synonyms
+#
+# Structure:
+#   domain_name:
+#     triggers: words that activate this domain
+#     synonyms: terms to include in expanded search
+#     file_hints: path/extension filters
+#     repos: known key repositories
+#     prefixes: team prefixes associated with this domain
+
+# Team prefix to domain mapping
+# Based on ASU org analysis: 760 repos with these common prefixes
+team_prefixes:
+  crm: salesforce      # 66 repos - CRM/Salesforce team
+  eadv: edna           # 38 repos - EDNA Advocacy
+  aiml: ml             # 12 repos - AI/ML team
+  edna: edna           # 11 repos - EDNA core
+  iden: identity       # 10 repos - Identity services
+  authn: auth          # 15 repos - Authentication
+  infra: infrastructure # Infrastructure team
+  tf: terraform        # Terraform prefix
+  dpl: dpl             # Data Potluck
+  ps: peoplesoft       # PeopleSoft integrations
+  sf: salesforce       # Salesforce
+  cf: cloudflare       # Cloudflare
+  unity: unity         # Unity ID platform
+  evbr: eel            # Enterprise Event Lake
+  eli5: logging        # Logging/Observability (Kafkabahn)
+  dco: devops          # Data Center Operations / DevOps
+  caas: cicd           # Container-as-a-Service
+  devops: devops       # DevOps Engineering
+  dot: cicd            # GitHub Organization management
+  mom: infrastructure  # Monitoring/Operations Management
+  ceng: terraform      # Cloud Engineering
+  ddt: mulesoft        # MuleSoft DDT team
+  appss: feature-flags # Application Services (feature flags)
+  ewp: cloudflare      # Enterprise Web Platform
+
+domains:
+  peoplesoft:
+    triggers:
+      - peoplesoft
+      - ps
+      - psft
+      - "integration broker"
+      - ib
+      - "component interface"
+      - peoplecode
+      - rowset
+    synonyms:
+      - peoplesoft
+      - "integration broker"
+      - IB_CONNECTOR
+      - ServiceOperation
+      - IBRequest
+      - IBResponse
+      - "Component Interface"
+      - CI_
+      - PeopleCode
+      - RowSet
+      - IntBroker
+      - psft
+      - HRMS
+      - Campus Solutions
+    file_hints:
+      extensions: ["py", "go", "java"]
+      paths: ["ib/", "peoplesoft/", "integration/"]
+    repos:
+      - aiml-peoplesoft-ib
+      - ps-integration-service
+      - peoplesoft-connector
+    prefixes: [ps, aiml]
+
+  edna:
+    triggers:
+      - edna
+      - entitlement
+      - "check access"
+      - checkaccess
+      - permission
+      - authorization
+      - authz
+      - policy
+      - eadv
+    synonyms:
+      - edna
+      - checkAccess
+      - hasPermission
+      - getEntitlements
+      - EdnaClient
+      - entitlement
+      - authorization
+      - permission
+      - role
+      - policy
+      - EDNA_
+      - edna-client
+    file_hints:
+      extensions: ["py", "go", "ts", "js", "java"]
+      paths: ["edna/", "auth/", "authz/", "middleware/", "entitlement/"]
+    repos:
+      - edna-sdk
+      - edna-python-client
+      - edna-go-client
+      - edna-js-client
+    prefixes: [edna, eadv]
+
+  dpl:
+    triggers:
+      - dpl
+      - "data potluck"
+      - datapotluck
+      - principal
+      - emplid
+      - asurite
+      - identity
+      - affiliation
+      - person
+    synonyms:
+      - dpl
+      - "data potluck"
+      - getPrincipal
+      - DplClient
+      - EMPLID
+      - ASURITE
+      - principal
+      - affiliation
+      - identity
+      - person
+      - dpl-client
+      - data-potluck
+    file_hints:
+      extensions: ["py", "go", "ts", "java"]
+      paths: ["dpl/", "principal/", "identity/"]
+    repos:
+      - dpl-python-sdk
+      - dpl-client
+      - principal-service
+      - data-potluck-client
+    prefixes: [dpl]
+
+  serviceauth:
+    triggers:
+      - serviceauth
+      - "service auth"
+      - jwt
+      - token
+      - "service account"
+      - "client credentials"
+      - oauth
+      - bearer
+    synonyms:
+      - serviceauth
+      - serviceauth-client
+      - ServiceAuthClient
+      - getToken
+      - validateToken
+      - refreshToken
+      - JWT
+      - Bearer
+      - OAuth
+      - client_credentials
+      - "@asu/serviceauth"
+    file_hints:
+      extensions: ["ts", "js", "py", "java"]
+      paths: ["auth/", "middleware/", "lib/"]
+    repos:
+      - serviceauth-client
+      - service-auth-js
+      - jwt-validator
+    prefixes: [authn, auth]
+
+  auth:
+    triggers:
+      - authn
+      - authentication
+      - login
+      - sso
+      - saml
+      - oidc
+      - cas
+      - shibboleth
+    synonyms:
+      - authentication
+      - login
+      - SSO
+      - SAML
+      - OIDC
+      - OpenID
+      - CAS
+      - Shibboleth
+      - WebAuth
+      - session
+    file_hints:
+      extensions: ["ts", "js", "py", "java", "xml"]
+      paths: ["auth/", "sso/", "login/"]
+    repos:
+      - auth-service
+      - sso-proxy
+      - cas-client
+    prefixes: [authn, auth, iden]
+
+  identity:
+    triggers:
+      - identity
+      - iden
+      - unity
+      - unityid
+      - "unity id"
+      - account
+      - profile
+    synonyms:
+      - identity
+      - UnityID
+      - account
+      - profile
+      - user
+      - ASURITE
+      - affiliate
+      - employee
+      - student
+    file_hints:
+      extensions: ["ts", "js", "py", "java"]
+      paths: ["identity/", "profile/", "account/"]
+    repos:
+      - unity-identity
+      - identity-service
+      - profile-service
+    prefixes: [iden, unity]
+
+  salesforce:
+    triggers:
+      - salesforce
+      - crm
+      - sfdc
+      - sf
+      - apex
+      - soql
+      - lightning
+      - lwc
+    synonyms:
+      - Salesforce
+      - CRM
+      - SFDC
+      - Apex
+      - SOQL
+      - Lightning
+      - LWC
+      - Force.com
+      - Visualforce
+      - sObject
+      - Trigger
+    file_hints:
+      extensions: ["cls", "trigger", "js", "html", "xml"]
+      paths: ["force-app/", "salesforce/", "crm/"]
+    repos:
+      - salesforce-integrations
+      - crm-connectors
+      - sf-data-sync
+    prefixes: [crm, sf]
+
+  ml:
+    triggers:
+      - ml
+      - "machine learning"
+      - ai
+      - model
+      - prediction
+      - inference
+      - training
+      - neural
+      - deep learning
+    synonyms:
+      - "machine learning"
+      - ML
+      - AI
+      - model
+      - prediction
+      - inference
+      - training
+      - PyTorch
+      - TensorFlow
+      - sklearn
+      - pandas
+      - numpy
+    file_hints:
+      extensions: ["py", "ipynb", "pkl", "h5"]
+      paths: ["models/", "ml/", "ai/", "notebooks/"]
+    repos:
+      - ml-models
+      - ai-services
+      - prediction-engine
+    prefixes: [aiml, ml, ai]
+
+  terraform:
+    triggers:
+      - terraform
+      - tf
+      - iac
+      - infrastructure
+      - infra
+      - module
+      - hcl
+      - provider
+    synonyms:
+      - terraform
+      - module
+      - resource
+      - provider
+      - variable
+      - output
+      - HCL
+      - tfstate
+      - tfvars
+      - plan
+      - apply
+    file_hints:
+      extensions: ["tf", "tfvars", "hcl"]
+      paths: ["modules/", "terraform/", "infra/", "infrastructure/"]
+    repos:
+      - dco-terraform
+      - dco-examples
+      - terraform-provider-edna
+      - terraform-provider-mandiantasm
+      - ceng-aws-data-center-accounts
+      - ceng-aws-data-center-config
+      - sso-aws-identity-center
+      - mom-datadog
+      - iden-fraud-watchdog
+    prefixes: [tf, infra, dco, ceng]
+
+  cicd:
+    triggers:
+      - cicd
+      - ci/cd
+      - pipeline
+      - workflow
+      - "github actions"
+      - actions
+      - deploy
+      - deployment
+      - jenkins
+      - build
+      - "shared library"
+      - reusable workflow
+    synonyms:
+      - workflow
+      - pipeline
+      - deploy
+      - build
+      - test
+      - release
+      - "github actions"
+      - CI
+      - CD
+      - artifact
+      - runner
+      - Jenkinsfile
+      - workflow_call
+      - terraformApply
+    file_hints:
+      extensions: ["yml", "yaml", "groovy", "jenkinsfile"]
+      paths: [".github/workflows/", ".github/actions/", "jenkins/", "vars/"]
+    repos:
+      - devops-jenkins-pipeline-library
+      - caas-image-library
+      - caas-pipeline-templates
+      - dco-jenkins-pop
+      - dco-jenkins-pipeline-mule4caasPipeline
+      - dco-github-actions-oidc-aws-example
+      - dot-github-org-management-actions
+      - mobile-mapp-templates
+    prefixes: [cicd, devops, dco, caas, dot]
+
+  cloudflare:
+    triggers:
+      - cloudflare
+      - cf
+      - worker
+      - workers
+      - pages
+      - waf
+      - dns
+      - r2
+      - d1
+      - kv
+      - origin ca
+      - origin certificate
+      - cloudflare-origin-ca-certificate
+    synonyms:
+      - cloudflare
+      - worker
+      - wrangler
+      - pages
+      - dns
+      - waf
+      - access
+      - R2
+      - D1
+      - KV
+      - Durable Objects
+    file_hints:
+      extensions: ["js", "ts", "toml"]
+      paths: ["workers/", "functions/", "pages/"]
+    repos:
+      - cloudflare-workers
+      - cf-dns-automation
+      - cf-access
+    prefixes: [cf, cloudflare]
+
+  infoblox:
+    triggers:
+      - infoblox
+      - ipam
+      - dns
+      - dhcp
+      - nios
+      - "ip address"
+    synonyms:
+      - infoblox
+      - NIOS
+      - ipam
+      - dns
+      - dhcp
+      - "network automation"
+      - WAPI
+      - grid
+    file_hints:
+      extensions: ["py", "go"]
+      paths: ["infoblox/", "network/", "ipam/"]
+    repos:
+      - infoblox-client
+      - network-automation
+      - ipam-integration
+    prefixes: [infoblox, network]
+
+  aws:
+    triggers:
+      - aws
+      - amazon
+      - lambda
+      - s3
+      - ec2
+      - dynamodb
+      - sqs
+      - sns
+      - cloudwatch
+      - iam
+    synonyms:
+      - AWS
+      - Lambda
+      - S3
+      - EC2
+      - DynamoDB
+      - SQS
+      - SNS
+      - CloudWatch
+      - IAM
+      - boto3
+      - CDK
+    file_hints:
+      extensions: ["py", "ts", "js", "tf"]
+      paths: ["lambda/", "aws/", "cdk/"]
+    repos:
+      - aws-infrastructure
+      - lambda-functions
+      - aws-cdk-constructs
+    prefixes: [aws, cloud]
+
+  api:
+    triggers:
+      - api
+      - rest
+      - graphql
+      - openapi
+      - swagger
+      - endpoint
+      - gateway
+    synonyms:
+      - API
+      - REST
+      - GraphQL
+      - OpenAPI
+      - Swagger
+      - endpoint
+      - gateway
+      - route
+      - handler
+      - controller
+    file_hints:
+      extensions: ["yaml", "json", "ts", "py", "java"]
+      paths: ["api/", "routes/", "handlers/", "controllers/"]
+    repos:
+      - api-gateway
+      - openapi-specs
+      - graphql-server
+    prefixes: [api, gateway]
+
+  eel:
+    triggers:
+      - eel
+      - "event lake"
+      - "enterprise event"
+      - kafka
+      - confluent
+      - avro
+      - "schema registry"
+      - producer
+      - consumer
+      - publisher
+      - subscriber
+      - "event handler"
+      - "event driven"
+      - "event-driven"
+      - realtime
+      - "real-time"
+      - evbr
+    synonyms:
+      - EEL
+      - EelClient
+      - eel_client
+      - "enterprise-event-lake"
+      - KafkaProducer
+      - KafkaConsumer
+      - avro
+      - "schema registry"
+      - publish_event
+      - send_event
+      - event_handler
+      - confluent
+      - kafka
+    file_hints:
+      extensions: ["py", "java", "js", "ts", "tf"]
+      paths: ["event-handlers/", "eel/", "kafka/", "events/", "enterprise-event-lake/"]
+    repos:
+      - evbr-enterprise-event-lake
+      - evbr-enterprise-event-lake-event-handler-boilerplate
+      - sisfa-peoplesoft-financial-aid-module-event-listeners
+      - siscc-peoplesoft-campus-community-module-event-listeners
+      - sisint-sis-data-event-realtime-publisher
+      - eli5-kafkabahn
+    prefixes: [evbr, eli5]
+
+  logging:
+    triggers:
+      - logging
+      - log
+      - observability
+      - cribl
+      - opensearch
+      - elk
+      - kafkabahn
+      - "logging lake"
+      - datadog
+    synonyms:
+      - logging
+      - observability
+      - Cribl
+      - OpenSearch
+      - Elasticsearch
+      - Kafkabahn
+      - log aggregation
+      - Datadog
+      - "Logging Lake"
+    file_hints:
+      extensions: ["py", "yaml", "json", "tf"]
+      paths: ["logging/", "observability/", "cribl/"]
+    repos:
+      - eli5-kafkabahn
+      - eli5-observability-pipeline-platform
+      - eli5-logging-lake
+      - eli5-observability-pipeline-platform-cribl-config
+      - eli5-observability-pipeline-platform-cribl-pack-linux
+      - eli5-observability-pipeline-platform-cribl-pack-kubernetes
+      - eli5-observability-pipeline-platform-cribl-pack-windows
+      - eli5-logging-lake-lighthouse
+      - eli5-logging-lake-osis
+      - mom-datadog
+    prefixes: [eli5, mom]
+    # For comprehensive observability patterns, see:
+    # ./discover.sh pattern --name observability
+    see_also:
+      pattern: observability
+      note: "Use 'discover.sh pattern --name observability' for full observability stack guidance"
+
+  vault:
+    triggers:
+      - vault
+      - hvac
+      - secret
+      - hashicorp
+      - "secrets manager"
+      - secretsmanager
+      - approle
+      - "vault login"
+      - ssm parameter
+      - "@aws-sdk/client-secrets-manager"
+      - "@aws-sdk/client-ssm"
+    synonyms:
+      - vault
+      - hvac
+      - HashiCorp
+      - Vault
+      - getVaultSecret
+      - vaultLogin
+      - vault_generic_secret
+      - aws_secretsmanager
+      - AppRole
+      - SecretsManagerClient
+      - SSMClient
+      - GetSecretValueCommand
+      - GetParameterCommand
+    file_hints:
+      extensions: ["py", "tf", "groovy", "java", "ts", "js"]
+      paths: ["vault/", "secrets/", "auth/", "clients/"]
+    repos:
+      - caas-caas-vault
+      - dco-lead-vault
+      - authn-ops-vault
+      - devops-jenkins-pipeline-library
+      - lms-canvas-enrollment-system
+      - cremo-cmidp-course-requisite-api
+      - iden-universal-service-provisioner
+    prefixes: [authn, caas]
+
+  devops:
+    triggers:
+      - devops
+      - jenkins
+      - pipeline
+      - shared library
+      - "shared-library"
+      - groovy
+      - jenkinsfile
+    synonyms:
+      - devops
+      - Jenkins
+      - pipeline
+      - Jenkinsfile
+      - shared library
+      - Groovy
+      - terraformApply
+      - getVaultSecret
+    file_hints:
+      extensions: ["groovy", "jenkinsfile", "yaml"]
+      paths: ["vars/", "jenkins/", "pipelines/"]
+    repos:
+      - devops-jenkins-pipeline-library
+      - dco-jenkins-pop
+      - dco-jenkins-pipeline-mule4caasPipeline
+      - caas-pipeline-templates
+    prefixes: [devops, dco]
+
+  mulesoft:
+    triggers:
+      - mulesoft
+      - mule
+      - anypoint
+      - esb
+      - raml
+      - dataweave
+    synonyms:
+      - MuleSoft
+      - Mule
+      - Anypoint
+      - ESB
+      - RAML
+      - DataWeave
+      - mule4caasPipeline
+    file_hints:
+      extensions: ["xml", "raml", "dwl", "java"]
+      paths: ["src/main/mule/", "api/"]
+    repos:
+      - ddt-mulesoft-base-application-template
+      - ddt-mulesoft-versioned-pipeline-base-application-template
+      - ddt-common-connectors
+      - ddt-common-utils
+      - ddt-common-error
+      - dco-jenkins-pipeline-mule4caasPipeline
+    prefixes: [ddt]
+
+  feature-flags:
+    triggers:
+      - "feature flag"
+      - "feature-flag"
+      - featureflag
+      - toggle
+      - flipper
+      - launchdarkly
+    synonyms:
+      - feature flag
+      - feature toggle
+      - FeatureFlags
+      - enterprise-feature-flags
+    file_hints:
+      extensions: ["py", "java", "js", "ts"]
+      paths: ["feature-flags/", "flags/"]
+    repos:
+      - appss-enterprise-feature-flags
+      - appss-enterprise-feature-flags-nodejs-client
+      - appss-enterprise-feature-flags-java-client
+      - appss-enterprise-feature-flags-python-client
+    prefixes: [appss]
+
+# =============================================================================
+# Design Patterns
+# =============================================================================
+# Architectural patterns with implementation guidance.
+# These are more comprehensive than domains - they represent full integration
+# patterns with examples, best practices, and boilerplate code.
+#
+# Use: ./discover.sh pattern --name <pattern>
+
+design_patterns:
+  eel:
+    name: "Enterprise Event Lake (EEL)"
+    description: |
+      Real-time, decoupled, event-driven architectural backbone at ASU.
+      The EEL provides a managed Kafka-based messaging platform for 
+      asynchronous, loosely-coupled communication between services.
+    
+    when_to_use:
+      - Real-time data synchronization across systems
+      - Loose coupling between services (publisher doesn't know subscribers)
+      - Event-driven workflows and notifications
+      - Async communication with PeopleSoft and other enterprise systems
+      - Audit trails and event sourcing
+      - Fan-out scenarios (one event, many consumers)
+    
+    architecture:
+      platform: "Confluent Cloud (Managed Apache Kafka)"
+      schema_format: "Apache Avro"
+      schema_registry: true
+      delivery_guarantee: "At-least-once"
+      infrastructure_repo: "ASU/evbr-enterprise-event-lake"
+      
+    naming_conventions:
+      topics: |
+        Format: {domain}.{entity}.{action}
+        Examples:
+          - identity.person.created
+          - enrollment.student.updated
+          - financial-aid.award.disbursed
+      events: |
+        Use PascalCase for event names:
+          - PersonCreated
+          - EnrollmentUpdated
+          - AwardDisbursed
+      schemas: |
+        - All events use Avro schemas
+        - Schemas registered in Confluent Schema Registry
+        - Support schema evolution (backward compatible changes)
+        
+    publishers:
+      java:
+        repo: "ASU/edna"
+        path: "edna-server/src/main/java/edu/asu/edna/server/EELClient.java"
+        description: "Java EEL client used by EDNA server for identity/entitlement events"
+        language: "Java"
+      python:
+        repo: "ASU/iden-identity-resolution-service-api"
+        path: "lambda_container_layers/python/irs_common/eel_client.py"
+        description: "Python EEL client for AWS Lambda-based publishers"
+        language: "Python"
+      javascript:
+        repo: "ASU/cremo-credid"
+        path: "backend/__tests__/event-handlers/enterprise-event-lake/"
+        description: "JavaScript/Node.js EEL integration example with tests"
+        language: "JavaScript"
+      sisint:
+        repo: "ASU/sisint-sis-data-event-realtime-publisher"
+        path: ""
+        description: "SIS realtime event publisher (PeopleSoft data)"
+        language: "HCL/Python"
+        
+    subscribers:
+      python_peoplesoft_fa:
+        repo: "ASU/sisfa-peoplesoft-financial-aid-module-event-listeners"
+        path: ""
+        description: "Event listeners for PeopleSoft Financial Aid module events"
+        language: "Python"
+      python_peoplesoft_cc:
+        repo: "ASU/siscc-peoplesoft-campus-community-module-event-listeners"
+        path: ""
+        description: "Event listeners for PeopleSoft Campus Community module events"
+        language: "Python"
+      identity_listener:
+        repo: "ASU/iden-identity-resolution-service-listener"
+        path: ""
+        description: "Identity Resolution Service event listener"
+        language: "HCL/Python"
+        
+    boilerplate:
+      repo: "ASU/evbr-enterprise-event-lake-event-handler-boilerplate"
+      description: "Official boilerplate for creating new EEL event handlers"
+      use_for: "Starting a new EEL publisher or subscriber"
+      
+    infrastructure:
+      repo: "ASU/evbr-enterprise-event-lake"
+      description: "Terraform infrastructure for EEL (Confluent Kafka cluster)"
+      
+    best_practices:
+      - "Use Avro schemas for all events (enables schema evolution)"
+      - "Register schemas in Schema Registry before publishing"
+      - "Include correlation IDs (trace_id) for distributed tracing"
+      - "Implement idempotent consumers (handle duplicate events gracefully)"
+      - "Use dead-letter queues for failed event processing"
+      - "Follow topic naming conventions for discoverability"
+      - "Keep events small - reference large payloads by ID"
+      - "Include event metadata: timestamp, source, version"
+      
+    related_domains:
+      - peoplesoft   # Common EEL publisher (SIS data)
+      - edna         # Uses EEL for identity/entitlement events
+      - identity     # Identity events via EEL
+      - dpl          # Principal data changes via EEL
+      
+    code_search_queries:
+      - "EelClient"
+      - "eel_client"
+      - "enterprise-event-lake"
+      - "KafkaProducer"
+      - "confluent_kafka"
+
+  # ===========================================================================
+  # CI/CD Pattern
+  # ===========================================================================
+  cicd:
+    name: "CI/CD Pipelines"
+    description: |
+      Centralized CI/CD patterns for Jenkins and GitHub Actions at ASU.
+      The primary asset is the Jenkins Shared Library with 75+ reusable 
+      Groovy functions covering Terraform, Vault, credentials, security 
+      scanning, and notifications.
+    
+    when_to_use:
+      - Setting up Jenkins pipelines for new projects
+      - Integrating Vault secrets into CI/CD
+      - Adding security scanning (Bridgecrew, Docker image scanning)
+      - Terraform automation in pipelines
+      - ServiceNow change management integration
+      - Slack/Datadog deployment notifications
+      - Building container images with GitHub Actions
+    
+    jenkins:
+      shared_library:
+        repo: "ASU/devops-jenkins-pipeline-library"
+        description: "Central Jenkins shared library with 75+ reusable Groovy functions"
+        path: "vars/"
+        functions:
+          terraform:
+            - terraformInit
+            - terraformPlan
+            - terraformApply
+            - terraformPlanV2
+            - terraformV2
+            - pipelineTerraformSingleEnvironment
+          vault:
+            - vaultLogin
+            - caasVaultLogin
+            - opsVaultLogin
+            - getVaultSecret
+            - getVaultToken
+            - getVaultAppRoleToken
+          credentials:
+            - setupGradleCredentials
+            - setupMavenCredentials
+            - setupNpmCredentials
+            - setupPipCredentials
+            - setupPoetryCredentials
+            - setupUvCredentials
+          notifications:
+            - slackNotification
+            - botNotification
+            - datadogDeployment
+          security:
+            - bridgecrewScan
+            - scanDockerImage
+            - scanDockerImageWithInspector
+          servicenow:
+            - servicenow_change
+            - changeFreezeCheck
+          ansible:
+            - ansible
+            - ansibleKubernetes
+            - ansiblePlaybook
+          mulesoft:
+            - mule4caasPipeline
+            - mule4caasPipelineSf
+            - mulesoftBuild
+            - mulesoftDeploy
+      infrastructure:
+        repo: "ASU/dco-jenkins-pop"
+        description: "Jenkins Point of Presence infrastructure"
+      mule4_pipeline:
+        repo: "ASU/dco-jenkins-pipeline-mule4caasPipeline"
+        description: "Versioned Jenkins library for MuleSoft deployments"
+    
+    github_actions:
+      reusable_workflows:
+        repo: "ASU/caas-image-library"
+        description: "Reusable GitHub Actions workflows for container builds"
+        path: ".github/workflows/"
+        workflows:
+          - name: workflow-build-image.yml
+            description: "Generic container image build with Trivy scanning"
+            trigger: workflow_call
+          - name: workflow-build-image-tomcat.yml
+            description: "Tomcat-specific image builds"
+            trigger: workflow_call
+        job_workflows:
+          - job-apache-installer.yml
+          - job-haproxy-default-backend.yml
+          - job-k8s-deploy.yml
+          - job-sonar-scanner.yml
+      oidc_example:
+        repo: "ASU/dco-github-actions-oidc-aws-example"
+        description: "Example for GitHub Actions OIDC with AWS"
+      org_management:
+        repo: "ASU/dot-github-org-management-actions"
+        description: "Pre-commit workflows for org management"
+    
+    pipeline_templates:
+      caas:
+        repo: "ASU/caas-pipeline-templates"
+        description: "CaaS pipeline templates (legacy-warapps, legacy-warapps-deployment)"
+      mobile:
+        repo: "ASU/mobile-mapp-templates"
+        description: "Mobile Application Publishing Pipeline Templates"
+      mulesoft:
+        repo: "ASU/ddt-mulesoft-base-application-template"
+        description: "Template with container pipeline for Mulesoft apps"
+    
+    team_prefixes:
+      - dco
+      - caas
+      - devops
+      - dot
+    
+    best_practices:
+      - "Use devops-jenkins-pipeline-library shared functions instead of custom scripts"
+      - "Integrate ServiceNow change management with changeFreezeCheck()"
+      - "Enable security scanning with bridgecrewScan() and scanDockerImage()"
+      - "Use Datadog for deployment tracking with datadogDeployment()"
+      - "For Terraform pipelines, use pipelineTerraformSingleEnvironment()"
+      - "Use workflow_call trigger for reusable GitHub Actions workflows"
+      - "Integrate Trivy container scanning in image builds"
+    
+    related_domains:
+      - terraform
+      - vault
+      - mulesoft
+    
+    code_search_queries:
+      - "devops-jenkins-pipeline-library"
+      - "workflow_call"
+      - "terraformApply"
+      - "getVaultSecret"
+      - "bridgecrewScan"
+
+  # ===========================================================================
+  # Terraform Modules Pattern
+  # ===========================================================================
+  terraform-modules:
+    name: "ASU Terraform Modules"
+    description: |
+      Custom Terraform modules from dco-terraform hosted on JFrog Artifactory.
+      These are ASU-specific modules with built-in tagging standards, security
+      configurations, and Ansible integration.
+    
+    when_to_use:
+      - Provisioning AWS infrastructure (EC2, RDS, Aurora, VPC)
+      - Setting up EKS with OIDC/IRSA
+      - Configuring Cloudflare tunnels and access
+      - Creating IAM roles for GitHub Actions, Vault, or other services
+      - Ensuring compliance with ASU tagging standards
+      - Setting up observability (CloudWatch to Datadog/Splunk)
+    
+    registry:
+      url: "jfrog-cloud.devops.asu.edu/asu-terraform-modules__dco-terraform"
+      main_repo: "ASU/dco-terraform"
+      examples_repo: "ASU/dco-examples"
+    
+    module_source_pattern: |
+      module "example" {
+        source  = "jfrog-cloud.devops.asu.edu/asu-terraform-modules__dco-terraform/<module-name>/aws"
+        version = ">= 1.0"
+        # ... module inputs
+      }
+    
+    modules:
+      compute:
+        - name: ec2-instance
+          description: "Linux EC2 with Ansible integration"
+        - name: ec2-instance-linux-lowlevel
+          description: "Low-level Linux EC2 configuration"
+        - name: ec2-windows
+          description: "Windows EC2 instances"
+        - name: ec2-windows-v2
+          description: "Windows EC2 v2"
+        - name: ec2-macos-instance
+          description: "macOS EC2 instances"
+        - name: ec2-public-instance
+          description: "Public-facing EC2 instances"
+        - name: nutanix-vm
+          description: "Nutanix virtual machines"
+      database:
+        - name: aurora
+          description: "Aurora clusters"
+        - name: aurora-mysql
+          description: "Aurora MySQL"
+        - name: aurora-postgres
+          description: "Aurora PostgreSQL"
+        - name: rds-mssql
+          description: "RDS SQL Server"
+        - name: rds-oracle
+          description: "RDS Oracle"
+      networking:
+        - name: vpc-core-v3
+          description: "VPC with subnets, NAT, VPN (v3)"
+        - name: vpc-core-v5
+          description: "VPC with subnets, NAT, VPN, Route53 resolver (v5)"
+        - name: security-group
+          description: "Security groups"
+        - name: core-security-groups
+          description: "Standard org-wide security groups"
+        - name: route53-host
+          description: "Route53 DNS records"
+        - name: route53-private-zone
+          description: "Private hosted zones"
+        - name: route53-public-zone
+          description: "Public hosted zones"
+      kubernetes:
+        - name: eks-oidc-provider
+          description: "EKS OIDC identity provider"
+        - name: eks-pod-identity-role
+          description: "EKS pod identity IAM roles"
+        - name: eks-service-account-role
+          description: "IRSA (IAM Roles for Service Accounts)"
+        - name: vault-kubernetes-auth-role
+          description: "Vault K8s authentication"
+      cloudflare:
+        - name: cloudflare-tunnel
+          description: "Cloudflare Tunnel setup"
+        - name: cloudflare-tunnel-route53-dns
+          description: "Tunnel with Route53 DNS"
+        - name: cloudflare-access-app
+          description: "Cloudflare Access applications"
+        - name: cloudflare-access-edna-group
+          description: "EDNA-integrated access groups"
+        - name: cloudflare-origin-ca-certificate
+          description: "Origin CA certificates"
+        - name: cloudflare-zone-logpush-logging-lake
+          description: "Zone logs to data lake"
+        - name: cloudflare-zero-trust-device-posture-rules
+          description: "Zero Trust posture rules"
+        - name: cloudflare-zero-trust-edna-list
+          description: "Zero Trust EDNA lists"
+      iam:
+        - name: iam-role-github-actions
+          description: "GitHub Actions OIDC federation"
+        - name: iam-role-datadog
+          description: "Datadog integration role"
+        - name: iam-role-vault
+          description: "HashiCorp Vault role"
+        - name: iam-role-packer
+          description: "Packer image building"
+        - name: iam-role-servicenow
+          description: "ServiceNow integrations"
+        - name: iam-role-prismacloud
+          description: "Prisma Cloud security"
+        - name: iam-role-splunk
+          description: "Splunk logging"
+        - name: iam-saml-adfs
+          description: "SAML ADFS federation"
+        - name: iam-shibboleth
+          description: "Shibboleth federation"
+        - name: github-oidc-provider
+          description: "GitHub OIDC provider setup"
+        - name: aws-identity-center-permission-set
+          description: "AWS SSO permission sets"
+      observability:
+        - name: cloudwatch-logs-to-datadog
+          description: "CloudWatch to Datadog"
+        - name: cloudwatch-logs-to-log-lake
+          description: "CloudWatch to S3 data lake"
+        - name: cloudwatch-to-splunk
+          description: "CloudWatch to Splunk"
+        - name: datadog-lambda-forwarder
+          description: "Datadog Lambda forwarder"
+        - name: datadog-logs-firehose-forwarder
+          description: "Datadog Kinesis Firehose"
+        - name: datadog-mule-monitors
+          description: "MuleSoft Datadog monitors"
+        - name: amazon-inspector
+          description: "AWS Inspector config"
+      backup:
+        - name: aws-backup-global
+          description: "AWS Backup global settings"
+        - name: aws-backup-region
+          description: "Regional backup config"
+        - name: dlm-policy
+          description: "EBS lifecycle policies"
+      compliance:
+        - name: config-global
+          description: "AWS Config global"
+        - name: config-region
+          description: "AWS Config regional"
+        - name: cloudtrail
+          description: "CloudTrail logging"
+        - name: cloudtrail-kinesis
+          description: "CloudTrail to Kinesis"
+      standards:
+        - name: product-tags
+          description: "MANDATORY - ASU standard tagging for all resources"
+        - name: generate-tags
+          description: "Tag generation utilities"
+        - name: product-map
+          description: "Product key to metadata mapping"
+      utilities:
+        - name: ecr-repo
+          description: "ECR container registries"
+        - name: ebs-volume
+          description: "Additional EBS volumes"
+        - name: get-vpc
+          description: "VPC data lookup"
+        - name: get-private-ami
+          description: "AMI data lookup"
+        - name: get-sg-ids
+          description: "Security group ID lookup"
+        - name: vendor-ips
+          description: "Vendor IP address lists"
+        - name: asu-ips
+          description: "ASU IP ranges"
+    
+    providers:
+      - name: terraform-provider-edna
+        repo: "ASU/terraform-provider-edna"
+        description: "EDNA resource management (AWS, Cloudflare, service registration)"
+      - name: terraform-provider-mandiantasm
+        repo: "ASU/terraform-provider-mandiantasm"
+        description: "Mandiant Attack Surface Management integration"
+    
+    tagging_standard:
+      version: "2025.0.2"
+      required_tags:
+        - ProductCategory
+        - ProductFamily
+        - ProductFamilyKey
+        - Product
+        - ProductKey
+        - TechContact
+        - AdminContact
+        - env
+      environments:
+        - infradev
+        - sandbox
+        - dev
+        - qa
+        - uat
+        - test
+        - scan
+        - non-prod
+        - prod
+    
+    requirements:
+      terraform: ">= 1.5.6"
+      aws_provider: ">= 5.82.0"
+    
+    team_prefixes:
+      - dco
+      - tf
+      - infra
+      - ceng
+    
+    best_practices:
+      - "Always use product-tags module for ASU tagging compliance"
+      - "Source modules from JFrog registry, not GitHub directly"
+      - "Pin module versions with >= constraint"
+      - "Use vpc-core-v5 for new VPCs (latest version)"
+      - "For EKS, use eks-service-account-role for IRSA"
+      - "Check dco-examples for implementation patterns"
+    
+    related_domains:
+      - cicd
+      - cloudflare
+      - aws
+    
+    code_search_queries:
+      - "dco-terraform"
+      - "product-tags"
+      - "jfrog-cloud.devops.asu.edu"
+      - "eks-oidc-provider"
+
+  # ===========================================================================
+  # Vault Secrets Pattern
+  # ===========================================================================
+  vault:
+    name: "HashiCorp Vault Secrets"
+    description: |
+      Patterns for accessing secrets from HashiCorp Vault and syncing to AWS.
+      ASU uses multiple Vault clusters (CaaS, DCO, Ops) with various auth
+      methods including AppRole, AWS IAM, Kubernetes, and OIDC.
+      
+      NOTE: TypeScript/Node.js services at ASU typically use AWS Secrets Manager
+      or SSM Parameter Store rather than direct Vault access. Vault secrets are
+      synced to AWS at the Terraform level.
+    
+    when_to_use:
+      - Reading secrets in Python/Java/TypeScript/Node.js applications
+      - Syncing Vault secrets to AWS Secrets Manager
+      - Syncing Vault secrets to SSM Parameter Store
+      - Setting up Jenkins CI/CD with Vault integration
+      - Configuring AWS Lambda/EC2 to authenticate with Vault
+      - Setting up Kubernetes pods to access Vault
+    
+    infrastructure:
+      - repo: "ASU/caas-caas-vault"
+        description: "Central CaaS Vault cluster - Terraform + Ansible"
+        environment: "vault.caas-{env}.asu.edu"
+      - repo: "ASU/dco-lead-vault"
+        description: "DCO Lead Vault configuration"
+      - repo: "ASU/authn-ops-vault"
+        description: "Operations Vault configuration"
+        environment: "ops-vault-prod.opsprod.asu.edu"
+    
+    typescript_patterns:
+      note: |
+        Node.js services at ASU use AWS Secrets Manager or SSM Parameter Store
+        rather than direct Vault access. Vault secrets are synced to AWS at the
+        Terraform level using vault_generic_secret → aws_secretsmanager_secret.
+      
+      secrets_manager:
+        description: "For sensitive credentials (API keys, DB passwords)"
+        example_repos:
+          - "ASU/lms-canvas-enrollment-system"
+          - "ASU/meho-digital-learner-portfolio"
+          - "ASU/crm-salesforce-apis-salesforce-connector"
+          - "ASU/meho-asu-media-services-platform"
+        packages:
+          - "@aws-sdk/client-secrets-manager"
+        code_snippet: |
+          import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+          
+          const client = new SecretsManagerClient({ region: process.env.AWS_REGION });
+          
+          export async function getSecret(secretId: string): Promise<Record<string, string>> {
+            const command = new GetSecretValueCommand({ SecretId: secretId });
+            const response = await client.send(command);
+            return JSON.parse(response.SecretString!);
+          }
+      
+      ssm_parameter:
+        description: "For configuration and encrypted parameters"
+        example_repos:
+          - "ASU/cremo-cmidp-course-requisite-api"
+          - "ASU/iden-universal-service-provisioner"
+          - "ASU/eadv-dars-uachieve-execute-locked-report"
+          - "ASU/epo-core"
+        packages:
+          - "@aws-sdk/client-ssm"
+        code_snippet: |
+          import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+          
+          const client = new SSMClient({ region: process.env.AWS_REGION });
+          
+          export async function getParameter(name: string): Promise<string> {
+            const command = new GetParameterCommand({
+              Name: name,
+              WithDecryption: true,
+            });
+            const response = await client.send(command);
+            return response.Parameter?.Value ?? '';
+          }
+    
+    python_patterns:
+      token_file:
+        repo: "ASU/edna-rmi-linux"
+        path: "ansible/roles/edna/files/serviceConfigLookup.py"
+        description: "Token from /var/run/vault-token with AWS IAM fallback"
+        language: "Python"
+        code_snippet: |
+          import hvac
+          import boto3
+          
+          # Primary: Read token from file
+          with open('/var/run/vault-token') as token:
+              TOKENVAL = token.read()
+          client = hvac.Client(url='https://ops-vault-prod.opsprod.asu.edu', token=TOKENVAL)
+          
+          # Fallback: AWS IAM authentication
+          if not client.is_authenticated():
+              session = boto3.Session()
+              cred = session.get_credentials()
+              client = hvac.Client(url='https://ops-vault-prod.opsprod.asu.edu')
+              client.auth.aws.iam_login(cred.access_key, cred.secret_key, cred.token, role='edna-rmi-linux-prod')
+          
+          # Read secret from KV v1
+          secret = client.secrets.kv.v1.read_secret(path='services/edna/core/...')['data']
+          client.logout()
+      env_vars:
+        repo: "ASU/oprah-product-map"
+        path: "get_gdrive_sheet.py"
+        description: "Uses VAULT_ADDR and VAULT_TOKEN env vars"
+        language: "Python"
+        code_snippet: |
+          import hvac
+          vault_client = hvac.Client()  # Uses VAULT_ADDR and VAULT_TOKEN
+          secret_data = vault_client.secrets.kv.v1.read_secret(path="services/dco/jenkins/...")
+    
+    terraform_patterns:
+      vault_to_secrets_manager:
+        repo: "ASU/wflow-kuali-approver-service"
+        path: "terraform/secretsmanager.tf"
+        description: "Single secret sync to AWS Secrets Manager"
+        code_snippet: |
+          data "vault_generic_secret" "api_key" {
+            path = "secret/services/dco/jenkins/wflow/kbapi/${terraform.workspace}/kuali_api_key"
+          }
+          
+          resource "aws_secretsmanager_secret" "api_key" {
+            name_prefix = "kuali-api-key-${terraform.workspace}-"
+          }
+          
+          resource "aws_secretsmanager_secret_version" "api_key" {
+            secret_id     = aws_secretsmanager_secret.api_key.id
+            secret_string = data.vault_generic_secret.api_key.data["api_key"]
+          }
+      vault_to_secrets_manager_multi:
+        repo: "ASU/eda-workspaces-data-analytics"
+        path: "terraform/vault.tf"
+        description: "Multiple secrets aggregated to single AWS secret"
+      vault_to_ssm:
+        repo: "ASU/iden-identity-resolution-service-api"
+        path: "terraform/secrets.tf"
+        description: "Vault to SSM Parameter Store"
+        code_snippet: |
+          data "vault_generic_secret" "db" {
+            path = "secret/services/dco/jenkins/iden/irs/${terraform.workspace}/api/pscs/db"
+          }
+          
+          resource "aws_ssm_parameter" "db" {
+            name  = "/iden/irs/${terraform.workspace}/api/pscs/db"
+            type  = "SecureString"
+            value = data.vault_generic_secret.db.data_json
+          }
+    
+    auth_methods:
+      approle:
+        use_for: "Jenkins CI/CD"
+        token_ttl: "30 minutes"
+        example_repo: "ASU/caas-caas-vault"
+        example_path: "vault/approle-jenkins.tf"
+      aws_iam:
+        use_for: "EC2/Lambda workloads"
+        description: "Cross-account STS roles for Vault authentication"
+        example_repo: "ASU/caas-caas-vault"
+        example_path: "vault/auth-aws.tf"
+      kubernetes:
+        use_for: "EKS pods"
+        description: "Native Kubernetes service account auth"
+        example_repo: "ASU/caas-caas-vault"
+        example_path: "vault/auth-iam-principals.tf"
+      oidc:
+        use_for: "Human users"
+        description: "OIDC via AWS Cognito integration"
+        example_repo: "ASU/caas-caas-vault"
+        example_path: "vault/oidc.tf"
+    
+    secret_path_convention: |
+      secret/services/{org}/{team}/{app}/{environment}/{component}
+      
+      Examples:
+        secret/services/dco/jenkins/eda/biws/prod/lambda/principals/slack/userpassword
+        secret/services/dco/jenkins/iden/irs/prod/api/pscs/db
+        secret/services/dco/jenkins/docmgt/adsign/prod/mulesoft
+    
+    jenkins_functions:
+      - name: vaultLogin
+        description: "Login to Vault"
+      - name: caasVaultLogin
+        description: "Login to CaaS Vault"
+      - name: opsVaultLogin
+        description: "Login to Ops Vault"
+      - name: getVaultSecret
+        description: "Read secret from Vault"
+      - name: getVaultToken
+        description: "Get Vault token"
+      - name: getVaultAppRoleToken
+        description: "Get token via AppRole"
+    
+    team_prefixes:
+      - authn
+      - caas
+      - dco
+    
+    best_practices:
+      - "For TypeScript/Node.js: Use AWS Secrets Manager or SSM (not direct Vault)"
+      - "Sync Vault secrets to AWS at Terraform level"
+      - "Store token files at /var/run/vault-token"
+      - "Always call client.logout() after secret retrieval"
+      - "Use AWS IAM auth for Lambda/EC2 workloads"
+      - "Use AppRole with short TTL (30 min) for CI/CD"
+      - "Set recovery_window_in_days on AWS Secrets Manager secrets"
+      - "Use Terraform workspace for environment-based paths"
+      - "Follow secret path naming convention for discoverability"
+    
+    related_domains:
+      - cicd
+      - auth
+      - terraform
+    
+    code_search_queries:
+      - "hvac"
+      - "vault_generic_secret"
+      - "getVaultSecret"
+      - "aws_secretsmanager_secret"
+      - "vaultLogin"
+      - "SecretsManagerClient"
+      - "SSMClient"
+      - "@aws-sdk/client-secrets-manager"
+
+  # ===========================================================================
+  # Observability Pattern
+  # ===========================================================================
+  observability:
+    name: "Observability Stack"
+    description: |
+      Full-stack observability: Datadog APM/RUM, Cribl/Logging Lake, CloudWatch, OpenTelemetry.
+      
+      IMPORTANT: Splunk is DEPRECATED at ASU. Use:
+        - Logging Lake (Cribl → S3 + OpenSearch) for log storage/search
+        - Datadog for APM, metrics, and dashboards
+    
+    when_to_use:
+      - Setting up application monitoring (APM, traces, metrics)
+      - Forwarding logs from CloudWatch to centralized storage
+      - Configuring Datadog RUM for frontend performance
+      - Setting up Kubernetes log collection with OpenTelemetry
+      - Migrating from Splunk to Logging Lake
+    
+    types:
+      datadog:
+        name: "Datadog Integration"
+        status: "ACTIVE"
+        description: "APM, monitors, dashboards, RUM, deployment tracking"
+        
+        repos:
+          config: "ASU/mom-datadog"
+          jenkins: "ASU/devops-jenkins-pipeline-library"
+        
+        terraform_modules:
+          - iam-role-datadog
+          - cloudwatch-logs-to-datadog
+          - datadog-lambda-forwarder
+          - datadog-logs-firehose-forwarder
+          - datadog-mule-monitors
+        
+        apm:
+          typescript:
+            description: "dd-trace for Node.js/TypeScript servers"
+            packages:
+              - "dd-trace (^5.x)"
+            example_repos:
+              - "ASU/iden-enterprise-identity-cloud"
+              - "ASU/iden-fraud-watchdog-orchestrator"
+              - "ASU/iden-universal-service-provisioner"
+              - "ASU/eadv-class-search"
+            init_simple: |
+              // Must be the FIRST import in your entry file
+              import "dd-trace/init.js";
+              import { ApolloServer } from "@apollo/server";
+              // ... rest of your imports
+            init_configured: |
+              import tracer from 'dd-trace';
+              
+              tracer.init({
+                service: process.env.DD_SERVICE || 'my-service',
+                env: process.env.DD_ENV || 'development',
+                version: process.env.DD_VERSION || '1.0.0',
+                logInjection: true,  // Correlate logs with traces
+              });
+              
+              export { tracer };
+            wrapper_pattern: |
+              // Wrap handlers for custom spans
+              import tracer from "dd-trace";
+              
+              const handler = tracer.wrap(
+                'my-handler',
+                { resource: 'handlers:my-handler' },
+                originalHandler,
+              );
+          
+          python:
+            description: "ddtrace for Python services"
+            packages:
+              - "ddtrace"
+            init_pattern: |
+              from ddtrace import tracer, patch_all
+              patch_all()
+          
+          java:
+            description: "Datadog Java agent (JVM attachment)"
+            method: "Add -javaagent:/path/to/dd-java-agent.jar to JVM args"
+            env_vars:
+              - "DD_SERVICE=my-service"
+              - "DD_ENV=production"
+              - "DD_VERSION=1.0.0"
+        
+        rum:
+          typescript:
+            description: "Browser RUM for React/Vue/Angular frontends"
+            packages:
+              - "@datadog/browser-rum (^6.x)"
+              - "@datadog/browser-rum-react (for React)"
+            example_repos:
+              - "ASU/cremo-interactive-degree-planner"
+              - "ASU/appss-enterprise-feature-flags"
+              - "ASU/sso-enterprise-authentication-service"
+              - "ASU/adms-admissions-application-ui"
+              - "ASU/eadv-class-search"
+            init_pattern: |
+              import { datadogRum } from '@datadog/browser-rum';
+              import { reactPlugin } from '@datadog/browser-rum-react';
+              
+              // Only init in non-local environments
+              if (process.env.NODE_ENV !== 'development') {
+                datadogRum.init({
+                  applicationId: 'YOUR_APP_ID',
+                  clientToken: 'YOUR_CLIENT_TOKEN',
+                  site: 'datadoghq.com',
+                  service: 'my-frontend',
+                  env: process.env.NODE_ENV,
+                  sessionSampleRate: 100,
+                  sessionReplaySampleRate: 20,
+                  defaultPrivacyLevel: 'mask-user-input',
+                  plugins: [reactPlugin({ router: true })],
+                });
+              }
+        
+        jenkins_functions:
+          - name: datadogDeployment
+            description: "Track deployments in Datadog"
+            usage: |
+              datadogDeployment(
+                service: 'my-service',
+                environment: env.DEPLOY_ENV,
+                version: env.BUILD_TAG,
+                status: 'success'  // or 'started', 'failure'
+              )
+        
+        env_vars:
+          - "DD_SERVICE - Service name"
+          - "DD_ENV - Environment (dev, staging, prod)"
+          - "DD_VERSION - Application version"
+          - "DD_AGENT_HOST - Datadog agent host (optional)"
+          - "DD_TRACE_ENABLED - Enable/disable tracing"
+        
+        best_practices:
+          - "Set DD_SERVICE, DD_ENV, DD_VERSION environment variables"
+          - "Use datadogDeployment() in Jenkins for deployment tracking"
+          - "Enable logInjection for APM-log correlation"
+          - "Use RUM for frontend performance monitoring"
+          - "Sample session replays at 20% in production"
+      
+      logging-lake:
+        name: "Logging Lake / Cribl"
+        status: "RECOMMENDED"
+        description: |
+          Enterprise log aggregation - PRIMARY log destination (replaces Splunk).
+          Built on Cribl Stream (EKS) routing to S3 and OpenSearch.
+        
+        repos:
+          - "ASU/eli5-logging-lake"
+          - "ASU/eli5-observability-pipeline-platform"
+          - "ASU/eli5-observability-pipeline-platform-cribl-config"
+          - "ASU/eli5-observability-pipeline-platform-cribl-pack-kubernetes"
+          - "ASU/eli5-observability-pipeline-platform-cribl-pack-linux"
+          - "ASU/eli5-observability-pipeline-platform-cribl-pack-windows"
+          - "ASU/eli5-logging-lake-osis"
+          - "ASU/eli5-logging-lake-lighthouse"
+          - "ASU/eli5-kafkabahn"
+        
+        terraform_modules:
+          - cloudwatch-logs-to-log-lake
+          - cloudflare-zone-logpush-logging-lake
+        
+        architecture:
+          deployment: "Cribl Stream on EKS (Helm charts: logstream-leader, logstream-workergroup)"
+          workers: "8-16 pods, autoscaled at 60% CPU / 85% memory"
+          storage: "S3 buckets (80+ source types, 365-day retention)"
+          analytics: "OpenSearch (6x or2.4xlarge data + 9x warm + cold storage)"
+          ingestion: "OSIS pipelines for K8s, Cloudflare, VPC Flow Logs"
+        
+        ports:
+          - "9997 - Splunk S2S (legacy ingest)"
+          - "8088 - HTTP Event Collector (HEC)"
+          - "5140 - Syslog UDP"
+          - "6514 - Syslog TLS"
+          - "10001 - TCP JSON"
+          - "10200 - Cribl HTTP"
+          - "10300 - Cribl TCP"
+        
+        s3_bucket_naming: "ELI5-LOGL-{env}-log-lake-{source_key}"
+        retention: "365 days default, 7 days for noncurrent versions"
+        
+        cribl_packs:
+          kubernetes:
+            repo: "ASU/eli5-observability-pipeline-platform-cribl-pack-kubernetes"
+            pipelines:
+              - kubernetes_default
+              - nginx
+              - sso_cas
+              - tomcat
+              - eli5_opp
+          linux:
+            repo: "ASU/eli5-observability-pipeline-platform-cribl-pack-linux"
+          windows:
+            repo: "ASU/eli5-observability-pipeline-platform-cribl-pack-windows"
+        
+        team: "eli5"
+      
+      cloudwatch:
+        name: "CloudWatch"
+        status: "ACTIVE"
+        description: "AWS native logging/metrics - route to Datadog or Logging Lake"
+        
+        terraform_modules:
+          routing:
+            - cloudwatch-logs-to-datadog
+            - cloudwatch-logs-to-log-lake
+          legacy:
+            - cloudwatch-to-splunk (DEPRECATED - use cloudwatch-logs-to-log-lake)
+        
+        alarm_example: |
+          resource "aws_cloudwatch_metric_alarm" "high_cpu" {
+            alarm_name          = "${var.service}-high-cpu"
+            comparison_operator = "GreaterThanThreshold"
+            evaluation_periods  = 2
+            metric_name         = "CPUUtilization"
+            namespace           = "AWS/ECS"
+            period              = 300
+            statistic           = "Average"
+            threshold           = 80
+            alarm_actions       = [aws_sns_topic.alerts.arn]
+            ok_actions          = [aws_sns_topic.alerts.arn]
+            treat_missing_data  = "notBreaching"
+          }
+        
+        log_routing_example: |
+          # Route CloudWatch logs to Logging Lake
+          module "logs_to_lake" {
+            source = "jfrog-cloud.devops.asu.edu/asu-terraform-modules__dco-terraform/cloudwatch-logs-to-log-lake/aws"
+            version = ">= 1.0"
+            
+            log_group_name = aws_cloudwatch_log_group.app.name
+          }
+        
+        routing_guidance:
+          metrics: "Forward to Datadog via datadog-lambda-forwarder"
+          logs: "Forward to Logging Lake via cloudwatch-logs-to-log-lake"
+          alarms: "Use SNS → Datadog integration for alerting"
+      
+      opentelemetry:
+        name: "OpenTelemetry"
+        status: "ACTIVE"
+        description: "K8s container logs and distributed tracing correlation"
+        
+        repos:
+          - "ASU/eli5-logging-lake-osis"
+        
+        pipeline: "OTEL Collector → OSIS → OpenSearch + S3"
+        index: "logs-kubernetes_otel"
+        
+        metadata_extracted:
+          - kube_namespace
+          - kube_pod
+          - kube_container
+          - kube_pod_labels
+          - trace_id
+        
+        osis_config_example: |
+          eli5-logl-osis-k8s:
+            source:
+              otel_logs_source:
+                path: "/${pipelineName}/v1/logs"
+            processor:
+              - date:
+                  destination: "@timestamp"
+              - add_entries:
+                  entries:
+                    - key: "sourcetype"
+                      value: "kubernetes"
+              - rename_keys:
+                  entries:
+                    - from_key: "body"
+                      to_key: "message"
+                    - from_key: "/attributes/resource.attributes.k8s@namespace@name"
+                      to_key: "kube_namespace"
+            sink:
+              - opensearch:
+                  hosts: ["https://opensearch.example.com"]
+                  index: "logs-kubernetes_otel"
+              - s3:
+                  bucket: "logging-lake-archive"
+                  object_key:
+                    path_prefix: "opentelemetry-collector/${/sourcetype}/${/kube_namespace}/"
+        
+        best_practices:
+          - "Include trace_id for distributed tracing correlation"
+          - "Extract K8s metadata (namespace, pod, container) for filtering"
+          - "Dual-sink to OpenSearch + S3 archive for durability"
+          - "Use structured logging (JSON) for better parsing"
+      
+      splunk:
+        name: "Splunk (DEPRECATED)"
+        status: "DEPRECATED"
+        description: "Legacy - migrate to Logging Lake"
+        
+        migration_note: |
+          ╔══════════════════════════════════════════════════════════════════════╗
+          ║                    SPLUNK IS DEPRECATED AT ASU                        ║
+          ╠══════════════════════════════════════════════════════════════════════╣
+          ║  New integrations should use:                                         ║
+          ║                                                                        ║
+          ║  FOR LOGS:                                                             ║
+          ║    → Logging Lake (Cribl → S3 + OpenSearch)                           ║
+          ║    → Terraform: cloudwatch-logs-to-log-lake                           ║
+          ║                                                                        ║
+          ║  FOR METRICS/APM:                                                      ║
+          ║    → Datadog                                                           ║
+          ║    → Terraform: cloudwatch-logs-to-datadog, datadog-lambda-forwarder  ║
+          ╚══════════════════════════════════════════════════════════════════════╝
+        
+        migration_path:
+          step_1: "Update Terraform: Replace cloudwatch-to-splunk with cloudwatch-logs-to-log-lake"
+          step_2: "Reconfigure Cribl routes: Send to S3/OpenSearch instead of Splunk HEC"
+          step_3: "Recreate dashboards/alerts in OpenSearch or Datadog"
+          step_4: "Validate log ingestion in Logging Lake (check S3 bucket and OpenSearch)"
+          step_5: "Decommission Splunk forwarders after 30-day validation period"
+        
+        legacy_modules:
+          - name: iam-role-splunk
+            note: "DO NOT USE for new projects"
+          - name: cloudwatch-to-splunk
+            note: "DO NOT USE - use cloudwatch-logs-to-log-lake instead"
+        
+        replacement_commands:
+          logs: "discover.sh pattern --name observability --type logging-lake"
+          metrics: "discover.sh pattern --name observability --type datadog"
+    
+    team_prefixes:
+      eli5: "logging/observability (Logging Lake, Cribl, OpenSearch)"
+      mom: "monitoring/operations (Datadog)"
+    
+    triggers:
+      - datadog
+      - observability
+      - logging
+      - cribl
+      - cloudwatch
+      - opentelemetry
+      - otel
+      - metrics
+      - monitoring
+      - tracing
+      - apm
+      - rum
+      - "logging lake"
+      - eli5
+      - dd-trace
+      - ddtrace
+      - splunk
+    
+    related_domains:
+      - logging
+      - aws
+      - cicd
+    
+    code_search_queries:
+      - "dd-trace"
+      - "datadogRum"
+      - "@datadog/browser-rum"
+      - "cribl"
+      - "eli5-logging-lake"
+      - "cloudwatch-logs-to-datadog"
+      - "datadogDeployment"
+
+  # ===========================================================================
+  # DNS Configuration Pattern
+  # ===========================================================================
+  dns:
+    name: "DNS Configuration (Infoblox + Cloudflare)"
+    description: |
+      DNS management patterns for ASU infrastructure using Terraform.
+      
+      ROUTING RULES:
+        - *.asu.edu domains → Infoblox (dnsadmin.asu.edu)
+        - External/non-ASU domains → Cloudflare (registration + DNS)
+        - Hybrid pattern → Infoblox CNAME → Cloudflare CDN → Origin
+    
+    when_to_use:
+      - Creating DNS records for *.asu.edu domains (A, CNAME)
+      - Registering and configuring non-ASU domains
+      - Setting up Cloudflare CDN/WAF for ASU domains (hybrid pattern)
+      - Migrating DNS configurations to Terraform
+    
+    decision_tree:
+      - condition: "Domain ends with .asu.edu"
+        provider: infoblox
+        action: "Use Infoblox via dnsadmin.asu.edu"
+        views: [default, external]
+        
+      - condition: "Non-ASU domain (external)"
+        provider: cloudflare
+        action: "Register domain + configure DNS records in Cloudflare"
+        
+      - condition: "ASU domain needs CDN/WAF protection"
+        provider: hybrid
+        action: "Infoblox CNAME → Cloudflare CDN → Origin server"
+        description: |
+          Creates Infoblox CNAMEs (both views) pointing to Cloudflare CDN,
+          then Cloudflare proxied record pointing to actual origin.
+    
+    providers:
+      infoblox:
+        server: "dnsadmin.asu.edu"
+        views:
+          - default   # Internal ASU network
+          - external  # External/public DNS
+        vault_path: "secret/services/dco/jenkins/dco/jenkins/prod/kerberos/principals/jenkins_app"
+        resources:
+          - infoblox_a_record
+          - infoblox_cname_record
+        provider_config: |
+          provider "infoblox" {
+            server   = "dnsadmin.asu.edu"
+            username = data.vault_generic_secret.infoblox.data["username"]
+            password = data.vault_generic_secret.infoblox.data["password"]
+          }
+        
+      cloudflare:
+        vault_path: "secret/services/dco/jenkins/ewp/cloudflare/prod/api/principals/asu-jenkins-devops"
+        resources:
+          - cloudflare_record
+          - cloudflare_zone
+        terraform_modules:
+          - cloudflare-tunnel
+          - cloudflare-tunnel-route53-dns
+          - cloudflare-access-app
+          - cloudflare-origin-ca-certificate
+        provider_config: |
+          provider "cloudflare" {
+            api_token = data.vault_generic_secret.cloudflare.data["api_token"]
+          }
+    
+    code_examples:
+      infoblox_cname: |
+        # Infoblox CNAME record for *.asu.edu domain
+        resource "infoblox_cname_record" "myapp_internal" {
+          dns_view  = "default"
+          alias     = "myapp.asu.edu"
+          canonical = "myapp-origin.aws.amazon.com"
+          comment   = "Managed by Terraform"
+        }
+        
+        resource "infoblox_cname_record" "myapp_external" {
+          dns_view  = "external"
+          alias     = "myapp.asu.edu"
+          canonical = "myapp-origin.aws.amazon.com"
+          comment   = "Managed by Terraform"
+        }
+      
+      infoblox_a: |
+        # Infoblox A record for *.asu.edu domain
+        resource "infoblox_a_record" "myapp_internal" {
+          dns_view = "default"
+          fqdn     = "myapp.asu.edu"
+          ip_addr  = "10.1.2.3"
+          comment  = "Managed by Terraform"
+        }
+        
+        resource "infoblox_a_record" "myapp_external" {
+          dns_view = "external"
+          fqdn     = "myapp.asu.edu"
+          ip_addr  = "203.0.113.10"
+          comment  = "Managed by Terraform"
+        }
+      
+      cloudflare_cname: |
+        # Cloudflare CNAME for external domain
+        resource "cloudflare_record" "myapp" {
+          zone_id = data.vault_generic_secret.cloudflare.data["zone_id"]
+          name    = "www"
+          value   = "myapp-origin.aws.amazon.com"
+          type    = "CNAME"
+          proxied = true  # Enable Cloudflare CDN/WAF
+        }
+      
+      hybrid_pattern: |
+        # Hybrid: ASU domain with Cloudflare CDN protection
+        # Flow: User → myapp.asu.edu (Infoblox) → Cloudflare CDN → Origin
+        
+        # Step 1: Infoblox CNAMEs pointing to Cloudflare CDN
+        resource "infoblox_cname_record" "myapp_internal" {
+          dns_view  = "default"
+          alias     = "myapp.asu.edu"
+          canonical = "myapp.asu.edu.cdn.cloudflare.net"
+          comment   = "Points to Cloudflare CDN"
+        }
+        
+        resource "infoblox_cname_record" "myapp_external" {
+          dns_view  = "external"
+          alias     = "myapp.asu.edu"
+          canonical = "myapp.asu.edu.cdn.cloudflare.net"
+          comment   = "Points to Cloudflare CDN"
+        }
+        
+        # Step 2: Cloudflare proxied record to origin
+        resource "cloudflare_record" "myapp" {
+          zone_id = data.vault_generic_secret.cloudflare.data["zone_id"]
+          name    = "myapp.asu.edu"
+          value   = "myapp-origin.aws.amazon.com"
+          type    = "CNAME"
+          proxied = true
+        }
+      
+      vault_secrets: |
+        # Vault secrets for DNS provider authentication
+        
+        # Infoblox credentials
+        data "vault_generic_secret" "infoblox" {
+          path = "secret/services/dco/jenkins/dco/jenkins/prod/kerberos/principals/jenkins_app"
+        }
+        
+        # Cloudflare credentials
+        data "vault_generic_secret" "cloudflare" {
+          path = "secret/services/dco/jenkins/ewp/cloudflare/prod/api/principals/asu-jenkins-devops"
+        }
+    
+    example_repos:
+      infoblox:
+        - repo: "ASU/sso-shibboleth"
+          path: "terraform/app/dns.tf"
+          description: "Hybrid Infoblox+Cloudflare pattern"
+        - repo: "ASU/hosting-fse"
+          path: "terraform/ets_services_qa_prod/infoblox.tf"
+          description: "Infoblox CNAME with for_each"
+        - repo: "ASU/ewp-www-farm-acquia"
+          description: "Infoblox A and CNAME records"
+        - repo: "ASU/hosting-cronkite"
+          description: "infoblox-cname-record module usage"
+        - repo: "ASU/xreal-xr-at-asu-portal"
+          description: "Infoblox integration"
+      cloudflare:
+        - repo: "ASU/sso-shibboleth"
+          path: "terraform/app/dns.tf"
+          description: "Cloudflare proxied records"
+      module_source:
+        - repo: "ASU/dns-infoblox"
+          description: "Infoblox Terraform configurations (per-region)"
+    
+    scaffolding:
+      command: "./scripts/discover.sh dns-scaffold"
+      options:
+        - "--domain <domain>     Domain to create records for"
+        - "--type a|cname        Record type (default: cname)"
+        - "--target <value>      Target IP or hostname"
+        - "--pattern hybrid      Use hybrid Infoblox→Cloudflare pattern"
+        - "--origin <value>      Origin server for hybrid pattern"
+        - "--no-vault            Skip Vault secrets in output"
+      examples:
+        - cmd: "dns-scaffold --domain myapp.asu.edu --type cname --target cdn.example.com"
+          desc: "Generate Infoblox CNAME for ASU domain"
+        - cmd: "dns-scaffold --domain myapp.example.com --type a --target 1.2.3.4"
+          desc: "Generate Cloudflare A record for external domain"
+        - cmd: "dns-scaffold --domain myapp.asu.edu --pattern hybrid --origin myapp-origin.aws.com"
+          desc: "Generate hybrid Infoblox→Cloudflare CDN pattern"
+    
+    validation:
+      command: "./scripts/discover.sh dns-validate"
+      options:
+        - "--domain <domain>     Domain to validate"
+        - "--check-dns           Check if domain exists in DNS (uses dig)"
+      examples:
+        - cmd: "dns-validate --domain myapp.asu.edu"
+          desc: "Returns provider recommendation (infoblox)"
+        - cmd: "dns-validate --domain myapp.example.com --check-dns"
+          desc: "Returns cloudflare + checks if domain resolves"
+    
+    triggers:
+      - dns record
+      - dns configuration
+      - infoblox
+      - cloudflare dns
+      - cname record
+      - a record
+      - asu.edu domain
+      - domain registration
+      - custom domain
+      - certificate
+      - acm
+    
+    team_prefixes:
+      - dco
+      - ewp
+    
+    best_practices:
+      - "Always create records in BOTH Infoblox views (default + external) for *.asu.edu"
+      - "Use Vault for provider credentials - never hardcode"
+      - "Enable proxied=true on Cloudflare records for CDN/WAF benefits"
+      - "Use hybrid pattern when ASU domains need Cloudflare protection"
+      - "Add meaningful comments to DNS records for auditability"
+      - "Use for_each when creating multiple similar records"
+    
+    related_domains:
+      - cloudflare
+      - infoblox
+      - terraform
+      - vault
+    
+    code_search_queries:
+      - "infoblox_cname_record"
+      - "infoblox_a_record"
+      - "cloudflare_record"
+      - "dnsadmin.asu.edu"
+      - "dns_view"
+
+  # ===========================================================================
+  # Custom Domains Pattern
+  # ===========================================================================
+  custom-domains:
+    name: "Custom Domain Provisioning"
+    description: |
+      Patterns for provisioning custom domains (*.asu.edu) for AWS services.
+      Covers ACM certificates, API Gateway, CloudFront, and ALB with Route53
+      DNS validation and Infoblox integration.
+      
+      PRIMARY EXAMPLE: ASU/iden-fraud-watchdog - Complete ACM + Route53 + 
+      CloudFront pattern with cross-account DNS validation.
+    
+    when_to_use:
+      - Adding a custom domain to API Gateway (REST or HTTP API)
+      - Setting up CloudFront distribution with custom domain aliases
+      - Configuring ALB/NLB with HTTPS and custom domain
+      - Provisioning ACM certificates for *.asu.edu subdomains
+      - Setting up wildcard certificates with DNS validation
+    
+    decision_tree:
+      cloudfront:
+        use_when: "Static site, CDN, or frontend app needs custom domain"
+        certificate_region: "us-east-1 (REQUIRED for CloudFront)"
+        pattern: "ACM cert → DNS validation → CloudFront aliases → Route53/Infoblox CNAME"
+        primary_example: "ASU/iden-fraud-watchdog"
+      api_gateway:
+        use_when: "REST API or HTTP API needs custom domain"
+        certificate_region: "us-east-1 for edge-optimized, same region for regional"
+        pattern: "ACM cert → DNS validation → API Gateway Domain → Route53/Infoblox"
+      alb:
+        use_when: "Application Load Balancer needs HTTPS"
+        certificate_region: "Same region as ALB"
+        pattern: "ACM cert → DNS validation → ALB HTTPS listener → Route53/Infoblox"
+    
+    types:
+      acm-cloudfront:
+        name: "ACM + CloudFront Custom Domain"
+        description: |
+          Complete pattern for CloudFront custom domains with ACM certificate
+          and Route53 DNS validation. Supports cross-account Route53 zones.
+        
+        primary_example:
+          repo: "ASU/iden-fraud-watchdog"
+          description: "IDEN Fraud Watchdog - Complete ACM + Route53 + CloudFront pattern"
+          files:
+            - path: "terraform/acm.tf"
+              description: "ACM certificate with wildcard SANs, DNS validation"
+            - path: "terraform/dns.tf"
+              description: "Route53 validation records + CloudFront CNAME (public + internal zones)"
+            - path: "terraform/variables.tf"
+              description: "certificate_domains object pattern"
+        
+        acm_certificate: |
+          # ACM Certificate with DNS Validation (must be us-east-1 for CloudFront)
+          resource "aws_acm_certificate" "main" {
+            count    = var.enable_acm_certificate ? 1 : 0
+            provider = aws.us_east_1  # REQUIRED for CloudFront
+            
+            domain_name               = var.certificate_domains.primary
+            subject_alternative_names = var.certificate_domains.subject_alternative_names
+            validation_method         = "DNS"
+            
+            options {
+              certificate_transparency_logging_preference = "ENABLED"
+            }
+            
+            lifecycle {
+              create_before_destroy = true
+            }
+            
+            tags = module.product_tags.tags
+          }
+          
+          # Process validation domains
+          locals {
+            acm_domain_validation_options = var.enable_acm_certificate ? {
+              for dvo in aws_acm_certificate.main[0].domain_validation_options : dvo.domain_name => {
+                name   = dvo.resource_record_name
+                record = dvo.resource_record_value
+                type   = dvo.resource_record_type
+              }
+            } : {}
+          }
+        
+        dns_validation: |
+          # Route53 zones (cross-account if needed)
+          data "aws_route53_zone" "public" {
+            provider     = aws.route53  # Cross-account provider
+            name         = var.route53_zone_name
+            private_zone = false
+          }
+          
+          data "aws_route53_zone" "internal" {
+            provider     = aws.route53
+            name         = var.route53_zone_name
+            private_zone = true
+          }
+          
+          # ACM validation records
+          resource "aws_route53_record" "acm_validation" {
+            for_each = local.acm_domain_validation_options
+            provider = aws.route53
+            
+            zone_id = data.aws_route53_zone.public.zone_id
+            name    = each.value.name
+            type    = each.value.type
+            ttl     = 60
+            records = [each.value.record]
+            
+            allow_overwrite = true
+          }
+          
+          # Certificate validation
+          resource "aws_acm_certificate_validation" "main" {
+            count    = var.enable_acm_certificate ? 1 : 0
+            provider = aws.us_east_1
+            
+            certificate_arn         = aws_acm_certificate.main[0].arn
+            validation_record_fqdns = [for r in aws_route53_record.acm_validation : r.fqdn]
+          }
+        
+        cloudfront_cname: |
+          # CloudFront CNAME records (public + internal zones)
+          resource "aws_route53_record" "cloudfront_public" {
+            provider = aws.route53
+            zone_id  = data.aws_route53_zone.public.zone_id
+            name     = var.certificate_domains.primary
+            type     = "CNAME"
+            ttl      = 300
+            records  = [var.cloudfront_distribution_domain_name]
+          }
+          
+          resource "aws_route53_record" "cloudfront_internal" {
+            provider = aws.route53
+            zone_id  = data.aws_route53_zone.internal.zone_id
+            name     = var.certificate_domains.primary
+            type     = "CNAME"
+            ttl      = 300
+            records  = [var.cloudfront_distribution_domain_name]
+          }
+        
+        variables_pattern: |
+          variable "certificate_domains" {
+            description = "Certificate domain configuration"
+            type = object({
+              primary                   = string
+              subject_alternative_names = list(string)
+            })
+          }
+          
+          variable "cloudfront_distribution_domain_name" {
+            description = "CloudFront distribution domain (e.g., d1234.cloudfront.net)"
+            type        = string
+          }
+          
+          variable "route53_zone_name" {
+            description = "Route53 zone name (e.g., asu.edu)"
+            type        = string
+          }
+          
+          variable "enable_acm_certificate" {
+            description = "Whether to create ACM certificate"
+            type        = bool
+            default     = true
+          }
+      
+      api-gateway:
+        name: "API Gateway Custom Domain"
+        description: "Custom domain for API Gateway with ACM certificate"
+        
+        example_repos:
+          - repo: "ASU/meho-asu-media-services-platform"
+            files: ["route53.tf"]
+          - repo: "ASU/appss-enterprise-feature-flags"
+            files: ["eff_api/apigateway.tf"]
+          - repo: "ASU/lms-canvas-enrollment-system"
+            files: ["api_gateway.tf", "route53.tf"]
+          - repo: "ASU/csupt-enterprise-chatbot"
+            files: ["apigateway_chatbot.tf"]
+        
+        code_snippet: |
+          # API Gateway Custom Domain
+          resource "aws_api_gateway_domain_name" "main" {
+            domain_name              = var.custom_domain
+            regional_certificate_arn = aws_acm_certificate.main.arn
+            
+            endpoint_configuration {
+              types = ["REGIONAL"]
+            }
+          }
+          
+          resource "aws_api_gateway_base_path_mapping" "main" {
+            api_id      = aws_api_gateway_rest_api.main.id
+            stage_name  = aws_api_gateway_stage.main.stage_name
+            domain_name = aws_api_gateway_domain_name.main.domain_name
+          }
+          
+          # Route53 record pointing to API Gateway
+          resource "aws_route53_record" "api" {
+            zone_id = data.aws_route53_zone.main.zone_id
+            name    = var.custom_domain
+            type    = "A"
+            
+            alias {
+              name                   = aws_api_gateway_domain_name.main.regional_domain_name
+              zone_id                = aws_api_gateway_domain_name.main.regional_zone_id
+              evaluate_target_health = false
+            }
+          }
+    
+    infoblox_integration: |
+      For *.asu.edu domains, after ACM certificate provisioning, you may need
+      to create Infoblox records instead of (or in addition to) Route53.
+      
+      See the 'dns' design pattern for Infoblox examples:
+        ./discover.sh pattern --name dns
+      
+      Hybrid pattern (Infoblox → Cloudflare → Origin):
+        1. Provision ACM certificate with Route53 validation
+        2. Create Infoblox CNAME pointing to CloudFront/API Gateway
+        3. Both internal (default) and external views
+    
+    team_prefixes:
+      - iden
+      - meho
+      - eadv
+      - appss
+      - lms
+      - csupt
+    
+    triggers:
+      - custom domain
+      - domain
+      - acm
+      - certificate
+      - ssl
+      - tls
+      - api gateway domain
+      - cloudfront alias
+      - cloudfront custom domain
+      - route53
+      - subdomain
+      - wildcard certificate
+      - dns validation
+      - certificate_domains
+    
+    synonyms:
+      - aws_acm_certificate
+      - aws_acm_certificate_validation
+      - aws_api_gateway_domain_name
+      - aws_api_gateway_base_path_mapping
+      - aws_cloudfront_distribution
+      - certificate_arn
+      - aliases
+      - domain_name
+      - certificate_domains
+      - subject_alternative_names
+      - validation_method
+      - acm_domain_validation_options
+    
+    best_practices:
+      - "ACM certificates for CloudFront/API Gateway (edge) MUST be in us-east-1"
+      - "Use DNS validation (not email) for automated certificate renewal"
+      - "Create records in BOTH public and internal Route53 zones"
+      - "Use create_before_destroy lifecycle for zero-downtime certificate rotation"
+      - "Enable certificate transparency logging for security"
+      - "Use workspace-based domain naming for environment separation"
+      - "For cross-account Route53, use provider aliases with assume_role"
+      - "Store sensitive values in Vault, sync to AWS Secrets Manager at Terraform level"
+    
+    related_domains:
+      - dns
+      - cloudflare
+      - terraform
+      - aws
+    
+    code_search_queries:
+      - "aws_acm_certificate"
+      - "aws_acm_certificate_validation"
+      - "aws_api_gateway_domain_name"
+      - "cloudfront_distribution aliases"
+      - "certificate_domains"
+      - "acm_domain_validation_options"
+
+# =============================================================================
+# Search configuration
+# =============================================================================
+search:
+  default_limit: 50
+  max_results: 200
+  rate_limit_delay_ms: 6000   # 6 seconds = 10 req/min for code search
+  cache_ttl_hours: 24
+  org: ASU
+  
+# Query expansion rules
+expansion:
+  # Add language filter if code-related
+  auto_language: true
+  # Include repo name matches
+  search_repo_names: true
+  # Search in specific paths first
+  prioritize_paths: true
+  # Maximum terms in expanded query
+  max_expansion_terms: 8
+
+# Priority languages for ASU org (based on analysis)
+# HCL: 335, Python: 64, Java: 47, JavaScript: 38, TypeScript: 17
+priority_languages:
+  - HCL
+  - Python
+  - Java
+  - JavaScript
+  - TypeScript
+  - Go
+  - Shell
+
+# Domain classification rules
+# Used when building the index to auto-classify repos
+classification:
+  # Minimum confidence to assign domain
+  min_confidence: 0.5
+  # Weight for name match vs description match
+  name_weight: 0.7
+  description_weight: 0.3
+  # Classify by prefix first (highest confidence)
+  use_prefix_classification: true

@@ -1,0 +1,129 @@
+{
+  "name": "analyze-copper-stock-resilience-dependency",
+  "version": "0.1.0",
+  "displayName": "銅價股市韌性依賴分析",
+  "description": "用跨資產訊號（全球股市韌性 + 中國利率環境）評估銅價能否突破關卡或進入「回補/回踩」到支撐的機率與路徑",
+  "author": "Ricky Wang",
+  "license": "MIT",
+  "category": "indicator-monitoring",
+  "tags": [
+    "銅價",
+    "股市韌性",
+    "跨資產分析",
+    "中國利率",
+    "關卡突破",
+    "回補分析",
+    "COMEX",
+    "宏觀經濟"
+  ],
+  "dataLevel": "free-nolimit",
+  "dependencies": {
+    "python": ">=3.8",
+    "packages": [
+      "pandas>=1.5.0",
+      "numpy>=1.20.0",
+      "yfinance>=0.2.0",
+      "requests>=2.28.0",
+      "scipy>=1.10.0",
+      "statsmodels>=0.14.0"
+    ],
+    "optional": [
+      "matplotlib>=3.5.0",
+      "plotly>=5.0.0"
+    ]
+  },
+  "entryPoints": {
+    "skill": "SKILL.md",
+    "mainScript": "scripts/copper_stock_analyzer.py"
+  },
+  "workflows": [
+    {
+      "id": "analyze",
+      "name": "完整分析",
+      "description": "分析銅價與股市韌性的依賴關係、關卡狀態與回補機率",
+      "file": "workflows/analyze.md"
+    },
+    {
+      "id": "quick-check",
+      "name": "快速檢查",
+      "description": "快速查看目前銅價、股市韌性、關卡狀態",
+      "file": "workflows/quick-check.md"
+    },
+    {
+      "id": "visualize",
+      "name": "視覺化",
+      "description": "生成銅價與依賴因子的視覺化圖表",
+      "file": "workflows/visualize.md"
+    }
+  ],
+  "references": [
+    "references/methodology.md",
+    "references/data-sources.md",
+    "references/input-schema.md"
+  ],
+  "templates": [
+    "templates/output-json.md",
+    "templates/output-markdown.md"
+  ],
+  "examples": [
+    "examples/sample-output.json"
+  ],
+  "dataSources": [
+    {
+      "name": "Yahoo Finance",
+      "type": "primary",
+      "url": "https://finance.yahoo.com",
+      "api": "yfinance (no API key required)",
+      "series": {
+        "copper": [
+          "HG=F"
+        ],
+        "equity_proxy": [
+          "ACWI",
+          "VT",
+          "URTH"
+        ]
+      }
+    },
+    {
+      "name": "TradingEconomics / Investing.com",
+      "type": "secondary",
+      "url": "https://tradingeconomics.com",
+      "api": "Web scraping with Selenium",
+      "series": {
+        "china_10y_yield": [
+          "China 10Y Government Bond"
+        ]
+      }
+    }
+  ],
+  "modelConfig": {
+    "defaultParams": {
+      "freq": "1mo",
+      "ma_window": 60,
+      "rolling_window": 24,
+      "round_levels": [
+        10000,
+        13000
+      ],
+      "backfill_max_drawdown": 0.25,
+      "equity_resilience_weights": {
+        "momentum_12m": 0.4,
+        "above_sma": 0.4,
+        "drawdown_3m": 0.2
+      }
+    },
+    "trendDefinitions": {
+      "up": "close > SMA && SMA_slope > 0",
+      "down": "close < SMA && SMA_slope < 0",
+      "range": "otherwise"
+    },
+    "unitConversion": {
+      "HG=F": {
+        "from": "USD/lb",
+        "to": "USD/ton",
+        "multiplier": 2204.62262
+      }
+    }
+  }
+}

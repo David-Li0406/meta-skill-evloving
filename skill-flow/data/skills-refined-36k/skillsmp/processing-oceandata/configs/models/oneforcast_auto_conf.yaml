@@ -1,0 +1,29 @@
+# OneForecast Model Configuration - Autoregressive Version
+# Simplified graph neural network for long-term ocean prediction
+
+# Temporal configuration
+input_len: 7        # Number of input frames
+output_len: 1       # Always 1 for autoregressive mode
+in_channels: 2      # Ocean velocity components (u, v)
+
+# Spatial resolution
+input_res: [240, 240]  # H, W
+
+# Model architecture
+hidden_dim: 256     # Hidden dimension
+num_layers: 1       # Number of MLP layers
+processor_layers: 8 # Number of processor layers
+
+# Graph configuration
+mesh_level: 4       # Mesh refinement level
+multimesh: false    # Single resolution mesh for simplicity
+
+# Autoregressive specific settings
+rollout_steps: 10   # Number of autoregressive prediction steps
+                    # Can be overridden at inference time
+
+# Training recommendations
+# - Train with mixed teacher forcing
+# - Use curriculum learning on rollout length
+# - Monitor long-term stability
+# - Consider using scheduled sampling

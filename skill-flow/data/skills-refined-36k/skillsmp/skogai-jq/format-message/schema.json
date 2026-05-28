@@ -1,0 +1,47 @@
+{
+  "name": "format-message",
+  "description": "Format message object as string using template with {field} placeholders",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing fields referenced in template"
+  },
+  "args": {
+    "template": {
+      "type": "string",
+      "required": true,
+      "description": "Template string with {field} placeholders (e.g., '{role}: {content}'). Supports nested paths with dots (e.g., '{user.name}')"
+    }
+  },
+  "output": {
+    "type": "string",
+    "description": "Formatted string with placeholders replaced by field values. Missing fields become empty strings. Non-string values are converted to strings."
+  },
+  "examples": [
+    {
+      "description": "Format chat message with role and content",
+      "input": {"role": "user", "content": "Hello world"},
+      "args": {"template": "{role}: {content}"},
+      "output": "user: Hello world"
+    },
+    {
+      "description": "Format nested field path",
+      "input": {"user": {"name": "skogix"}, "message": "test"},
+      "args": {"template": "[{user.name}] {message}"},
+      "output": "[skogix] test"
+    },
+    {
+      "description": "Missing field replaced with empty string",
+      "input": {"role": "assistant"},
+      "args": {"template": "{role}: {content}"},
+      "output": "assistant: "
+    },
+    {
+      "description": "Number value converted to string",
+      "input": {"count": 42, "item": "messages"},
+      "args": {"template": "{count} {item}"},
+      "output": "42 messages"
+    }
+  ],
+  "tags": ["string", "format", "template", "message", "interpolation"]
+}

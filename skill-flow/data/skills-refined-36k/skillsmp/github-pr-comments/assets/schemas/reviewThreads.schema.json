@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NormalizedReviewThreads",
+  "type": "object",
+  "required": ["owner", "repo", "pullNumber", "threads"],
+  "properties": {
+    "owner": { "type": "string", "minLength": 1 },
+    "repo": { "type": "string", "minLength": 1 },
+    "pullNumber": { "type": "integer", "minimum": 1 },
+    "pullUrl": { "type": ["string", "null"] },
+    "threads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["isResolved", "isOutdated"],
+        "properties": {
+          "id": { "type": ["string", "null"] },
+          "isResolved": { "type": "boolean" },
+          "isOutdated": { "type": "boolean" },
+          "path": { "type": ["string", "null"] },
+          "line": { "type": ["integer", "null"] },
+          "originalLine": { "type": ["integer", "null"] },
+          "diffHunk": { "type": ["string", "null"] },
+          "author": { "type": ["string", "null"] },
+          "body": { "type": ["string", "null"] },
+          "url": { "type": ["string", "null"] },
+          "createdAt": { "type": ["string", "null"] },
+          "commentCount": { "type": "integer" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

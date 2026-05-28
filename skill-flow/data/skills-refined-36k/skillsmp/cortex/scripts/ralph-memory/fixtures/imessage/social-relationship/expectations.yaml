@@ -1,0 +1,38 @@
+# Fixture: Group chat with Venmo handle and event coordination
+description: "Friends coordinating plans, Casey's Venmo shared for payment"
+
+entities:
+  must_have:
+    - name_contains: "Tyler"
+      entity_type: Person
+      
+    - name_contains: "Casey"
+      entity_type: Person
+
+  optional:
+    # Casexadams may be extracted as separate entity from Venmo URL
+    - name_contains: "Casexadams"
+      entity_type: Person
+    # Event might be extracted
+    - name_contains: "Marty Supreme"
+      entity_type: Event
+
+aliases:
+  # The Venmo handle could be associated with either Casey or extracted as Casexadams entity
+  optional:
+    - alias_like: "%Casexadams%"
+      alias_type: handle
+
+relationships:
+  optional:
+    # Tyler attended event
+    - source_entity_name_contains: "Tyler"
+      relation_type: ATTENDED
+    # Casey scheduled/hosted
+    - source_entity_name_contains: "Casey"
+      relation_type: HOSTED
+
+episode_entity_mentions:
+  must_have:
+    - entity_name_contains: "Tyler"
+    - entity_name_contains: "Casey"

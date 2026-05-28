@@ -1,0 +1,143 @@
+# =============================================================================
+# SPRINT.yaml Template
+# =============================================================================
+# This annotated template shows all available fields for sprint definitions.
+# Copy this file to your sprint directory and customize.
+# Location: .claude/sprints/YYYY-MM-DD_sprint-name/SPRINT.yaml
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Sprint Metadata (Optional)
+# -----------------------------------------------------------------------------
+
+# Human-readable name for the sprint
+# Good: Descriptive, indicates purpose
+name: Feature Implementation Sprint
+
+# Unique identifier (auto-generated if not provided)
+# Format: Usually UUID or date-based
+# sprint-id: 2024-01-15-auth-feature
+
+# Creation date (ISO 8601 format)
+# created: 2024-01-15T10:00:00Z
+
+# Sprint owner (for tracking/filtering)
+# owner: developer@example.com
+
+# -----------------------------------------------------------------------------
+# Workflow Reference (Required)
+# -----------------------------------------------------------------------------
+
+# Workflow to use for this sprint
+# Must exist in .claude/workflows/<name>.yaml
+# Common options:
+#   - sprint-default: Standard multi-step development
+#   - gherkin-verified-execution: Full verification workflow
+#   - execute-with-qa: Simple execution with QA
+#   - flat-foreach: Minimal iteration
+#   - bugfix-workflow: Quick bug fixes
+workflow: sprint-default
+
+# -----------------------------------------------------------------------------
+# Configuration (Optional)
+# -----------------------------------------------------------------------------
+
+# Sprint-level configuration options
+# config:
+#   # Maximum tasks before pausing (safety limit)
+#   max-tasks: 50
+#
+#   # Time limit for sprint execution
+#   time-box: "4h"
+#
+#   # Automatically commit after each step
+#   auto-commit: true
+
+# -----------------------------------------------------------------------------
+# Steps (Required)
+# -----------------------------------------------------------------------------
+
+# Steps can be simple strings or objects with metadata
+# Aim for 3-8 steps per sprint (single responsibility)
+
+steps:
+  # -----------------------------
+  # Format 1: Simple String Steps
+  # -----------------------------
+  # Use when: Step is self-explanatory, no special config needed
+
+  - Implement user registration endpoint with email/password validation
+
+  - Add JWT token generation on successful login
+
+  # -----------------------------
+  # Format 2: Object Steps
+  # -----------------------------
+  # Use when: Need custom ID, per-step workflow, or multi-line prompts
+
+  - prompt: |
+      Implement password reset flow:
+      - POST /auth/forgot-password (sends email)
+      - POST /auth/reset-password (validates token, updates password)
+    id: password-reset
+
+  # Per-step workflow override
+  - prompt: Add integration tests for authentication endpoints
+    id: auth-tests
+    workflow: execute-with-qa  # Uses different workflow for this step
+
+  # -----------------------------
+  # Step Writing Best Practices
+  # -----------------------------
+  # - Start with action verb (Implement, Add, Create, Fix, Update)
+  # - Be specific about what to build
+  # - Include success criteria for complex steps
+  # - One logical task per step
+
+  - Update API documentation with new auth endpoints
+
+# =============================================================================
+# Example Variations
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Bug Fix Sprint
+# -----------------------------------------------------------------------------
+# name: Fix Login Validation Bugs
+# workflow: bugfix-workflow
+# steps:
+#   - Fix email format validation allowing invalid emails
+#   - Fix password strength check not enforcing special characters
+#   - Add regression tests for validation fixes
+
+# -----------------------------------------------------------------------------
+# Refactoring Sprint
+# -----------------------------------------------------------------------------
+# name: Auth Module Refactoring
+# workflow: gherkin-verified-execution
+# steps:
+#   - Extract password hashing into dedicated PasswordService
+#   - Move JWT logic into TokenService
+#   - Update AuthController to use new services
+#   - Add unit tests for extracted services
+
+# -----------------------------------------------------------------------------
+# Documentation Sprint
+# -----------------------------------------------------------------------------
+# name: API Documentation Update
+# workflow: flat-foreach
+# steps:
+#   - Document authentication endpoints in OpenAPI spec
+#   - Add usage examples for each endpoint
+#   - Create authentication flow diagram
+
+# =============================================================================
+# Validation Checklist
+# =============================================================================
+# Before running, verify:
+# [ ] workflow exists in .claude/workflows/
+# [ ] 3-8 steps (single focused goal)
+# [ ] Each step has clear, actionable prompt
+# [ ] Step prompts are specific, not vague
+# [ ] No compound steps (one task per step)
+# [ ] YAML syntax is valid

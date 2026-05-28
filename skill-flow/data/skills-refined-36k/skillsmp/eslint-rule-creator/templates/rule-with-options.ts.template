@@ -1,0 +1,49 @@
+import { createRule } from "../utilities/create-rule";
+
+type MessageIds = "MESSAGE_ID_HERE";
+
+export interface RuleNameOptions {
+	readonly optionName?: string;
+	readonly threshold?: number;
+}
+
+const DEFAULT_THRESHOLD = 10;
+
+export default createRule<[RuleNameOptions?], MessageIds>({
+	create(context) {
+		const options = context.options[0] ?? {};
+		const threshold = options.threshold ?? DEFAULT_THRESHOLD;
+
+		return {
+			// Visitor function example
+			CallExpression(node): void {
+				// Rule logic here - replace with actual condition
+				context.report({
+					messageId: "MESSAGE_ID_HERE",
+					node,
+				});
+			},
+		};
+	},
+	defaultOptions: [{}],
+	meta: {
+		docs: {
+			description: "RULE_DESCRIPTION",
+		},
+		messages: {
+			MESSAGE_ID_HERE: "USER_FACING_MESSAGE",
+		},
+		schema: [
+			{
+				additionalProperties: false,
+				properties: {
+					optionName: { type: "string" },
+					threshold: { type: "integer" },
+				},
+				type: "object",
+			},
+		],
+		type: "problem", // Or "suggestion" or "layout"
+	},
+	name: "RULE_NAME",
+});

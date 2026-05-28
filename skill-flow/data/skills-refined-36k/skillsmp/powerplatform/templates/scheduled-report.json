@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "_comment": "Template: Scheduled flow that collects data and sends report",
+  "triggers": {
+    "Recurrence": {
+      "type": "Recurrence",
+      "recurrence": {
+        "frequency": "Week",
+        "interval": 1,
+        "schedule": {
+          "weekDays": ["Monday"],
+          "hours": ["9"],
+          "minutes": ["0"]
+        },
+        "timeZone": "GMT Standard Time"
+      }
+    }
+  },
+  "actions": {
+    "Initialize_report_content": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "ReportContent",
+            "type": "string",
+            "value": ""
+          }
+        ]
+      },
+      "runAfter": {}
+    },
+    "Get_items_from_source": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "connectionName": "shared_sharepointonline",
+          "operationId": "GetItems",
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+        },
+        "parameters": {
+          "dataset": "SITE_URL",
+          "table": "LIST_GUID",
+          "$filter": "Created ge '@{addDays(utcNow(), -7)}'",
+          "$top": 100
+        }
+      },
+      "runAfter": {
+        "Initialize_report_content": ["Succeeded"]
+      }
+    },
+    "Apply_to_each_item": {
+      "type": "Foreach",
+      "foreach": "@body('Get_items_from_source')?['value']",
+      "actions": {
+        "Append_to_report": {
+          "type": "AppendToStringVariable",
+          "inputs": {
+            "name": "ReportContent",
+            "value": "- @{items('Apply_to_each_item')?['Title']} (Created: @{items('Apply_to_each_item')?['Created']})\n"
+          }
+        }
+      },
+      "runAfter": {
+        "Get_items_from_source": ["Succeeded"]
+      }
+    },
+    "Send_report_email": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "connectionName": "shared_office365",
+          "operationId": "SendEmailV2",
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+        },
+        "parameters": {
+          "emailMessage/To": "RECIPIENT_EMAIL",
+          "emailMessage/Subject": "Weekly Report - @{formatDateTime(utcNow(), 'yyyy-MM-dd')}",
+          "emailMessage/Body": "<h2>Weekly Report</h2><p>Items created in the last 7 days:</p><pre>@{variables('ReportContent')}</pre><p>Total items: @{length(body('Get_items_from_source')?['value'])}</p>",
+          "emailMessage/Importance": "Normal"
+        }
+      },
+      "runAfter": {
+        "Apply_to_each_item": ["Succeeded"]
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+#!/bin/bash
+# Fake giil tool for testing
+# Supports MODE environment variable: normal (default), timeout, error
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        exec sleep 3600
+        ;;
+    error)
+        echo "giil: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version|-v|version)
+        echo "giil version 3.1.0 (Hybrid Edition)"
+        exit 0
+        ;;
+    --help|-h|help)
+        echo "giil - Get Image from Internet Link (fake for testing)"
+        echo "Usage: giil [options] <url>"
+        echo "  --version          Show version"
+        echo "  --json             Output as JSON"
+        echo "  --output <dir>     Output directory"
+        echo "  --print-url        Print direct URL only"
+        echo "  --quiet            Suppress progress output"
+        echo ""
+        echo "Supported platforms: iCloud, Dropbox, Google Photos, Google Drive"
+        exit 0
+        ;;
+    *)
+        # If URL-like argument provided, simulate a download
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"url": "https://example.com/share/photo", "direct_url": "https://cdn.example.com/photo.jpg", "filename": "photo.jpg", "output_path": "/tmp/photo.jpg", "content_type": "image/jpeg", "size": 1024000, "width": 1920, "height": 1080, "platform": "icloud", "downloaded_at": "2026-01-20T12:00:00Z"}'
+        else
+            echo "Downloaded: photo.jpg (1024KB)"
+        fi
+        exit 0
+        ;;
+esac

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSD Card Component Example</title>
+  <meta name="description" content="A product card built with Declarative Shadow DOM, container queries, and baseline 2024 features.">
+  
+  <style>
+    /* ===== Global Tokens ===== */
+    :root {
+      color-scheme: light dark;
+      
+      /* Colors */
+      --bg: light-dark(#ffffff, #0a0a0a);
+      --fg: light-dark(#1a1a1a, #f0f0f0);
+      --surface: light-dark(#f8f8f8, #141414);
+      --border: light-dark(#e5e5e5, #2a2a2a);
+      --accent: light-dark(#0066cc, #5599ff);
+      --muted: light-dark(#666666, #999999);
+      
+      /* Spacing Scale */
+      --space-xs: clamp(0.25rem, 0.5cqi, 0.5rem);
+      --space-sm: clamp(0.5rem, 1cqi, 0.75rem);
+      --space-md: clamp(1rem, 2cqi, 1.5rem);
+      --space-lg: clamp(1.5rem, 3cqi, 2.5rem);
+      
+      /* Typography */
+      --text-sm: clamp(0.875rem, 2cqi, 1rem);
+      --text-base: clamp(1rem, 2.5cqi, 1.125rem);
+      --text-lg: clamp(1.125rem, 3cqi, 1.5rem);
+      --text-xl: clamp(1.5rem, 4cqi, 2rem);
+      
+      /* Misc */
+      --radius: 0.75rem;
+      --shadow: 0 4px 16px light-dark(#0001, #0004);
+    }
+    
+    /* ===== Base Styles ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      padding: var(--space-lg);
+    }
+    
+    h1 {
+      font-size: var(--text-xl);
+      margin: 0 0 var(--space-lg);
+    }
+    
+    /* ===== Demo Layout ===== */
+    .demo-grid {
+      display: grid;
+      gap: var(--space-md);
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+    }
+    
+    /* Card container provides container context */
+    .card-container {
+      container-type: inline-size;
+      container-name: card;
+    }
+  </style>
+</head>
+<body>
+  <h1>Product Card Component</h1>
+  <p style="margin-bottom: var(--space-lg); color: var(--muted);">
+    Responsive card using DSD + container queries. Resize the browser to see layout changes.
+  </p>
+  
+  <div class="demo-grid">
+    <!-- Card 1 -->
+    <div class="card-container">
+      <product-card>
+        <template shadowrootmode="open">
+          <style>
+            :host {
+              display: block;
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: var(--radius);
+              overflow: hidden;
+              box-shadow: var(--shadow);
+            }
+            
+            .layout {
+              display: grid;
+              gap: var(--space-md);
+            }
+            
+            .image {
+              aspect-ratio: 16/9;
+              background: var(--border);
+              overflow: hidden;
+            }
+            
+            ::slotted(img) {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+            
+            .content {
+              padding: 0 var(--space-md) var(--space-md);
+            }
+            
+            .title {
+              font-size: var(--text-lg);
+              font-weight: 600;
+              margin: 0 0 var(--space-xs);
+              line-height: 1.2;
+            }
+            
+            .description {
+              font-size: var(--text-sm);
+              color: var(--muted);
+              margin: 0 0 var(--space-sm);
+            }
+            
+            .price {
+              font-size: var(--text-lg);
+              font-weight: 700;
+              color: var(--accent);
+            }
+            
+            .actions {
+              display: flex;
+              gap: var(--space-sm);
+              margin-top: var(--space-md);
+            }
+            
+            ::slotted(button) {
+              flex: 1;
+              padding: var(--space-sm) var(--space-md);
+              border: 1px solid var(--border);
+              border-radius: 0.5rem;
+              background: var(--surface);
+              color: var(--fg);
+              font: inherit;
+              cursor: pointer;
+              transition: background 0.2s, border-color 0.2s;
+            }
+            
+            ::slotted(button:hover) {
+              background: var(--border);
+            }
+            
+            ::slotted(button[data-primary]) {
+              background: var(--accent);
+              border-color: var(--accent);
+              color: white;
+            }
+            
+            /* Container query: side-by-side on wider containers */
+            @container card (width >= 25rem) {
+              .layout {
+                grid-template-columns: 10rem 1fr;
+                padding: var(--space-md);
+              }
+              
+              .image {
+                aspect-ratio: 1;
+                border-radius: 0.5rem;
+              }
+              
+              .content {
+                padding: 0;
+              }
+            }
+            
+            @container card (width >= 35rem) {
+              .layout {
+                grid-template-columns: 12rem 1fr auto;
+                align-items: center;
+              }
+              
+              .actions {
+                flex-direction: column;
+                margin-top: 0;
+              }
+            }
+          </style>
+          
+          <article class="layout">
+            <div class="image">
+              <slot name="image"></slot>
+            </div>
+            <div class="content">
+              <h2 class="title"><slot name="title">Product Title</slot></h2>
+              <p class="description"><slot name="description">Product description</slot></p>
+              <span class="price"><slot name="price">$0.00</slot></span>
+              <div class="actions">
+                <slot name="actions"></slot>
+              </div>
+            </div>
+          </article>
+        </template>
+        
+        <!-- Light DOM content -->
+        <img slot="image" 
+             src="https://picsum.photos/seed/product1/400/300" 
+             alt="Wireless headphones"
+             loading="lazy"
+             decoding="async">
+        <span slot="title">Wireless Headphones Pro</span>
+        <span slot="description">Premium sound quality with active noise cancellation and 30-hour battery life.</span>
+        <span slot="price">$299.00</span>
+        <button slot="actions">Add to Cart</button>
+        <button slot="actions" data-primary>Buy Now</button>
+      </product-card>
+    </div>
+    
+    <!-- Card 2 -->
+    <div class="card-container">
+      <product-card>
+        <template shadowrootmode="open">
+          <style>
+            :host {
+              display: block;
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: var(--radius);
+              overflow: hidden;
+              box-shadow: var(--shadow);
+            }
+            
+            .layout {
+              display: grid;
+              gap: var(--space-md);
+            }
+            
+            .image {
+              aspect-ratio: 16/9;
+              background: var(--border);
+              overflow: hidden;
+            }
+            
+            ::slotted(img) {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+            
+            .content {
+              padding: 0 var(--space-md) var(--space-md);
+            }
+            
+            .title {
+              font-size: var(--text-lg);
+              font-weight: 600;
+              margin: 0 0 var(--space-xs);
+            }
+            
+            .description {
+              font-size: var(--text-sm);
+              color: var(--muted);
+              margin: 0 0 var(--space-sm);
+            }
+            
+            .price {
+              font-size: var(--text-lg);
+              font-weight: 700;
+              color: var(--accent);
+            }
+            
+            .actions {
+              display: flex;
+              gap: var(--space-sm);
+              margin-top: var(--space-md);
+            }
+            
+            ::slotted(button) {
+              flex: 1;
+              padding: var(--space-sm) var(--space-md);
+              border: 1px solid var(--border);
+              border-radius: 0.5rem;
+              background: var(--surface);
+              color: var(--fg);
+              font: inherit;
+              cursor: pointer;
+              transition: background 0.2s;
+            }
+            
+            ::slotted(button:hover) {
+              background: var(--border);
+            }
+            
+            ::slotted(button[data-primary]) {
+              background: var(--accent);
+              border-color: var(--accent);
+              color: white;
+            }
+            
+            @container card (width >= 25rem) {
+              .layout {
+                grid-template-columns: 10rem 1fr;
+                padding: var(--space-md);
+              }
+              .image { aspect-ratio: 1; border-radius: 0.5rem; }
+              .content { padding: 0; }
+            }
+          </style>
+          
+          <article class="layout">
+            <div class="image"><slot name="image"></slot></div>
+            <div class="content">
+              <h2 class="title"><slot name="title">Product</slot></h2>
+              <p class="description"><slot name="description"></slot></p>
+              <span class="price"><slot name="price"></slot></span>
+              <div class="actions"><slot name="actions"></slot></div>
+            </div>
+          </article>
+        </template>
+        
+        <img slot="image" src="https://picsum.photos/seed/product2/400/300" alt="Smart watch" loading="lazy">
+        <span slot="title">Smart Watch Ultra</span>
+        <span slot="description">Advanced health tracking, GPS, and 7-day battery life.</span>
+        <span slot="price">$449.00</span>
+        <button slot="actions" data-primary>Buy Now</button>
+      </product-card>
+    </div>
+    
+    <!-- Card 3 -->
+    <div class="card-container">
+      <product-card>
+        <template shadowrootmode="open">
+          <style>
+            :host {
+              display: block;
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: var(--radius);
+              overflow: hidden;
+            }
+            .layout { display: grid; gap: var(--space-md); }
+            .image { aspect-ratio: 16/9; background: var(--border); }
+            ::slotted(img) { width: 100%; height: 100%; object-fit: cover; }
+            .content { padding: 0 var(--space-md) var(--space-md); }
+            .title { font-size: var(--text-lg); font-weight: 600; margin: 0 0 var(--space-xs); }
+            .description { font-size: var(--text-sm); color: var(--muted); margin: 0 0 var(--space-sm); }
+            .price { font-size: var(--text-lg); font-weight: 700; color: var(--accent); }
+            .actions { display: flex; gap: var(--space-sm); margin-top: var(--space-md); }
+            ::slotted(button) { flex: 1; padding: var(--space-sm); border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); color: var(--fg); font: inherit; cursor: pointer; }
+            ::slotted(button[data-primary]) { background: var(--accent); border-color: var(--accent); color: white; }
+            @container card (width >= 25rem) {
+              .layout { grid-template-columns: 10rem 1fr; padding: var(--space-md); }
+              .image { aspect-ratio: 1; border-radius: 0.5rem; }
+              .content { padding: 0; }
+            }
+          </style>
+          <article class="layout">
+            <div class="image"><slot name="image"></slot></div>
+            <div class="content">
+              <h2 class="title"><slot name="title"></slot></h2>
+              <p class="description"><slot name="description"></slot></p>
+              <span class="price"><slot name="price"></slot></span>
+              <div class="actions"><slot name="actions"></slot></div>
+            </div>
+          </article>
+        </template>
+        
+        <img slot="image" src="https://picsum.photos/seed/product3/400/300" alt="Laptop" loading="lazy">
+        <span slot="title">MacBook Pro 16"</span>
+        <span slot="description">M3 Max chip, 36GB RAM, 1TB SSD.</span>
+        <span slot="price">$3,499.00</span>
+        <button slot="actions" data-primary>Configure</button>
+      </product-card>
+    </div>
+  </div>
+  
+  <!-- Optional: Hydration script for enhanced interactivity -->
+  <script type="module">
+    // DSD already rendered - just add event listeners if needed
+    customElements.define('product-card', class extends HTMLElement {
+      connectedCallback() {
+        // Shadow root exists from DSD
+        this.shadowRoot?.addEventListener('click', (e) => {
+          if (e.target.matches('slot[name="actions"]')) {
+            console.log('Action clicked');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

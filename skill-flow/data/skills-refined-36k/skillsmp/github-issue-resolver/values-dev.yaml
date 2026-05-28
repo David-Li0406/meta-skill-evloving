@@ -1,0 +1,98 @@
+# Development deployment values for self-healing-platform namespace
+# Enables ALL integrations for end-to-end testing
+
+replicaCount: 1  # Single replica for dev testing
+
+image:
+  repository: image-registry.openshift-image-registry.svc:5000/self-healing-platform/mcp-server
+  pullPolicy: Always
+  tag: "latest"
+
+# MCP Transport - HTTP for testing
+transport: http
+httpPort: 8080
+
+# Service name: mcp-server (Issue #22 - ADR-036 Option 2)
+# Service URL: mcp-server.self-healing-platform.svc:8080
+fullnameOverride: "mcp-server"
+
+serviceAccount:
+  create: true
+  name: mcp-server
+
+rbac:
+  create: true
+
+# OpenShift-compatible security context (let OpenShift assign UIDs automatically)
+# DO NOT set runAsUser or fsGroup - OpenShift will assign from namespace UID range
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+  # Explicitly unset fsGroup (OpenShift will assign)
+  fsGroup: null
+  runAsUser: null
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  # Explicitly unset runAsUser (OpenShift will assign)
+  runAsUser: null
+  capabilities:
+    drop:
+      - ALL
+
+# Reduced resources for dev
+resources:
+  limits:
+    memory: 256Mi
+    cpu: 500m
+  requests:
+    memory: 128Mi
+    cpu: 100m
+
+# Integration configuration - ENABLE ALL
+integrations:
+  kubernetes:
+    enabled: true
+    inCluster: true
+
+  prometheus:
+    enabled: true
+    url: https://prometheus-k8s.openshift-monitoring.svc:9091
+
+  # ENABLE Coordination Engine
+  coordinationEngine:
+    enabled: true
+    url: http://coordination-engine:8080
+    namespace: self-healing-platform
+    timeout: 10s
+
+  # ENABLE KServe
+  kserve:
+    enabled: true
+    namespace: self-healing-platform
+    timeout: 15s
+    models:
+      - name: predictive-analytics
+        endpoint: predictive-analytics-predictor
+      - name: anomaly-detector
+        endpoint: anomaly-detector-predictor
+
+# Cache configuration
+cache:
+  clusterHealthTTL: 10s
+  nodeListTTL: 30s
+  kserveStatusTTL: 20s
+
+# Logging - debug level for development
+logging:
+  level: debug
+  format: json
+
+# Metrics
+metrics:
+  enabled: true
+  port: 8080
+  path: /metrics

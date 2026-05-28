@@ -1,0 +1,59 @@
+{
+  "name": "schema-validation",
+  "description": "Comprehensive JSON schema validation with type checking and required field validation",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object to validate against a schema"
+  },
+  "args": {
+    "schema": {
+      "type": "string",
+      "required": true,
+      "description": "JSON schema string with 'required' (array of field paths) and 'types' (object mapping paths to types). Example: '{\"required\":[\"name\"],\"types\":{\"name\":\"string\",\"age\":\"number\"}}'"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Validation result with 'valid' (boolean) and 'errors' (array of error messages)"
+  },
+  "examples": [
+    {
+      "description": "Valid object passing all checks",
+      "input": {"name": "Alice", "age": 30},
+      "args": {"schema": "{\"required\":[\"name\",\"age\"],\"types\":{\"name\":\"string\",\"age\":\"number\"}}"},
+      "output": {"valid": true, "errors": []}
+    },
+    {
+      "description": "Missing required field",
+      "input": {"name": "Bob"},
+      "args": {"schema": "{\"required\":[\"name\",\"email\"]}"},
+      "output": {"valid": false, "errors": ["Required field 'email' is missing"]}
+    },
+    {
+      "description": "Wrong type for field",
+      "input": {"name": "Charlie", "age": "30"},
+      "args": {"schema": "{\"types\":{\"age\":\"number\"}}"},
+      "output": {"valid": false, "errors": ["Field 'age' has type 'string', expected 'number'"]}
+    },
+    {
+      "description": "Nested field validation",
+      "input": {"user": {"name": "Dave", "profile": {"age": 25}}},
+      "args": {"schema": "{\"required\":[\"user.name\",\"user.profile.age\"],\"types\":{\"user.name\":\"string\",\"user.profile.age\":\"number\"}}"},
+      "output": {"valid": true, "errors": []}
+    },
+    {
+      "description": "Multiple validation errors",
+      "input": {"name": 123},
+      "args": {"schema": "{\"required\":[\"email\"],\"types\":{\"name\":\"string\"}}"},
+      "output": {"valid": false, "errors": ["Required field 'email' is missing", "Field 'name' has type 'number', expected 'string'"]}
+    },
+    {
+      "description": "Empty schema always passes",
+      "input": {"anything": "goes"},
+      "args": {"schema": "{}"},
+      "output": {"valid": true, "errors": []}
+    }
+  ],
+  "tags": ["validation", "schema", "type", "required", "check", "verify"]
+}

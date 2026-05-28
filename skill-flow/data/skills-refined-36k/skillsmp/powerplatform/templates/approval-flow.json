@@ -1,0 +1,131 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "_comment": "Template: Approval workflow with conditional outcome handling",
+  "triggers": {
+    "When_item_created_or_modified": {
+      "type": "OpenApiConnectionWebhook",
+      "inputs": {
+        "host": {
+          "connectionName": "shared_sharepointonline",
+          "operationId": "OnItemCreatedOrModified",
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+        },
+        "parameters": {
+          "dataset": "SITE_URL",
+          "table": "LIST_GUID"
+        }
+      }
+    }
+  },
+  "actions": {
+    "Start_and_wait_for_an_approval": {
+      "type": "OpenApiConnectionWebhook",
+      "inputs": {
+        "host": {
+          "connectionName": "shared_approvals",
+          "operationId": "StartAndWaitForAnApproval",
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals"
+        },
+        "parameters": {
+          "approvalType": "Basic",
+          "WebhookApprovalCreationInput/title": "Approval Request: @{triggerOutputs()?['body/Title']}",
+          "WebhookApprovalCreationInput/assignedTo": "APPROVER_EMAIL",
+          "WebhookApprovalCreationInput/details": "Please review and approve this request.\n\nDetails: @{triggerOutputs()?['body/Description']}",
+          "WebhookApprovalCreationInput/enableNotifications": true,
+          "WebhookApprovalCreationInput/enableReassignment": true
+        }
+      },
+      "runAfter": {}
+    },
+    "Condition_-_Check_approval_outcome": {
+      "type": "If",
+      "expression": {
+        "equals": [
+          "@body('Start_and_wait_for_an_approval')?['outcome']",
+          "Approve"
+        ]
+      },
+      "actions": {
+        "Update_item_-_Approved": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "PatchItem",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "SITE_URL",
+              "table": "LIST_GUID",
+              "id": "@triggerOutputs()?['body/ID']",
+              "item/Status": "Approved"
+            }
+          },
+          "runAfter": {}
+        },
+        "Send_approval_notification": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_teams",
+              "operationId": "PostMessageToConversation",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+            },
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Chat with Flow bot",
+              "body/recipient": "@{triggerOutputs()?['body/Author/Email']}",
+              "body/messageBody": "Your request '@{triggerOutputs()?['body/Title']}' has been approved!"
+            }
+          },
+          "runAfter": {
+            "Update_item_-_Approved": ["Succeeded"]
+          }
+        }
+      },
+      "else": {
+        "actions": {
+          "Update_item_-_Rejected": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_sharepointonline",
+                "operationId": "PatchItem",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+              },
+              "parameters": {
+                "dataset": "SITE_URL",
+                "table": "LIST_GUID",
+                "id": "@triggerOutputs()?['body/ID']",
+                "item/Status": "Rejected"
+              }
+            },
+            "runAfter": {}
+          },
+          "Send_rejection_notification": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": {
+                "connectionName": "shared_teams",
+                "operationId": "PostMessageToConversation",
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+              },
+              "parameters": {
+                "poster": "Flow bot",
+                "location": "Chat with Flow bot",
+                "body/recipient": "@{triggerOutputs()?['body/Author/Email']}",
+                "body/messageBody": "Your request '@{triggerOutputs()?['body/Title']}' was not approved.\n\nComments: @{body('Start_and_wait_for_an_approval')?['responses'][0]['comments']}"
+              }
+            },
+            "runAfter": {
+              "Update_item_-_Rejected": ["Succeeded"]
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Start_and_wait_for_an_approval": ["Succeeded"]
+      }
+    }
+  }
+}

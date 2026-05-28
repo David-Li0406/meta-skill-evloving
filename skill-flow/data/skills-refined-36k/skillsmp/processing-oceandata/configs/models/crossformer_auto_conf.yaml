@@ -1,0 +1,38 @@
+# Crossformer Model Configuration - Autoregressive Version
+# For long-term multi-step prediction using autoregressive rollout
+
+# Temporal configuration
+input_len: 7          # Number of input frames for context
+output_len: 1         # Always 1 for autoregressive (will be overridden)
+in_channels: 2        # Number of channels (u, v velocity components)
+
+# Autoregressive specific
+rollout_steps: 7      # Number of autoregressive prediction steps
+
+# Spatial configuration
+img_size: [240, 240]  # Input image size (H, W)
+patch_size: [8, 8]    # Medium patches (240/8 = 30x30 grid)
+
+# Temporal segmentation
+seg_len: 1            # Temporal segment length (each frame is a segment)
+win_size: 2           # Window size for segment merging in encoder
+
+# Model architecture parameters - BALANCED (same as balanced for stability)
+d_model: 384          # Model dimension
+d_ff: 768             # Feed-forward dimension (2x d_model)
+n_heads: 8            # Number of attention heads
+e_layers: 3           # Number of encoder/decoder scales
+factor: 10            # Router factor for cross-patch attention
+
+# Regularization
+dropout: 0.1          # Dropout rate
+baseline: false       # Use baseline prediction (mean of inputs)
+
+# Expected metrics:
+# - Parameters: ~10-15M (same as balanced)
+# - Num patches: 30x30 = 900
+# - Memory usage: ~3-5 GB for batch_size=2
+# - Training: Single-step prediction
+# - Inference: Multi-step autoregressive rollout
+# - Best for: Long-term prediction tasks
+

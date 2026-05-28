@@ -1,0 +1,54 @@
+# Example SpecKit Configuration for Non-Interactive Mode
+#
+# Usage:
+#   python .claude/skills/speckit-author/scripts/create_specifications.py \
+#     feature my-feature stharrold --config spec_config.yaml
+#
+# Copy this file and customize for your feature.
+# Use 'with_bmad' section if BMAD planning exists (planning/<slug>/)
+# Use 'without_bmad' section if no BMAD planning exists
+
+# Configuration when BMAD planning documents exist
+with_bmad:
+  # Database migrations (only asked if database mentioned in architecture.md)
+  migration_strategy: "Alembic (recommended)"  # Alembic (recommended), Manual SQL migrations, None needed
+
+  # Testing approach
+  include_e2e_tests: false
+  include_performance_tests: false
+  include_security_tests: false
+
+  # Task granularity
+  task_granularity: "Small tasks (1-2 hours each)"  # Small tasks (1-2 hours each), Medium tasks (half-day each), Large tasks (full-day each)
+
+  # Epic implementation order (only asked if epics.md exists)
+  follow_epic_order: true
+
+  # Additional notes (optional)
+  additional_notes: ""
+
+# Configuration when NO BMAD planning documents exist
+# (Full requirements gathering needed)
+without_bmad:
+  # Core requirements
+  purpose: "Brief description of feature purpose"
+  users: "Primary users of this feature"
+  success_criteria: "How success will be measured"
+
+  # Technology stack
+  web_framework: "None"  # FastAPI, Flask, Django, None
+  database: "None"  # SQLite (dev), PostgreSQL, MySQL, None
+  migration_strategy: "Alembic"  # Alembic, Manual SQL, None (only if database != None)
+  testing_framework: "pytest (recommended)"  # pytest (recommended), unittest, other
+
+  # Performance & security
+  performance_target: "Standard performance"
+  security_requirements: "none"
+
+  # Testing preferences
+  target_coverage: "80%"
+  include_e2e_tests: false
+  include_performance_tests: false
+
+  # Task breakdown
+  task_granularity: "Small (1-2 hours)"  # Small (1-2 hours), Medium (half-day), Large (full-day)

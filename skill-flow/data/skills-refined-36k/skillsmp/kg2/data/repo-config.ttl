@@ -1,0 +1,24 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rep: <http://www.openrdf.org/config/repository#> .
+@prefix sr: <http://www.openrdf.org/config/repository/sail#> .
+@prefix sail: <http://www.openrdf.org/config/sail#> .
+@prefix sail-shacl: <http://rdf4j.org/config/sail/shacl#> .
+@prefix graphdb: <http://www.ontotext.com/config/graphdb#> .
+
+[] a rep:Repository ;
+    rep:repositoryID "kg2" ;
+    rdfs:label "Knowledge Graph v2" ;
+    rep:repositoryImpl [
+        rep:repositoryType "graphdb:SailRepository" ;
+        sr:sailImpl [
+            sail:sailType "rdf4j:ShaclSail" ;
+            sail-shacl:validationEnabled true ;
+            sail-shacl:parallelValidation true ;
+            sail:delegate [
+                sail:sailType "graphdb:Sail" ;
+                graphdb:base-URL "https://kg.corca.ai/" ;
+                graphdb:repository-type "file-repository" ;
+                graphdb:ruleset "rdfsplus-optimized"
+            ]
+        ]
+    ] .

@@ -1,0 +1,165 @@
+import { and, count, db, desc, eq } from "@core/database/db";
+import { Actor } from "@core/helpers/actor";
+import { Ent } from "@core/helpers/ent";
+import {
+  type {{EntityName}},
+  type {{EntityName}}Status,
+  {{entities}}Table,
+} from "@core/schemas/{{entity-name}}.sql";
+import { fn } from "@core/utils/fn";
+import * as z from "zod";
+
+// =============================================================================
+// Entity Class
+// =============================================================================
+
+export class Ent{{EntityName}} extends Ent<{{EntityName}}> {
+  static type = "{{entityName}}";
+
+  data: {{EntityName}};
+
+  constructor(data: {{EntityName}}) {
+    super(data);
+    this.data = data;
+  }
+
+  toJSON() {
+    return this.data;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Schemas
+  // ---------------------------------------------------------------------------
+
+  static Schemas() {
+    return {
+      create: z.object({
+        name: z.string().min(1),
+        description: z.string().optional(),
+      }),
+      list: z.object({
+        status: z.enum(["active", "paused", "archived"]).optional(),
+      }),
+      update: z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        status: z.enum(["active", "paused", "archived"]).optional(),
+      }),
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Static Factory Methods
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Create a new {{entityName}}
+   */
+  static create = fn(this.Schemas().create, async (input) => {
+    const workspaceId = Actor.workspaceID();
+
+    const [{{entityName}}] = await db()
+      .insert({{entities}}Table)
+      .values({
+        workspaceId,
+        name: input.name,
+        description: input.description,
+      })
+      .returning();
+
+    return new Ent{{EntityName}}({{entityName}});
+  });
+
+  /**
+   * Get by ID (workspace-scoped)
+   */
+  static async fromID(id: string): Promise<Ent{{EntityName}}> {
+    const workspaceId = Actor.workspaceID();
+
+    const [{{entityName}}] = await db()
+      .select()
+      .from({{entities}}Table)
+      .where(
+        and(
+          eq({{entities}}Table.id, id),
+          eq({{entities}}Table.workspaceId, workspaceId)
+        )
+      )
+      .limit(1);
+
+    if (!{{entityName}}) throw new Error(`{{EntityName}} ${id} not found`);
+
+    return new Ent{{EntityName}}({{entityName}});
+  }
+
+  /**
+   * Get by ID without workspace check (for system/workflow use)
+   */
+  static async fromIDSystem(id: string): Promise<Ent{{EntityName}} | null> {
+    const [{{entityName}}] = await db()
+      .select()
+      .from({{entities}}Table)
+      .where(eq({{entities}}Table.id, id))
+      .limit(1);
+
+    return {{entityName}} ? new Ent{{EntityName}}({{entityName}}) : null;
+  }
+
+  /**
+   * List {{entities}} for current workspace
+   */
+  static list = fn(this.Schemas().list, async (input) => {
+    const workspaceId = Actor.workspaceID();
+    const conditions = [eq({{entities}}Table.workspaceId, workspaceId)];
+
+    if (input.status) {
+      conditions.push(eq({{entities}}Table.status, input.status));
+    }
+
+    const {{entities}} = await db()
+      .select()
+      .from({{entities}}Table)
+      .where(and(...conditions))
+      .orderBy(desc({{entities}}Table.createdAt));
+
+    return {{entities}}.map((e) => new Ent{{EntityName}}(e));
+  });
+
+  // ---------------------------------------------------------------------------
+  // Instance Methods
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Update this {{entityName}}
+   */
+  update = fn(Ent{{EntityName}}.Schemas().update, async (input) => {
+    const [updated] = await db()
+      .update({{entities}}Table)
+      .set(input)
+      .where(eq({{entities}}Table.id, this.data.id))
+      .returning();
+
+    if (!updated) throw new Error("{{EntityName}} not found");
+
+    this.data = updated;
+    return this;
+  });
+
+  /**
+   * Delete this {{entityName}}
+   */
+  async remove(): Promise<void> {
+    await db()
+      .delete({{entities}}Table)
+      .where(eq({{entities}}Table.id, this.data.id));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Getters
+  // ---------------------------------------------------------------------------
+
+  get id() { return this.data.id; }
+  get name() { return this.data.name; }
+  get status() { return this.data.status; }
+  get workspaceId() { return this.data.workspaceId; }
+}

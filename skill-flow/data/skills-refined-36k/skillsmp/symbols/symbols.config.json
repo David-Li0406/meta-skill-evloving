@@ -1,0 +1,86 @@
+{
+  "$schema": "../symbols-config-schema.json",
+  "projectName": "SkillMeat",
+  "symbolsDir": "ai",
+  "domains": {
+    "web": {
+      "file": "symbols-web.json",
+      "description": "Next.js App Router application - Pages, layouts, route handlers, server and client components. Adjust directories for your app structure.",
+      "enabled": true
+    },
+    "ui": {
+      "file": "symbols-ui.json",
+      "description": "Shared UI components - Reusable React components, design system primitives, component library.",
+      "testFile": "symbols-ui-tests.json",
+      "enabled": false
+    },
+    "api": {
+      "file": "symbols-api.json",
+      "description": "API routes and handlers - Next.js API routes (app/api), server actions, route handlers.",
+      "enabled": true
+    },
+    "shared": {
+      "file": "symbols-shared.json",
+      "description": "Shared utilities and types - Type definitions, hooks, utilities, constants used across apps.",
+      "enabled": false
+    }
+  },
+  "extraction": {
+    "python": {
+      "directories": [
+        "skillmeat/api",
+        "skillmeat/core",
+        "skillmeat/storage",
+        "skillmeat/sources",
+        "skillmeat/marketplace",
+        "skillmeat/observability"
+      ],
+      "extensions": [
+        ".py"
+      ],
+      "excludes": [
+        "__pycache__",
+        "*.pyc"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    },
+    "typescript": {
+      "directories": [
+        "skillmeat/web/app",
+        "skillmeat/web/components",
+        "skillmeat/web/hooks",
+        "skillmeat/web/lib"
+      ],
+      "extensions": [
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx"
+      ],
+      "excludes": [
+        "node_modules/",
+        "*.test.*",
+        "*.spec.*",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/__tests__/",
+        "dist/",
+        "build/",
+        ".next/",
+        "out/",
+        "coverage/",
+        ".turbo/",
+        "*.d.ts",
+        "*.stories.*"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "SkillMeat full-stack application with FastAPI backend and Next.js 15 frontend. Python backend in skillmeat/api, core logic in skillmeat/core, Next.js app in skillmeat/web. Supports symbols extraction for Python (FastAPI routes, services, repositories) and TypeScript (React Server/Client Components, hooks, utilities).",
+    "lastUpdated": "2026-01-14T20:15:00.000000Z"
+  }
+}

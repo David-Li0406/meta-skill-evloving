@@ -1,0 +1,124 @@
+/**
+ * Example CSS Module following Pricing App patterns.
+ * Shows: design tokens, camelCase naming, no hardcoded colors.
+ */
+
+.container {
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-md);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.searchBar {
+  margin-bottom: var(--spacing-md);
+}
+
+.searchInput {
+  width: 100%;
+  padding: var(--spacing-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  position: relative;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 100px 1fr 100px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.item:hover {
+  background: var(--bg-hover);
+}
+
+.codigo {
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.descripcion {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.costo {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+.loading {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  z-index: 10;
+}
+
+.error {
+  text-align: center;
+  padding: var(--spacing-lg);
+  background: var(--error-bg);
+  color: var(--error-text);
+  border-radius: var(--radius-sm);
+}
+
+.error button {
+  composes: btn-primary from '../../styles/buttons-tesla.css';
+  margin-top: var(--spacing-sm);
+}
+
+.empty {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .item {
+    grid-template-columns: 1fr 80px;
+  }
+
+  .codigo {
+    grid-column: 1 / -1;
+  }
+}

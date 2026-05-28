@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""Layton CLI entrypoint.
+
+Thin wrapper that invokes laytonlib.cli.main().
+"""
+
+import sys
+from pathlib import Path
+
+# Add laytonlib to path (sibling directory)
+script_dir = Path(__file__).parent.resolve()
+laytonlib_dir = script_dir.parent / "laytonlib"
+sys.path.insert(0, str(laytonlib_dir.parent))
+
+from laytonlib.cli import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,125 @@
+---
+// Layout: MainLayout
+// Description: Main site layout with header, footer, and SEO
+import { ClientRouter } from 'astro:transitions';
+
+export interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  url?: string;
+  noHeader?: boolean;
+  noFooter?: boolean;
+}
+
+const {
+  title,
+  description,
+  image,
+  url,
+  noHeader = false,
+  noFooter = false,
+} = Astro.props;
+
+const canonicalUrl = url ? new URL(url, Astro.site) : Astro.site;
+const socialImage = image ? new URL(image, Astro.site) : undefined;
+---
+
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <!-- Meta tags -->
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    {socialImage && <meta property="og:image" content={socialImage} />}
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    {description && <meta name="twitter:description" content={description} />}
+    {socialImage && <meta name="twitter:image" content={socialImage} />}
+
+    <!-- View transitions -->
+    <ClientRouter />
+
+    <!-- Preload fonts -->
+    <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- CSS - Include Tailwind CSS -->
+    <link rel="stylesheet" href="/styles/global.css" />
+
+    <!-- Page title -->
+    <title>{title}</title>
+  </head>
+  <body class="h-full m-0 font-sans leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900">
+    <div class="flex flex-col min-h-screen">
+      {!noHeader && (
+        <header
+          class="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg -webkit-backdrop-blur-lg"
+          transition:name="header"
+        >
+          <slot name="header">
+            <!-- Default header content -->
+            <nav class="flex flex-col md:flex-row justify-between items-center px-4 md:px-8 py-4 max-w-6xl mx-auto gap-4 md:gap-0">
+              <a
+                href="/"
+                class="text-2xl font-bold text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-200"
+              >
+                YourSite
+              </a>
+              <ul class="flex list-none m-0 p-0 gap-4 md:gap-8">
+                <li><a href="/" class="text-gray-600 dark:text-gray-400 font-medium hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">Home</a></li>
+                <li><a href="/about" class="text-gray-600 dark:text-gray-400 font-medium hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">About</a></li>
+                <li><a href="/blog" class="text-gray-600 dark:text-gray-400 font-medium hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">Blog</a></li>
+                <li><a href="/contact" class="text-gray-600 dark:text-gray-400 font-medium hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200">Contact</a></li>
+              </ul>
+            </nav>
+          </slot>
+        </header>
+      )}
+
+      <main
+        class="flex-grow px-4 py-4 md:px-8 md:py-8 max-w-6xl mx-auto w-full"
+        transition:name="main-content"
+      >
+        <slot />
+      </main>
+
+      {!noFooter && (
+        <footer
+          class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 mt-auto"
+          transition:name="footer"
+        >
+          <slot name="footer">
+            <!-- Default footer content -->
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 px-4 py-6 md:px-8 md:py-8 max-w-6xl mx-auto text-center md:text-left">
+              <p class="text-gray-600 dark:text-gray-400">
+                &copy; {new Date().getFullYear()} Your Company. All rights reserved.
+              </p>
+              <ul class="flex list-none m-0 p-0 gap-4">
+                <li><a href="/privacy" class="text-gray-600 dark:text-gray-400 text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200">Privacy</a></li>
+                <li><a href="/terms" class="text-gray-600 dark:text-gray-400 text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200">Terms</a></li>
+                <li><a href="/sitemap" class="text-gray-600 dark:text-gray-400 text-sm hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200">Sitemap</a></li>
+              </ul>
+            </div>
+          </slot>
+        </footer>
+      )}
+    </div>
+
+    <!-- Scripts -->
+    <script src="/scripts/theme-toggle.js"></script>
+  </body>
+</html>

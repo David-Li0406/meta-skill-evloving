@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "session-chronicle/session-entry.schema.json",
+  "title": "Claude Code Session Entry",
+  "description": "Schema for entries in Claude Code session JSONL files",
+  "type": "object",
+  "required": ["uuid", "sessionId", "type", "timestamp"],
+  "properties": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this entry"
+    },
+    "parentUuid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID of the parent entry in the conversation chain"
+    },
+    "sessionId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Session identifier (matches filename)"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["user", "assistant", "summary", "file-history-snapshot"],
+      "description": "Type of entry"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp"
+    },
+    "isSidechain": {
+      "type": "boolean",
+      "description": "Whether this is a sidechain conversation"
+    },
+    "isMeta": {
+      "type": "boolean",
+      "description": "Whether this is metadata entry"
+    },
+    "userType": {
+      "type": "string",
+      "enum": ["external", "internal"],
+      "description": "Source of user input"
+    },
+    "cwd": {
+      "type": "string",
+      "description": "Current working directory when entry was created"
+    },
+    "version": {
+      "type": "string",
+      "description": "Claude Code version"
+    },
+    "gitBranch": {
+      "type": "string",
+      "description": "Git branch at time of entry"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Human-readable session slug"
+    },
+    "message": {
+      "type": "object",
+      "description": "The actual message content",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant"]
+        },
+        "model": {
+          "type": "string",
+          "description": "Model identifier for assistant messages"
+        },
+        "id": {
+          "type": "string",
+          "description": "API message ID"
+        },
+        "content": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["text", "tool_use", "tool_result"]
+                  },
+                  "text": { "type": "string" },
+                  "id": { "type": "string" },
+                  "name": {
+                    "type": "string",
+                    "description": "Tool name for tool_use entries"
+                  },
+                  "input": {
+                    "type": "object",
+                    "description": "Tool input parameters"
+                  },
+                  "tool_use_id": { "type": "string" },
+                  "content": { "type": "string" }
+                }
+              }
+            }
+          ]
+        },
+        "usage": {
+          "type": "object",
+          "description": "Token usage statistics"
+        }
+      }
+    },
+    "requestId": {
+      "type": "string",
+      "description": "API request ID"
+    },
+    "toolUseResult": {
+      "type": "object",
+      "description": "Result of tool execution (for user entries following tool_use)"
+    }
+  }
+}

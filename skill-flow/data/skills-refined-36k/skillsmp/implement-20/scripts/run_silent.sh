@@ -1,0 +1,1 @@
+/workspaces/Workbench/scripts/run_silent.sh

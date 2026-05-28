@@ -1,0 +1,74 @@
+{
+  "name": "universal-axiom-mcp-server",
+  "version": "0.2.1",
+  "description": "MCP Server for The Universal Axiom - Expose intelligence framework as tools and resources",
+  "type": "module",
+  "main": "build/mcp-server/index.js",
+  "bin": {
+    "universal-axiom-mcp": "./build/mcp-server/index.js"
+  },
+  "scripts": {
+    "build": "tsc && cp universal-axiom.js build/mcp-server/ && chmod +x build/mcp-server/index.js",
+    "build:vercel": "tsc -p tsconfig.vercel.json",
+    "start": "node build/mcp-server/index.js",
+    "dev": "tsc --watch",
+    "dev:vercel": "vercel dev",
+    "deploy": "vercel",
+    "deploy:prod": "vercel --prod",
+    "prepare": "npm run build",
+    "test:vercel": "node test-vercel-config.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "universal-axiom",
+    "intelligence",
+    "reasoning",
+    "ai-tools",
+    "vercel",
+    "serverless"
+  ],
+  "author": {
+    "name": "Matt Belanger",
+    "url": "https://www.epiphanyengine.ai"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/TheUniversalAxiom/pointy-stick#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheUniversalAxiom/pointy-stick.git",
+    "directory": "mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/TheUniversalAxiom/pointy-stick/issues"
+  },
+  "files": [
+    "build/",
+    "api/",
+    "lib/",
+    "README.md",
+    "LICENSE",
+    "universal-axiom.js",
+    "universal-axiom.d.ts",
+    "vercel.json"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "typescript": "^5.0.0"
+  },
+  "optionalDependencies": {
+    "@vercel/node": "^5.5.27",
+    "vercel": "^50.4.11"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "overrides": {
+    "path-to-regexp": "^8.3.0",
+    "tar": "^7.5.6",
+    "undici": "^7.19.0"
+  }
+}

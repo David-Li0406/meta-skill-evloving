@@ -1,0 +1,498 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate Plugin Structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Validate plugin.json
+        run: |
+          echo "Validating .claude-plugin/plugin.json..."
+          python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+          echo "Valid JSON"
+
+      - name: Validate marketplace.json
+        run: |
+          echo "Validating .claude-plugin/marketplace.json..."
+          python3 -c "
+          import json
+          with open('.claude-plugin/marketplace.json') as f:
+              m = json.load(f)
+          # Check required fields
+          assert 'name' in m, 'Missing name field'
+          assert 'owner' in m, 'Missing owner field'
+          assert 'plugins' in m, 'Missing plugins field'
+          assert len(m['plugins']) > 0, 'No plugins defined'
+          for p in m['plugins']:
+              assert 'name' in p, 'Plugin missing name'
+              assert 'source' in p, 'Plugin missing source'
+          print('All required fields present')
+          "
+          echo "Valid marketplace.json"
+
+      - name: Validate hooks.json
+        run: |
+          echo "Validating hooks/hooks.json..."
+          python3 -c "import json; json.load(open('hooks/hooks.json'))"
+          echo "Valid JSON"
+
+      - name: Validate plugin configuration
+        run: |
+          echo "Running comprehensive plugin configuration validation..."
+          uv run tests/test_plugin_config.py
+
+      - name: Lint bash scripts
+        run: |
+          echo "Checking bash script syntax..."
+          for script in scripts/*.sh; do
+            echo "  Checking $script..."
+            bash -n "$script"
+          done
+          echo "All scripts have valid syntax"
+
+  test-scripts:
+    name: Test Plugin Scripts
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Create test project
+        run: |
+          mkdir -p test-project
+          cd test-project
+
+          # Python test file
+          cat > main.py << 'EOF'
+          """Test Python module for CI."""
+
+          class TestClass:
+              """A test class with documentation."""
+
+              def method_one(self, value: int) -> str:
+                  """Convert value to string."""
+                  return str(value)
+
+          def helper_function(x: int, y: int) -> int:
+              """Add two numbers together."""
+              return x + y
+          EOF
+
+          # C++ test file
+          cat > lib.cpp << 'EOF'
+          /// A simple C++ class for testing
+          class Calculator {
+          public:
+              /// Add two integers
+              int add(int a, int b) {
+                  return a + b;
+              }
+          };
+
+          /// Multiply two numbers
+          int multiply(int x, int y) {
+              return x * y;
+          }
+          EOF
+
+          # Rust test file
+          cat > utils.rs << 'EOF'
+          /// A point in 2D space
+          struct Point {
+              x: f64,
+              y: f64,
+          }
+
+          impl Point {
+              /// Create a new point
+              fn new(x: f64, y: f64) -> Self {
+                  Point { x, y }
+              }
+          }
+
+          /// Calculate distance between two points
+          fn distance(p1: &Point, p2: &Point) -> f64 {
+              ((p2.x - p1.x).powi(2) + (p2.y - p1.y).powi(2)).sqrt()
+          }
+          EOF
+
+      - name: Run scan.py
+        run: |
+          cd test-project
+          uv run ../scripts/scan.py .
+          echo "--- Manifest content ---"
+          cat .claude/project-manifest.json
+
+      - name: Run map.py
+        run: |
+          cd test-project
+          uv run ../scripts/map.py . 2>&1 | head -100
+          echo "--- Repo map generated ---"
+
+      - name: Verify manifest output
+        run: |
+          cd test-project
+          if [ ! -f ".claude/project-manifest.json" ]; then
+            echo "ERROR: project-manifest.json not created"
+            exit 1
+          fi
+          # Check it's valid JSON
+          python3 -c "import json; json.load(open('.claude/project-manifest.json'))"
+          echo "Manifest is valid JSON"
+
+      - name: Verify repo-map output
+        run: |
+          cd test-project
+          if [ ! -f ".claude/repo-map.md" ]; then
+            echo "ERROR: repo-map.md not created"
+            exit 1
+          fi
+
+          # Verify Python symbols were extracted
+          if ! grep -q "TestClass" .claude/repo-map.md; then
+            echo "ERROR: Python class not found in repo map"
+            exit 1
+          fi
+          if ! grep -q "helper_function" .claude/repo-map.md; then
+            echo "ERROR: Python function not found in repo map"
+            exit 1
+          fi
+
+          # Verify C++ symbols were extracted
+          if ! grep -q "Calculator" .claude/repo-map.md; then
+            echo "ERROR: C++ class not found in repo map"
+            exit 1
+          fi
+          if ! grep -q "multiply" .claude/repo-map.md; then
+            echo "ERROR: C++ function not found in repo map"
+            exit 1
+          fi
+
+          # Verify Rust symbols were extracted
+          if ! grep -q "Point" .claude/repo-map.md; then
+            echo "ERROR: Rust struct not found in repo map"
+            exit 1
+          fi
+          if ! grep -q "distance" .claude/repo-map.md; then
+            echo "ERROR: Rust function not found in repo map"
+            exit 1
+          fi
+
+          echo "All expected symbols found in repo map"
+
+      - name: Verify cache created
+        run: |
+          cd test-project
+          if [ ! -f ".claude/repo-map-cache.json" ]; then
+            echo "ERROR: repo-map-cache.json not created"
+            exit 1
+          fi
+          python3 -c "import json; json.load(open('.claude/repo-map-cache.json'))"
+          echo "Cache file is valid JSON"
+
+      - name: Verify SQLite database created
+        run: |
+          cd test-project
+          if [ ! -f ".claude/repo-map.db" ]; then
+            echo "ERROR: repo-map.db not created"
+            exit 1
+          fi
+
+          # Verify database structure and content
+          python3 << 'EOF'
+          import sqlite3
+          conn = sqlite3.connect('.claude/repo-map.db')
+
+          # Check table exists
+          tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+          assert ('symbols',) in tables, "symbols table not found"
+
+          # Check indexes exist
+          indexes = conn.execute("SELECT name FROM sqlite_master WHERE type='index'").fetchall()
+          index_names = [i[0] for i in indexes]
+          assert 'idx_name' in index_names, "idx_name index not found"
+          assert 'idx_file' in index_names, "idx_file index not found"
+          assert 'idx_kind' in index_names, "idx_kind index not found"
+
+          # Check symbols were inserted
+          count = conn.execute("SELECT COUNT(*) FROM symbols").fetchone()[0]
+          assert count > 0, f"No symbols in database, expected > 0"
+
+          # Check specific symbols exist
+          symbols = conn.execute("SELECT name FROM symbols").fetchall()
+          symbol_names = [s[0] for s in symbols]
+          assert 'TestClass' in symbol_names, "TestClass not in database"
+          assert 'helper_function' in symbol_names, "helper_function not in database"
+          assert 'Calculator' in symbol_names, "Calculator not in database"
+          assert 'Point' in symbol_names, "Point not in database"
+
+          # Check end_line_number column exists and has values
+          cursor = conn.execute("SELECT name, line_number, end_line_number FROM symbols WHERE name = 'helper_function'")
+          row = cursor.fetchone()
+          assert row is not None, "helper_function not found"
+          assert row[2] is not None, "end_line_number should not be None for helper_function"
+          assert row[2] > row[1], f"end_line_number ({row[2]}) should be > line_number ({row[1]})"
+          print(f"end_line_number verified: helper_function spans lines {row[1]}-{row[2]}")
+
+          print(f"SQLite database valid with {count} symbols")
+          conn.close()
+          EOF
+
+      - name: Test MCP server syntax
+        run: |
+          python3 -m py_compile servers/repo-map-server.py
+          echo "MCP server syntax valid"
+
+      - name: Test MCP server imports
+        run: |
+          cd test-project
+          # Test that the server can import and initialize
+          # Use --project .. to find pyproject.toml with MCP dependency
+          uv run --project .. python3 << 'EOF'
+          import sys
+          sys.path.insert(0, '..')
+
+          # Just test imports work - full MCP test needs async
+          import sqlite3
+          import fnmatch
+          import json
+          from pathlib import Path
+
+          # Verify we can import mcp (installed by uv)
+          from mcp.server import Server
+          from mcp.types import Tool, TextContent
+
+          print("All MCP server imports successful")
+          EOF
+
+      - name: Test MCP server query functions
+        run: |
+          cd test-project
+          PROJECT_ROOT="$(pwd)"
+          export PROJECT_ROOT
+          # Use --project .. to find pyproject.toml with MCP dependency
+          uv run --project .. python3 << 'EOF'
+          import os
+          import sqlite3
+          from pathlib import Path
+          import fnmatch
+
+          PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", os.getcwd()))
+          DB_PATH = PROJECT_ROOT / ".claude" / "repo-map.db"
+
+          def get_db():
+              conn = sqlite3.connect(DB_PATH)
+              conn.row_factory = sqlite3.Row
+              return conn
+
+          def row_to_dict(row):
+              return {key: row[key] for key in row.keys()}
+
+          # Test search_symbols logic
+          conn = get_db()
+          pattern = "helper_*"
+          sql_pattern = pattern.replace("*", "%").replace("?", "_")
+          cursor = conn.execute("SELECT * FROM symbols WHERE name LIKE ?", [sql_pattern])
+          rows = cursor.fetchall()
+          results = [row_to_dict(row) for row in rows if fnmatch.fnmatch(row["name"], pattern)]
+          assert len(results) == 1, f"Expected 1 result for 'helper_*', got {len(results)}"
+          assert results[0]["name"] == "helper_function"
+          print(f"search_symbols test passed: found {results[0]['name']}")
+
+          # Test get_file_symbols logic
+          cursor = conn.execute("SELECT * FROM symbols WHERE file_path = ? ORDER BY line_number", ["main.py"])
+          results = [row_to_dict(row) for row in cursor.fetchall()]
+          assert len(results) >= 2, f"Expected >= 2 symbols in main.py, got {len(results)}"
+          print(f"get_file_symbols test passed: found {len(results)} symbols in main.py")
+
+          # Test kind filter
+          cursor = conn.execute("SELECT * FROM symbols WHERE kind = ?", ["class"])
+          classes = cursor.fetchall()
+          assert len(classes) >= 3, f"Expected >= 3 classes, got {len(classes)}"
+          print(f"Kind filter test passed: found {len(classes)} classes")
+
+          conn.close()
+          print("All MCP query function tests passed!")
+          EOF
+
+      - name: Test get_symbol_content function
+        run: |
+          cd test-project
+          PROJECT_ROOT="$(pwd)"
+          export PROJECT_ROOT
+          # Use --project .. to find pyproject.toml with MCP dependency
+          uv run --project .. python3 << 'EOF'
+          import os
+          import sqlite3
+          from pathlib import Path
+
+          PROJECT_ROOT = Path(os.environ.get("PROJECT_ROOT", os.getcwd()))
+          DB_PATH = PROJECT_ROOT / ".claude" / "repo-map.db"
+
+          conn = sqlite3.connect(DB_PATH)
+          conn.row_factory = sqlite3.Row
+
+          # Test get_symbol_content logic
+          cursor = conn.execute(
+              "SELECT * FROM symbols WHERE name = ?",
+              ["helper_function"]
+          )
+          row = cursor.fetchone()
+          assert row is not None, "helper_function not found"
+
+          file_path = PROJECT_ROOT / row["file_path"]
+          assert file_path.exists(), f"File not found: {row['file_path']}"
+
+          lines = file_path.read_text(encoding="utf-8").splitlines()
+          start_line = row["line_number"]
+          end_line = row["end_line_number"]
+
+          assert end_line is not None, "end_line_number should not be None"
+          content_lines = lines[start_line - 1:end_line]
+          content = "\n".join(content_lines)
+
+          assert "def helper_function" in content, "Content should include function definition"
+          assert "return x + y" in content, "Content should include function body"
+          print(f"get_symbol_content test passed!")
+          print(f"Retrieved {len(content_lines)} lines for helper_function")
+
+          conn.close()
+          EOF
+
+      - name: Test incremental update
+        run: |
+          cd test-project
+          # Add a new file
+          cat > extra.py << 'EOF'
+          def new_function():
+              """A newly added function."""
+              pass
+          EOF
+
+          # Re-run repo map
+          uv run ../scripts/map.py . 2>&1 | tail -10
+
+          # Verify new function was picked up in markdown
+          if ! grep -q "new_function" .claude/repo-map.md; then
+            echo "ERROR: New function not found in repo-map.md after incremental update"
+            exit 1
+          fi
+
+          # Verify new function was picked up in SQLite
+          python3 << 'EOF'
+          import sqlite3
+          conn = sqlite3.connect('.claude/repo-map.db')
+          result = conn.execute("SELECT name FROM symbols WHERE name = 'new_function'").fetchone()
+          assert result is not None, "new_function not found in SQLite database"
+          print("new_function found in SQLite database")
+          conn.close()
+          EOF
+
+          echo "Incremental update works correctly for both markdown and SQLite"
+
+  test-session-start:
+    name: Test Session Start Hook
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Create test project
+        run: |
+          mkdir -p test-project
+          cat > test-project/app.py << 'EOF'
+          """Simple test application."""
+
+          def main():
+              """Entry point."""
+              print("Hello, World!")
+          EOF
+
+      - name: Run session-start.sh
+        run: |
+          cd test-project
+          export CLAUDE_PLUGIN_ROOT="${GITHUB_WORKSPACE}"
+          bash ../scripts/session-start.sh
+          echo "Session start hook completed"
+
+      - name: Verify session start output
+        run: |
+          cd test-project
+          # Give background process a moment
+          sleep 2
+
+          if [ ! -f ".claude/project-manifest.json" ]; then
+            echo "ERROR: Manifest not created by session start"
+            exit 1
+          fi
+          echo "Session start hook works correctly"
+
+  test-plugin-install:
+    name: Test Plugin Installation
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Verify Claude Code installed
+        run: claude --version
+
+      - name: Add marketplace from local checkout
+        run: |
+          echo "Adding local directory as marketplace..."
+          claude plugin marketplace add ./
+          echo "Marketplace added successfully"
+
+      - name: Install plugin
+        run: |
+          echo "Installing context-daddy plugin..."
+          claude plugin install context-daddy
+          echo "Plugin installed successfully"
+
+      - name: Test plugin loads with --plugin-dir
+        run: |
+          echo "Testing plugin loads correctly..."
+          # Just verify the CLI accepts the --plugin-dir flag without error
+          claude --plugin-dir ./ --version
+          echo "Plugin loads without errors"

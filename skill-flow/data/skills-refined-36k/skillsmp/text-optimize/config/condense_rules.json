@@ -1,0 +1,79 @@
+{
+  "information_hierarchy": {
+    "core": {
+      "description": "核心信息，必须保留",
+      "priority": 1,
+      "examples": ["主要观点", "核心结论", "关键数据", "重要定义"]
+    },
+    "important": {
+      "description": "重要信息，中度缩写时保留",
+      "priority": 2,
+      "examples": ["支撑论点", "关键细节", "重要例子", "相关数据"]
+    },
+    "secondary": {
+      "description": "次要信息，轻度缩写时保留",
+      "priority": 3,
+      "examples": ["背景介绍", "补充说明", "一般细节", "辅助信息"]
+    },
+    "redundant": {
+      "description": "冗余信息，始终删除",
+      "priority": 4,
+      "examples": ["重复内容", "无关描述", "过多修饰", "冗余表达"]
+    }
+  },
+  "redundancy_patterns": [
+    {
+      "pattern": "重复表达同一观点",
+      "example": "这个问题很重要，这个问题值得重视"
+    },
+    {
+      "pattern": "过度修饰",
+      "example": "非常非常极其重要"
+    },
+    {
+      "pattern": "同义反复",
+      "example": "完全彻底地"
+    },
+    {
+      "pattern": "冗余连接词",
+      "example": "此外，另外，还"
+    }
+  ],
+  "length_targets": {
+    "light": {
+      "ratio": 0.75,
+      "description": "保留70-80%的内容",
+      "preserve": ["core", "important", "大部分secondary"]
+    },
+    "medium": {
+      "ratio": 0.5,
+      "description": "保留40-60%的内容",
+      "preserve": ["core", "important", "部分secondary"]
+    },
+    "heavy": {
+      "ratio": 0.25,
+      "description": "保留20-30%的内容",
+      "preserve": ["core", "部分important"]
+    },
+    "summary": {
+      "ratio": 0.125,
+      "description": "保留10-15%的内容",
+      "preserve": ["core"]
+    }
+  },
+  "compression_strategies": {
+    "merge_sentences": "合并语义相似的句子",
+    "remove_modifiers": "删除非必要的修饰语",
+    "simplify_structure": "简化复杂的句式结构",
+    "delete_redundancy": "删除重复内容",
+    "abstract_details": "将具体细节抽象为概述",
+    "combine_points": "合并相关的要点"
+  },
+  "quality_checks": [
+    "确保核心信息完整",
+    "保持逻辑连贯",
+    "避免信息断崖",
+    "检查因果关系",
+    "验证关键数据"
+  ]
+}

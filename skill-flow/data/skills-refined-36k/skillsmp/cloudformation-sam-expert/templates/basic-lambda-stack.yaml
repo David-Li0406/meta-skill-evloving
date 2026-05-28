@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  基礎 Lambda Stack 範例
+  展示：動態命名、環境變數、SAM policy templates、日誌配置
+
+Parameters:
+  Environment:
+    Type: String
+    Description: Deployment environment
+    AllowedValues: [dev, staging, prod]
+    Default: dev
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.11
+    MemorySize: 256
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        LOG_LEVEL: INFO
+
+Resources:
+  # Lambda Function
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # 動態命名
+      FunctionName: !Sub '${AWS::StackName}-processor'
+      Handler: handler.lambda_handler
+      CodeUri: src/
+      
+      # 環境變數
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref MyTable
+      
+      # 使用 SAM Policy Templates
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MyTable
+        - Statement:
+            - Effect: Allow
+              Action: logs:CreateLogGroup
+              Resource: '*'
+      
+      # 事件觸發（可選）
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /process
+            Method: POST
+  
+  # DynamoDB Table
+  MyTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # 動態命名
+      TableName: !Sub '${AWS::StackName}-data'
+      BillingMode: PAY_PER_REQUEST
+      
+      # Schema
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      
+      # 安全配置
+      SSESpecification:
+        SSEEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      
+      # 標記
+      Tags:
+        - Key: Project
+          Value: AgentCoreNexus
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: SAM
+  
+  # CloudWatch Log Group（明確控制保留期）
+  MyFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${MyFunction}'
+      RetentionInDays: 14
+
+Outputs:
+  # Export 函數資訊
+  FunctionName:
+    Description: Lambda function name
+    Value: !Ref MyFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionName'
+  
+  FunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt MyFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionArn'
+  
+  # Export Table 資訊
+  TableName:
+    Description: DynamoDB table name
+    Value: !Ref MyTable
+    Export:
+      Name: !Sub '${AWS::StackName}-TableName'
+  
+  # API URL
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiUrl'

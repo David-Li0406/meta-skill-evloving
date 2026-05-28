@@ -1,0 +1,38 @@
+{
+  "id": "pattern-aop-切面编程-(koatty风格)-af16b026",
+  "category": "pattern",
+  "name": "AOP 切面编程 (Koatty风格)",
+  "triggers": [
+    "(koatty风格)",
+    "aop",
+    "architecture",
+    "切面编程"
+  ],
+  "content": {
+    "pattern_name": "AOP 切面编程 (Koatty风格)",
+    "category": "architecture",
+    "description": "使用装饰器实现横切关注点，如日志、权限、事务等",
+    "when_to_use": "需要在多个方法/类中统一处理日志、权限、缓存等横切关注点",
+    "structure": "\n@Aspect()\nexport class LogAspect implements IAspect {\n  run() {\n    console.log(\"LogAspect executed\");\n  }\n}\n\n@Controller()\n@BeforeEach(LogAspect)\nexport class UserController {\n  @After(LogAspect)\n  async getUser() { ... }\n}\n",
+    "example": "",
+    "pros": [
+      "关注点分离",
+      "代码复用",
+      "便于维护"
+    ],
+    "cons": [
+      "调试困难",
+      "性能开销"
+    ]
+  },
+  "sources": [
+    "https://github.com/Koatty/koatty"
+  ],
+  "tags": [
+    "architecture"
+  ],
+  "created_at": "2026-01-23T21:24:42.978613",
+  "updated_at": "2026-01-23T21:24:42.978613",
+  "usage_count": 0,
+  "effectiveness": 0.5
+}

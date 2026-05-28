@@ -1,0 +1,18 @@
+/* Style queries with range comparisons (Chrome 142+) */
+
+.progress-container {
+  container: progress / inline-size;
+  --progress: 0%;
+}
+
+@container progress style(--progress > 50%) {
+  .bar {
+    background: var(--color-success);
+  }
+}
+
+@container progress style(--progress < 25%) {
+  .bar {
+    background: var(--color-warning);
+  }
+}

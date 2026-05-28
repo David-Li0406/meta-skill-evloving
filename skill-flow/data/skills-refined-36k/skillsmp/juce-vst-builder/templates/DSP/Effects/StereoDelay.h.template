@@ -1,0 +1,183 @@
+#pragma once
+
+#include <juce_dsp/juce_dsp.h>
+#include <vector>
+#include <cmath>
+
+/**
+ * StereoDelay
+ *
+ * Stereo delay effect with cross-feedback (ping-pong) option,
+ * low-pass filtering in feedback path, and modulation.
+ */
+class StereoDelay
+{
+public:
+    StereoDelay() = default;
+
+    //==========================================================================
+    void prepare(double sampleRate, int maxDelayMs = 2000)
+    {
+        this->sampleRate = sampleRate;
+        int maxSamples = static_cast<int>(sampleRate * maxDelayMs / 1000.0) + 1;
+
+        delayLineL.resize(maxSamples, 0.0f);
+        delayLineR.resize(maxSamples, 0.0f);
+
+        maxDelaySamples = maxSamples;
+
+        // Initialize feedback filter
+        feedbackFilterL.reset();
+        feedbackFilterR.reset();
+    }
+
+    void reset()
+    {
+        std::fill(delayLineL.begin(), delayLineL.end(), 0.0f);
+        std::fill(delayLineR.begin(), delayLineR.end(), 0.0f);
+        writePos = 0;
+    }
+
+    //==========================================================================
+    void setDelayTime(float timeMs)
+    {
+        delaySamples = juce::jlimit(1.0f, static_cast<float>(maxDelaySamples - 1),
+                                    static_cast<float>(sampleRate) * timeMs / 1000.0f);
+    }
+
+    void setFeedback(float fb)
+    {
+        feedback = juce::jlimit(0.0f, 0.95f, fb);
+    }
+
+    void setMix(float m)
+    {
+        mix = juce::jlimit(0.0f, 1.0f, m);
+    }
+
+    void setPingPong(bool enabled)
+    {
+        pingPongEnabled = enabled;
+    }
+
+    void setFeedbackFilterCutoff(float freqHz)
+    {
+        feedbackFilterCutoff = juce::jlimit(200.0f, 20000.0f, freqHz);
+        updateFilterCoefficients();
+    }
+
+    void setStereoOffset(float offsetMs)
+    {
+        // Offset between L and R delay times
+        stereoOffsetSamples = static_cast<float>(sampleRate) * offsetMs / 1000.0f;
+    }
+
+    //==========================================================================
+    void process(float& left, float& right)
+    {
+        // Read from delay lines with linear interpolation
+        float delayedL = readDelayLine(delayLineL, delaySamples);
+        float delayedR = readDelayLine(delayLineR, delaySamples + stereoOffsetSamples);
+
+        // Apply feedback filter (warm tape-like character)
+        float filteredL = feedbackFilterL.process(delayedL);
+        float filteredR = feedbackFilterR.process(delayedR);
+
+        // Write to delay lines
+        if (pingPongEnabled)
+        {
+            // Cross-feedback for ping-pong effect
+            delayLineL[writePos] = left + filteredR * feedback;
+            delayLineR[writePos] = right + filteredL * feedback;
+        }
+        else
+        {
+            // Normal feedback
+            delayLineL[writePos] = left + filteredL * feedback;
+            delayLineR[writePos] = right + filteredR * feedback;
+        }
+
+        // Mix dry/wet
+        left = left * (1.0f - mix) + delayedL * mix;
+        right = right * (1.0f - mix) + delayedR * mix;
+
+        // Advance write position
+        writePos = (writePos + 1) % maxDelaySamples;
+    }
+
+    void processBlock(juce::AudioBuffer<float>& buffer)
+    {
+        if (buffer.getNumChannels() < 2)
+            return;
+
+        auto* leftChannel = buffer.getWritePointer(0);
+        auto* rightChannel = buffer.getWritePointer(1);
+
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            process(leftChannel[i], rightChannel[i]);
+        }
+    }
+
+private:
+    //==========================================================================
+    float readDelayLine(const std::vector<float>& delayLine, float delaySamplesF) const
+    {
+        // Linear interpolation for fractional delay
+        int readPos = writePos - static_cast<int>(delaySamplesF);
+        float frac = delaySamplesF - std::floor(delaySamplesF);
+
+        if (readPos < 0)
+            readPos += maxDelaySamples;
+
+        int readPosNext = (readPos + 1) % maxDelaySamples;
+
+        return delayLine[readPos] * (1.0f - frac) + delayLine[readPosNext] * frac;
+    }
+
+    void updateFilterCoefficients()
+    {
+        // Simple one-pole low-pass for feedback path
+        float omega = juce::MathConstants<float>::twoPi * feedbackFilterCutoff / static_cast<float>(sampleRate);
+        float g = omega / (1.0f + omega);
+        feedbackFilterL.setCoefficient(g);
+        feedbackFilterR.setCoefficient(g);
+    }
+
+    //==========================================================================
+    // Simple one-pole low-pass filter for feedback
+    class OnePoleFilter
+    {
+    public:
+        void reset() { state = 0.0f; }
+        void setCoefficient(float g) { this->g = g; }
+
+        float process(float input)
+        {
+            state = state + g * (input - state);
+            return state;
+        }
+
+    private:
+        float g = 0.5f;
+        float state = 0.0f;
+    };
+
+    //==========================================================================
+    double sampleRate = 44100.0;
+
+    std::vector<float> delayLineL;
+    std::vector<float> delayLineR;
+    int maxDelaySamples = 0;
+    int writePos = 0;
+
+    float delaySamples = 0.0f;
+    float stereoOffsetSamples = 0.0f;
+    float feedback = 0.3f;
+    float mix = 0.5f;
+    bool pingPongEnabled = true;
+
+    float feedbackFilterCutoff = 8000.0f;
+    OnePoleFilter feedbackFilterL;
+    OnePoleFilter feedbackFilterR;
+};
