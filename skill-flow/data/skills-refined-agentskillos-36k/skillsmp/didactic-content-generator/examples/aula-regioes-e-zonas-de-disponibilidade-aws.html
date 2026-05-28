@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS: Regiões e Zonas de Disponibilidade</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Oswald:wght@500;700&display=swap');
+        :root {
+            --color-bg: #f8f9fa;
+            --color-text: #1a202c;
+            --color-primary: #232f3e; /* AWS Dark Blue */
+            --color-accent: #ff9900; /* AWS Orange */
+            --color-secondary: #007bff;
+            --color-surface: #ffffff;
+            --color-code-bg: #2d3748;
+            --color-border: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --spacing-unit: 1rem;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.7;
+            font-size: 18px;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Oswald', sans-serif;
+            color: var(--color-primary);
+            line-height: 1.2;
+            margin-bottom: 0.8em;
+        }
+        h1 {
+            font-size: 3.5rem;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5em;
+            border-bottom: 6px solid var(--color-accent);
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 2.2rem;
+            margin-top: 2rem;
+            border-left: 5px solid var(--color-accent);
+            padding-left: 15px;
+        }
+        h3 {
+            font-size: 1.5rem;
+            color: #4a5568;
+            margin-top: 1.5rem;
+        }
+        p {
+            margin-bottom: 1.5rem;
+            color: #4a5568;
+        }
+        strong {
+            color: var(--color-primary);
+            font-weight: 800;
+        }
+        /* Container */
+        .container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            background-color: var(--color-surface);
+            box-shadow: 0 0 40px rgba(0,0,0,0.03);
+            min-height: 100vh;
+        }
+        /* Header Editorial */
+        header {
+            margin-bottom: 4rem;
+            text-align: left;
+        }
+        .meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #718096;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .badge-exam {
+            background-color: var(--color-primary);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        /* TL;DR Box */
+        .tldr {
+            background-color: #ebf8ff;
+            border: 2px solid #3182ce;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        .tldr::before {
+            content: "RESUMO EXECUTIVO (TL;DR)";
+            position: absolute;
+            top: -14px;
+            left: 20px;
+            background: #3182ce;
+            color: white;
+            padding: 4px 12px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .tldr ul {
+            list-style: none;
+        }
+        
+        .tldr li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .tldr li::before {
+            content: "➤";
+            color: #3182ce;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        /* Illustrations */
+        .diagram-container {
+            margin: 3rem 0;
+            background: aliceblue;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        figure {
+            margin: 0;
+        }
+        figcaption {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        /* Specific Content Boxes */
+        .callout {
+            background: linear-gradient(to right, #fdfbf7, #fffaf0);
+            border-left: 4px solid var(--color-accent);
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .callout-title {
+            font-family: 'Oswald', sans-serif;
+            color: #bd6c07; /* Darker orange */
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: block;
+            text-transform: uppercase;
+        }
+        .pro-tip {
+            border: 2px dashed var(--color-primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: #f7fafc;
+            margin: 2rem 0;
+        }
+        .pro-tip-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            color: var(--color-primary);
+            margin-bottom: 10px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: #edf2f7;
+            color: #c05621;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        /* SVG Styles */
+        .az-circle {
+            fill: white;
+            stroke: var(--color-primary);
+            stroke-width: 2;
+        }
+        .az-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            fill: var(--color-primary);
+            font-weight: bold;
+            text-anchor: middle;
+        }
+        .fiber-link {
+            stroke: var(--color-accent);
+            stroke-width: 2;
+            stroke-dasharray: 4;
+            animation: flow 1s linear infinite;
+        }
+        @keyframes flow {
+            from { stroke-dashoffset: 10; }
+            to { stroke-dashoffset: 0; }
+        }
+        .region-bg {
+            fill: #ebf8ff;
+            stroke: #3182ce;
+            stroke-width: 2;
+            stroke-dasharray: 5 5;
+        }
+        /* Footer */
+        footer {
+            margin-top: 5rem;
+            border-top: 1px solid var(--color-border);
+            padding-top: 2rem;
+            font-size: 0.9rem;
+            color: #a0aec0;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 2.5rem; }
+            .container { padding: 2rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="meta">
+            <span>Certificação: <span class="badge-exam">SAP-C02</span></span> &nbsp;|&nbsp; 
+            <span>Tópico: Global Infrastructure</span>
+        </div>
+        <h1>Regiões e <br>Zonas de Disponibilidade</h1>
+        <p class="intro">
+            A pedra angular da arquitetura resiliente na AWS. Entenda as nuances físicas e lógicas que diferenciam uma aplicação global de uma falha catastrófica.
+        </p>
+    </header>
+    <div class="tldr">
+        <ul>
+            <li><strong>Região AWS:</strong> Área física geográfica independente. Isolamento total de falhas entre regiões.</li>
+            <li><strong>Zona de Disponibilidade (AZ):</strong> Cluster de datacenters isolados dentro de uma Região.</li>
+            <li><strong>Interconectividade:</strong> AZs são interligadas por fibra dedicada de baixa latência (< 2ms), permitindo replicação síncrona.</li>
+            <li><strong>Regra de Ouro:</strong> <span style="font-family: 'JetBrains Mono'">High Availability</span> requer Multi-AZ. <span style="font-family: 'JetBrains Mono'">Disaster Recovery</span> requer Multi-Region.</li>
+        </ul>
+    </div>
+    <article>
+        <section>
+            <h2>1. O Conceito de Região</h2>
+            <p>
+                A infraestrutura da AWS não é uma nuvem amorfa e única. Ela é particionada em <strong>Regiões</strong>. Uma Região é uma localização física no mundo onde clusterizamos datacenters.
+            </p>
+            <p>
+                Cada região é projetada para ser completamente isolada das outras regiões. Isso garante a maior tolerância a falhas e estabilidade possível. Se um desastre natural afetar a região <code>us-east-1</code> (N. Virginia), a região <code>sa-east-1</code> (São Paulo) continuará operando sem impacto direto.
+            </p>
+            
+            <div class="callout">
+                <span class="callout-title">Por que o isolamento importa?</span>
+                No exame Solutions Architect Professional, você encontrará cenários de <strong>Recuperação de Desastres (DR)</strong>. A resposta correta quase sempre envolverá replicação de dados e infraestrutura através de fronteiras regionais para mitigar falhas de escopo geográfico.
+            </div>
+            <h3>Critérios de Seleção de Região</h3>
+            <p>Como arquiteto, você não escolhe uma região aleatoriamente. Use a matriz de decisão:</p>
+            <ul>
+                <li><strong>Conformidade de Dados:</strong> Leis locais (como LGPD ou GDPR) exigem que os dados residam em fronteiras específicas?</li>
+                <li><strong>Latência:</strong> Quão próximo está o usuário final? (Use o <code>CloudFront</code> para conteúdo estático, mas a Região domina o backend).</li>
+                <li><strong>Catálogo de Serviços:</strong> Nem todos os recursos AWS estão disponíveis em todas as regiões no dia zero (Ex: <code>us-east-1</code> geralmente recebe features primeiro).</li>
+                <li><strong>Custo:</strong> O mesmo serviço pode custar 50% mais em São Paulo do que em Ohio devido a impostos e custos de energia.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>2. Zonas de Disponibilidade (AZs)</h2>
+            <p>
+                Dentro de cada Região, existem as <strong>Zonas de Disponibilidade</strong> (Availability Zones - AZs). Uma crença comum errada é que uma AZ é um único datacenter.
+            </p>
+            <p>
+                <strong>Correção Mental:</strong> Uma AZ pode ser constituída por <em>um ou mais</em> datacenters discretos, com energia, rede e conectividade redundantes, alojados em instalações separadas.
+            </p>
+            <div class="diagram-container">
+                <svg width="100%" height="300" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Definitions -->
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto" markerUnits="strokeWidth">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#ff9900" />
+                        </marker>
+                    </defs>
+                    
+                    <!-- Region Boundary -->
+                    <rect x="50" y="20" width="500" height="260" rx="20" ry="20" class="region-bg" />
+                    <text x="70" y="50" font-family="Oswald" font-size="20" fill="#2b6cb0">AWS Region (Ex: us-east-1)</text>
+                    <!-- Connections (Full Mesh) -->
+                    <line x1="150" y1="150" x2="300" y2="100" class="fiber-link" />
+                    <line x1="300" y1="100" x2="450" y2="150" class="fiber-link" />
+                    <line x1="150" y1="150" x2="450" y2="150" class="fiber-link" />
+                    <!-- AZ 1 -->
+                    <g transform="translate(150, 150)">
+                        <circle r="40" class="az-circle" />
+                        <text y="5" class="az-text">AZ A</text>
+                        <text y="20" font-size="10" fill="#718096" text-anchor="middle">Power/Net Islet</text>
+                    </g>
+                    <!-- AZ 2 -->
+                    <g transform="translate(300, 100)">
+                        <circle r="40" class="az-circle" />
+                        <text y="5" class="az-text">AZ B</text>
+                        <text y="20" font-size="10" fill="#718096" text-anchor="middle">~100km Dist.</text>
+                    </g>
+                    <!-- AZ 3 -->
+                    <g transform="translate(450, 150)">
+                        <circle r="40" class="az-circle" />
+                        <text y="5" class="az-text">AZ C</text>
+                        <text y="20" font-size="10" fill="#718096" text-anchor="middle">Indep. Fault</text>
+                    </g>
+                    
+                    <!-- Latency Label -->
+                    <rect x="250" y="180" width="100" height="24" rx="4" fill="#2d3748" />
+                    <text x="300" y="196" font-family="JetBrains Mono" font-size="12" fill="#fff" text-anchor="middle">&lt; 2ms Latency</text>
+                </svg>
+                <figcaption>Figura 1: Topologia Lógica de uma Região. As AZs são separadas fisicamente (geralmente até 100km) para evitar falhas correlacionadas (como inundações), mas próximas o suficiente para replicação síncrona.</figcaption>
+            </div>
+            <h3>A Engenharia do Isolamento</h3>
+            <p>
+                Cada AZ possui sua própria infraestrutura de energia (geradores a diesel, no mínimo N+1) e conectividade de backbone independente. Falhas em uma AZ não se propagam para outras.
+            </p>
+            <p>
+                No entanto, todas as AZs em uma região são interconectadas por <strong>fibra óptica dedicada de alta largura de banda e baixa latência</strong>. Isso é o segredo para arquiteturas Multi-AZ.
+            </p>
+        </section>
+        <section>
+            <div class="pro-tip">
+                <div class="pro-tip-title">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    SOLUTIONS ARCHITECT PROFESSIONAL VIEW
+                </div>
+                <p>
+                    Para o exame, a distinção crítica é entre <strong>Síncrono</strong> e <strong>Assíncrono</strong>.
+                </p>
+                <ul>
+                    <li><strong>Dentro da Região (Multi-AZ):</strong> A latência é baixa o suficiente (single-digit milliseconds) para permitir replicação síncrona de bancos de dados (Ex: Amazon Aurora, RDS Multi-AZ). Isso garante RPO (Recovery Point Objective) de zero ou próximo de zero.</li>
+                    <li><strong>Entre Regiões (Cross-Region):</strong> Devido à física da velocidade da luz, a replicação deve ser assíncrona (Ex: DynamoDB Global Tables, S3 Cross-Region Replication, RDS Read Replicas em outra região).</li>
+                </ul>
+            </div>
+        </section>
+        <section>
+            <h2>3. Resumo Comparativo</h2>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 2rem; font-size: 0.95rem;">
+                <thead>
+                    <tr style="background-color: var(--color-primary); color: white; text-align: left;">
+                        <th style="padding: 12px; border-radius: 8px 0 0 0;">Entidade</th>
+                        <th style="padding: 12px;">Escopo</th>
+                        <th style="padding: 12px; border-radius: 0 8px 0 0;">Função Principal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px; font-weight: bold;">Região</td>
+                        <td style="padding: 12px;">Geográfico Global</td>
+                        <td style="padding: 12px;">Conformidade de dados e latência macro.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px; font-weight: bold;">Availability Zone (AZ)</td>
+                        <td style="padding: 12px;">Cluster Local (< 100km)</td>
+                        <td style="padding: 12px;">Alta Disponibilidade (HA) e Failover.</td>
+                    </tr>
+                    <tr style="background-color: #f7fafc;">
+                        <td style="padding: 12px; font-weight: bold;">Edge Location</td>
+                        <td style="padding: 12px;">Cidade Específica</td>
+                        <td style="padding: 12px;">Cache de conteúdo (CDN) e entrada de DNS. Não roda EC2 geral.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        <footer style="margin-top: 4rem;">
+            <p>Gerado via Antigravity Didactic Content Skill | © 2026 ReducaiLab</p>
+        </footer>
+    </article>
+</div>
+</body>
+</html>

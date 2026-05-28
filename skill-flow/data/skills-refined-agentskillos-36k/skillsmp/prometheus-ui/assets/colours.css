@@ -1,0 +1,105 @@
+/* 
+ * Prometheus Design System - Colour Variables
+ * Part of prometheus-ui skill
+ * 
+ * Usage: Import in your CSS/Tailwind config or copy variables
+ */
+
+:root {
+  /* ===========================================
+   * BACKGROUND COLOURS
+   * =========================================== */
+  --bg-primary: #0d0d0d;        /* Main application background - RGB(13, 13, 13) */
+  --bg-panel: #1a1a1a;          /* Panel backgrounds, cards - RGB(26, 26, 26) */
+  --bg-input: #0d0d0d;          /* Input field backgrounds - RGB(13, 13, 13) */
+  
+  /* ===========================================
+   * TEXT COLOURS
+   * =========================================== */
+  --text-primary: #f2f2f2;      /* Main body text - RGB(242, 242, 242) */
+  --text-muted: #767171;        /* Secondary text, labels - RGB(118, 113, 113) */
+  --text-active: #00FF00;       /* Status values, active data - RGB(0, 255, 0) */
+  --text-highlight: #FF6600;    /* Active states, selections - RGB(255, 102, 0) */
+  
+  /* ===========================================
+   * ACCENT COLOURS
+   * =========================================== */
+  --accent-orange: #FF6600;     /* Primary accent - RGB(255, 102, 0) */
+  --accent-cyan: #00FFFF;       /* Grid lines, data accents - RGB(0, 255, 255) */
+  --accent-green: #00FF00;      /* Success states - RGB(0, 255, 0) */
+  --pke-gold: #BF9000;          /* PKE active border - RGB(191, 144, 0) */
+  
+  /* ===========================================
+   * BUTTON COLOURS
+   * =========================================== */
+  --btn-gradient-start: #D65700;  /* Primary button gradient start - RGB(214, 87, 0) */
+  --btn-gradient-end: #763000;    /* Primary button gradient end - RGB(118, 48, 0) */
+  --btn-secondary: #767171;       /* Secondary/inactive buttons - RGB(118, 113, 113) */
+  
+  /* ===========================================
+   * BORDER COLOURS
+   * =========================================== */
+  --border-gradient-start: #767171;  /* Frame line gradients start - RGB(118, 113, 113) */
+  --border-gradient-end: #ffffff;    /* Frame line gradients end - RGB(255, 255, 255) */
+  --border-input: #404040;           /* Input field borders - RGB(64, 64, 64) */
+  --border-input-focus: #00FFFF;     /* Input field focus state - RGB(0, 255, 255) */
+}
+
+/* ===========================================
+ * UTILITY CLASSES
+ * =========================================== */
+
+/* Backgrounds */
+.bg-prometheus-primary { background-color: var(--bg-primary); }
+.bg-prometheus-panel { background-color: var(--bg-panel); }
+.bg-prometheus-input { background-color: var(--bg-input); }
+
+/* Text */
+.text-prometheus-primary { color: var(--text-primary); }
+.text-prometheus-muted { color: var(--text-muted); }
+.text-prometheus-active { color: var(--text-active); }
+.text-prometheus-highlight { color: var(--text-highlight); }
+
+/* Accents */
+.text-accent-orange { color: var(--accent-orange); }
+.text-accent-cyan { color: var(--accent-cyan); }
+.text-accent-green { color: var(--accent-green); }
+.text-pke-gold { color: var(--pke-gold); }
+
+/* Borders */
+.border-prometheus-input { border-color: var(--border-input); }
+.border-prometheus-focus { border-color: var(--border-input-focus); }
+
+/* Button Gradients */
+.btn-prometheus-primary {
+  background: linear-gradient(180deg, var(--btn-gradient-start), var(--btn-gradient-end));
+}
+
+/* Frame Line Gradient */
+.border-prometheus-frame {
+  border-image: linear-gradient(90deg, var(--border-gradient-start), var(--border-gradient-end)) 1;
+}
+
+/* ===========================================
+ * TAILWIND EXTENSION (for tailwind.config.js)
+ * =========================================== */
+/*
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        'prometheus': {
+          'bg-primary': '#0d0d0d',
+          'bg-panel': '#1a1a1a',
+          'text': '#f2f2f2',
+          'text-muted': '#767171',
+          'active': '#00FF00',
+          'highlight': '#FF6600',
+          'cyan': '#00FFFF',
+          'gold': '#BF9000',
+        }
+      }
+    }
+  }
+}
+*/

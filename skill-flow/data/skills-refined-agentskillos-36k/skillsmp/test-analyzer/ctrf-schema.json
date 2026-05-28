@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CTRF Test Report Schema",
+  "description": "Common Test Report Format (CTRF) - A standardized JSON schema for test reports. Source: https://github.com/ctrf-io/ctrf",
+  "type": "object",
+  "required": ["reportFormat", "specVersion", "results"],
+  "properties": {
+    "reportFormat": {
+      "type": "string",
+      "enum": ["CTRF"]
+    },
+    "specVersion": {
+      "type": "string",
+      "description": "Semantic version of CTRF specification (e.g., '0.0.0', '1.0.0')"
+    },
+    "reportId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this report"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when report was generated"
+    },
+    "generatedBy": {
+      "type": "string",
+      "description": "Tool that generated this report (e.g., 'd2t-vitest-ctrf-json-reporter', 'pytest-json-ctrf')"
+    },
+    "results": {
+      "type": "object",
+      "required": ["tool", "summary", "tests"],
+      "properties": {
+        "tool": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Test framework name (e.g., 'vitest', 'pytest', 'jest')"
+            },
+            "version": {
+              "type": "string"
+            }
+          }
+        },
+        "summary": {
+          "type": "object",
+          "description": "Aggregate test statistics",
+          "properties": {
+            "tests": {
+              "type": "integer",
+              "description": "Total number of tests"
+            },
+            "passed": {
+              "type": "integer",
+              "description": "Number of passed tests"
+            },
+            "failed": {
+              "type": "integer",
+              "description": "Number of failed tests"
+            },
+            "skipped": {
+              "type": "integer",
+              "description": "Number of skipped tests"
+            },
+            "pending": {
+              "type": "integer",
+              "description": "Number of pending tests"
+            },
+            "other": {
+              "type": "integer",
+              "description": "Tests with other status"
+            },
+            "start": {
+              "type": "integer",
+              "description": "Unix timestamp (ms) when tests started"
+            },
+            "stop": {
+              "type": "integer",
+              "description": "Unix timestamp (ms) when tests stopped"
+            },
+            "duration": {
+              "type": "integer",
+              "description": "Total duration in milliseconds"
+            },
+            "flaky": {
+              "type": "integer",
+              "description": "Number of flaky tests"
+            }
+          }
+        },
+        "tests": {
+          "type": "array",
+          "description": "Array of individual test results",
+          "items": {
+            "type": "object",
+            "required": ["name", "status", "duration"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Full test name including suite path"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["passed", "failed", "skipped", "pending", "other"],
+                "description": "Test execution status"
+              },
+              "duration": {
+                "type": "number",
+                "description": "Test duration in milliseconds"
+              },
+              "suite": {
+                "type": "string",
+                "description": "Test suite or describe block name"
+              },
+              "message": {
+                "type": "string",
+                "description": "Error message or assertion failure details"
+              },
+              "trace": {
+                "type": "string",
+                "description": "Stack trace for failed tests"
+              },
+              "filePath": {
+                "type": "string",
+                "description": "Relative path to test file"
+              },
+              "line": {
+                "type": "integer",
+                "description": "Line number in test file where test is defined"
+              },
+              "retries": {
+                "type": "integer",
+                "description": "Number of retry attempts"
+              },
+              "flaky": {
+                "type": "boolean",
+                "description": "Whether test is flagged as flaky"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Test tags or labels"
+              },
+              "extra": {
+                "type": "object",
+                "description": "Additional framework-specific metadata"
+              }
+            }
+          }
+        },
+        "environment": {
+          "type": "object",
+          "description": "Test execution environment metadata",
+          "properties": {
+            "appName": {
+              "type": "string"
+            },
+            "buildName": {
+              "type": "string"
+            },
+            "buildNumber": {
+              "type": "string"
+            },
+            "buildUrl": {
+              "type": "string"
+            },
+            "repositoryName": {
+              "type": "string"
+            },
+            "repositoryUrl": {
+              "type": "string"
+            },
+            "branchName": {
+              "type": "string"
+            },
+            "commitHash": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

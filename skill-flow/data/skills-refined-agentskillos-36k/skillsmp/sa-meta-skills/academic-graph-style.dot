@@ -1,0 +1,71 @@
+digraph STYLE_GUIDE {
+    // 学术流程图风格指南
+
+    // 节点类型示例及其形状
+    subgraph cluster_node_types {
+        label="节点类型与形状";
+
+        // 问题使用菱形
+        "Is logic sound?" [shape=diamond];
+
+        // 动作使用矩形（默认）
+        "Write Section" [shape=box];
+
+        // 外部工具/引用使用纯文本
+        "Cite: Smith (2020)" [shape=plaintext];
+
+        // 状态使用椭圆
+        "Drafting" [shape=ellipse];
+
+        // 警告使用八边形
+        "STOP: Circular Reasoning" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+
+        // 入口/出口使用双圆
+        "Start Research" [shape=doublecircle];
+        "Submit Paper" [shape=doublecircle];
+
+        // 每种类型的示例
+        "Data supports hypothesis?" [shape=diamond];
+        "Analyze Data" [shape=box];
+        "See Table 1" [shape=plaintext];
+        "Writer's Block" [shape=ellipse];
+        "NEVER Plagiarize" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+    }
+
+    // 边命名约定
+    subgraph cluster_edge_types {
+        label="边标签";
+
+        "Hypothesis confirmed?" [shape=diamond];
+        "Write Results" [shape=box];
+        "Revise Theory" [shape=box];
+
+        "Hypothesis confirmed?" -> "Write Results" [label="yes"];
+        "Hypothesis confirmed?" -> "Revise Theory" [label="no"];
+
+        "Method Choice?" [shape=diamond];
+        "Qualitative" [shape=box];
+        "Quantitative" [shape=box];
+
+        "Method Choice?" -> "Qualitative" [label="small sample"];
+        "Method Choice?" -> "Quantitative" [label="large sample"];
+    }
+
+    // 命名模式
+    subgraph cluster_naming_patterns {
+        label="命名模式";
+
+        // 问题以 ? 结尾
+        "Is evidence sufficient?";
+        "Does flow make sense?";
+
+        // 动作以动词开头
+        "Conduct Survey";
+        "Review Literature";
+        "Format Citations";
+
+        // 状态描述情境
+        "Results unclear";
+        "Argument weak";
+    }
+}

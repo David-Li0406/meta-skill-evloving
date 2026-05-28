@@ -1,0 +1,109 @@
+"""
+SQLModel base models and mixins.
+
+Replace placeholders:
+- {{MODEL_NAME}}: Your model name (PascalCase)
+- {{TABLE_NAME}}: Database table name (snake_case)
+- {{FIELDS}}: Model fields
+- {{RELATIONSHIPS}}: Relationship definitions
+"""
+from datetime import datetime
+from typing import Optional, List
+from sqlmodel import Field, Relationship, SQLModel
+
+
+# =============================================================================
+# Mixins - Reusable model components
+# =============================================================================
+
+class TimestampMixin(SQLModel):
+    """Adds created_at and updated_at fields."""
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        nullable=False,
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        nullable=False,
+        sa_column_kwargs={"onupdate": datetime.utcnow},
+    )
+
+
+class SoftDeleteMixin(SQLModel):
+    """Adds soft delete capability."""
+    is_deleted: bool = Field(default=False, index=True)
+    deleted_at: Optional[datetime] = Field(default=None)
+
+    def soft_delete(self) -> None:
+        """Mark record as deleted without removing from database."""
+        self.is_deleted = True
+        self.deleted_at = datetime.utcnow()
+
+
+# =============================================================================
+# Base Models
+# =============================================================================
+
+class BaseModel(TimestampMixin):
+    """Base model with ID and timestamps."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+
+# =============================================================================
+# Example Models - Replace with your domain models
+# =============================================================================
+
+class User(BaseModel, table=True):
+    """User model example."""
+    __tablename__ = "users"
+
+    email: str = Field(max_length=255, unique=True, index=True)
+    name: str = Field(max_length=100)
+    is_active: bool = Field(default=True, index=True)
+
+    # Relationships
+    # orders: List["Order"] = Relationship(back_populates="user")
+
+
+class Order(BaseModel, table=True):
+    """Order model example with foreign key."""
+    __tablename__ = "orders"
+
+    total: float = Field(default=0.0)
+    status: str = Field(default="pending", max_length=20, index=True)
+
+    # Foreign Key
+    user_id: int = Field(foreign_key="users.id", index=True)
+
+    # Relationships
+    # user: Optional["User"] = Relationship(back_populates="orders")
+    # items: List["OrderItem"] = Relationship(back_populates="order")
+
+
+# =============================================================================
+# Pydantic Models for API (Read/Create schemas)
+# =============================================================================
+
+class UserBase(SQLModel):
+    """Base schema for User - shared fields."""
+    email: str = Field(max_length=255)
+    name: str = Field(max_length=100)
+
+
+class UserCreate(UserBase):
+    """Schema for creating a User."""
+    pass
+
+
+class UserRead(UserBase):
+    """Schema for reading a User (includes id and timestamps)."""
+    id: int
+    is_active: bool
+    created_at: datetime
+
+
+class UserUpdate(SQLModel):
+    """Schema for updating a User - all fields optional."""
+    email: Optional[str] = Field(default=None, max_length=255)
+    name: Optional[str] = Field(default=None, max_length=100)
+    is_active: Optional[bool] = None

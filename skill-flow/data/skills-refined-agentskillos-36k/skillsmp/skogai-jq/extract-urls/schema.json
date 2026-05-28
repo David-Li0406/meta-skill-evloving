@@ -1,0 +1,47 @@
+{
+  "name": "extract-urls",
+  "description": "Extract all URLs (http://, https://, ftp://) from a string at specified path",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field containing text with URLs (e.g., 'content.text')"
+    }
+  },
+  "output": {
+    "type": "array",
+    "description": "Array of URL strings found in the text (http://, https://, ftp://), or empty array if none found or path doesn't exist/isn't string"
+  },
+  "examples": [
+    {
+      "description": "Extract single HTTP URL from text",
+      "input": {"text": "Visit http://example.com for more info"},
+      "args": {"path": "text"},
+      "output": ["http://example.com"]
+    },
+    {
+      "description": "Extract multiple URLs from text",
+      "input": {"content": "Check https://google.com and http://github.com"},
+      "args": {"path": "content"},
+      "output": ["https://google.com", "http://github.com"]
+    },
+    {
+      "description": "Extract URLs with query parameters",
+      "input": {"data": "API: https://api.example.com/v1?key=abc&id=123"},
+      "args": {"path": "data"},
+      "output": ["https://api.example.com/v1?key=abc&id=123"]
+    },
+    {
+      "description": "No URLs in text returns empty array",
+      "input": {"text": "No links here, just plain text"},
+      "args": {"path": "text"},
+      "output": []
+    }
+  ],
+  "tags": ["string", "url", "extract", "regex", "parse", "http", "https", "ftp"]
+}

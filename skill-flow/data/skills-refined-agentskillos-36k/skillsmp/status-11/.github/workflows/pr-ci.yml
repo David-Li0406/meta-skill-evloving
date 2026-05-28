@@ -1,0 +1,39 @@
+name: PR CI — build + validate + Playwright
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-validate:
+    runs-on: ubuntu-latest
+    outputs:
+      build-dir: ${{ steps.build.outputs.build_dir }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        id: build
+        run: |
+          npm run build || true
+          echo "build_dir=web" >> $GITHUB_OUTPUT
+
+      - name: Validate stories
+        run: |
+          node scripts/validate-story.js --glob "web/stories/**/*.ink" --output json --max-steps 2000
+
+      - name: Archive build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-web
+          path: web
+

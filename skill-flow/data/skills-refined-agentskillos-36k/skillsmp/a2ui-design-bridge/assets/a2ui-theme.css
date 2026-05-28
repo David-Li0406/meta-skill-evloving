@@ -1,0 +1,139 @@
+/**
+ * A2UI Theme: Newfoundation Integration
+ * 
+ * Import this CSS at app root to bridge A2UI components
+ * with the Newfoundation design system.
+ * 
+ * Usage:
+ *   @import './a2ui-theme.css';
+ *   
+ * Or in index.html:
+ *   <link rel="stylesheet" href="./a2ui-theme.css">
+ */
+
+:root {
+    /* ================================================================
+     TYPOGRAPHY
+     Newfoundation Whyte is the exclusive typeface.
+     ================================================================ */
+    --a2ui-font-family: "Newfoundation Whyte", -apple-system, BlinkMacSystemFont, sans-serif;
+    --a2ui-font-weight-normal: 400;
+    --a2ui-font-weight-medium: 500;
+    --a2ui-font-weight-bold: 600;
+    --a2ui-line-height: 1.4;
+    --a2ui-line-height-tight: 1.3;
+
+    /* ================================================================
+     COLOR PALETTE: "The Light and The Void"
+     High-contrast black/white with Newfoundation Green accent.
+     ================================================================ */
+
+    /* Primary */
+    --a2ui-primary-bg: #FFFFFF;
+    --a2ui-primary-text: #000000;
+
+    /* Secondary */
+    --a2ui-secondary-text: rgba(0, 0, 0, 0.8);
+    --a2ui-muted-text: rgba(0, 0, 0, 0.5);
+
+    /* Accent */
+    --a2ui-accent: #E0FD8C;
+    /* Newfoundation Green */
+    --a2ui-accent-text: #000000;
+
+    /* Borders & Dividers */
+    --a2ui-border: rgba(0, 0, 0, 0.1);
+    --a2ui-border-strong: rgba(0, 0, 0, 0.2);
+    --a2ui-border-subtle: rgba(0, 0, 0, 0.05);
+
+    /* ================================================================
+     GLASSMORPHISM
+     Frosted glass effect for overlays and buttons.
+     ================================================================ */
+    --a2ui-glass-bg: rgba(255, 255, 255, 0.6);
+    --a2ui-glass-bg-dark: rgba(0, 0, 0, 0.03);
+    --a2ui-glass-blur: blur(12px);
+    --a2ui-glass-blur-heavy: blur(20px);
+
+    /* ================================================================
+     SPACING (8px Scale)
+     All spacing must be multiples of 8px.
+     ================================================================ */
+    --a2ui-space-2xs: 4px;
+    --a2ui-space-xs: 8px;
+    --a2ui-space-sm: 16px;
+    --a2ui-space-md: 24px;
+    --a2ui-space-lg: 32px;
+    --a2ui-space-xl: 48px;
+    --a2ui-space-2xl: 64px;
+    --a2ui-space-3xl: 96px;
+
+    /* ================================================================
+     BORDERS & RADII
+     Softened Brutalism: 12px radius for containers.
+     ================================================================ */
+    --a2ui-border-width: 1px;
+    --a2ui-border-radius: 12px;
+    --a2ui-border-radius-sm: 8px;
+    --a2ui-border-radius-lg: 16px;
+    --a2ui-border-radius-pill: 24px;
+    --a2ui-border-radius-none: 0;
+    /* For inputs - sharp corners */
+
+    /* ================================================================
+     ANIMATION: "Minimal Inertia"
+     Quick but weighted. No bouncing or playful easing.
+     ================================================================ */
+    --a2ui-duration-instant: 100ms;
+    --a2ui-duration-fast: 200ms;
+    --a2ui-duration-normal: 300ms;
+    --a2ui-duration-slow: 400ms;
+    --a2ui-easing: ease-out;
+    --a2ui-easing-enter: cubic-bezier(0.0, 0.0, 0.2, 1);
+    --a2ui-easing-exit: cubic-bezier(0.4, 0.0, 1, 1);
+
+    /* ================================================================
+     LAYOUT
+     Editorial reading width and technical gaps.
+     ================================================================ */
+    --a2ui-content-width: 720px;
+    --a2ui-nav-gap: 60px;
+
+    /* ================================================================
+     Z-INDEX SCALE
+     Consistent layering for overlays.
+     ================================================================ */
+    --a2ui-z-base: 0;
+    --a2ui-z-dropdown: 100;
+    --a2ui-z-sticky: 200;
+    --a2ui-z-modal: 300;
+    --a2ui-z-toast: 400;
+    --a2ui-z-tooltip: 500;
+}
+
+/* ================================================================
+   BASE STYLES
+   Apply Newfoundation DNA to document.
+   ================================================================ */
+
+html {
+    font-family: var(--a2ui-font-family);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    background: var(--a2ui-primary-bg);
+    color: var(--a2ui-primary-text);
+    line-height: var(--a2ui-line-height);
+}
+
+/* ================================================================
+   FOCUS STYLES
+   Accessible focus indicators using Newfoundation Green.
+   ================================================================ */
+
+:focus-visible {
+    outline: 2px solid var(--a2ui-accent);
+    outline-offset: 2px;
+}

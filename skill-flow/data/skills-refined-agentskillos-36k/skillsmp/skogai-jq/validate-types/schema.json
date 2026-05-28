@@ -1,0 +1,53 @@
+{
+  "name": "validate-types",
+  "description": "Validate that fields have correct JSON types (returns boolean)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object to validate"
+  },
+  "args": {
+    "type_rules": {
+      "type": "string",
+      "required": true,
+      "description": "JSON object string mapping field paths to expected types (e.g., '{\"name\":\"string\",\"age\":\"number\"}'). Supported types: string, number, boolean, null, array, object"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if all fields match their expected types, false if any type mismatch or missing field"
+  },
+  "examples": [
+    {
+      "description": "All fields match types",
+      "input": {"name": "Alice", "age": 30, "active": true},
+      "args": {"type_rules": "{\"name\":\"string\",\"age\":\"number\",\"active\":\"boolean\"}"},
+      "output": true
+    },
+    {
+      "description": "One field has wrong type",
+      "input": {"name": "Alice", "age": "30"},
+      "args": {"type_rules": "{\"name\":\"string\",\"age\":\"number\"}"},
+      "output": false
+    },
+    {
+      "description": "Nested field validation",
+      "input": {"user": {"name": "Bob", "profile": {"age": 25}}},
+      "args": {"type_rules": "{\"user.name\":\"string\",\"user.profile.age\":\"number\"}"},
+      "output": true
+    },
+    {
+      "description": "Array type validation",
+      "input": {"items": [1, 2, 3]},
+      "args": {"type_rules": "{\"items\":\"array\"}"},
+      "output": true
+    },
+    {
+      "description": "Empty type rules returns true",
+      "input": {"any": "data"},
+      "args": {"type_rules": "{}"},
+      "output": true
+    }
+  ],
+  "tags": ["validation", "type", "check", "schema", "verify"]
+}

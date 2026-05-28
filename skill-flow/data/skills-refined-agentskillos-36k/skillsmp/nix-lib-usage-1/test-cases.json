@@ -1,0 +1,50 @@
+[
+  {
+    "ruleId": "",
+    "ruleTitle": "Inherit Pattern",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Inherit Pattern"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Inherit Pattern",
+    "type": "good",
+    "code": "let\n  inherit (lib) mkIf mkEnableOption mkOption types;\nin\n{\n  options.foo = mkOption { type = types.str; };\n}",
+    "language": "nix",
+    "description": "Correct example for Inherit Pattern"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Inline Prefix",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Inline Prefix"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Inline Prefix",
+    "type": "good",
+    "code": "config.foo = lib.mkDefault \"bar\";",
+    "language": "nix",
+    "description": "Correct example for Inline Prefix"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "High-Scope With",
+    "type": "bad",
+    "code": "{ config, lib, ... }:\nwith lib;  # Bad!\n{\n  # types, mkIf, etc. are now magical\n}",
+    "language": "nix",
+    "description": "Incorrect example for High-Scope With"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "High-Scope With",
+    "type": "good",
+    "code": "environment.systemPackages = with pkgs; [ git vim curl ];",
+    "language": "nix",
+    "description": "Correct example for High-Scope With"
+  }
+]

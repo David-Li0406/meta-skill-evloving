@@ -1,0 +1,38 @@
+# Dockerfile.debug - Debug variant with busybox shell
+# Use this for troubleshooting in production environments
+
+# Stage 1: Build stage (reuse from main Dockerfile)
+FROM docker.io/library/golang:1.24-alpine AS builder
+
+WORKDIR /build
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-s -w" \
+    -trimpath \
+    -o /build/mcp-server \
+    ./cmd/mcp-server
+
+# Build healthcheck binary for init containers
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-s -w" \
+    -trimpath \
+    -o /build/healthcheck \
+    ./cmd/healthcheck
+
+# Stage 2: Debug runtime stage (distroless with busybox)
+FROM gcr.io/distroless/static:debug-nonroot
+
+COPY --from=builder /build/mcp-server /usr/local/bin/mcp-server
+COPY --from=builder /build/healthcheck /usr/local/bin/healthcheck
+
+USER nonroot:nonroot
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/mcp-server"]
+
+# To get a shell in debug image:
+# docker run -it cluster-health-mcp:debug /busybox/sh
+# oc exec -it pod/cluster-health-mcp-xxx -- /busybox/sh

@@ -1,0 +1,34 @@
+# OneForecast Model Configuration - Adapted for Ocean Velocity Prediction
+# Graph-based neural network with multi-frame input/output support
+
+# Temporal configuration - multi-frame input/output
+input_len: 7        # Number of input frames
+output_len: 1       # Number of output frames
+in_channels: 2      # u and v velocity components
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration
+mesh_level: 5       # Level of mesh refinement (5 for high resolution)
+multimesh: true     # Use multi-resolution mesh hierarchy for better multi-scale modeling
+
+# Model architecture parameters
+hidden_dim: 512     # Hidden dimension for all MLPs (increased for better capacity)
+num_layers: 1       # Number of layers in MLPs
+processor_layers: 16  # Number of mesh processor layers (graph message passing)
+
+# Feature processing options
+use_dual_path: true        # Enable dual-path (2D and pseudo-3D) processing
+use_temporal_processing: true  # Enable temporal LSTM processing
+
+# Training optimization hints
+# - This model is computationally intensive due to graph operations
+# - Recommended batch_size: 1-2 for GPU with 16GB memory
+# - For smaller GPUs, reduce hidden_dim to 256 and processor_layers to 8
+# - Requires DGL library and scikit-learn
+
+# Alternative lighter configuration for faster training:
+# hidden_dim: 256
+# processor_layers: 8
+# mesh_level: 4

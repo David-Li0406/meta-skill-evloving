@@ -1,0 +1,41 @@
+{
+  "name": "pick-fields",
+  "description": "Select only specified fields from an object",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "fields": {
+      "type": "string",
+      "required": true,
+      "description": "Comma-separated list of field names to keep (e.g., 'name,email,age')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "New object containing only the specified fields"
+  },
+  "examples": [
+    {
+      "description": "Pick multiple fields from object",
+      "input": {"name": "skogix", "age": 30, "email": "test@example.com", "phone": "123"},
+      "args": {"fields": "name,email"},
+      "output": {"name": "skogix", "email": "test@example.com"}
+    },
+    {
+      "description": "Pick single field",
+      "input": {"user": "john", "status": "active", "role": "admin"},
+      "args": {"fields": "user"},
+      "output": {"user": "john"}
+    },
+    {
+      "description": "Pick all fields",
+      "input": {"x": 1, "y": 2, "z": 3},
+      "args": {"fields": "x,y,z"},
+      "output": {"x": 1, "y": 2, "z": 3}
+    }
+  ],
+  "tags": ["object", "fields", "select", "filter"]
+}

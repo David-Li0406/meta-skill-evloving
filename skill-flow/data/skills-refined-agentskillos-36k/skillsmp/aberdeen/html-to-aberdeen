@@ -1,0 +1,470 @@
+#!/usr/bin/env node
+
+// WARNING: This script was created by Claude Sonnet 3.7, and hasn't
+// received any human code review. It seems to do the job though!
+
+export function parseHTML(html) {
+  const result = {
+    body: []
+  };
+  
+  let currentPosition = 0;
+  let currentParent = result;
+  const stack = [];
+  
+  while (currentPosition < html.length) {
+    // Skip whitespace
+    while (currentPosition < html.length && /\s/.test(html[currentPosition])) {
+      currentPosition++;
+    }
+    
+    if (currentPosition >= html.length) break;
+    
+    // Check for comment
+    if (html.substring(currentPosition, currentPosition + 4) === '<!--') {
+      const endComment = html.indexOf('-->', currentPosition);
+      if (endComment === -1) break;
+      
+      const commentContent = html.substring(currentPosition + 4, endComment);
+      currentParent.children = currentParent.children || [];
+      currentParent.children.push({
+        type: 'comment',
+        content: commentContent
+      });
+      
+      currentPosition = endComment + 3;
+      continue;
+    }
+    
+    // Check for tag
+    if (html[currentPosition] === '<') {
+      // Check if it's a closing tag
+      if (html[currentPosition + 1] === '/') {
+        const endTag = html.indexOf('>', currentPosition);
+        if (endTag === -1) break;
+        
+        const tagName = html.substring(currentPosition + 2, endTag).trim().toLowerCase();
+        
+        // Pop from stack
+        if (stack.length > 0) {
+          currentParent = stack.pop();
+        }
+        
+        currentPosition = endTag + 1;
+        continue;
+      }
+      
+      // It's an opening tag
+      const endTag = html.indexOf('>', currentPosition);
+      if (endTag === -1) break;
+      
+      const selfClosing = html[endTag - 1] === '/';
+      const tagContent = html.substring(currentPosition + 1, selfClosing ? endTag - 1 : endTag).trim();
+      const spaceIndex = tagContent.search(/\s/);
+      
+      let tagName, attributesStr;
+      if (spaceIndex === -1) {
+        tagName = tagContent;
+        attributesStr = '';
+      } else {
+        tagName = tagContent.substring(0, spaceIndex);
+        attributesStr = tagContent.substring(spaceIndex + 1);
+      }
+      
+      tagName = tagName.toLowerCase();
+      
+      // Parse attributes
+      const attributes = [];
+      let pos = 0;
+      
+      while (pos < attributesStr.length) {
+        // Skip whitespace
+        while (pos < attributesStr.length && /\s/.test(attributesStr[pos])) {
+          pos++;
+        }
+        if (pos >= attributesStr.length) break;
+        
+        // Get attribute name
+        const nameMatch = attributesStr.substring(pos).match(/^([\w-]+)/);
+        if (!nameMatch) break;
+        
+        const name = nameMatch[1];
+        pos += name.length;
+        
+        // Skip whitespace
+        while (pos < attributesStr.length && /\s/.test(attributesStr[pos])) {
+          pos++;
+        }
+        
+        // Check for '='
+        if (pos < attributesStr.length && attributesStr[pos] === '=') {
+          pos++;
+          
+          // Skip whitespace
+          while (pos < attributesStr.length && /\s/.test(attributesStr[pos])) {
+            pos++;
+          }
+          
+          let value = '';
+          
+          if (pos < attributesStr.length) {
+            const quoteChar = attributesStr[pos];
+            
+            if (quoteChar === '"' || quoteChar === "'") {
+              // Quoted value - handle escaped quotes
+              pos++;
+              while (pos < attributesStr.length) {
+                if (attributesStr[pos] === '\\' && pos + 1 < attributesStr.length) {
+                  // Escaped character
+                  value += attributesStr[pos + 1];
+                  pos += 2;
+                } else if (attributesStr[pos] === quoteChar) {
+                  // End quote
+                  pos++;
+                  break;
+                } else {
+                  value += attributesStr[pos];
+                  pos++;
+                }
+              }
+            } else {
+              // Unquoted value
+              const unquotedMatch = attributesStr.substring(pos).match(/^(\S+)/);
+              if (unquotedMatch) {
+                value = unquotedMatch[1];
+                pos += value.length;
+              }
+            }
+          }
+          
+          attributes.push({ name, value });
+        } else {
+          // Boolean attribute
+          attributes.push({ name, value: '' });
+        }
+      }
+      
+      const newElement = {
+        type: 'element',
+        tagName,
+        attributes,
+        children: []
+      };
+      
+      // Add to current parent
+      if (currentParent === result) {
+        currentParent.body = currentParent.body || [];
+        currentParent.body.push(newElement);
+      } else {
+        currentParent.children = currentParent.children || [];
+        currentParent.children.push(newElement);
+      }
+      
+      if (!selfClosing && !['br', 'hr', 'img', 'input', 'link', 'meta'].includes(tagName)) {
+        stack.push(currentParent);
+        currentParent = newElement;
+      }
+      
+      currentPosition = endTag + 1;
+      continue;
+    }
+    
+    // It's text content
+    let endText = html.indexOf('<', currentPosition);
+    if (endText === -1) endText = html.length;
+    
+    const textContent = html.substring(currentPosition, endText);
+    if (textContent.trim()) {
+      if (currentParent === result) {
+        currentParent.body = currentParent.body || [];
+        currentParent.body.push({
+          type: 'text',
+          content: textContent
+        });
+      } else {
+        currentParent.children = currentParent.children || [];
+        currentParent.children.push({
+          type: 'text',
+          content: textContent
+        });
+      }
+    }
+    
+    currentPosition = endText;
+  }
+  
+  return result;
+}
+
+// Read from stdin
+let html = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', (chunk) => {
+  html += chunk;
+});
+process.stdin.on('end', () => {
+  // Convert HTML to Aberdeen code
+  const aberdeenCode = convertHTMLToAberdeen(html);
+  
+  // Output to stdout
+  process.stdout.write(aberdeenCode);
+});
+
+// Main conversion function
+function convertHTMLToAberdeen(html) {
+  // Parse HTML into a simple AST
+  const ast = parseHTML(html);
+  
+  // Generate the Aberdeen code
+  let aberdeenCode = ``;
+  
+  // Process the body's children
+  for (const node of ast.body) {
+    aberdeenCode += processNode(node);
+  }
+  
+  return aberdeenCode;
+}
+
+// Process a node and return Aberdeen code
+const CSS_PROPERTY_TO_SHORTCUT = {
+  'margin': 'm',
+  'margin-top': 'mt',
+  'margin-bottom': 'mb',
+  'margin-left': 'ml',
+  'margin-right': 'mr',
+  'padding': 'p',
+  'padding-top': 'pt',
+  'padding-bottom': 'pb',
+  'padding-left': 'pl',
+  'padding-right': 'pr',
+  'width': 'w',
+  'height': 'h',
+  'background': 'bg',
+  'color': 'fg',
+  'border-radius': 'r',
+};
+
+function kebabToCamel(str) {
+  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+}
+
+function convertStyleToAberdeen(styleString) {
+  const rules = styleString.split(';').map(s => s.trim()).filter(Boolean);
+  const resultParts = [];
+  
+  const props = {};
+  for (const rule of rules) {
+    const colonIndex = rule.indexOf(':');
+    if (colonIndex === -1) continue;
+    const key = rule.substring(0, colonIndex).trim();
+    const value = rule.substring(colonIndex + 1).trim();
+    props[key] = value;
+  }
+
+  const addPart = (key, value) => {
+    if (value.includes(' ')) {
+      resultParts.push(`${key}:"${value}"`);
+    } else {
+      resultParts.push(`${key}:${value}`);
+    }
+  };
+
+  const handleGroup = (prop1, prop2, shortcut) => {
+    if (props[prop1] && props[prop2] && props[prop1] === props[prop2]) {
+      addPart(shortcut, props[prop1]);
+      delete props[prop1];
+      delete props[prop2];
+    }
+  };
+
+  handleGroup('margin-top', 'margin-bottom', 'mv');
+  handleGroup('margin-left', 'margin-right', 'mh');
+  handleGroup('padding-top', 'padding-bottom', 'pv');
+  handleGroup('padding-left', 'padding-right', 'ph');
+
+  for (const [key, value] of Object.entries(props)) {
+    const shortcut = CSS_PROPERTY_TO_SHORTCUT[key] || kebabToCamel(key);
+    addPart(shortcut, value);
+  }
+
+  return resultParts.join(' ');
+}
+
+function processNode(node, indentLevel = 0) {
+  const indent = '    '.repeat(indentLevel);
+  
+  // Handle text nodes
+  if (node.type === 'text') {
+    const text = node.content.trim();
+    return text ? `${indent}$('#${escapeString(text)}');\n` : ``;
+  }
+  
+  // Handle comments
+  if (node.type === 'comment') {
+    return `${indent}// ${node.content.trim()}\n`;
+  }
+  
+  // Handle elements
+  if (node.type === 'element') {
+    return processElement(node, indentLevel);
+  }
+  
+  return '';
+}
+
+// Process an element node and build the chain of single children
+function processElement(node, indentLevel) {
+  const indent = '    '.repeat(indentLevel);
+  const chain = getSingleChildChain(node);
+  
+  // Build tag string for each element in the chain
+  let result = `${indent}$('`;
+  const allSeparateArgs = [];
+  
+  for (let i = 0; i < chain.length; i++) {
+    const element = chain[i];
+    
+    // Add space separator between chained elements
+    if (i > 0) result += ' ';
+    
+    // Build tag name with classes
+    const tagName = element.tagName.toLowerCase();
+    const classAttr = element.attributes.find(attr => attr.name === 'class');
+    const classes = classAttr 
+      ? classAttr.value.split(/\s+/).filter(Boolean).map(c => `.${c}`).join('')
+      : '';
+    
+    result += tagName + classes;
+    
+    // Add style shorthand
+    const styleAttr = element.attributes.find(attr => attr.name === 'style');
+    if (styleAttr) {
+      const styleShorthand = convertStyleToAberdeen(styleAttr.value);
+      if (styleShorthand) {
+        result += ' ' + styleShorthand;
+      }
+    }
+    
+    // Add attributes (excluding class and style)
+    const attributes = element.attributes.filter(attr => attr.name !== 'class' && attr.name !== 'style');
+    const { attrString, separateArgs } = buildAttributeString(attributes);
+    result += attrString;
+    
+    // Check if this element has only text content
+    const hasOnlyText = element.children.length === 1 
+      && element.children[0].type === 'text' 
+      && element.children[0].content.trim();
+    
+    if (hasOnlyText) {
+      const textContent = element.children[0].content.trim();
+      if (i === chain.length - 1) {
+        // If it's the last element in the chain and there are no other children,
+        // use the '#' syntax for text
+        result += '#' + escapeString(textContent);
+      } else {
+        // Treat text like any other attribute
+        const textAttr = { name: 'text', value: textContent };
+        const { attrString: textAttrString, separateArgs: textSeparateArgs } = buildAttributeString([textAttr]);
+        result += textAttrString;
+        separateArgs.push(...textSeparateArgs);
+      }
+    }
+    
+    allSeparateArgs.push(...separateArgs);
+  }
+  
+  result += `'`;
+  
+  // Add all separate arguments
+  for (const value of allSeparateArgs) {
+    result += `, '${escapeString(value)}'`;
+  }
+  
+  // Check if the last element in the chain has multiple children
+  const lastElement = chain[chain.length - 1];
+  const children = lastElement.children.filter(child => 
+    child.type === 'element' || (child.type === 'text' && child.content.trim())
+  );
+  
+  // Exclude the case where there's only text (already handled above)
+  const hasOnlyText = children.length === 1 && children[0].type === 'text';
+  
+  if (children.length > 0 && !hasOnlyText) {
+    // Add children as callback function
+    result += `, () => {\n`;
+    for (const child of children) {
+      result += processNode(child, indentLevel + 1);
+    }
+    result += `${indent}}`;
+  }
+  
+  result += `);\n`;
+  return result;
+}
+
+// Get a chain of nodes where each node has exactly one element child
+function getSingleChildChain(node) {
+  const chain = [node];
+  let current = node;
+  
+  while (true) {
+    const elementChildren = current.children.filter(child => child.type === 'element');
+    
+    if (elementChildren.length === 1) {
+      current = elementChildren[0];
+      chain.push(current);
+    } else {
+      break;
+    }
+  }
+  
+  return chain;
+}
+
+// Escape special characters for single-quoted strings
+function escapeString(str) {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
+}
+
+// Escape special characters for double-quoted strings within tag strings
+function escapeDoubleQuoted(str) {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
+}
+
+// Build attribute string and collect values that need separate arguments
+function buildAttributeString(attributes) {
+  let attrString = '';
+  const separateArgs = [];
+  
+  for (const attr of attributes) {
+    const value = attr.value;
+    
+    if (value === '') {
+      // Boolean attribute
+      attrString += ` ${attr.name}=""`;
+    } else if (value.includes('"')) {
+      // Contains double quotes - must use separate argument
+      attrString += ` ${attr.name}=`;
+      separateArgs.push(value);
+    } else if (value.includes(' ') || value.includes('\n') || value.includes('\r') || value.includes('\t')) {
+      // Contains spaces/whitespace - use double quotes with escaping
+      attrString += ` ${attr.name}="${escapeDoubleQuoted(value)}"`;
+    } else {
+      // Simple value - no quotes needed
+      attrString += ` ${attr.name}=${value}`;
+    }
+  }
+  
+  return { attrString, separateArgs };
+}

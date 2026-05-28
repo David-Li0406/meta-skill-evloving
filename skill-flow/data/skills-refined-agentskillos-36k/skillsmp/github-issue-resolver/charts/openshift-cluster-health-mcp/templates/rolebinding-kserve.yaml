@@ -1,0 +1,17 @@
+{{- if and .Values.rbac.create .Values.integrations.kserve.enabled -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "openshift-cluster-health-mcp.fullname" . }}-kserve
+  namespace: {{ .Values.integrations.kserve.namespace }}
+  labels:
+    {{- include "openshift-cluster-health-mcp.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "openshift-cluster-health-mcp.fullname" . }}-kserve
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "openshift-cluster-health-mcp.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

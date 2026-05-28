@@ -1,0 +1,591 @@
+# Wireframes and Mockups Examples
+
+Examples for creating low-fidelity wireframes, high-fidelity mockups, interactive prototypes, and responsive layouts using Gemini.
+
+---
+
+## Example 1: Low-Fidelity Wireframes
+
+Generate wireframe specifications for rapid prototyping.
+
+### Command
+
+```bash
+memex-cli run --backend gemini --stdin <<'EOF'
+---TASK---
+id: wireframe-specs
+backend: gemini
+workdir: /path/to/wireframes
+---CONTENT---
+为移动端外卖App创建关键页面的低保真线框图规格：
+
+页面：首页、商家详情、购物车、订单确认
+
+对每个页面，描述：
+1. 布局结构（header/content/footer分区）
+2. 关键组件位置和大小（使用百分比或pt）
+3. 内容优先级（P0/P1/P2标记）
+4. 交互元素（按钮、输入框、列表等）
+5. 状态说明（默认、加载、空状态）
+
+使用ASCII图或文字描述，便于开发理解。
+---END---
+EOF
+```
+
+### Expected Output
+
+````
+▶ wireframe-specs (gemini)
+
+# 外卖App线框图规格
+
+## 1. 首页 (Home Screen)
+
+### 布局结构
+
+```
+┌─────────────────────────────────────┐
+│ ┌─────────┐  [搜索框]       [🔔]   │ ← Header (64pt)
+│ │  Logo   │                         │
+│ └─────────┘                         │
+├─────────────────────────────────────┤
+│ 📍 当前位置: 北京市朝阳区            │ ← Location (40pt) [P0]
+├─────────────────────────────────────┤
+│ ┌────┐ ┌────┐ ┌────┐ ┌────┐        │
+│ │美食│ │快餐│ │火锅│ │甜品│ ...   │ ← Category Tabs (60pt) [P0]
+│ └────┘ └────┘ └────┘ └────┘        │
+├─────────────────────────────────────┤
+│ ╔═══════════════════════════════╗   │
+│ ║     [促销Banner - 轮播图]     ║   │ ← Banner (180pt) [P1]
+│ ╚═══════════════════════════════╝   │
+├─────────────────────────────────────┤
+│ 附近商家                             │ ← Section Header [P0]
+│ ┌─────────────────────────────────┐ │
+│ │ [商家Logo]  商家名称             │ │
+│ │             ⭐4.8  月售1200      │ │
+│ │             配送费¥5  30分钟     │ │ ← Merchant Card (100pt) [P0]
+│ └─────────────────────────────────┘ │
+│ ┌─────────────────────────────────┐ │
+│ │ [商家Logo]  商家名称             │ │
+│ │             ⭐4.5  月售800       │ │
+│ └─────────────────────────────────┘ │
+│           (可滚动列表)              │
+├─────────────────────────────────────┤
+│ [🏠]  [分类]  [订单]  [我的]       │ ← Bottom Nav (56pt) [P0]
+└─────────────────────────────────────┘
+```
+
+### 组件规格
+
+| 组件 | 尺寸 | 说明 |
+|------|------|------|
+| **Header** | 高64pt | Logo 40×40pt, 搜索框占70%宽度 |
+| **Location Bar** | 高40pt | 显示当前定位，点击可切换地址 |
+| **Category Tabs** | 高60pt | 每个tab宽80pt，横向滚动 |
+| **Banner** | 高180pt | 3-5张轮播图，自动播放3秒切换 |
+| **Merchant Card** | 高100pt | 左侧Logo 60×60pt，右侧信息2行 |
+| **Bottom Nav** | 高56pt | 4个Tab均分宽度，图标24×24pt |
+
+### 状态设计
+
+**默认状态:** 显示附近10家商家
+
+**加载状态:**
+- 商家卡片显示骨架屏（灰色占位块）
+- Banner显示加载动画
+
+**空状态:**
+- 无商家时显示："该地区暂无商家"
+- 提供按钮："切换其他地址"
+
+---
+
+## 2. 商家详情页 (Merchant Detail)
+
+### 布局结构
+
+```
+┌─────────────────────────────────────┐
+│ [←]  商家名称              [💚收藏]  │ ← Nav Bar (48pt)
+├─────────────────────────────────────┤
+│ ╔═══════════════════════════════╗   │
+│ ║    [商家封面图]                ║   │ ← Cover (200pt)
+│ ║    ⭐4.8  月售1200             ║   │
+│ ╚═══════════════════════════════╝   │
+├─────────────────────────────────────┤
+│ 配送信息                             │
+│ 起送¥20 | 配送¥5 | 预计30分钟       │ ← Delivery Info (60pt)
+├─────────────────────────────────────┤
+│ ┌─────┐ ┌─────┐ ┌─────┐             │
+│ │热销 │ │主食 │ │饮品 │ ...        │ ← Category Pills (40pt) [P0]
+│ └─────┘ └─────┘ └─────┘             │
+├─────────────────────────────────────┤
+│ 热销                                 │ ← Section
+│ ┌─────────────────────────────────┐ │
+│ │ [菜品图]  宫保鸡丁       ¥28     │ │
+│ │           销量500+               │ │
+│ │                    [-] 0 [+]     │ │ ← Item (80pt)
+│ └─────────────────────────────────┘ │
+│           (可滚动列表)              │
+├─────────────────────────────────────┤
+│ 已选2件 | 共¥56      [去结算]      │ ← Cart Bar (60pt) [P0]
+└─────────────────────────────────────┘
+```
+
+**交互说明:**
+- 点击菜品 → 弹窗显示详情（图片、描述、规格选择）
+- 点击[+][-] → 增减数量，动画反馈
+- 点击[去结算] → 跳转购物车页
+
+---
+
+## 3. 购物车 (Cart)
+
+### 布局结构
+
+```
+┌─────────────────────────────────────┐
+│ [←]  购物车                          │ ← Nav Bar (48pt)
+├─────────────────────────────────────┤
+│ 商家名称                             │
+│ ┌─────────────────────────────────┐ │
+│ │ [☑] 宫保鸡丁          ¥28       │ │
+│ │                   [-] 1 [+]     │ │
+│ │ [☑] 麻婆豆腐          ¥22       │ │
+│ │                   [-] 1 [+]     │ │ ← Items (80pt each)
+│ │ [☐] 米饭              ¥2        │ │
+│ │                   [-] 0 [+]     │ │
+│ └─────────────────────────────────┘ │
+├─────────────────────────────────────┤
+│ 配送方式                             │
+│ ● 外卖配送 (¥5, 预计30分钟)         │ ← Delivery Method (80pt)
+│ ○ 到店自取 (免配送费)                │
+├─────────────────────────────────────┤
+│ 优惠券  [选择优惠券 >]               │ ← Coupon (50pt)
+├─────────────────────────────────────┤
+│ 备注  [口味、餐具等要求]             │ ← Remarks (50pt)
+├─────────────────────────────────────┤
+│ 小计  ¥50                            │
+│ 配送费  ¥5                           │ ← Price Detail (100pt)
+│ 优惠  -¥5                            │
+│ ═══════════════════════════════     │
+│ 实付  ¥50                            │
+├─────────────────────────────────────┤
+│ [提交订单]                          │ ← Submit Button (56pt) [P0]
+└─────────────────────────────────────┘
+```
+
+---
+
+## 4. 订单确认 (Order Confirmation)
+
+### 布局结构
+
+```
+┌─────────────────────────────────────┐
+│              订单已提交              │ ← Title
+├─────────────────────────────────────┤
+│          ┌─────────┐                 │
+│          │   ✓     │                 │
+│          │  成功   │                 │ ← Success Icon (100pt)
+│          └─────────┘                 │
+├─────────────────────────────────────┤
+│ 预计30分钟送达                       │ ← Estimate (40pt)
+│ 配送员将尽快接单                     │
+├─────────────────────────────────────┤
+│ 订单编号: 202601101234567            │
+│ 下单时间: 2026-01-10 12:30          │ ← Order Info (80pt)
+│ 配送地址: 北京市朝阳区...            │
+├─────────────────────────────────────┤
+│ [查看订单详情]                      │ ← Action Button (48pt)
+│ [返回首页]                           │
+└─────────────────────────────────────┘
+```
+
+» 写入 wireframe-specs.md
+✓ wireframe-specs 15.2s
+````
+
+---
+
+## Example 2: High-Fidelity Mockup Specifications
+
+Create detailed visual specifications for developers.
+
+### Command
+
+```bash
+memex-cli run --backend gemini --stdin <<'EOF'
+---TASK---
+id: mockup-specs
+backend: gemini
+workdir: /path/to/mockups
+---CONTENT---
+为登录注册页面创建高保真视觉稿规格文档：
+
+要求：
+1. 颜色规范（主色、辅助色、文字颜色、背景色）
+2. 字体规范（字体族、大小、行高、字重）
+3. 间距规范（margin、padding，基于8px grid）
+4. 组件规格（按钮、输入框、链接的各状态）
+5. 响应式断点（移动端、平板、桌面）
+
+输出Markdown格式规格文档，方便开发者查阅。
+---END---
+EOF
+```
+
+### Expected Output
+
+```markdown
+# 登录注册页面视觉规格文档
+
+## 颜色规范 (Color Palette)
+
+### 主色 (Primary Colors)
+
+| 名称 | HEX | RGB | 用途 |
+|------|-----|-----|------|
+| **Brand Blue** | `#1E88E5` | rgb(30, 136, 229) | 主按钮、链接、选中状态 |
+| **Hover Blue** | `#1976D2` | rgb(25, 118, 210) | 按钮悬停 |
+| **Active Blue** | `#1565C0` | rgb(21, 101, 192) | 按钮按下 |
+
+### 辅助色 (Secondary Colors)
+
+| 名称 | HEX | RGB | 用途 |
+|------|-----|-----|------|
+| **Success Green** | `#4CAF50` | rgb(76, 175, 80) | 成功提示 |
+| **Error Red** | `#F44336` | rgb(244, 67, 54) | 错误提示、必填星号 |
+| **Warning Yellow** | `#FF9800` | rgb(255, 152, 0) | 警告提示 |
+
+### 中性色 (Neutral Colors)
+
+| 名称 | HEX | RGB | 用途 |
+|------|-----|-----|------|
+| **Text Primary** | `#212121` | rgb(33, 33, 33) | 标题、重要文本 |
+| **Text Secondary** | `#757575` | rgb(117, 117, 117) | 次要文本、提示 |
+| **Border** | `#E0E0E0` | rgb(224, 224, 224) | 输入框边框、分隔线 |
+| **Background** | `#FAFAFA` | rgb(250, 250, 250) | 页面背景 |
+| **Card White** | `#FFFFFF` | rgb(255, 255, 255) | 卡片、输入框背景 |
+
+---
+
+## 字体规范 (Typography)
+
+### 字体族 (Font Family)
+
+```css
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+```
+
+### 字体大小和行高 (Font Sizes & Line Heights)
+
+| 名称 | 大小 | 行高 | 字重 | 用途 |
+|------|------|------|------|------|
+| **H1** | 32px | 40px | 700 (Bold) | 页面标题"欢迎登录" |
+| **H2** | 24px | 32px | 600 (Semi-bold) | 区块标题 |
+| **Body** | 16px | 24px | 400 (Regular) | 正文、输入框文字 |
+| **Caption** | 14px | 20px | 400 (Regular) | 提示文字、链接 |
+| **Small** | 12px | 16px | 400 (Regular) | 辅助说明 |
+
+---
+
+## 间距规范 (Spacing)
+
+### 8px Grid System
+
+所有间距必须是8的倍数：8px, 16px, 24px, 32px, 40px...
+
+### 组件间距 (Component Spacing)
+
+| 元素 | Margin/Padding | 值 |
+|------|---------------|-----|
+| **页面边距** | Padding | 24px (移动端), 40px (桌面端) |
+| **标题到表单** | Margin-bottom | 32px |
+| **输入框间距** | Margin-bottom | 16px |
+| **按钮到链接** | Margin-top | 24px |
+| **表单到分隔线** | Margin-top/bottom | 24px |
+
+---
+
+## 组件规格 (Component Specifications)
+
+### 1. 输入框 (Text Input)
+
+**默认状态:**
+```css
+width: 100%;
+height: 48px;
+padding: 12px 16px;
+border: 1px solid #E0E0E0;
+border-radius: 8px;
+background: #FFFFFF;
+font-size: 16px;
+color: #212121;
+```
+
+**聚焦状态 (Focus):**
+```css
+border-color: #1E88E5;
+box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+```
+
+**错误状态 (Error):**
+```css
+border-color: #F44336;
+background: #FFEBEE; /* Light red tint */
+```
+
+**禁用状态 (Disabled):**
+```css
+background: #F5F5F5;
+color: #BDBDBD;
+cursor: not-allowed;
+```
+
+### 2. 主按钮 (Primary Button)
+
+**默认状态:**
+```css
+width: 100%;
+height: 48px;
+padding: 12px 24px;
+border: none;
+border-radius: 8px;
+background: #1E88E5;
+color: #FFFFFF;
+font-size: 16px;
+font-weight: 600;
+cursor: pointer;
+```
+
+**悬停状态 (Hover):**
+```css
+background: #1976D2;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+```
+
+**按下状态 (Active):**
+```css
+background: #1565C0;
+transform: translateY(1px);
+```
+
+**禁用状态 (Disabled):**
+```css
+background: #E0E0E0;
+color: #9E9E9E;
+cursor: not-allowed;
+```
+
+### 3. 次要按钮 (Secondary Button)
+
+```css
+background: transparent;
+border: 1px solid #1E88E5;
+color: #1E88E5;
+```
+
+### 4. 链接 (Link)
+
+**默认状态:**
+```css
+color: #1E88E5;
+text-decoration: none;
+font-size: 14px;
+```
+
+**悬停状态 (Hover):**
+```css
+text-decoration: underline;
+```
+
+### 5. 错误提示 (Error Message)
+
+```css
+color: #F44336;
+font-size: 14px;
+margin-top: 4px;
+display: flex;
+align-items: center;
+```
+
+图标：⚠️ 或 ❌ (16px)
+
+---
+
+## 布局规范 (Layout)
+
+### 登录卡片 (Login Card)
+
+**尺寸:**
+- 移动端：100% 宽度, 无阴影
+- 桌面端：最大宽度 400px, 居中显示
+
+**样式:**
+```css
+background: #FFFFFF;
+border-radius: 16px;
+padding: 40px;
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+```
+
+---
+
+## 响应式断点 (Breakpoints)
+
+| 设备 | 宽度 | 布局调整 |
+|------|------|---------|
+| **Mobile** | 0-767px | 卡片全宽，padding 24px |
+| **Tablet** | 768-1023px | 卡片最大600px |
+| **Desktop** | 1024px+ | 卡片最大400px，居中 |
+
+---
+
+## 页面结构示例
+
+### 登录页
+
+```html
+<div class="login-container">
+  <div class="login-card">
+    <h1>欢迎登录</h1>
+
+    <form>
+      <div class="form-group">
+        <label>邮箱</label>
+        <input type="email" placeholder="请输入邮箱" />
+        <span class="error-message">⚠️ 邮箱格式不正确</span>
+      </div>
+
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" placeholder="请输入密码" />
+      </div>
+
+      <button class="btn-primary">登录</button>
+
+      <div class="links">
+        <a href="/forgot-password">忘记密码？</a>
+        <a href="/register">注册账号</a>
+      </div>
+    </form>
+
+    <div class="divider">或</div>
+
+    <button class="btn-secondary">使用Google登录</button>
+  </div>
+</div>
+```
+
+» 写入 mockup-specs.md
+✓ mockup-specs 12.7s
+```
+
+---
+
+## Example 3: Interactive Prototype Specifications
+
+Define interactions and transitions for prototypes.
+
+### Command
+
+```bash
+memex-cli run --backend gemini --stdin <<'EOF'
+---TASK---
+id: prototype-interactions
+backend: gemini
+workdir: /path/to/prototypes
+---CONTENT---
+为电商App购买流程定义交互原型规格：
+
+流程：商品详情 → 加入购物车 → 结算 → 支付 → 完成
+
+要求：
+1. 页面间跳转逻辑
+2. 动画效果（进入/退出、加载、成功反馈）
+3. 手势交互（滑动、长按、拖拽）
+4. 错误处理和边界情况
+5. 使用Figma/Adobe XD术语描述
+
+输出交互规格文档，方便制作原型。
+---END---
+EOF
+```
+
+---
+
+## Example 4: Responsive Layout Guide
+
+Design adaptive layouts for multiple screen sizes.
+
+### Command
+
+```bash
+memex-cli run --backend gemini --stdin <<'EOF'
+---TASK---
+id: responsive-layout
+backend: gemini
+workdir: /path/to/layouts
+---CONTENT---
+为博客文章详情页设计响应式布局方案：
+
+设备：
+- 移动端 (320-767px)
+- 平板 (768-1023px)
+- 桌面 (1024px+)
+
+内容组件：
+- Header (Logo + 导航)
+- 文章标题和元信息
+- 正文内容
+- 侧边栏 (作者信息、相关文章)
+- 评论区
+- Footer
+
+要求：
+1. 每个断点的布局调整
+2. 组件重排序优先级
+3. 图片/视频适配方案
+4. 字体大小调整
+---END---
+EOF
+```
+
+---
+
+## Tips for Wireframes & Mockups
+
+1. **Low-Fi Wireframes**
+   - Use ASCII art or simple boxes for speed
+   - Focus on layout and hierarchy, not visuals
+   - Annotate interaction states
+   - Iterate quickly based on feedback
+
+2. **High-Fi Mockups**
+   - Follow 8px grid system consistently
+   - Document all states (default, hover, active, disabled, error)
+   - Provide exact HEX colors and font specs
+   - Include responsive breakpoints
+
+3. **Interactive Prototypes**
+   - Define transitions (duration, easing)
+   - Document gesture interactions
+   - Test on actual devices
+   - Include loading and error states
+
+4. **Responsive Design**
+   - Mobile-first approach
+   - Use fluid grids (%, fr units)
+   - Test on real devices, not just emulators
+   - Consider touch targets (min 44×44pt)
+
+---
+
+## Related Resources
+
+- [references/design-principles.md](../references/design-principles.md) - Visual hierarchy principles
+- [references/design-workflow.md](../references/design-workflow.md) - Prototype stage details
+- [examples/component-systems.md](./component-systems.md) - Design system components
+- [SKILL.md](../SKILL.md) - Gemini basic usage

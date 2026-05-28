@@ -1,0 +1,46 @@
+{
+  "name": "string-split",
+  "description": "Split a string at a specified path by a delimiter into an array of parts",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'data.message')"
+    },
+    "delimiter": {
+      "type": "string",
+      "required": true,
+      "description": "The delimiter string to split on (e.g., ',', '.', '|')"
+    }
+  },
+  "output": {
+    "type": ["array", "null"],
+    "description": "Array of string parts split by delimiter, or null if path doesn't exist or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Split comma-separated values",
+      "input": {"data": "a,b,c"},
+      "args": {"path": "data", "delimiter": ","},
+      "output": ["a", "b", "c"]
+    },
+    {
+      "description": "Split nested string by dot",
+      "input": {"config": {"items": "x.y.z"}},
+      "args": {"path": "config.items", "delimiter": "."},
+      "output": ["x", "y", "z"]
+    },
+    {
+      "description": "Split by space in deeply nested string",
+      "input": {"user": {"profile": {"tags": "hello world test"}}},
+      "args": {"path": "user.profile.tags", "delimiter": " "},
+      "output": ["hello", "world", "test"]
+    }
+  ],
+  "tags": ["string", "split", "array", "delimiter"]
+}

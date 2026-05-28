@@ -1,0 +1,237 @@
+{
+  "version": "1.4.0",
+  "lastUpdated": "2026-01-09",
+  "docsPath": "content/docs/protocol/v2/transactions",
+  "summary": {
+    "documented": 13,
+    "missing": 3,
+    "path-mismatch": 0,
+    "needs-review": 13,
+    "reviewed": 0,
+    "verified": 0
+  },
+  "notes": [
+    "2026-01-09: Removed deprecated /enroll endpoints (course and project). Enrollment now via /assignment/commit and /task/commit.",
+    "2026-01-09: Migrated all non-project MDX files to correct paths matching API URL structure.",
+    "2026-01-09: Created missing MDX: assignment/commit.mdx, instance/owner/project/create.mdx",
+    "2026-01-09: Created 4 project MDX files: manager/tasks/manage, manager/tasks/assess, contributor/task/commit, contributor/credential/claim",
+    "Remaining missing: project.owner.managers.manage, project.owner.contributor-blacklist.manage, project.contributor.task.action"
+  ],
+  "transactions": [
+    {
+      "id": "global.general.access-token.mint",
+      "endpoint": "/v2/tx/global/general/access-token/mint",
+      "system": "global",
+      "role": "general",
+      "expectedPath": "global/general/access-token/mint.mdx",
+      "currentPath": "global/general/access-token/mint.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/global/general/access-token/mint.yaml",
+      "issues": [],
+      "notes": "Entry point transaction. 5 ADA protocol fee. Path migrated 2026-01-09."
+    },
+    {
+      "id": "instance.owner.course.create",
+      "endpoint": "/v2/tx/instance/owner/course/create",
+      "system": "instance",
+      "role": "owner",
+      "expectedPath": "instance/owner/course/create.mdx",
+      "currentPath": "instance/owner/course/create.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/instance/owner/course/create.yaml",
+      "issues": [],
+      "notes": "Creates LocalStateNFT, LocalStateToken, governance. 100+10×N ADA fee. Path migrated 2026-01-09."
+    },
+    {
+      "id": "instance.owner.project.create",
+      "endpoint": "/v2/tx/instance/owner/project/create",
+      "system": "instance",
+      "role": "owner",
+      "expectedPath": "instance/owner/project/create.mdx",
+      "currentPath": "instance/owner/project/create.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/instance/owner/project/create.yaml",
+      "issues": [],
+      "notes": "Complex: 6 mints, 2 observers, stake registration. 100+10×N ADA fee. MDX created 2026-01-09."
+    },
+    {
+      "id": "course.owner.teachers.manage",
+      "endpoint": "/v2/tx/course/owner/teachers/manage",
+      "system": "course",
+      "role": "owner",
+      "expectedPath": "course/owner/teachers/manage.mdx",
+      "currentPath": "course/owner/teachers/manage.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/course/owner/teachers/manage.yaml",
+      "issues": [],
+      "notes": "Spend and recreate pattern. 10 ADA fee. Path migrated 2026-01-09."
+    },
+    {
+      "id": "course.teacher.modules.manage",
+      "endpoint": "/v2/tx/course/teacher/modules/manage",
+      "system": "course",
+      "role": "teacher",
+      "expectedPath": "course/teacher/modules/manage.mdx",
+      "currentPath": "course/teacher/modules/manage.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/course/teacher/modules/manage.yaml",
+      "issues": [],
+      "notes": "Mint/update/burn modules. No protocol fee. Path migrated 2026-01-09."
+    },
+    {
+      "id": "course.teacher.assignments.assess",
+      "endpoint": "/v2/tx/course/teacher/assignments/assess",
+      "system": "course",
+      "role": "teacher",
+      "expectedPath": "course/teacher/assignments/assess.mdx",
+      "currentPath": "course/teacher/assignments/assess.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/course/teacher/assignments/assess.yaml",
+      "issues": [],
+      "notes": "Accept or refuse submissions. Batching supported. Path migrated 2026-01-09."
+    },
+    {
+      "id": "course.student.assignment.commit",
+      "endpoint": "/v2/tx/course/student/assignment/commit",
+      "system": "course",
+      "role": "student",
+      "expectedPath": "course/student/assignment/commit.mdx",
+      "currentPath": "course/student/assignment/commit.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/course/student/assignment/commit.yaml",
+      "issues": [],
+      "notes": "Replaces enroll endpoint. Commitment is required. MDX created 2026-01-09."
+    },
+    {
+      "id": "course.student.assignment.update",
+      "endpoint": "/v2/tx/course/student/assignment/update",
+      "system": "course",
+      "role": "student",
+      "expectedPath": "course/student/assignment/update.mdx",
+      "currentPath": "course/student/assignment/update.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/course/student/assignment/update.yaml",
+      "issues": [],
+      "notes": "For updating assignment_info on existing commitment. Path migrated 2026-01-09."
+    },
+    {
+      "id": "course.student.credential.claim",
+      "endpoint": "/v2/tx/course/student/credential/claim",
+      "system": "course",
+      "role": "student",
+      "expectedPath": "course/student/credential/claim.mdx",
+      "currentPath": "course/student/credential/claim.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/course/student/credential/claim.yaml",
+      "issues": [],
+      "notes": "Burns course-state token, stores credential hash. Student gains ~1.03 ADA. Path migrated 2026-01-09."
+    },
+    {
+      "id": "project.owner.managers.manage",
+      "endpoint": "/v2/tx/project/owner/managers/manage",
+      "system": "project",
+      "role": "owner",
+      "expectedPath": "project/owner/managers/manage.mdx",
+      "currentPath": null,
+      "status": "missing",
+      "lastReviewed": null,
+      "yamlSource": "public/yaml/transactions/v2/project/owner/managers/manage.yaml",
+      "issues": [
+        "No documentation exists - YAML available"
+      ],
+      "notes": "Similar to course teachers management. YAML created 2026-01-09."
+    },
+    {
+      "id": "project.owner.contributor-blacklist.manage",
+      "endpoint": "/v2/tx/project/owner/contributor-blacklist/manage",
+      "system": "project",
+      "role": "owner",
+      "expectedPath": "project/owner/contributor-blacklist/manage.mdx",
+      "currentPath": null,
+      "status": "missing",
+      "lastReviewed": null,
+      "yamlSource": "public/yaml/transactions/v2/project/owner/contributor-blacklist/manage.yaml",
+      "issues": [
+        "No documentation exists - YAML available"
+      ],
+      "notes": "Blacklist management. YAML created 2026-01-09."
+    },
+    {
+      "id": "project.manager.tasks.manage",
+      "endpoint": "/v2/tx/project/manager/tasks/manage",
+      "system": "project",
+      "role": "manager",
+      "expectedPath": "project/manager/tasks/manage.mdx",
+      "currentPath": "project/manager/tasks/manage.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/project/manager/tasks/manage.yaml",
+      "issues": [],
+      "notes": "Batch task management. Mints task-escrow tokens. No protocol fee. MDX created 2026-01-09."
+    },
+    {
+      "id": "project.manager.tasks.assess",
+      "endpoint": "/v2/tx/project/manager/tasks/assess",
+      "system": "project",
+      "role": "manager",
+      "expectedPath": "project/manager/tasks/assess.mdx",
+      "currentPath": "project/manager/tasks/assess.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/project/manager/tasks/assess.yaml",
+      "issues": [],
+      "notes": "Spend-and-recreate pattern. Uses task-assess-observer. No protocol fee. MDX created 2026-01-09."
+    },
+    {
+      "id": "project.contributor.task.commit",
+      "endpoint": "/v2/tx/project/contributor/task/commit",
+      "system": "project",
+      "role": "contributor",
+      "expectedPath": "project/contributor/task/commit.mdx",
+      "currentPath": "project/contributor/task/commit.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/project/contributor/task/commit.yaml",
+      "issues": [],
+      "notes": "MINTS contributor-state token. Prerequisite check via contributor_state_id. ~14.5 ADA deposit. MDX created 2026-01-09."
+    },
+    {
+      "id": "project.contributor.task.action",
+      "endpoint": "/v2/tx/project/contributor/task/action",
+      "system": "project",
+      "role": "contributor",
+      "expectedPath": "project/contributor/task/action.mdx",
+      "currentPath": null,
+      "status": "missing",
+      "lastReviewed": null,
+      "yamlSource": null,
+      "issues": [
+        "No documentation exists",
+        "No YAML source yet - awaiting CBOR analysis"
+      ],
+      "notes": "Task update or withdrawal. Only remaining unanalyzed transaction."
+    },
+    {
+      "id": "project.contributor.credential.claim",
+      "endpoint": "/v2/tx/project/contributor/credential/claim",
+      "system": "project",
+      "role": "contributor",
+      "expectedPath": "project/contributor/credential/claim.mdx",
+      "currentPath": "project/contributor/credential/claim.mdx",
+      "status": "needs-review",
+      "lastReviewed": "2026-01-09",
+      "yamlSource": "public/yaml/transactions/v2/project/contributor/credential/claim.yaml",
+      "issues": [],
+      "notes": "BURNS contributor-state token. 1 ADA protocol fee. NET GAIN ~13 ADA. MDX created 2026-01-09."
+    }
+  ]
+}

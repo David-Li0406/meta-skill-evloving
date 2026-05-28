@@ -1,0 +1,53 @@
+# Example: Dynamic Branch Size Limit
+#
+# Configuration for automatically blocking when branch changes exceed threshold.
+# Uses the dynamic requirement type with branch_size_calculator.
+
+version: "1.0"
+enabled: true
+inherit: true
+
+requirements:
+  branch_size_limit:
+    enabled: true
+    type: dynamic              # Auto-calculated at runtime
+    scope: session
+    threshold: 400             # Max lines changed before warning
+    calculation_cache_ttl: 30  # Cache result for 30 seconds
+    trigger_tools:
+      - Edit
+      - Write
+      - MultiEdit
+    message: |
+      📊 **Branch Size Limit Exceeded**
+
+      This branch has **{size}** lines changed (threshold: **{threshold}**).
+
+      Large branches are harder to review and more likely to have issues.
+
+      **Recommended Actions**:
+      1. Split work into smaller, focused PRs
+      2. Create a new branch for remaining changes
+      3. Or temporarily increase threshold:
+         ```bash
+         req config branch_size_limit --set threshold=600 --local
+         ```
+
+      **Current branch stats**:
+      - Total changes: {size} lines
+      - Threshold: {threshold} lines
+      - Over by: {size - threshold} lines
+
+# Notes:
+#
+# How it works:
+# 1. On Edit/Write, the dynamic calculator runs
+# 2. Calculates: git diff main...HEAD --numstat | sum lines
+# 3. If > threshold, blocks with message
+# 4. Result cached for calculation_cache_ttl seconds
+#
+# Calculation is only run when:
+# - Cache is expired (30 seconds by default)
+# - A new Edit/Write tool is used
+#
+# This prevents performance impact while keeping checks current.

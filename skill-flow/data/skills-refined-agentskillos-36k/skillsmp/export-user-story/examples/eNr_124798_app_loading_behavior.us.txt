@@ -1,0 +1,26 @@
+User Story ID: 124798
+Title: CS and eNcounter Refresh: App Loading Behavior
+Type: User Story
+==================================================
+
+ACCEPTANCE CRITERIA:
+
+Scenario 1: System attempts to connect at Launch
+Given the encounter/clerasteth user has selected the desktop icon
+When the system is loading
+And the initial connection attempt does not connect
+Then the system will display the spinner while the system is attempting to connect again
+
+Scenario 2: Check connection - every 1 sec
+Given the eNcounter/clearsteth user has selected the desktop icon
+and the system is loading
+When the initial connection attempt does not connect
+Then the system will attempt to connect every 1 seconds
+And the system will do so for 20 seconds
+
+Scenario 3: System fails to connect after 20 seconds
+Given the eNcounter/Clearsteth user has selected the desktop icon
+And the system is loading
+And the system is attempting to connect every 1 seconds
+When the system gets to 20 seconds and there is NO successful connection
+Then the system will display error message - Connection Failed, please contact your system administrator

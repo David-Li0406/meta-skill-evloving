@@ -1,0 +1,197 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quick-test:
+    name: Quick Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run quick tests
+        run: |
+          chmod +x tests/run_tests.sh
+          ./tests/run_tests.sh --quick
+
+  validate:
+    name: Validate Skill
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          echo "Checking required files..."
+
+          # Required files
+          files=(
+            "skills/SKILL.md"
+            "README.md"
+            "LICENSE"
+            "install.sh"
+            "CLAUDE.md"
+          )
+
+          missing=()
+          for file in "${files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              missing+=("$file")
+            fi
+          done
+
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            echo "Missing required files:"
+            printf '  - %s\n' "${missing[@]}"
+            exit 1
+          fi
+
+          echo "All required files present"
+
+      - name: Validate skill structure
+        run: |
+          echo "Validating skill module structure..."
+
+          # Required modules
+          modules=(
+            "skills/00-getting-started"
+            "skills/01-core"
+            "skills/02-checkpoints"
+            "skills/03-memory"
+            "skills/04-emergence"
+            "skills/05-integration"
+            "skills/99-evolution"
+          )
+
+          for module in "${modules[@]}"; do
+            if [[ ! -d "$module" ]]; then
+              echo "Missing module: $module"
+              exit 1
+            fi
+
+            if [[ ! -d "$module/_base" ]]; then
+              echo "Missing _base directory in: $module"
+              exit 1
+            fi
+
+            if [[ ! -f "$module/README.md" ]]; then
+              echo "Missing README.md in: $module"
+              exit 1
+            fi
+          done
+
+          echo "All modules valid"
+
+      - name: Check markdown links
+        run: |
+          echo "Checking for broken internal links..."
+
+          # Find all markdown files and check internal links
+          broken=0
+          while IFS= read -r file; do
+            # Extract markdown links [text](path)
+            grep -oE '\[.*\]\([^)]+\)' "$file" 2>/dev/null | \
+            grep -oE '\([^)]+\)' | tr -d '()' | \
+            grep -v '^http' | grep -v '^#' | \
+            while read -r link; do
+              # Get directory of current file
+              dir=$(dirname "$file")
+              # Resolve relative path
+              target="$dir/$link"
+              if [[ ! -e "$target" && ! -e "$link" ]]; then
+                echo "Broken link in $file: $link"
+                broken=1
+              fi
+            done
+          done < <(find . -name "*.md" -type f -not -path "./.git/*")
+
+          if [[ $broken -eq 1 ]]; then
+            echo "Found broken links"
+            # Don't fail for now, just warn
+          fi
+
+          echo "Link check complete"
+
+      - name: Validate scripts are executable
+        run: |
+          echo "Checking script permissions..."
+
+          scripts=(
+            "install.sh"
+            "scripts/check-env.sh"
+            "scripts/validate-memory.sh"
+            "scripts/sync-global.sh"
+          )
+
+          for script in "${scripts[@]}"; do
+            if [[ -f "$script" && ! -x "$script" ]]; then
+              echo "Warning: $script is not executable"
+            fi
+          done
+
+          echo "Script check complete"
+
+      - name: Count skill content
+        run: |
+          echo "Skill Statistics:"
+          echo "================="
+
+          # Count markdown files
+          md_count=$(find skills -name "*.md" -type f | wc -l | tr -d ' ')
+          echo "Markdown files: $md_count"
+
+          # Count total lines
+          total_lines=$(find skills -name "*.md" -type f -exec cat {} \; | wc -l | tr -d ' ')
+          echo "Total lines: $total_lines"
+
+          # Count modules
+          module_count=$(ls -d skills/*/ 2>/dev/null | wc -l | tr -d ' ')
+          echo "Modules: $module_count"
+
+          # List module sizes
+          echo ""
+          echo "Module sizes (lines):"
+          for dir in skills/*/; do
+            if [[ -d "$dir" ]]; then
+              lines=$(find "$dir" -name "*.md" -type f -exec cat {} \; | wc -l | tr -d ' ')
+              echo "  $(basename "$dir"): $lines"
+            fi
+          done
+
+  install-test:
+    name: Test Installation
+    runs-on: ubuntu-latest
+    needs: [quick-test, validate]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test install script syntax
+        run: |
+          bash -n install.sh
+          echo "Install script syntax OK"
+
+      - name: Test install script help
+        run: |
+          ./install.sh --help
+          echo "Install script help OK"
+
+      - name: Test environment check script
+        run: |
+          # Initialize git for the test
+          git init test-project
+          cd test-project
+
+          # Run check-env (should work but with warnings)
+          ../scripts/check-env.sh || true
+
+          echo "Environment check script OK"

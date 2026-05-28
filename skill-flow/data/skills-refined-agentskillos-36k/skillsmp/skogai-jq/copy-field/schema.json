@@ -1,0 +1,52 @@
+{
+  "name": "copy-field",
+  "description": "Copy a field's value from one path to another path in a JSON object",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "source_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to source value (e.g., 'user.name')"
+    },
+    "dest_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path where to copy the value (e.g., 'profile.username')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with value copied from source to destination path"
+  },
+  "examples": [
+    {
+      "description": "Copy existing field to new path",
+      "input": {"user": {"name": "skogix"}},
+      "args": {"source_path": "user.name", "dest_path": "profile.username"},
+      "output": {"user": {"name": "skogix"}, "profile": {"username": "skogix"}}
+    },
+    {
+      "description": "Copy nested field to root",
+      "input": {"user": {"profile": {"age": 30}}},
+      "args": {"source_path": "user.profile.age", "dest_path": "age"},
+      "output": {"user": {"profile": {"age": 30}}, "age": 30}
+    },
+    {
+      "description": "Copy to nested path creating intermediate objects",
+      "input": {"name": "test"},
+      "args": {"source_path": "name", "dest_path": "data.user.name"},
+      "output": {"name": "test", "data": {"user": {"name": "test"}}}
+    },
+    {
+      "description": "Copy array value",
+      "input": {"items": [1, 2, 3]},
+      "args": {"source_path": "items", "dest_path": "backup.items"},
+      "output": {"items": [1, 2, 3], "backup": {"items": [1, 2, 3]}}
+    }
+  ],
+  "tags": ["crud", "copy", "field", "object", "mutation"]
+}

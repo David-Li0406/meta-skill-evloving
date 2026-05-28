@@ -1,0 +1,77 @@
+{
+  "name": "filter-by-role",
+  "description": "Filter messages array by role field (user/assistant/system)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing a messages array with role field"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the field containing the messages array (e.g., 'messages')"
+    },
+    "role": {
+      "type": "string",
+      "required": true,
+      "description": "Role to filter by (e.g., 'user', 'assistant', 'system')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with the same structure, but with filtered messages array"
+  },
+  "examples": [
+    {
+      "description": "Filter user messages",
+      "input": {
+        "messages": [
+          {"role": "user", "content": "Hello"},
+          {"role": "assistant", "content": "Hi there"},
+          {"role": "user", "content": "How are you?"}
+        ]
+      },
+      "args": {"array_path": "messages", "role": "user"},
+      "output": {
+        "messages": [
+          {"role": "user", "content": "Hello"},
+          {"role": "user", "content": "How are you?"}
+        ]
+      }
+    },
+    {
+      "description": "Filter assistant messages",
+      "input": {
+        "messages": [
+          {"role": "user", "content": "Hello"},
+          {"role": "assistant", "content": "Hi there"},
+          {"role": "assistant", "content": "I'm doing well"}
+        ]
+      },
+      "args": {"array_path": "messages", "role": "assistant"},
+      "output": {
+        "messages": [
+          {"role": "assistant", "content": "Hi there"},
+          {"role": "assistant", "content": "I'm doing well"}
+        ]
+      }
+    },
+    {
+      "description": "Filter system messages",
+      "input": {
+        "messages": [
+          {"role": "system", "content": "You are a helpful assistant"},
+          {"role": "user", "content": "Hello"}
+        ]
+      },
+      "args": {"array_path": "messages", "role": "system"},
+      "output": {
+        "messages": [
+          {"role": "system", "content": "You are a helpful assistant"}
+        ]
+      }
+    }
+  ],
+  "tags": ["array", "filter", "messages", "role", "chat"]
+}

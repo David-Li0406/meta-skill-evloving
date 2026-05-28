@@ -1,0 +1,118 @@
+# Example DAPR Configuration for a Microservice Application
+
+# Deployment with DAPR sidecar
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-microservice
+  labels:
+    app: my-microservice
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-microservice
+  template:
+    metadata:
+      labels:
+        app: my-microservice
+      annotations:
+        # Enable DAPR sidecar injection
+        dapr.io/enabled: "true"
+        # Unique identifier for the application
+        dapr.io/app-id: "my-microservice"
+        # Port the application is listening on
+        dapr.io/app-port: "8080"
+        # DAPR configuration name
+        dapr.io/config: "app-config"
+        # Log level for the DAPR sidecar
+        dapr.io/log-level: "info"
+    spec:
+      containers:
+      - name: my-microservice
+        image: my-microservice:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DAPR_HTTP_ENDPOINT
+          value: "http://127.0.0.1:3500"
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+
+---
+# Service for the application
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-microservice
+  labels:
+    app: my-microservice
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: my-microservice
+  type: ClusterIP
+
+---
+# DAPR Component for State Management (Redis)
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+spec:
+  type: state.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""
+  - name: actorStateStore
+    value: "true"
+
+---
+# DAPR Component for Pub/Sub (Redis)
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+spec:
+  type: pubsub.redis
+  version: v1
+  metadata:
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""
+
+---
+# DAPR Configuration
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: app-config
+spec:
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: "http://zipkin.default.svc.cluster.local:9411/api/v2/spans"
+  metric:
+    enabled: true
+  httpPipeline:
+    handlers: []
+  accessControl:
+    defaultAction: allow
+    trustDomain: "public"
+    policies:
+    - appId: "my-microservice"
+      defaultAction: allow
+      namespace: "default"

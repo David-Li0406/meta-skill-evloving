@@ -1,0 +1,42 @@
+🚨 DO NOT CREATE NEW SCRIPTS - USE EXISTING ONES! 🚨
+=======================================================
+
+This skill has ready-to-use scripts. You should ALWAYS use them instead of creating new ones.
+
+EXISTING SCRIPTS:
+-----------------
+1. Wrapper script (RECOMMENDED):
+   .opencode/skills/spss-file-metadata/run.sh
+
+2. Python script with venv:
+   .opencode/skills/spss-file-metadata/venv/bin/python .opencode/skills/spss-file-metadata/extract_sav_metadata.py
+
+USAGE EXAMPLES:
+---------------
+# Basic usage (output to stdout):
+.opencode/skills/spss-file-metadata/run.sh blueprint.sav
+
+# Save to file:
+.opencode/skills/spss-file-metadata/run.sh blueprint.sav output.json
+
+# With full paths:
+.opencode/skills/spss-file-metadata/run.sh /path/to/file.sav /path/to/output.json
+
+WHAT THE SCRIPT DOES:
+---------------------
+- Reads SPSS .sav files using pyreadstat with metadataonly=True
+- Extracts comprehensive metadata (no data rows loaded)
+- Outputs JSON to stdout or saves to file
+- Already configured and tested!
+
+DO NOT:
+-------
+❌ Create a new Python script
+❌ Install pyreadstat again (already installed in venv)
+❌ Write inline Python code to read the .sav file
+
+DO:
+---
+✅ Use the existing run.sh wrapper script
+✅ Pass the .sav file path as argument
+✅ Optionally specify output file path as second argument

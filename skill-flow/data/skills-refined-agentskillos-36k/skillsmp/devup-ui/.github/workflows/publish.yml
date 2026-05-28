@@ -1,0 +1,111 @@
+name: Publish Package to npm
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+permissions: write-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Cargo tarpaulin and fmt
+        run: |
+          cargo install cargo-tarpaulin
+          rustup component add rustfmt clippy
+      - uses: oven-sh/setup-bun@v2
+        name: Install bun
+
+      - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: 'latest'
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          registry-url: "https://registry.npmjs.org"
+          node-version: 22
+      - run: bun install
+      - run: bun run build
+      - name: Benchmark
+        run: bun run benchmark
+
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Cargo tarpaulin and fmt
+        run: |
+          cargo install cargo-tarpaulin
+          rustup component add rustfmt clippy
+      - uses: oven-sh/setup-bun@v2
+        name: Install bun
+
+      - uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: 'latest'
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          registry-url: "https://registry.npmjs.org"
+          node-version: 22
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: bun install
+      - run: bun run build
+      - run: |
+          bun run lint
+          # rust coverage issue
+          echo 'max_width = 100000' > .rustfmt.toml
+          echo 'tab_spaces = 4' >> .rustfmt.toml
+          echo 'newline_style = "Unix"' >> .rustfmt.toml
+          echo 'fn_call_width = 100000' >> .rustfmt.toml
+          echo 'fn_params_layout = "Compressed"' >> .rustfmt.toml
+          echo 'chain_width = 100000' >> .rustfmt.toml
+          echo 'merge_derives = true' >> .rustfmt.toml
+          echo 'use_small_heuristics = "Default"' >> .rustfmt.toml
+          cargo fmt
+      - run: bun run test
+      - name: Format Rollback
+        run: |
+          rm -rf .rustfmt.toml
+          cargo fmt
+      - name: Build Landing
+        run: |
+          bun run --filter @devup-ui/components build-storybook
+          mv ./packages/components/storybook-static ./apps/landing/public/storybook
+          bun run --filter landing build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./apps/landing/out
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - uses: actions/deploy-pages@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          files: ./coverage/lcov.info
+
+      - uses: changepacks/action@main
+        id: changepacks
+        with:
+          publish: true
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}

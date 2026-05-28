@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+# Pre-commit hook: Basic security checks
+#
+# Installation:
+#   cp pre-commit.template .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+set -e
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+echo "Pre-commit: Checking for secrets..."
+
+# Check for common secret patterns
+FOUND=0
+for file in $STAGED; do
+  if [ -f "$file" ]; then
+    # AWS keys
+    if grep -qE "AKIA[0-9A-Z]{16}" "$file" 2>/dev/null; then
+      echo "  ⚠ Possible AWS key in $file"
+      FOUND=1
+    fi
+    # GitHub tokens
+    if grep -qE "ghp_[a-zA-Z0-9]{36}" "$file" 2>/dev/null; then
+      echo "  ⚠ Possible GitHub token in $file"
+      FOUND=1
+    fi
+    # Generic secrets
+    if grep -qiE "(api_key|secret_key|password)\s*[:=]\s*['\"][^'\"]{8,}" "$file" 2>/dev/null; then
+      echo "  ⚠ Possible secret in $file"
+      FOUND=1
+    fi
+  fi
+done
+
+if [ $FOUND -eq 1 ]; then
+  echo ""
+  echo "Potential secrets detected. Review before committing."
+  echo "To bypass: git commit --no-verify"
+  exit 1
+fi
+
+echo "  ✓ No secrets detected"

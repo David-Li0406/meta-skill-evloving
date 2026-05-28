@@ -1,0 +1,41 @@
+{
+  "name": "deduplicate-by-content",
+  "description": "Remove duplicate objects from array based on content similarity (hash-based, field order independent)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing an array field to deduplicate based on content"
+  },
+  "args": {
+    "array": {
+      "type": "string",
+      "required": false,
+      "description": "Name of the array field in the input object (defaults to 'items')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with the same structure, but with deduplicated array (objects with identical content are treated as duplicates)"
+  },
+  "examples": [
+    {
+      "description": "Remove objects with same content but different field order",
+      "input": {"items": [{"id": 1, "name": "alice"}, {"name": "alice", "id": 1}, {"id": 2, "name": "bob"}]},
+      "args": {},
+      "output": {"items": [{"id": 1, "name": "alice"}, {"id": 2, "name": "bob"}]}
+    },
+    {
+      "description": "Remove exact duplicates",
+      "input": {"items": [{"x": 1}, {"x": 1}, {"x": 2}]},
+      "args": {},
+      "output": {"items": [{"x": 1}, {"x": 2}]}
+    },
+    {
+      "description": "Custom array field",
+      "input": {"users": [{"age": 30, "name": "alice"}, {"name": "alice", "age": 30}]},
+      "args": {"array": "users"},
+      "output": {"users": [{"age": 30, "name": "alice"}]}
+    }
+  ],
+  "tags": ["array", "deduplicate", "unique", "hash", "content-similarity"]
+}

@@ -1,0 +1,1 @@
+../../../rules/workflow/github-pr-5w1h.md

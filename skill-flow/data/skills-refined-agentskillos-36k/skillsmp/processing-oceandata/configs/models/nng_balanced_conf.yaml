@@ -1,0 +1,23 @@
+# NNG Model Configuration - Balanced version
+# Optimized for good performance with reasonable memory usage
+
+# Temporal configuration
+input_len: 7        # Number of input frames
+output_len: 1       # Number of output frames
+in_channels: 2      # uo and vo components (ocean velocity)
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration - BALANCED
+mesh_level: 5       # Standard mesh refinement level
+multimesh: false    # Disable multi-resolution to save memory
+
+# Model architecture parameters - BALANCED
+hidden_dim: 96      # Moderate hidden dimension (between 64 and 128)
+processor_layers: 12  # Moderate number of layers (between 8 and 16)
+aggregation: "sum"    # Standard aggregation method
+
+# Optimization flags
+use_cugraphops: false  # Disable for stability (can enable if CuGraphOps is installed)
+add_3d_dim: true       # Enable pseudo-3D processing for better feature extraction

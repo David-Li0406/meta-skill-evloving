@@ -1,0 +1,34 @@
+# Crossformer Model Configuration - Lightweight Version
+# Efficient spatiotemporal attention for ocean velocity prediction
+
+# Temporal configuration
+input_len: 7          # Number of input frames
+output_len: 1         # Number of output frames
+in_channels: 2        # Number of channels (u, v velocity components)
+
+# Spatial configuration
+img_size: [240, 240]  # Input image size (H, W)
+patch_size: [12, 12]  # Larger patches for efficiency (240/12 = 20x20 grid)
+
+# Temporal segmentation
+seg_len: 1            # Temporal segment length (each frame is a segment)
+win_size: 2           # Window size for segment merging in encoder
+
+# Model architecture parameters - LIGHTWEIGHT
+d_model: 256          # Model dimension
+d_ff: 512             # Feed-forward dimension (2x d_model)
+n_heads: 4            # Number of attention heads
+e_layers: 2           # Number of encoder/decoder scales (2 scales)
+factor: 8             # Router factor for cross-patch attention
+
+# Regularization
+dropout: 0.1          # Dropout rate
+baseline: false       # Use baseline prediction (mean of inputs)
+
+# Expected metrics:
+# - Parameters: ~2-3M (very lightweight)
+# - Num patches: 20x20 = 400
+# - Memory usage: ~1-2 GB for batch_size=2
+# - Training speed: Fast (~2-3x faster than balanced)
+# - Best for: Quick experiments, limited GPU memory
+

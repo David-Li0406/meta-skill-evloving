@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>融资演示文稿</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #1a1a2e;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></svg>');
+            background-size: 200px;
+            opacity: 0.3;
+        }
+
+        .slide-content {
+            background: white;
+            border-radius: 20px;
+            padding: 50px 60px;
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 36px;
+            color: #764ba2;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .cover-title {
+            font-size: 56px;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .slogan {
+            font-size: 28px;
+            color: #555;
+            margin-bottom: 40px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .contact-info {
+            font-size: 20px;
+            color: #666;
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+        }
+
+        .content-text {
+            font-size: 18px;
+            color: #444;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .bullet-points {
+            list-style: none;
+            padding: 0;
+        }
+
+        .bullet-points li {
+            font-size: 18px;
+            color: #444;
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .bullet-points li::before {
+            content: '●';
+            color: #667eea;
+            position: absolute;
+            left: 0;
+            font-size: 20px;
+        }
+
+        .data-point {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: inline-block;
+            margin: 10px 10px 10px 0;
+            font-weight: 600;
+        }
+
+        .section-divider {
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            margin: 30px 0;
+            border-radius: 2px;
+        }
+
+        .final-slide {
+            text-align: center;
+        }
+
+        .final-slide h1 {
+            font-size: 52px;
+            margin-bottom: 40px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 50px;
+            border-radius: 50px;
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 40px;
+            text-decoration: none;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        @media print {
+            .slide {
+                page-break-after: always;
+                height: auto;
+                min-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Page 1: Cover -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">1</div>
+            <h1 class="cover-title">{{PROJECT_NAME}}融资演示</h1>
+            <p class="slogan">{{SLOGAN}}</p>
+            <div class="contact-info">
+                <p>创始人：{{FOUNDER_NAME}}</p>
+                <p>联系方式：{{CONTACT_INFO}}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 2: Problem & Opportunity -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">2</div>
+            <h2>问题与机会</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{PROBLEM_OPPORTUNITY}}</p>
+        </div>
+    </div>
+
+    <!-- Page 3: Solution -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">3</div>
+            <h2>解决方案</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{SOLUTION}}</p>
+        </div>
+    </div>
+
+    <!-- Page 4: Product Demo -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">4</div>
+            <h2>产品展示</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{PRODUCT_DEMO}}</p>
+        </div>
+    </div>
+
+    <!-- Page 5: Market Size -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">5</div>
+            <h2>市场规模</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{MARKET_SIZE}}</p>
+        </div>
+    </div>
+
+    <!-- Page 6: Competition -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">6</div>
+            <h2>竞争格局</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{COMPETITION}}</p>
+        </div>
+    </div>
+
+    <!-- Page 7: Business Model -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">7</div>
+            <h2>商业模式</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{BUSINESS_MODEL}}</p>
+        </div>
+    </div>
+
+    <!-- Page 8: Traction & Milestones -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">8</div>
+            <h2>牵引力与里程碑</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{TRACTION}}</p>
+        </div>
+    </div>
+
+    <!-- Page 9: Team -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">9</div>
+            <h2>团队介绍</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{TEAM}}</p>
+        </div>
+    </div>
+
+    <!-- Page 10: Financial Projections -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">10</div>
+            <h2>财务预测</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{FINANCIAL_PROJECTIONS}}</p>
+        </div>
+    </div>
+
+    <!-- Page 11: Funding Needs -->
+    <div class="slide">
+        <div class="slide-content">
+            <div class="slide-number">11</div>
+            <h2>融资需求</h2>
+            <div class="section-divider"></div>
+            <p class="content-text">{{FUNDING_NEEDS}}</p>
+        </div>
+    </div>
+
+    <!-- Page 12: Final - Investment Highlights -->
+    <div class="slide">
+        <div class="slide-content final-slide">
+            <div class="slide-number">12</div>
+            <h1>投资亮点总结</h1>
+            <div class="section-divider"></div>
+            <ul class="bullet-points">
+                {{INVESTMENT_HIGHLIGHTS}}
+            </ul>
+            <a href="#" class="cta-button">联系我们</a>
+            <div class="contact-info" style="margin-top: 40px;">
+                <p>{{CONTACT_INFO}}</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

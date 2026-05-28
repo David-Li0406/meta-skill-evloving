@@ -1,0 +1,26 @@
+import { describe } from "bun:test";
+import { RuleTester } from "eslint";
+import rule from "../../src/rules/RULE_NAME";
+
+const ruleTester = new RuleTester({
+	languageOptions: {
+		ecmaVersion: 2022,
+		sourceType: "module",
+	},
+});
+
+describe("RULE_NAME", () => {
+	ruleTester.run("RULE_NAME", rule, {
+		invalid: [
+			{
+				code: "BAD_CODE_EXAMPLE",
+				errors: [{ messageId: "MESSAGE_ID_HERE" }],
+			},
+			// Add more invalid cases for full coverage
+		],
+		valid: [
+			"GOOD_CODE_EXAMPLE",
+			// Add more valid cases
+		],
+	});
+});

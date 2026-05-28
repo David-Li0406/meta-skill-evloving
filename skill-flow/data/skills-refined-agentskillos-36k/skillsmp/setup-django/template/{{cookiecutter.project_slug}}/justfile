@@ -1,0 +1,74 @@
+# List available commands
+default:
+    @just --list
+
+# Run development server
+run:
+    uv run python manage.py runserver
+
+# Run database migrations
+migrate:
+    uv run python manage.py migrate
+
+# Create new migration
+makemigrations *args:
+    uv run python manage.py makemigrations {% raw %}{{args}}{% endraw %}
+
+# Run tests
+test *args:
+    uv run pytest {% raw %}{{args}}{% endraw %}
+
+# Run tests with coverage
+test-cov:
+    uv run pytest --cov
+
+# Format code
+fmt:
+    uv run ruff format .
+
+# Lint code
+lint:
+    uv run ruff check .
+
+# Lint and fix
+lint-fix:
+    uv run ruff check . --fix
+
+# Format and lint
+check: fmt lint
+
+# Django shell with IPython
+shell:
+    uv run python manage.py shell -i ipython
+
+# Create superuser
+createsuperuser:
+    uv run python manage.py createsuperuser
+
+# Collect static files
+collectstatic:
+    uv run python manage.py collectstatic --noinput
+
+# Start Jupyter Lab
+jupyter:
+    uv run jupyter lab
+
+# Docker: start all services
+docker-up:
+    docker compose up -d
+
+# Docker: stop all services
+docker-down:
+    docker compose down
+
+# Docker: run migrations
+docker-migrate:
+    docker compose exec web uv run python manage.py migrate
+
+# Docker: view logs
+docker-logs:
+    docker compose logs -f
+
+# Docker: shell into web container
+docker-shell:
+    docker compose exec web bash

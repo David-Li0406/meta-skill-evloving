@@ -1,0 +1,151 @@
+/* ========================================= */
+/* COMPONENT: BOLD PRICING                   */
+/* Dependencies: design-tokens.css           */
+/* ========================================= */
+
+.bold-pricing {
+  /* Core customization points */
+  --w-bold-pricing-max: 600px;
+  --w-bold-pricing-min: 100%;
+  --p-bold-pricing: var(--s-8);
+  --g-bold-pricing: var(--g-standard);
+  
+  /* Card appearance */
+  --bg-bold-pricing-card: var(--bg-surface);
+  --p-bold-pricing-card: var(--p-card);
+  --r-bold-pricing-card: var(--r-card);
+  
+  /* Button styling */
+  --p-bold-pricing-btn: var(--p-btn);
+  --r-bold-pricing-btn: var(--r-btn);
+
+  /* Root layout using component properties */
+  min-width: var(--w-bold-pricing-min);
+  max-width: var(--w-bold-pricing-max);
+  padding: var(--p-bold-pricing);
+  border-radius: var(--r-card);
+
+  /* Inherit global semantics */
+  font-family: var(--ff-sans);
+  color: var(--c-muted);
+  background: var(--bg-app);
+
+  /* Layout */
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--g-bold-pricing);
+
+  /* Content alignment */
+  & > * {
+    text-align: center;
+  }
+
+  /* Headings */
+  & h2 {
+    color: var(--c-text);
+    font-size: var(--fs-7);
+    font-weight: var(--fw-900);
+  }
+
+  & > p {
+    font-size: var(--fs-3);
+  }
+
+  /* Main card */
+  & article {
+    min-width: min(375px, 100%);
+
+    background: var(--bg-bold-pricing-card);
+    backdrop-filter: var(--x-glass);
+    border: var(--b-standard);
+    box-shadow: var(--x-card-shadow);
+    border-radius: var(--r-bold-pricing-card);
+    padding: var(--p-bold-pricing-card);
+    gap: var(--g-standard);
+
+    display: grid;
+    text-align: left;
+
+    /* Card internal alignment */
+    & > :not(ul) {
+      text-align: center;
+    }
+
+    /* Small label */
+    & small {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: var(--fs-2);
+    }
+
+    /* Price row */
+    & .price-row {
+      font-size: var(--fs-3);
+
+      & strong {
+        color: var(--c-text);
+        font-size: var(--fs-9);
+        font-weight: var(--fw-900);
+      }
+    }
+
+    /* Highlight text */
+    & .highlight {
+      color: var(--c-primary);
+      font-weight: var(--fw-600);
+    }
+
+    /* Features list */
+    & ul {
+      padding: var(--s-0);
+      list-style: none;
+      color: var(--c-text);
+
+      & li {
+        display: flex;
+        gap: var(--g-standard);
+        margin-block-end: var(--s-2);
+
+        /* Custom checkmark */
+        &::before {
+          content: "✓";
+          color: var(--c-primary);
+          font-weight: var(--fw-600);
+        }
+      }
+    }
+
+    /* Primary action button */
+    & button {
+      margin-block-start: var(--s-8);
+      min-width: 100%;
+
+      padding: var(--p-bold-pricing-btn);
+      border-radius: var(--r-bold-pricing-btn);
+      border: var(--b-0);
+
+      background: var(--c-primary);
+      color: var(--c-on-primary);
+      font-weight: var(--fw-700);
+      box-shadow: var(--x-primary-glow);
+
+      cursor: pointer;
+      transition: background var(--a-base);
+
+      &:hover {
+        background: var(--c-primary-hover);
+      }
+    }
+  }
+
+  /* Footer section */
+  & footer {
+    font-size: var(--fs-2);
+    font-style: italic;
+
+    & > :first-child {
+      margin-top: var(--s-3);
+    }
+  }
+}

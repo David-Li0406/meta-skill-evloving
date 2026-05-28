@@ -1,0 +1,293 @@
+# Multi-Branch Pipeline Management
+# Dynamically creates/manages pipelines for feature branches
+#
+# Architecture:
+# 1. branch-tracker: Monitors branches, creates/deletes pipelines
+# 2. feature-pipeline.yml: Template for per-branch pipelines
+#
+# Usage:
+# fly -t target set-pipeline -p branch-tracker -c multi-branch.yml \
+#   -v git_uri=https://github.com/org/repo.git
+
+################################################
+# Resource Types
+################################################
+
+resource_types:
+- name: git-branches
+  type: registry-image
+  source:
+    repository: aoldershaw/git-branches-resource
+
+################################################
+# Resources
+################################################
+
+resources:
+# Track all feature branches
+- name: feature-branches
+  type: git-branches
+  icon: source-branch
+  check_every: 5m
+  source:
+    uri: ((git_uri))
+    branch_regex: "feature/.*"
+    private_key: ((git.private_key))
+
+# Main repository for pipeline config
+- name: ci-config
+  type: git
+  icon: gitlab
+  source:
+    uri: ((git_uri))
+    branch: main
+    paths:
+    - ci/**
+    private_key: ((git.private_key))
+
+################################################
+# Jobs
+################################################
+
+jobs:
+#-----------------------------------------
+# Branch Tracker - Creates pipelines for branches
+#-----------------------------------------
+- name: sync-branches
+  serial: true
+  plan:
+  - in_parallel:
+    - get: feature-branches
+      trigger: true
+    - get: ci-config
+
+  - load_var: branches
+    file: feature-branches/branches.json
+
+  # Create/update pipeline for each branch
+  - across:
+    - var: branch
+      values: ((.:branches))
+    set_pipeline: feature
+    file: ci-config/ci/feature-pipeline.yml
+    instance_vars:
+      branch: ((.:branch.name))
+    vars:
+      git_uri: ((git_uri))
+      branch_name: ((.:branch.name))
+
+#-----------------------------------------
+# Cleanup - Remove pipelines for deleted branches
+#-----------------------------------------
+- name: cleanup-pipelines
+  serial: true
+  plan:
+  - in_parallel:
+    - get: feature-branches
+      trigger: true
+      passed: [sync-branches]
+    - get: ci-config
+
+  - task: find-orphaned-pipelines
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/fly
+          tag: latest
+      inputs:
+      - name: feature-branches
+      outputs:
+      - name: orphaned
+      params:
+        CONCOURSE_URL: ((concourse.url))
+        CONCOURSE_USERNAME: ((concourse.username))
+        CONCOURSE_PASSWORD: ((concourse.password))
+        CONCOURSE_TEAM: ((concourse.team))
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          fly -t main login \
+            -c "$CONCOURSE_URL" \
+            -u "$CONCOURSE_USERNAME" \
+            -p "$CONCOURSE_PASSWORD" \
+            -n "$CONCOURSE_TEAM"
+
+          # Get active branches
+          jq -r '.[].name' feature-branches/branches.json | sort > /tmp/active-branches.txt
+
+          # Get existing feature pipelines
+          fly -t main pipelines --json | \
+            jq -r '.[] | select(.name | startswith("feature:")) | .name | sub("feature:"; "")' | \
+            sort > /tmp/existing-pipelines.txt
+
+          # Find orphaned (pipeline exists but branch doesn't)
+          comm -23 /tmp/existing-pipelines.txt /tmp/active-branches.txt > orphaned/pipelines.txt
+
+          echo "Orphaned pipelines:"
+          cat orphaned/pipelines.txt
+
+  - task: destroy-orphaned-pipelines
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/fly
+          tag: latest
+      inputs:
+      - name: orphaned
+      params:
+        CONCOURSE_URL: ((concourse.url))
+        CONCOURSE_USERNAME: ((concourse.username))
+        CONCOURSE_PASSWORD: ((concourse.password))
+        CONCOURSE_TEAM: ((concourse.team))
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          fly -t main login \
+            -c "$CONCOURSE_URL" \
+            -u "$CONCOURSE_USERNAME" \
+            -p "$CONCOURSE_PASSWORD" \
+            -n "$CONCOURSE_TEAM"
+
+          while read pipeline; do
+            if [ -n "$pipeline" ]; then
+              echo "Destroying pipeline: feature:$pipeline"
+              fly -t main destroy-pipeline -p "feature:$pipeline" -n || true
+            fi
+          done < orphaned/pipelines.txt
+
+---
+# Store this as ci/feature-pipeline.yml in your repo
+# This is the template used for each feature branch
+
+# Feature Branch Pipeline Template
+# Automatically set by branch-tracker for each feature branch
+
+################################################
+# Resources
+################################################
+
+resources:
+- name: source
+  type: git
+  icon: gitlab
+  check_every: 2m
+  source:
+    uri: ((git_uri))
+    branch: ((branch_name))
+    private_key: ((git.private_key))
+
+################################################
+# Jobs
+################################################
+
+jobs:
+- name: build
+  plan:
+  - get: source
+    trigger: true
+
+  - task: build
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: node
+          tag: 20-slim
+      inputs:
+      - name: source
+      caches:
+      - path: source/node_modules
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          cd source
+          npm ci
+          npm run build
+
+- name: test
+  plan:
+  - get: source
+    passed: [build]
+    trigger: true
+
+  - in_parallel:
+    - task: unit-tests
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: node
+            tag: 20-slim
+        inputs:
+        - name: source
+        caches:
+        - path: source/node_modules
+        run:
+          path: /bin/bash
+          args:
+          - -exc
+          - |
+            cd source
+            npm ci
+            npm test
+
+    - task: lint
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: node
+            tag: 20-slim
+        inputs:
+        - name: source
+        caches:
+        - path: source/node_modules
+        run:
+          path: /bin/bash
+          args:
+          - -exc
+          - |
+            cd source
+            npm ci
+            npm run lint
+
+- name: deploy-preview
+  plan:
+  - get: source
+    passed: [test]
+    trigger: true
+
+  - task: deploy-to-preview
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: alpine
+          tag: latest
+      inputs:
+      - name: source
+      params:
+        BRANCH: ((branch_name))
+      run:
+        path: /bin/sh
+        args:
+        - -exc
+        - |
+          # Deploy to preview environment
+          # Replace with actual deployment logic
+          PREVIEW_URL="https://${BRANCH//\//-}.preview.example.com"
+          echo "Deployed to: $PREVIEW_URL"

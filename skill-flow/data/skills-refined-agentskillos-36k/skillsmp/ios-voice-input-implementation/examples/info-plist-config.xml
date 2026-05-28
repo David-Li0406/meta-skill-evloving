@@ -1,0 +1,90 @@
+<!--
+    info-plist-config.xml
+    iOS音声入力に必要なInfo.plist設定
+
+    使用方法:
+    1. Xcodeでプロジェクトを開く
+    2. Info.plistを選択
+    3. 以下のキーと値を追加
+
+    または、Info.plistのソースコードに直接追加
+-->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+    <!-- ============================================== -->
+    <!-- 必須: マイクアクセス権限                         -->
+    <!-- ============================================== -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>音声入力機能を使用するためにマイクへのアクセスが必要です。音声データはテキスト変換のみに使用され、サーバーには保存されません。</string>
+
+    <!-- ============================================== -->
+    <!-- 必須: 音声認識権限                              -->
+    <!-- ============================================== -->
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>音声をテキストに変換するために音声認識を使用します。認識処理はデバイス上で行われ、プライバシーが保護されます。</string>
+
+    <!-- ============================================== -->
+    <!-- オプション: バックグラウンドオーディオ           -->
+    <!-- 注意: 必要な場合のみ追加                        -->
+    <!-- App Storeレビューで追加説明が必要になる場合あり  -->
+    <!-- ============================================== -->
+    <!--
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+    </array>
+    -->
+
+</dict>
+</plist>
+
+<!--
+    ============================================
+    補足説明
+    ============================================
+
+    1. NSMicrophoneUsageDescription
+       - iOS 7以降で必須
+       - ユーザーに表示される説明文
+       - 具体的で明確な理由を記載
+
+    2. NSSpeechRecognitionUsageDescription
+       - iOS 10以降で必須（Speech Framework使用時）
+       - 音声認識の使用目的を記載
+       - プライバシーへの配慮を明記すると良い
+
+    3. UIBackgroundModes (audio)
+       - バックグラウンドでの音声処理が必要な場合のみ
+       - App Storeレビューで厳しくチェックされる
+       - 不要な場合は追加しない
+
+    ============================================
+    App Store審査のポイント
+    ============================================
+
+    1. 使用目的の明確化
+       - なぜマイクアクセスが必要かを明確に
+       - ユーザーの利益を説明
+
+    2. プライバシーポリシー
+       - 音声データの取り扱いを明記
+       - オンデバイス処理であることをアピール
+
+    3. 最小権限の原則
+       - 必要な権限のみを要求
+       - バックグラウンドモードは本当に必要な場合のみ
+
+    ============================================
+    英語版（多言語対応の場合）
+    ============================================
+
+    InfoPlist.strings (en) に以下を追加:
+
+    NSMicrophoneUsageDescription = "Microphone access is required for voice input. Audio data is only used for text conversion and is not stored on servers.";
+
+    NSSpeechRecognitionUsageDescription = "Speech recognition is used to convert your voice to text. Processing is done on-device to protect your privacy.";
+-->

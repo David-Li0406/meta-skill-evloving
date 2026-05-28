@@ -1,0 +1,185 @@
+#!/usr/bin/env node
+
+/*
+ * Interactively pick DOM elements from the current page.
+ *
+ * This script overlays a visual picker on the active page, allowing the user to click elements to inspect them.  It
+ * supports single selection or multi‑selection (Cmd/Ctrl+click) and returns an object or array describing the selected
+ * elements.  The information includes tag name, id, class, trimmed text, an HTML snippet and a breadcrumb of parents.
+ */
+
+import puppeteer from 'puppeteer-core';
+
+const argv = process.argv.slice(2);
+const message = argv.join(' ');
+
+function printUsage() {
+  console.log('Usage: pick.js <message>');
+  console.log('\nExample:');
+  console.log("  pick.js 'Click the submit button'");
+  console.log('\nInteractive element picker:');
+  console.log('  - Click to select element');
+  console.log('  - Cmd/Ctrl+Click for multi-select');
+  console.log('  - Enter to finish');
+  console.log('  - ESC to cancel');
+}
+
+if (!message) {
+  printUsage();
+  process.exit(1);
+}
+
+const port = process.env.BROWSER_PORT ? parseInt(process.env.BROWSER_PORT, 10) : 9222;
+
+try {
+  const browser = await puppeteer.connect({
+    browserURL: `http://localhost:${port}`,
+    defaultViewport: null,
+  });
+  const pages = await browser.pages();
+  const page = pages.at(-1);
+  if (!page) {
+    console.error('✗ No active tab found');
+    process.exit(1);
+  }
+  // Inject helper into the page if not already present
+  await page.evaluate(() => {
+    if (!window.pick) {
+      window.pick = async (message) => {
+        if (!message) {
+          throw new Error('pick() requires a message parameter');
+        }
+        return new Promise((resolve) => {
+          const selections = [];
+          const selectedElements = new Set();
+
+          const overlay = document.createElement('div');
+          overlay.style.cssText =
+            'position:fixed;top:0;left:0;width:100%;height:100%;z-index:2147483647;pointer-events:none';
+          const highlight = document.createElement('div');
+          highlight.style.cssText =
+            'position:absolute;border:2px solid #3b82f6;background:rgba(59,130,246,0.1);transition:all 0.1s';
+          overlay.appendChild(highlight);
+          const banner = document.createElement('div');
+          banner.style.cssText =
+            'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:12px 24px;border-radius:8px;font:14px sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.3);pointer-events:auto;z-index:2147483647';
+
+          const updateBanner = () => {
+            banner.textContent = `${message} (${selections.length} selected, Cmd/Ctrl+click to add, Enter to finish, ESC to cancel)`;
+          };
+          updateBanner();
+          document.body.append(banner, overlay);
+
+          const cleanup = () => {
+            document.removeEventListener('mousemove', onMove, true);
+            document.removeEventListener('click', onClick, true);
+            document.removeEventListener('keydown', onKey, true);
+            overlay.remove();
+            banner.remove();
+            selectedElements.forEach((el) => {
+              el.style.outline = '';
+            });
+          };
+
+          const onMove = (e) => {
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+            if (!el || overlay.contains(el) || banner.contains(el)) return;
+            const r = el.getBoundingClientRect();
+            highlight.style.cssText =
+              'position:absolute;border:2px solid #3b82f6;background:rgba(59,130,246,0.1);top:' +
+              r.top +
+              'px;left:' +
+              r.left +
+              'px;width:' +
+              r.width +
+              'px;height:' +
+              r.height +
+              'px';
+          };
+
+          const buildElementInfo = (el) => {
+            const parents = [];
+            let current = el.parentElement;
+            while (current && current !== document.body) {
+              const parentInfo = current.tagName.toLowerCase();
+              const id = current.id ? `#${current.id}` : '';
+              const cls = current.className ? `.${current.className.trim().split(/\s+/).join('.')}` : '';
+              parents.push(parentInfo + id + cls);
+              current = current.parentElement;
+            }
+            return {
+              tag: el.tagName.toLowerCase(),
+              id: el.id || null,
+              class: el.className || null,
+              text: el.textContent?.trim().slice(0, 200) || null,
+              html: el.outerHTML.slice(0, 500),
+              parents: parents.join(' > '),
+            };
+          };
+
+          const onClick = (e) => {
+            if (banner.contains(e.target)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+            if (!el || overlay.contains(el) || banner.contains(el)) return;
+            if (e.metaKey || e.ctrlKey) {
+              if (!selectedElements.has(el)) {
+                selectedElements.add(el);
+                el.style.outline = '3px solid #10b981';
+                selections.push(buildElementInfo(el));
+                updateBanner();
+              }
+            } else {
+              cleanup();
+              const info = buildElementInfo(el);
+              resolve(selections.length > 0 ? selections : info);
+            }
+          };
+
+          const onKey = (e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              cleanup();
+              resolve(null);
+            } else if (e.key === 'Enter' && selections.length > 0) {
+              e.preventDefault();
+              cleanup();
+              resolve(selections);
+            }
+          };
+
+          document.addEventListener('mousemove', onMove, true);
+          document.addEventListener('click', onClick, true);
+          document.addEventListener('keydown', onKey, true);
+        });
+      };
+    }
+  });
+  // Execute the pick helper
+  const result = await page.evaluate((msg) => window.pick(msg), message);
+  // Print the result
+  if (Array.isArray(result)) {
+    for (let i = 0; i < result.length; i++) {
+      if (i > 0) console.log('');
+      const entry = result[i];
+      if (entry && typeof entry === 'object') {
+        for (const [key, value] of Object.entries(entry)) {
+          console.log(`${key}: ${value}`);
+        }
+      } else {
+        console.log(entry);
+      }
+    }
+  } else if (result && typeof result === 'object') {
+    for (const [key, value] of Object.entries(result)) {
+      console.log(`${key}: ${value}`);
+    }
+  } else {
+    console.log(result);
+  }
+  await browser.disconnect();
+} catch (err) {
+  console.error('✗ Error during pick:', err.message || err);
+  process.exit(1);
+}

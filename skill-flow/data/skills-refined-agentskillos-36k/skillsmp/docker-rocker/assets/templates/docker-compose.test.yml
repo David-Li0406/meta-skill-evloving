@@ -1,0 +1,52 @@
+# =============================================================================
+# DOCKER COMPOSE FOR TESTING (CI/CD)
+# Services: Test runner + Test database
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Test Runner
+  # ---------------------------------------------------------------------------
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: testing
+    container_name: fastapi-test
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://test:test@db:5432/test
+      - ENVIRONMENT=testing
+      - DEBUG=false
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - test-network
+    # Run tests and exit
+    command: ["pytest", "-v", "--cov=app", "--cov-report=xml", "--cov-report=term-missing"]
+
+  # ---------------------------------------------------------------------------
+  # Test Database
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: postgres-test
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    # No volume - ephemeral test database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    networks:
+      - test-network
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  test-network:
+    driver: bridge

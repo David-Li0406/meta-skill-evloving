@@ -1,0 +1,1 @@
+../../../rules/workflow/git-commit-format.md

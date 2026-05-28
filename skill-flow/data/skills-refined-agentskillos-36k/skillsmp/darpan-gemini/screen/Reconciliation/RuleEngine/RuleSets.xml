@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Rule Engine" default-menu-index="1">
+
+    <transition name="runTestResult" read-only="true">
+        <actions>
+            <service-call name="reconciliation.ReconciliationSampleServices.test#RuleEngine" out-map="result"/>
+            <script>ec.web.sendJsonResponse(result)</script>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <subscreens default-item="RuleSetList">
+        <subscreens-item name="RuleSetList" location="component://darpan/screen/Reconciliation/RuleEngine/RuleSetList.xml"/>
+        <subscreens-item name="RuleSetDetail" location="component://darpan/screen/Reconciliation/RuleEngine/RuleSetDetail.xml"/>
+        <subscreens-item name="RuleEngineTest" location="component://darpan/screen/Reconciliation/RuleEngine/RuleEngineTest.xml"/>
+    </subscreens>
+
+    <widgets>
+        <subscreens-panel id="rule-engine-panel" type="popup"/>
+    </widgets>
+</screen>

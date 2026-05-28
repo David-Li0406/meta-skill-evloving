@@ -1,0 +1,316 @@
+# Ai Wrapper Product - Sharp Edges
+
+## Cost Explosion
+
+### **Id**
+cost-explosion
+### **Summary**
+AI API costs spiral out of control
+### **Severity**
+high
+### **Situation**
+Monthly AI bill is higher than revenue
+### **Why**
+  No usage tracking.
+  No user limits.
+  Using expensive models.
+  Abuse or bugs.
+  
+### **Solution**
+  ## Controlling AI Costs
+  
+  ### Set Hard Limits
+  ```javascript
+  // Per-user limits
+  const LIMITS = {
+    free: { dailyCalls: 10, monthlyTokens: 50000 },
+    pro: { dailyCalls: 100, monthlyTokens: 500000 },
+  };
+  
+  async function checkLimits(userId) {
+    const plan = await getUserPlan(userId);
+    const usage = await getDailyUsage(userId);
+  
+    if (usage.calls >= LIMITS[plan].dailyCalls) {
+      throw new Error('Daily limit reached');
+    }
+  }
+  ```
+  
+  ### Provider-Level Limits
+  ```
+  OpenAI: Set usage limits in dashboard
+  Anthropic: Set spend limits
+  Add alerts at 50%, 80%, 100%
+  ```
+  
+  ### Cost Monitoring
+  ```javascript
+  // Alert on anomalies
+  async function checkCostAnomaly() {
+    const todayCost = await getTodayCost();
+    const avgCost = await getAverageDailyCost(30);
+  
+    if (todayCost > avgCost * 3) {
+      await alertAdmin('Cost anomaly detected');
+    }
+  }
+  ```
+  
+  ### Emergency Shutoff
+  ```javascript
+  // Kill switch
+  const MAX_DAILY_SPEND = 100; // $100
+  
+  async function canMakeAPICall() {
+    const todaySpend = await getTodaySpend();
+    if (todaySpend >= MAX_DAILY_SPEND) {
+      await disableAPI();
+      await alertAdmin('Emergency shutoff triggered');
+      return false;
+    }
+    return true;
+  }
+  ```
+  
+### **Symptoms**
+  - Surprise API bills
+  - Costs > revenue
+  - Rapid usage spikes
+  - No visibility into costs
+### **Detection Pattern**
+cost|bill|expensive|money|budget
+
+## Rate Limit Handling
+
+### **Id**
+rate-limit-handling
+### **Summary**
+App breaks when hitting API rate limits
+### **Severity**
+high
+### **Situation**
+API calls fail with 429 errors
+### **Why**
+  No retry logic.
+  Not queuing requests.
+  Burst traffic not handled.
+  No backoff strategy.
+  
+### **Solution**
+  ## Handling Rate Limits
+  
+  ### Retry with Exponential Backoff
+  ```javascript
+  async function callWithRetry(fn, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (err) {
+        if (err.status === 429 && i < maxRetries - 1) {
+          const delay = Math.pow(2, i) * 1000; // 1s, 2s, 4s
+          await sleep(delay);
+          continue;
+        }
+        throw err;
+      }
+    }
+  }
+  ```
+  
+  ### Request Queue
+  ```javascript
+  import PQueue from 'p-queue';
+  
+  // Limit concurrent requests
+  const queue = new PQueue({
+    concurrency: 5,
+    interval: 1000,
+    intervalCap: 10, // Max 10 per second
+  });
+  
+  async function callAPI(prompt) {
+    return queue.add(() => anthropic.messages.create({...}));
+  }
+  ```
+  
+  ### User-Facing Handling
+  ```javascript
+  try {
+    const result = await callWithRetry(generateContent);
+    return result;
+  } catch (err) {
+    if (err.status === 429) {
+      return {
+        error: true,
+        message: 'High demand - please try again in a moment',
+        retryAfter: 30
+      };
+    }
+    throw err;
+  }
+  ```
+  
+### **Symptoms**
+  - 429 Too Many Requests errors
+  - Requests failing in bursts
+  - Users seeing errors
+  - Inconsistent behavior
+### **Detection Pattern**
+429|rate limit|too many|throttle
+
+## Hallucination In Production
+
+### **Id**
+hallucination-in-production
+### **Summary**
+AI gives wrong or made-up information
+### **Severity**
+high
+### **Situation**
+Users complain about incorrect outputs
+### **Why**
+  No output validation.
+  Trusting AI blindly.
+  No fact-checking.
+  Wrong use case for AI.
+  
+### **Solution**
+  ## Handling Hallucinations
+  
+  ### Output Validation
+  ```javascript
+  function validateOutput(output, schema) {
+    // Check required fields
+    if (!output.title || !output.content) {
+      throw new Error('Missing required fields');
+    }
+  
+    // Check reasonable length
+    if (output.content.length < 50 || output.content.length > 5000) {
+      throw new Error('Content length out of range');
+    }
+  
+    // Check for placeholder text
+    const placeholders = ['[INSERT', 'PLACEHOLDER', 'YOUR NAME HERE'];
+    if (placeholders.some(p => output.content.includes(p))) {
+      throw new Error('Output contains placeholders');
+    }
+  
+    return true;
+  }
+  ```
+  
+  ### Domain-Specific Validation
+  ```javascript
+  // For factual content
+  async function validateFacts(output) {
+    // Check dates are reasonable
+    const dates = extractDates(output);
+    for (const date of dates) {
+      if (date > new Date() || date < new Date('1900-01-01')) {
+        return { valid: false, reason: 'Suspicious date' };
+      }
+    }
+  
+    // Check numbers are reasonable
+    // ...
+  }
+  ```
+  
+  ### Use Cases to Avoid
+  | Risky | Safer Alternative |
+  |-------|-------------------|
+  | Medical advice | Summarize, not diagnose |
+  | Legal advice | Draft, not advise |
+  | Current events | Use with data sources |
+  | Precise calculations | Validate or use code |
+  
+  ### User Expectations
+  - Disclaimer for generated content
+  - "AI-generated" labels
+  - Edit capability for users
+  - Feedback mechanism
+  
+### **Symptoms**
+  - Users report wrong information
+  - Made-up facts in outputs
+  - Outdated information
+  - Trust issues
+### **Detection Pattern**
+wrong|incorrect|hallucin|made up|fake
+
+## Latency Issues
+
+### **Id**
+latency-issues
+### **Summary**
+AI responses too slow for good UX
+### **Severity**
+medium
+### **Situation**
+Users complain about slow responses
+### **Why**
+  Large prompts.
+  Expensive models.
+  No streaming.
+  No caching.
+  
+### **Solution**
+  ## Improving AI Latency
+  
+  ### Streaming Responses
+  ```javascript
+  // Stream to user as AI generates
+  async function* streamResponse(prompt) {
+    const stream = await anthropic.messages.stream({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    });
+  
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta') {
+        yield event.delta.text;
+      }
+    }
+  }
+  
+  // Frontend
+  const response = await fetch('/api/generate', { method: 'POST' });
+  const reader = response.body.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    appendToOutput(new TextDecoder().decode(value));
+  }
+  ```
+  
+  ### Caching
+  ```javascript
+  async function generateWithCache(prompt) {
+    const cacheKey = hashPrompt(prompt);
+    const cached = await cache.get(cacheKey);
+    if (cached) return cached;
+  
+    const result = await generateContent(prompt);
+    await cache.set(cacheKey, result, { ttl: 3600 });
+    return result;
+  }
+  ```
+  
+  ### Use Faster Models
+  | Model | Typical Latency |
+  |-------|-----------------|
+  | GPT-4 | 5-15s |
+  | GPT-4o-mini | 1-3s |
+  | Claude 3 Haiku | 1-3s |
+  | Claude 3.5 Sonnet | 2-5s |
+  
+### **Symptoms**
+  - Long wait times
+  - Users abandoning
+  - Timeout errors
+  - Poor perceived performance
+### **Detection Pattern**
+slow|latency|waiting|timeout|speed

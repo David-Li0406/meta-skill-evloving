@@ -1,0 +1,58 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "model": "llm-mux/claude-sonnet-thinking",
+
+  "provider": {
+    "llm-mux": {
+      "npm": "@ai-sdk/anthropic",
+      "name": "LLM-Mux",
+      "options": {
+        "baseURL": "{env:LLM_MUX_URL:-http://localhost:8318}/v1",
+        "apiKey": "x"
+      },
+      "models": {
+        "claude-sonnet-thinking": {
+          "id": "claude-sonnet-4-5-thinking",
+          "name": "Claude Sonnet Thinking",
+          "tool_call": true,
+          "reasoning": true,
+          "options": {
+            "thinking": {
+              "type": "enabled",
+              "budgetTokens": 8000
+            }
+          }
+        },
+        "claude-opus-thinking": {
+          "id": "claude-opus-4-5-thinking",
+          "name": "Claude Opus Thinking",
+          "tool_call": true,
+          "reasoning": true,
+          "options": {
+            "thinking": {
+              "type": "enabled",
+              "budgetTokens": 16000
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "permission": {
+    "bash": { "*": "allow" },
+    "edit": "allow",
+    "webfetch": "allow"
+  },
+
+  "tools": {
+    "bash": true,
+    "edit": true,
+    "write": true,
+    "read": true,
+    "grep": true,
+    "glob": true,
+    "list": true
+  }
+}

@@ -1,0 +1,48 @@
+<div class="container">
+  <div class="success-message">
+    <div class="success-icon">✓</div>
+    <h1>Order Confirmed!</h1>
+    <p class="confirmation-number">
+      Your order confirmation number is:
+      <strong><%= @order.formatted_order_confirmation %></strong>
+    </p>
+    <p>A confirmation email has been sent to <strong><%= @order.email %></strong></p>
+  </div>
+
+  <div class="order-summary">
+    <h2>Order Summary</h2>
+
+    <div class="summary-section">
+      <h3>Fitness Kit</h3>
+      <p><strong><%= @order.promise_fitness_kit.name %></strong></p>
+      <p class="kit-desc"><%= @order.promise_fitness_kit.description %></p>
+    </div>
+
+    <div class="summary-section">
+      <h3>Shipping To</h3>
+      <p class="address">
+        <strong><%= @order.full_name %></strong><br>
+        <%= simple_format(@order.full_address) %>
+      </p>
+    </div>
+
+    <div class="summary-section">
+      <h3>Contact Information</h3>
+      <p>
+        <strong>Email:</strong> <%= @order.email %><br>
+        <strong>Phone:</strong> <%= @order.formatted_phone %>
+      </p>
+    </div>
+
+    <% if @order.description.present? %>
+      <div class="summary-section">
+        <h3>Order Notes</h3>
+        <p><%= @order.description %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="actions">
+    <%= link_to 'Back to Home', root_path, class: 'btn btn-primary' %>
+  </div>
+</div>

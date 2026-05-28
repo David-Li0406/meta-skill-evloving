@@ -1,0 +1,234 @@
+# CI Workflow for repo_updater (ru)
+# Runs on every push and PR to main
+#
+# Security: Uses minimal permissions and pinned action versions
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel in-progress runs for the same branch/PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Minimal permissions - read-only access to repository contents
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: '.'
+          severity: warning
+          additional_files: 'ru install.sh'
+
+  syntax:
+    name: Bash Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check ru syntax
+        run: bash -n ru
+
+      - name: Check install.sh syntax
+        run: bash -n install.sh
+
+      - name: Check test scripts syntax
+        run: |
+          for script in scripts/*.sh; do
+            echo "Checking syntax: $script"
+            bash -n "$script"
+          done
+
+  tests:
+    name: Test Suite (${{ matrix.os }})
+    needs: [shellcheck, syntax]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Homebrew cache (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /usr/local/Cellar/bash
+            /opt/homebrew/Cellar/bash
+          key: ${{ runner.os }}-homebrew-bash-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-homebrew-bash-
+
+      - name: Install bash 5 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install bash
+          BASH_5="$(brew --prefix bash 2>/dev/null)/bin/bash"
+          if [[ ! -x "$BASH_5" ]]; then
+            BREW_PREFIX="$(brew --prefix)"
+            if [[ -x "$BREW_PREFIX/opt/bash/bin/bash" ]]; then
+              BASH_5="$BREW_PREFIX/opt/bash/bin/bash"
+            else
+              CELLAR="$(brew --cellar bash)"
+              BASH_5="$(ls -1 "$CELLAR"/*/bin/bash 2>/dev/null | tail -1)"
+            fi
+          fi
+
+          if [[ -x "$BASH_5" ]]; then
+            echo "BASH_5=$BASH_5" >> $GITHUB_ENV
+            echo "$(dirname "$BASH_5")" >> $GITHUB_PATH
+          else
+            echo "::error::Unable to locate Homebrew bash"
+            exit 1
+          fi
+
+      - name: Show bash version
+        run: bash --version | head -1
+
+      - name: Create test output directory
+        run: mkdir -p test-results
+
+      - name: Run all tests (TAP format)
+        id: tap_tests
+        run: ./scripts/run_all_tests.sh --tap 2>&1 | tee test-results/tests.tap
+
+      - name: Run all tests (human-readable)
+        if: failure() || success()
+        run: ./scripts/run_all_tests.sh 2>&1 | tee test-results/tests.log
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}
+          path: test-results/
+          retention-days: 14
+
+  install-test:
+    name: Installation Test
+    needs: [shellcheck, syntax]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Homebrew cache (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /usr/local/Cellar/bash
+            /opt/homebrew/Cellar/bash
+          key: ${{ runner.os }}-homebrew-bash-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-homebrew-bash-
+
+      - name: Install bash 5 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install bash
+          BASH_5="$(brew --prefix bash 2>/dev/null)/bin/bash"
+          if [[ ! -x "$BASH_5" ]]; then
+            BREW_PREFIX="$(brew --prefix)"
+            if [[ -x "$BREW_PREFIX/opt/bash/bin/bash" ]]; then
+              BASH_5="$BREW_PREFIX/opt/bash/bin/bash"
+            else
+              CELLAR="$(brew --cellar bash)"
+              BASH_5="$(ls -1 "$CELLAR"/*/bin/bash 2>/dev/null | tail -1)"
+            fi
+          fi
+
+          if [[ -x "$BASH_5" ]]; then
+            echo "BASH_5=$BASH_5" >> $GITHUB_ENV
+            echo "$(dirname "$BASH_5")" >> $GITHUB_PATH
+          else
+            echo "::error::Unable to locate Homebrew bash"
+            exit 1
+          fi
+
+      - name: Run installer
+        run: |
+          chmod +x install.sh
+          # Use RU_UNSAFE_MAIN=1 to test main-branch install path
+          # (avoids dependency on GitHub releases existing)
+          RU_UNSAFE_MAIN=1 DEST=/tmp/ru-test ./install.sh
+
+      - name: Verify installation
+        run: |
+          test -x /tmp/ru-test/ru
+          echo "ru is installed and executable"
+
+      - name: Check version output
+        run: |
+          # Use brew bash on macOS since ru requires bash >= 4.3
+          if [[ "$(uname)" == "Darwin" ]]; then
+            "$BASH_5" /tmp/ru-test/ru --version
+          else
+            /tmp/ru-test/ru --version
+          fi
+
+      - name: Check help output
+        run: |
+          if [[ "$(uname)" == "Darwin" ]]; then
+            "$BASH_5" /tmp/ru-test/ru --help | head -20
+          else
+            /tmp/ru-test/ru --help | head -20
+          fi
+
+  version-check:
+    name: Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check VERSION file exists
+        run: |
+          if [[ ! -f VERSION ]]; then
+            echo "::warning::VERSION file not found"
+            exit 0
+          fi
+
+      - name: Verify version matches
+        run: |
+          if [[ ! -f VERSION ]]; then
+            exit 0
+          fi
+
+          file_version=$(cat VERSION)
+          script_version=$(grep -m1 'VERSION=' ru | cut -d'"' -f2)
+
+          if [[ "$file_version" != "$script_version" ]]; then
+            echo "::error::VERSION file ($file_version) does not match ru script ($script_version)"
+            exit 1
+          fi
+
+          echo "Versions are consistent: $file_version"

@@ -1,0 +1,47 @@
+{
+  "skill": "test-skill",
+  "path": "/full/path/to/test-skill",
+  "valid": false,
+  "errors": [
+    "Missing required file: HOW_TO_USE.md",
+    "SKILL.md must start with YAML frontmatter (---)",
+    "Python file name should be snake_case: 'CalculateRatios.py'"
+  ],
+  "warnings": [
+    "Found backup files: ['SKILL.md.backup']",
+    "Python file 'CalculateRatios.py' missing module docstring"
+  ],
+  "fix_suggestions": [
+    "Create HOW_TO_USE.md in skill folder",
+    "Add '---' as first line of SKILL.md",
+    "Rename file to: 'calculate_ratios.py'",
+    "Remove backup files: SKILL.md.backup",
+    "Add docstring to 'CalculateRatios.py'"
+  ],
+  "validation_details": {
+    "structure": {
+      "valid": false,
+      "errors": ["Missing required file: HOW_TO_USE.md"],
+      "warnings": ["Found backup files: ['SKILL.md.backup']"],
+      "fix_suggestions": ["Create HOW_TO_USE.md in skill folder", "Remove backup files: SKILL.md.backup"]
+    },
+    "yaml": {
+      "valid": false,
+      "errors": ["SKILL.md must start with YAML frontmatter (---)"],
+      "warnings": [],
+      "fix_suggestions": ["Add '---' as first line of SKILL.md"]
+    },
+    "python": {
+      "valid": false,
+      "errors": ["Python file name should be snake_case: 'CalculateRatios.py'"],
+      "warnings": ["Python file 'CalculateRatios.py' missing module docstring"],
+      "fix_suggestions": ["Rename file to: 'calculate_ratios.py'", "Add docstring to 'CalculateRatios.py'"]
+    },
+    "naming": {
+      "valid": true,
+      "errors": [],
+      "warnings": [],
+      "fix_suggestions": []
+    }
+  }
+}

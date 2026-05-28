@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>战略路线图示例 - McKinsey Style</title>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .roadmap-container {
+            position: relative;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+        }
+
+        .roadmap-timeline {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            padding: 40px 0;
+        }
+
+        .roadmap-timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-primary) 100%);
+            transform: translateY(-50%);
+        }
+
+        .milestone {
+            position: relative;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .milestone-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 5px solid;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .milestone-dot:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 10px currentColor;
+        }
+
+        .milestone-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            min-width: 150px;
+            transition: all 0.3s;
+        }
+
+        .milestone-content:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .milestone-year {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+        }
+
+        .milestone-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        .milestone-items {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-light);
+        }
+
+        .milestone-items li {
+            padding: 4px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .milestone-items li:last-child {
+            border-bottom: none;
+        }
+
+        .strategy-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin: 30px 0;
+            border-left: 5px solid var(--accent-primary);
+        }
+
+        .strategy-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+        }
+
+        @media (max-width: 768px) {
+            .roadmap-timeline {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .roadmap-timeline::before {
+                width: 4px;
+                height: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .milestone-content {
+                min-width: 200px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ 战略路线图示例</h1>
+        <p class="description">
+            McKinsey 风格战略规划可视化 | 时间轴+里程碑<br>
+            适用于战略规划、产品路线图、发展路径等场景
+        </p>
+
+        <h2>示例：公司5年发展战略</h2>
+        <div class="roadmap-container">
+            <div class="roadmap-timeline">
+                <div class="milestone">
+                    <div class="milestone-dot" style="border-color: var(--accent-blue); color: var(--accent-blue);">1</div>
+                    <div class="milestone-content">
+                        <div class="milestone-year">2025年</div>
+                        <div class="milestone-title">夯实基础</div>
+                        <ul class="milestone-items">
+                            <li>完成核心产品2.0版本</li>
+                            <li>建立华东华北销售网络</li>
+                            <li>培养100+人技术团队</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="milestone">
+                    <div class="milestone-dot" style="border-color: var(--accent-green); color: var(--accent-green);">2</div>
+                    <div class="milestone-content">
+                        <div class="milestone-year">2026年</div>
+                        <div class="milestone-title">区域扩张</div>
+                        <ul class="milestone-items">
+                            <li>进入华南西南市场</li>
+                            <li>推出企业版解决方案</li>
+                            <li>客户数突破1000家</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="milestone">
+                    <div class="milestone-dot" style="border-color: var(--accent-blue-light); color: var(--accent-blue-light);">3</div>
+                    <div class="milestone-content">
+                        <div class="milestone-year">2027年</div>
+                        <div class="milestone-title">生态建设</div>
+                        <ul class="milestone-items">
+                            <li>开放API和插件平台</li>
+                            <li>建立合作伙伴生态</li>
+                            <li>启动国际化布局</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="milestone">
+                    <div class="milestone-dot" style="border-color: var(--accent-yellow); color: var(--accent-yellow);">4</div>
+                    <div class="milestone-content">
+                        <div class="milestone-year">2028年</div>
+                        <div class="milestone-title">行业领导</div>
+                        <ul class="milestone-items">
+                            <li>市场份额达到15%</li>
+                            <li>推出3个新行业解决方案</li>
+                            <li>进入东南亚市场</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="milestone">
+                    <div class="milestone-dot" style="border-color: var(--accent-primary); color: var(--accent-primary);">5</div>
+                    <div class="milestone-content">
+                        <div class="milestone-year">2029年</div>
+                        <div class="milestone-title">全球化布局</div>
+                        <ul class="milestone-items">
+                            <li>收入突破10亿元</li>
+                            <li>员工规模达到500人</li>
+                            <li>登陆纳斯达克上市</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="strategy-card">
+            <h4>🎯 核心战略要点</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>产品战略</strong>：持续技术创新，2年一代迭代，3年行业定制</li>
+                <li><strong>市场战略</strong>：先国内后海外，先大客户后长尾市场</li>
+                <li><strong>人才战略</strong>：建立技术+销售双通道晋升体系，培养复合型人才</li>
+                <li><strong>生态战略</strong>：开放平台，赋能合作伙伴，共建行业生态</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h4>💡 实施保障</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>组织保障</strong>：设立战略委员会，季度复盘进展</li>
+                <li><strong>资源保障</strong>：每年投入营收的15%用于研发</li>
+                <li><strong>文化保障</strong>：建立"客户第一、持续创新"的企业文化</li>
+                <li><strong>激励机制</strong>：全员持股计划，长期利益绑定</li>
+            </ul>
+        </div>
+
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>企业战略</h4>
+                <p>3-5年发展规划、战略路径</p>
+            </div>
+            <div class="use-case-card">
+                <h4>产品路线图</h4>
+                <p>产品规划、功能迭代、版本演进</p>
+            </div>
+            <div class="use-case-card">
+                <h4>转型规划</h4>
+                <p>数字化转型、业务转型、组织变革</p>
+            </div>
+            <div class="use-case-card">
+                <h4>投资规划</h4>
+                <p>投资计划、募资时间表、退出策略</p>
+            </div>
+            <div class="use-case-card">
+                <h4>能力建设</h4>
+                <p>技术能力、管理能力、市场能力</p>
+            </div>
+            <div class="use-case-card">
+                <h4>组织发展</h4>
+                <p>组织架构、人才梯队、文化建设</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>HTML Presentation Beautifier - McKinsey Style Strategy Roadmap Example</p>
+            <p>时间轴+里程碑的战略规划可视化</p>
+        </footer>
+    </div>
+</body>
+</html>

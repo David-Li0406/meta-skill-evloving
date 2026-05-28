@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "generated": "<ISO8601>",
+  "project_type": "<detected stack>",
+  "patterns": {
+    "api_calls": {
+      "pattern": "<preferred pattern>",
+      "confidence": "detected|confirmed|custom",
+      "context": "<scope>",
+      "enforcement": "required|preferred|optional"
+    },
+    "naming": {
+      "functions": "camelCase",
+      "files": "kebab-case",
+      "components": "PascalCase"
+    }
+  },
+  "custom_rules": [
+    {
+      "name": "Page Title Convention",
+      "description": "Set document title in useEffect on every page component",
+      "category": "component_structure",
+      "detection_regex": "useEffect.*document\\.title",
+      "example": "useEffect(() => { document.title = 'Dashboard'; }, []);",
+      "enforcement": "required"
+    }
+  ],
+  "excluded_paths": ["node_modules/", "dist/", "build/", "coverage/", "*.test.ts"],
+  "integrations": {
+    "eslint": true,
+    "prettier": true,
+    "editorconfig": true
+  }
+}

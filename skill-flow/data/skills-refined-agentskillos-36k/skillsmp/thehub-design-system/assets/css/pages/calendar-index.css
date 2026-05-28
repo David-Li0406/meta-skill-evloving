@@ -1,0 +1,504 @@
+/**
+ * Calendar Index Page Styles
+ * Redesigned to match results/series page - row-based inline layout
+ * Mobile-first responsive design
+ */
+
+/* ============================================
+   MONTH SECTION & DIVIDER (Large prominent headers)
+   ============================================ */
+.calendar-events {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.calendar-month-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.calendar-month-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) 0;
+}
+
+.calendar-month-label {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.calendar-month-line {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-border) 0%, transparent 100%);
+}
+
+.calendar-month-count {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+/* ============================================
+   EVENT LIST
+   ============================================ */
+.event-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+/* ============================================
+   EVENT ROW - Flexbox inline layout
+   ============================================ */
+.event-row {
+    --event-accent: #61CE70;
+
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s ease;
+}
+
+.event-row:hover {
+    border-color: var(--event-accent);
+    box-shadow: var(--shadow-md);
+    transform: translateX(2px);
+}
+
+/* Accent Bar */
+.event-accent-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--event-accent);
+}
+
+/* Logo - Large */
+.event-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-secondary);
+}
+
+.event-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+}
+
+.event-logo-placeholder {
+    color: var(--color-text-muted);
+}
+
+.event-logo-placeholder i {
+    width: 32px;
+    height: 32px;
+}
+
+/* Date Inline */
+.event-date-inline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 70px;
+    flex-shrink: 0;
+}
+
+.event-date-inline strong {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--event-accent);
+    white-space: nowrap;
+}
+
+.event-date-inline .event-day-name {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Series Badge */
+.event-series-badge {
+    padding: 4px 12px;
+    background: rgba(97, 206, 112, 0.1);
+    color: var(--event-accent);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* SM Championship Badge */
+.event-sm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #1a1a1a;
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+}
+
+.event-sm-badge i {
+    width: 14px;
+    height: 14px;
+}
+
+/* Title */
+.event-title {
+    flex: 1;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Location Inline */
+.event-location-inline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.event-location-inline i {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+}
+
+/* Registrations */
+.event-registrations {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Deadline */
+.event-deadline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.event-deadline i {
+    width: 14px;
+    height: 14px;
+}
+
+.deadline-label {
+    color: var(--color-text-muted);
+}
+
+.event-deadline.soon {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-warning);
+}
+
+.event-deadline.urgent {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Arrow */
+.event-arrow {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+}
+
+.event-arrow i {
+    width: 24px;
+    height: 24px;
+}
+
+.event-row:hover .event-arrow {
+    color: var(--event-accent);
+    transform: translateX(4px);
+}
+
+/* ============================================
+   FILTERS BAR
+   ============================================ */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    flex: 1;
+    min-width: 140px;
+    max-width: 200px;
+}
+
+.filter-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    font-weight: var(--weight-medium);
+}
+
+.filter-select {
+    padding: var(--space-sm) var(--space-md);
+    padding-right: var(--space-xl);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    transition: border-color var(--transition-fast);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(59, 158, 255, 0.1);
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.empty-state {
+    text-align: center;
+    padding: var(--space-3xl);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+}
+
+.empty-icon i {
+    width: 64px;
+    height: 64px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-md);
+}
+
+.empty-state h3 {
+    margin: 0 0 var(--space-sm);
+}
+
+.empty-state p {
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+/* ============================================
+   MOBILE STYLES
+   ============================================ */
+@media (max-width: 767px) {
+    /* Filter bar - edge-to-edge on mobile */
+    .filter-bar {
+        flex-direction: column;
+        background: var(--color-bg-card);
+        padding: var(--space-sm) var(--container-padding, 16px);
+        gap: var(--space-sm);
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        width: calc(100% + var(--container-padding, 16px) * 2);
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .filter-group {
+        width: 100%;
+        max-width: none;
+    }
+
+    .filter-label {
+        display: block;
+        margin-bottom: var(--space-xs);
+    }
+
+    .filter-select {
+        width: 100%;
+    }
+
+    .calendar-events {
+        gap: var(--space-lg);
+    }
+
+    .calendar-month-divider {
+        padding-left: var(--container-padding);
+        padding-right: var(--container-padding);
+    }
+
+    .calendar-month-label {
+        font-size: 1.75rem;
+    }
+
+    /* Edge-to-edge cards */
+    .event-row {
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        padding: var(--space-md) var(--container-padding, 16px);
+        padding-left: calc(var(--container-padding, 16px) + 8px);
+        gap: var(--space-md);
+    }
+
+    .event-row:first-child {
+        border-top: none;
+    }
+
+    .event-logo {
+        width: 48px;
+        height: 48px;
+    }
+
+    .event-logo-placeholder i {
+        width: 24px;
+        height: 24px;
+    }
+
+    .event-title {
+        font-size: var(--text-base);
+    }
+
+    /* Hide extras on mobile - keep deadline and SM badge visible */
+    .event-series-badge,
+    .event-location-inline,
+    .event-registrations {
+        display: none;
+    }
+
+    /* SM badge stays visible and compact on mobile */
+    .event-sm-badge {
+        padding: 2px 6px;
+        font-size: var(--text-xs);
+    }
+
+    .event-sm-badge i {
+        width: 12px;
+        height: 12px;
+    }
+
+    .event-deadline {
+        padding: 2px 8px;
+        font-size: var(--text-xs);
+    }
+
+    .deadline-label {
+        display: none;
+    }
+
+    .event-arrow {
+        position: absolute;
+        right: var(--container-padding, 16px);
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .event-row:hover .event-arrow {
+        transform: translateY(-50%) translateX(2px);
+    }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+    .calendar-month-label {
+        font-size: 1.5rem;
+    }
+
+    .calendar-month-count {
+        display: none;
+    }
+
+    .event-title {
+        font-size: var(--text-sm);
+    }
+}
+
+/* ============================================
+   TABLET STYLES
+   ============================================ */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .event-row {
+        gap: var(--space-md);
+    }
+
+    /* Hide some elements on tablet */
+    .event-registrations {
+        display: none;
+    }
+}
+
+/* ============================================
+   DESKTOP STYLES - Large logos, all info visible
+   ============================================ */
+@media (min-width: 1024px) {
+    .event-logo {
+        width: 72px;
+        height: 72px;
+    }
+
+    .event-title {
+        font-size: var(--text-xl);
+    }
+}

@@ -1,0 +1,1 @@
+../../../rules/workflow/problem-solving.md

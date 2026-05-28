@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "description": "Snowflakeテーブルのスキーマ定義ファイル。このファイルにテーブル構造を記載しておくことで、クエリ生成時に参照できます。",
+  "tables": {
+    "users": {
+      "description": "ユーザー情報テーブル",
+      "schema": "PUBLIC",
+      "columns": {
+        "user_id": {
+          "type": "NUMBER(38,0)",
+          "nullable": false,
+          "description": "ユーザーID（主キー）",
+          "primary_key": true
+        },
+        "name": {
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "description": "ユーザー名"
+        },
+        "email": {
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "description": "メールアドレス"
+        },
+        "age": {
+          "type": "NUMBER(3,0)",
+          "nullable": true,
+          "description": "年齢"
+        },
+        "city": {
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "description": "居住都市"
+        },
+        "status": {
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "default": "'active'",
+          "description": "ステータス (active, inactive, suspended)"
+        },
+        "created_at": {
+          "type": "TIMESTAMP_NTZ(9)",
+          "nullable": false,
+          "default": "CURRENT_TIMESTAMP()",
+          "description": "作成日時"
+        },
+        "updated_at": {
+          "type": "TIMESTAMP_NTZ(9)",
+          "nullable": true,
+          "description": "更新日時"
+        }
+      },
+      "sample_queries": [
+        "SELECT * FROM users WHERE created_at >= '2024-01-01' LIMIT 100;",
+        "SELECT name, email FROM users WHERE email IS NOT NULL;",
+        "SELECT city, COUNT(*) as user_count FROM users GROUP BY city ORDER BY user_count DESC;"
+      ]
+    },
+    "orders": {
+      "description": "注文情報テーブル",
+      "schema": "PUBLIC",
+      "columns": {
+        "order_id": {
+          "type": "NUMBER(38,0)",
+          "nullable": false,
+          "description": "注文ID（主キー）",
+          "primary_key": true
+        },
+        "user_id": {
+          "type": "NUMBER(38,0)",
+          "nullable": false,
+          "description": "ユーザーID（外部キー）",
+          "foreign_key": "users.user_id"
+        },
+        "product_id": {
+          "type": "NUMBER(38,0)",
+          "nullable": false,
+          "description": "商品ID（外部キー）",
+          "foreign_key": "products.product_id"
+        },
+        "quantity": {
+          "type": "NUMBER(10,0)",
+          "nullable": false,
+          "default": "1",
+          "description": "注文数量"
+        },
+        "amount": {
+          "type": "NUMBER(10,2)",
+          "nullable": false,
+          "description": "注文金額"
+        },
+        "status": {
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "default": "'pending'",
+          "description": "注文ステータス (pending, processing, completed, cancelled)"
+        },
+        "order_date": {
+          "type": "TIMESTAMP_NTZ(9)",
+          "nullable": false,
+          "default": "CURRENT_TIMESTAMP()",
+          "description": "注文日時"
+        },
+        "shipped_date": {
+          "type": "TIMESTAMP_NTZ(9)",
+          "nullable": true,
+          "description": "発送日時"
+        }
+      },
+      "sample_queries": [
+        "SELECT * FROM orders WHERE order_date >= '2024-01-01' ORDER BY order_date DESC LIMIT 100;",
+        "SELECT status, COUNT(*) as order_count, SUM(amount) as total_amount FROM orders GROUP BY status;",
+        "SELECT DATE_TRUNC('month', order_date) as month, SUM(amount) FROM orders GROUP BY month ORDER BY month;"
+      ]
+    },
+    "products": {
+      "description": "商品情報テーブル",
+      "schema": "PUBLIC",
+      "columns": {
+        "product_id": {
+          "type": "NUMBER(38,0)",
+          "nullable": false,
+          "description": "商品ID（主キー）",
+          "primary_key": true
+        },
+        "name": {
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "description": "商品名"
+        },
+        "category": {
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "description": "カテゴリ"
+        },
+        "price": {
+          "type": "NUMBER(10,2)",
+          "nullable": false,
+          "description": "価格"
+        },
+        "stock": {
+          "type": "NUMBER(10,0)",
+          "nullable": false,
+          "default": "0",
+          "description": "在庫数"
+        },
+        "description": {
+          "type": "TEXT",
+          "nullable": true,
+          "description": "商品説明"
+        },
+        "is_active": {
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "description": "有効フラグ"
+        },
+        "created_at": {
+          "type": "TIMESTAMP_NTZ(9)",
+          "nullable": false,
+          "default": "CURRENT_TIMESTAMP()",
+          "description": "登録日時"
+        }
+      },
+      "sample_queries": [
+        "SELECT * FROM products WHERE is_active = TRUE ORDER BY price DESC LIMIT 50;",
+        "SELECT category, COUNT(*) as product_count, AVG(price) as avg_price FROM products GROUP BY category;",
+        "SELECT * FROM products WHERE name LIKE '%キーワード%' AND stock > 0;"
+      ]
+    }
+  },
+  "notes": {
+    "usage": "このスキーマファイルはSnowflakeクエリ実行スキルが参照します。実際のSnowflakeデータベースのテーブル構造に合わせて編集してください。",
+    "update_instructions": "新しいテーブルを追加する場合は、'tables'オブジェクトに新しいキーを追加し、同様の構造でカラム情報を定義してください。",
+    "data_types": [
+      "NUMBER(precision, scale) - 数値型",
+      "VARCHAR(length) - 可変長文字列",
+      "TEXT - 長い文字列",
+      "BOOLEAN - 真偽値",
+      "TIMESTAMP_NTZ - タイムゾーンなしタイムスタンプ",
+      "TIMESTAMP_LTZ - ローカルタイムゾーンタイムスタンプ",
+      "TIMESTAMP_TZ - タイムゾーン付きタイムスタンプ",
+      "DATE - 日付",
+      "TIME - 時刻",
+      "VARIANT - JSON等の半構造化データ",
+      "ARRAY - 配列型",
+      "OBJECT - オブジェクト型"
+    ]
+  }
+}

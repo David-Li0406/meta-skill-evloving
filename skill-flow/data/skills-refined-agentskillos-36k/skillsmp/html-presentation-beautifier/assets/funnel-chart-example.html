@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漏斗图示例 - McKinsey Style</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .funnel-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .funnel-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .funnel-card h3 {
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .funnel-chart-container {
+            position: relative;
+            height: 450px;
+            margin: 20px 0;
+        }
+
+        .chart-type-badge {
+            display: inline-block;
+            background: var(--accent-blue);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .funnel-legend {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .funnel-legend p {
+            font-size: 14px;
+            color: var(--text-light);
+            margin: 5px 0;
+        }
+
+        .conversion-rate {
+            display: inline-block;
+            background: var(--accent-green);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .funnel-showcase {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔻 漏斗图示例</h1>
+        <p class="description">
+            McKinsey 风格转化流程可视化 | 横向条形图，宽度递减<br>
+            适用于销售漏斗、用户转化、网站分析等场景
+        </p>
+
+        <!-- Example 1: E-commerce Funnel -->
+        <div class="funnel-showcase">
+            <div class="funnel-card">
+                <h3>电商销售漏斗</h3>
+                <div class="funnel-chart-container">
+                    <span class="chart-type-badge">Funnel Chart (漏斗图)</span>
+                    <canvas id="funnel1" style="height: 350px !important;"></canvas>
+                    <div class="funnel-legend">
+                        <p><strong>总体转化率：</strong><span class="conversion-rate">3.6%</span></p>
+                        <p style="font-size: 12px; color: #74788d; margin-top: 10px;">从访问到购买的完整转化路径</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="funnel-card">
+                <h3>SaaS 用户漏斗</h3>
+                <div class="funnel-chart-container">
+                    <span class="chart-type-badge">Funnel Chart (漏斗图)</span>
+                    <canvas id="funnel2" style="height: 350px !important;"></canvas>
+                    <div class="funnel-legend">
+                        <p><strong>付费转化率：</strong><span class="conversion-rate">15%</span></p>
+                        <p style="font-size: 12px; color: #74788d; margin-top: 10px;">从注册到付费的用户旅程</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="funnel-card">
+                <h3>招聘流程漏斗</h3>
+                <div class="funnel-chart-container">
+                    <span class="chart-type-badge">Funnel Chart (漏斗图)</span>
+                    <canvas id="funnel3" style="height: 350px !important;"></canvas>
+                    <div class="funnel-legend">
+                        <p><strong>录用率：</strong><span class="conversion-rate">6.7%</span></p>
+                        <p style="font-size: 12px; color: #74788d; margin-top: 10px;">从简历筛选到发offer的招聘流程</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="funnel-card">
+                <h3>客户流失漏斗</h3>
+                <div class="funnel-chart-container">
+                    <span class="chart-type-badge">Funnel Chart (漏斗图)</span>
+                    <canvas id="funnel4" style="height: 350px !important;"></canvas>
+                    <div class="funnel-legend">
+                        <p><strong>年度留存率：</strong><span class="conversion-rate">40%</span></p>
+                        <p style="font-size: 12px; color: #74788d; margin-top: 10px;">从新客到活跃客户的留存分析</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Use Cases -->
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>销售漏斗</h4>
+                <p>线索→机会→成交的全流程</p>
+            </div>
+            <div class="use-case-card">
+                <h4>用户转化</h4>
+                <p>访问→注册→激活→付费</p>
+            </div>
+            <div class="use-case-card">
+                <h4>网站分析</h4>
+                <p>浏览→点击→加购→购买</p>
+            </div>
+            <div class="use-case-card">
+                <h4>招聘流程</h4>
+                <p>简历→面试→offer→入职</p>
+            </div>
+            <div class="use-case-card">
+                <h4>客户留存</h4>
+                <p>新客→活跃→忠诚→流失</p>
+            </div>
+            <div class="use-case-card">
+                <h4>营销活动</h4>
+                <p>触达→打开→点击→转化</p>
+            </div>
+        </div>
+
+        <!-- Technical Implementation -->
+        <h2>🛠️ 技术实现</h2>
+        <div class="info-box">
+            <h4>核心实现逻辑</h4>
+            <p>使用 Chart.js 横向条形图（bar），通过调整 barPercentage 实现宽度递减：</p>
+            <div class="code-block" style="background: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 4px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.6;">
+<span style="color: #66d9ef;">type</span>: <span style="color: #e6db74;">'bar'</span>,
+<span style="color: #66d9ef;">options</span>: {
+    <span style="color: #66d9ef;">indexAxis</span>: <span style="color: #e6db74;">'y'</span>,  <span style="color: #75715e;">// 横向条形图</span>
+    <span style="color: #66d9ef;">barPercentage</span>: [<span style="color: #ae81ff;">0.8</span>, <span style="color: #ae81ff;">0.7</span>, <span style="color: #ae81ff;">0.6</span>, <span style="color: #ae81ff;">0.5</span>, <span style="color: #ae81ff;">0.4</span>]  <span style="color: #75715e;">// 宽度递减</span>
+}
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>McKinsey 配色方案</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>阶段 1</strong>：深蓝色 #556EE6（最宽）</li>
+                <li><strong>阶段 2</strong>：橙红色 #F85d42</li>
+                <li><strong>阶段 3</strong>：绿色 #34c38f</li>
+                <li><strong>阶段 4</strong>：蓝色 #50a5f1</li>
+                <li><strong>阶段 5</strong>：黄色 #f1b44c（最窄）</li>
+            </ul>
+        </div>
+
+        <!-- Design Guidelines -->
+        <h2>📐 设计规范</h2>
+        <div class="info-box">
+            <h4>McKinsey 风格建议</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>阶段数量</strong>：建议 3-5 个关键阶段</li>
+                <li><strong>宽度递减</strong>：从上到下宽度逐渐减小，形成漏斗形状</li>
+                <li><strong>转化率标注</strong>：每个阶段显示转化率或流失率</li>
+                <li><strong>颜色区分</strong>：每个阶段使用不同颜色，增强视觉层次</li>
+                <li><strong>数据标签</strong>：清晰显示每个阶段的数值和占比</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h4>关键指标计算</h4>
+            <p>漏斗图的关键是展示每个阶段的转化效率：</p>
+            <ul style="line-height: 1.8; margin-top: 10px;">
+                <li><strong>阶段转化率</strong>：当前阶段数量 ÷ 上一阶段数量</li>
+                <li><strong>总体转化率</strong>：最终阶段数量 ÷ 初始阶段数量</li>
+                <li><strong>流失率</strong>：1 - 转化率</li>
+                <li><strong>优化建议</strong>：流失率超过 50% 的阶段需要优化</li>
+            </ul>
+        </div>
+
+        <!-- Best Practices -->
+        <h2>✅ 使用建议</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>✓ 控制阶段数</h4>
+                <p>不超过 5 个关键阶段</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 明确标注</h4>
+                <p>显示每阶段数量和转化率</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 宽度递减</h4>
+                <p>视觉上形成明显的漏斗形状</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 关注流失</h4>
+                <p>突出高流失率的阶段</p>
+            </div>
+            <div class="use-case-card" style="border-left-color: #dc3545;">
+                <h4 style="color: #dc3545;">❌ 避免过多阶段</h4>
+                <p>超过 6 个会难以阅读</p>
+            </div>
+            <div class="use-case-card" style="border-left-color: #dc3545;">
+                <h4 style="color: #dc3545;">❌ 避免混乱排序</h4>
+                <p>必须按转化顺序排列</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>HTML Presentation Beautifier - McKinsey Style Funnel Chart Example</p>
+            <p>基于 Chart.js 横向条形图的漏斗图实现</p>
+        </footer>
+    </div>
+
+    <script>
+        // Funnel Chart Data
+        const funnelData = [
+            {
+                id: 'funnel1',
+                labels: ['访问', '加购', '下单', '支付'],
+                data: [10000, 3000, 1500, 360],
+                title: '电商销售漏斗'
+            },
+            {
+                id: 'funnel2',
+                labels: ['访问', '注册', '试用', '付费'],
+                data: [10000, 2000, 600, 300],
+                title: 'SaaS 用户漏斗'
+            },
+            {
+                id: 'funnel3',
+                labels: ['简历筛选', '初试', '复试', '发offer'],
+                data: [500, 100, 50, 34],
+                title: '招聘流程漏斗'
+            },
+            {
+                id: 'funnel4',
+                labels: ['新客户', '首购', '复购', '活跃'],
+                data: [1000, 600, 400, 200],
+                title: '客户流失漏斗'
+            }
+        ];
+
+        funnelData.forEach(funnel => {
+            new Chart(document.getElementById(funnel.id), {
+                type: 'bar',
+                data: {
+                    labels: funnel.labels,
+                    datasets: [{
+                        data: funnel.data,
+                        backgroundColor: [
+                            '#556EE6',
+                            '#F85d42',
+                            '#34c38f',
+                            '#50a5f1',
+                            '#f1b44c'
+                        ],
+                        borderColor: 'rgba(0,0,0,0.1)',
+                        borderWidth: 1,
+                        barPercentage: [0.8, 0.7, 0.6, 0.5, 0.4].slice(0, funnel.data.length),
+                        categoryPercentage: 0.9
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            grid: { display: false },
+                            ticks: { 
+                                font: { size: 14, weight: '600' },
+                                color: '#333'
+                            }
+                        },
+                        x: {
+                            beginAtZero: true,
+                            title: { 
+                                display: true, 
+                                text: '数量', 
+                                font: { size: 14, weight: '600' }
+                            },
+                            grid: { color: '#e0e0e0' },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.x;
+                                    const prevValue = context.dataIndex > 0 
+                                        ? funnel.data[context.dataIndex - 1] 
+                                        : funnel.data[0];
+                                    const rate = context.dataIndex > 0 
+                                        ? ((value / prevValue) * 100).toFixed(1) + '%'
+                                        : '100%';
+                                    return [
+                                        `数量: ${value.toLocaleString()}`,
+                                        `转化率: ${rate}`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

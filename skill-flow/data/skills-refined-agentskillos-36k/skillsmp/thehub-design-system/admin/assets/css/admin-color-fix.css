@@ -1,0 +1,1370 @@
+/**
+ * TheHUB Admin Color Fix - COMPLETE VERSION
+ * Restores correct design from original screenshot
+ * Load this LAST after all other CSS files
+ * Created: 2026-01-17
+ * Updated: 2026-01-18 - Unified dark/light mode to same colors
+ */
+
+/* ========================================================================
+   1. FIX ACCENT COLOR - Blue accent for all themes
+   Both dark and light mode now use identical light-mode colors
+   ======================================================================== */
+
+:root,
+html[data-theme="dark"],
+html[data-theme="light"] {
+    --color-accent: #0066CC !important;
+    --color-accent-hover: #0052A3 !important;
+    --color-accent-light: rgba(0, 102, 204, 0.08) !important;
+    --color-accent-text: #0066CC !important;
+    --color-accent-glow: rgba(0, 102, 204, 0.2) !important;
+    --color-accent-glow-strong: rgba(0, 102, 204, 0.35) !important;
+
+    /* Borders - same for both themes (light-mode style) */
+    --color-border: rgba(0, 0, 0, 0.1) !important;
+    --color-border-strong: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ========================================================================
+   2. FIX HEADER & SIDEBAR - Match primary pages background
+   ======================================================================== */
+
+/* Header - use theme-aware background instead of hardcoded dark */
+.header,
+.admin-header {
+    background: var(--color-bg-surface) !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+/* Sidebar - ensure it matches the page background */
+.sidebar,
+.admin-sidebar {
+    background: var(--color-bg-surface) !important;
+    border-right: 1px solid var(--color-border) !important;
+}
+
+/* Mobile sidebar overlay */
+.admin-sidebar-overlay {
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ========================================================================
+   3. FIX STAT CARDS - White cards instead of colored gradients
+   ======================================================================== */
+
+/* Remove gradient definitions */
+:root {
+    --admin-gradient-primary: transparent !important;
+    --admin-gradient-success: transparent !important;
+    --admin-gradient-warning: transparent !important;
+    --admin-gradient-danger: transparent !important;
+}
+
+/* All stat cards white background */
+.admin-stat-card.stat-primary,
+.admin-stat-card.stat-success,
+.admin-stat-card.stat-warning,
+.admin-stat-card.stat-danger,
+.admin-stat-card.stat-info {
+    background: var(--color-bg-card) !important;
+    color: var(--color-text-primary) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+.admin-stat-card {
+    background: var(--color-bg-card) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+.admin-stat-card:hover {
+    border-color: var(--color-accent) !important;
+    background: var(--color-bg-card) !important;
+    transform: none !important;
+}
+
+/* Remove decorative elements */
+.admin-stat-card::before {
+    display: none !important;
+}
+
+/* Fix text colors in stat cards */
+.admin-stat-card .stat-value,
+.admin-stat-card.stat-primary .stat-value,
+.admin-stat-card.stat-success .stat-value,
+.admin-stat-card.stat-warning .stat-value,
+.admin-stat-card.stat-danger .stat-value {
+    color: var(--color-text-primary) !important;
+}
+
+.admin-stat-card .stat-label,
+.admin-stat-card.stat-primary .stat-label,
+.admin-stat-card.stat-success .stat-label,
+.admin-stat-card.stat-warning .stat-label,
+.admin-stat-card.stat-danger .stat-label {
+    color: var(--color-text-secondary) !important;
+}
+
+/* ========================================================================
+   4. FIX ICON SIZES - Global constraints
+   ======================================================================== */
+
+/* Stat card icons */
+.admin-stat-card .stat-icon,
+.admin-stat-card .admin-stat-icon,
+.admin-stat-card.stat-primary .stat-icon,
+.admin-stat-card.stat-success .stat-icon,
+.admin-stat-card.stat-warning .stat-icon,
+.admin-stat-card.stat-danger .stat-icon {
+    width: 40px !important;
+    height: 40px !important;
+    background: transparent !important;
+    color: var(--color-accent) !important;
+}
+
+.admin-stat-card .stat-icon svg,
+.admin-stat-card .admin-stat-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    color: var(--color-accent) !important;
+}
+
+/* Global icon size constraints - max 32px for all admin icons */
+.admin-content svg:not(.logo):not([class*="chart"]):not(.empty-state-icon) {
+    max-width: 32px !important;
+    max-height: 32px !important;
+}
+
+/* Action icons - exact 20px */
+[class*="action-icon"] svg,
+[class*="quick-action"] svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* Override inline styles for large icons (64px, 80px, 96px) */
+svg[style*="width: 64px"],
+svg[style*="width: 80px"],
+svg[style*="width: 96px"],
+svg[style*="width:64px"],
+svg[style*="width:80px"],
+svg[style*="width:96px"] {
+    width: 32px !important;
+    height: 32px !important;
+}
+
+/* Event/series action icons - 24px */
+.event-actions svg,
+.series-actions svg,
+[class*="action-row"] svg,
+.table-actions svg {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* Quick action icons - use CSS variables */
+.admin-quick-action-icon {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+}
+
+/* ========================================================================
+   5. FIX BUTTONS - Make them look like proper buttons
+   ======================================================================== */
+
+/* Base button styles */
+.btn,
+button[class*="btn"],
+a[class*="btn"],
+.admin-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: var(--space-xs, 8px) !important;
+    padding: var(--space-xs, 8px) var(--space-md, 16px) !important;
+    font-size: var(--text-sm, 14px) !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+    text-decoration: none !important;
+    border-radius: var(--radius-md, 8px) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+}
+
+/* Primary button - solid blue */
+.btn-primary,
+.btn-admin-primary,
+.admin-btn-primary,
+button.btn-primary,
+a.btn-primary {
+    background: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: white !important;
+    box-shadow: 0 2px 4px rgba(0, 102, 204, 0.2) !important;
+}
+
+.btn-primary:hover,
+.btn-admin-primary:hover,
+.admin-btn-primary:hover,
+button.btn-primary:hover,
+a.btn-primary:hover {
+    background: var(--color-accent-hover) !important;
+    border-color: var(--color-accent-hover) !important;
+    box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Secondary button - outlined */
+.btn-secondary,
+.btn-admin-secondary,
+.admin-btn-secondary,
+button.btn-secondary,
+a.btn-secondary {
+    background: transparent !important;
+    border-color: var(--color-border-strong) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.btn-secondary:hover,
+.btn-admin-secondary:hover,
+.admin-btn-secondary:hover,
+button.btn-secondary:hover,
+a.btn-secondary:hover {
+    background: var(--color-bg-hover) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-accent) !important;
+}
+
+/* Ghost button - minimal */
+.btn-ghost,
+.btn-admin-ghost,
+.admin-btn-ghost {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--color-text-secondary) !important;
+}
+
+.btn-ghost:hover,
+.btn-admin-ghost:hover,
+.admin-btn-ghost:hover {
+    background: var(--color-bg-hover) !important;
+    color: var(--color-accent) !important;
+}
+
+/* Danger button */
+.btn-danger,
+.btn-admin-danger,
+.admin-btn-danger {
+    background: var(--color-error) !important;
+    border-color: var(--color-error) !important;
+    color: white !important;
+}
+
+.btn-danger:hover,
+.btn-admin-danger:hover,
+.admin-btn-danger:hover {
+    background: #c82333 !important;
+    border-color: #c82333 !important;
+}
+
+/* Success button */
+.btn-success,
+.btn-admin-success,
+.admin-btn-success {
+    background: var(--color-success) !important;
+    border-color: var(--color-success) !important;
+    color: white !important;
+}
+
+.btn-success:hover,
+.btn-admin-success:hover,
+.admin-btn-success:hover {
+    background: #059669 !important;
+    border-color: #059669 !important;
+}
+
+/* Warning button */
+.btn-warning,
+.btn-admin-warning,
+.admin-btn-warning {
+    background: var(--color-warning) !important;
+    border-color: var(--color-warning) !important;
+    color: #1a1a1a !important;
+}
+
+.btn-warning:hover,
+.btn-admin-warning:hover,
+.admin-btn-warning:hover {
+    background: #d97706 !important;
+    border-color: #d97706 !important;
+}
+
+/* Button sizes */
+.btn-sm {
+    padding: var(--space-2xs, 4px) var(--space-xs, 8px) !important;
+    font-size: var(--text-xs, 12px) !important;
+}
+
+.btn-lg {
+    padding: var(--space-sm, 12px) var(--space-lg, 24px) !important;
+    font-size: var(--text-base, 16px) !important;
+}
+
+/* Button with icon */
+.btn svg,
+.admin-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+}
+
+.btn-sm svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.btn-lg svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* Icon-only button */
+.btn-icon,
+.btn-icon-only {
+    padding: var(--space-xs, 8px) !important;
+    width: 36px !important;
+    height: 36px !important;
+}
+
+.btn-icon svg,
+.btn-icon-only svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* ========================================================================
+   6. FIX LINKS - Blue accent
+   ======================================================================== */
+
+a.text-primary,
+.admin-link-primary {
+    color: var(--color-accent) !important;
+}
+
+a.text-primary:hover,
+.admin-link-primary:hover {
+    color: var(--color-accent-hover) !important;
+}
+
+/* ========================================================================
+   7. FIX ACTIVE STATES - Blue highlight
+   ======================================================================== */
+
+.sidebar-link.is-active,
+.nav-item.active {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+}
+
+.sidebar-link.is-active::before,
+.nav-item.active::before {
+    background: var(--color-accent) !important;
+}
+
+/* ========================================================================
+   8. FIX TABS - Blue active state
+   ======================================================================== */
+
+.admin-tab.is-active,
+.tab.is-active,
+.tabs-nav .tab-btn.active {
+    color: var(--color-accent) !important;
+    border-bottom-color: var(--color-accent) !important;
+}
+
+/* ========================================================================
+   9. FIX FORMS - Blue focus states
+   ======================================================================== */
+
+.admin-input:focus,
+.admin-select:focus,
+.admin-textarea:focus,
+.form-input:focus,
+.form-select:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 3px var(--color-accent-light) !important;
+    outline: none !important;
+}
+
+/* ========================================================================
+   10. FIX CARDS - Consistent styling
+   ======================================================================== */
+
+.card,
+.admin-card {
+    background: var(--color-bg-card) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-lg, 12px) !important;
+}
+
+.card-header,
+.admin-card-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+/* ========================================================================
+   11. FIX TABLES - Consistent styling
+   ======================================================================== */
+
+.table,
+.admin-table {
+    background: var(--color-bg-card) !important;
+}
+
+.table th,
+.admin-table th {
+    background: var(--color-bg-surface) !important;
+    color: var(--color-text-secondary) !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+.table td,
+.admin-table td {
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+.table tbody tr:hover,
+.admin-table tbody tr:hover {
+    background: var(--color-bg-hover) !important;
+}
+
+/* ========================================================================
+   12. OVERRIDE ANY HARDCODED CYAN COLORS
+   ======================================================================== */
+
+[style*="#37d4d6"],
+[style*="#37D4D6"],
+[style*="#2bc4c6"],
+[style*="#2BC4C6"],
+[style*="rgb(55, 212, 214)"] {
+    color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+}
+
+/* Fix any hardcoded blue gradients */
+[style*="#3B82F6"],
+[style*="#1D4ED8"] {
+    background: var(--color-accent) !important;
+}
+
+/* ========================================================================
+   13. FIX PROGRESS BARS
+   ======================================================================== */
+
+.admin-progress-bar,
+.progress-bar {
+    background: var(--color-accent) !important;
+}
+
+.admin-progress-bar.success,
+.progress-bar.success {
+    background: var(--color-success) !important;
+}
+
+.admin-progress-bar.warning,
+.progress-bar.warning {
+    background: var(--color-warning) !important;
+}
+
+.admin-progress-bar.danger,
+.progress-bar.danger {
+    background: var(--color-error) !important;
+}
+
+/* ========================================================================
+   14. FIX BADGES
+   ======================================================================== */
+
+.badge-primary {
+    background: var(--color-accent) !important;
+    color: white !important;
+}
+
+.badge-success {
+    background: var(--color-success) !important;
+    color: white !important;
+}
+
+.badge-warning {
+    background: var(--color-warning) !important;
+    color: #1a1a1a !important;
+}
+
+.badge-danger {
+    background: var(--color-error) !important;
+    color: white !important;
+}
+
+/* ========================================================================
+   15. FIX ALERTS
+   ======================================================================== */
+
+.alert-info {
+    background: var(--color-info-light) !important;
+    border-color: var(--color-info) !important;
+    color: var(--color-info) !important;
+}
+
+.alert-success {
+    background: var(--color-success-light) !important;
+    border-color: var(--color-success) !important;
+    color: var(--color-success) !important;
+}
+
+.alert-warning {
+    background: var(--color-warning-light) !important;
+    border-color: var(--color-warning) !important;
+    color: var(--color-warning) !important;
+}
+
+.alert-danger,
+.alert-error {
+    background: var(--color-error-light) !important;
+    border-color: var(--color-error) !important;
+    color: var(--color-error) !important;
+}
+
+/* ========================================================================
+   16. CONSISTENCY FIX - Match public pages padding, borders, radius
+   ======================================================================== */
+
+/* Admin main content - match public page container padding */
+.admin-main {
+    padding: var(--container-padding, 16px) !important;
+}
+
+/* Responsive padding - match public pages exactly */
+@media (min-width: 768px) {
+    .admin-main {
+        padding: 24px !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .admin-main {
+        padding: 32px !important;
+    }
+}
+
+/* ========================================================================
+   17. CARDS - Match public page card styling
+   ======================================================================== */
+
+/* Card padding - use same as public (16px) */
+.card,
+.admin-card,
+.stat-card,
+.admin-stat-card {
+    padding: var(--card-padding, 16px) !important;
+    border-radius: var(--radius-lg, 14px) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+/* Card title - match public text size (1rem) */
+.card-title,
+.admin-card-title {
+    font-size: var(--text-md, 1rem) !important;
+    font-weight: var(--weight-semibold, 600) !important;
+    margin: 0 !important;
+}
+
+/* Card subtitle */
+.card-subtitle {
+    font-size: var(--text-sm, 0.8125rem) !important;
+    color: var(--color-text-secondary) !important;
+    margin-top: var(--space-2xs, 4px) !important;
+}
+
+/* Card header - consistent spacing */
+.card-header,
+.admin-card-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    margin-bottom: var(--space-md, 16px) !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+}
+
+/* Card body */
+.card-body,
+.admin-card-body {
+    color: var(--color-text-secondary) !important;
+}
+
+/* Card footer */
+.card-footer,
+.admin-card-footer {
+    margin-top: var(--space-md, 16px) !important;
+    padding-top: var(--space-md, 16px) !important;
+    border-top: 1px solid var(--color-divider, var(--color-border)) !important;
+}
+
+/* ========================================================================
+   18. PAGE HEADER - Match public styling
+   ======================================================================== */
+
+.page-header {
+    margin-bottom: var(--space-lg, 24px) !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+}
+
+.page-header h1,
+.page-title {
+    font-size: var(--text-2xl, 1.5rem) !important;
+    font-weight: var(--weight-bold, 700) !important;
+    color: var(--color-text-primary) !important;
+    margin: 0 0 var(--space-xs, 8px) 0 !important;
+}
+
+.page-subtitle {
+    font-size: var(--text-md, 1rem) !important;
+    color: var(--color-text-secondary) !important;
+    margin: 0 !important;
+}
+
+/* ========================================================================
+   19. STATS - Match public stat card styling
+   ======================================================================== */
+
+.stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    gap: var(--space-md, 16px) !important;
+    margin-bottom: var(--space-lg, 24px) !important;
+}
+
+.stat-card,
+.admin-stat-card {
+    text-align: center !important;
+}
+
+.stat-value {
+    display: block !important;
+    font-size: var(--text-2xl, 1.5rem) !important;
+    font-weight: var(--weight-bold, 700) !important;
+    color: var(--color-accent) !important;
+    line-height: 1.2 !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+.stat-label {
+    display: block !important;
+    font-size: var(--text-sm, 0.8125rem) !important;
+    color: var(--color-text-secondary) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin-top: var(--space-2xs, 4px) !important;
+}
+
+/* ========================================================================
+   20. FORMS - Consistent input styling
+   ======================================================================== */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+select,
+textarea,
+.form-input,
+.form-select,
+.form-textarea,
+.admin-input,
+.admin-select,
+.admin-textarea {
+    padding: var(--space-sm, 12px) var(--space-md, 16px) !important;
+    font-size: var(--text-sm, 0.8125rem) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-md, 10px) !important;
+    background: var(--color-bg-surface) !important;
+    color: var(--color-text-primary) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    width: 100% !important;
+}
+
+/* Form labels */
+.form-label,
+label {
+    font-size: var(--text-sm, 0.8125rem) !important;
+    font-weight: var(--weight-medium, 500) !important;
+    color: var(--color-text-primary) !important;
+    margin-bottom: var(--space-xs, 8px) !important;
+    display: block !important;
+}
+
+/* Form groups */
+.form-group {
+    margin-bottom: var(--space-md, 16px) !important;
+}
+
+/* ========================================================================
+   21. TABLES - Consistent cell padding
+   ======================================================================== */
+
+.table th,
+.table td,
+.admin-table th,
+.admin-table td {
+    padding: var(--table-cell-padding-y, 12px) var(--table-cell-padding-x, 16px) !important;
+    font-size: var(--text-sm, 0.8125rem) !important;
+}
+
+.table th,
+.admin-table th {
+    font-weight: var(--weight-semibold, 600) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    font-size: var(--text-xs, 0.75rem) !important;
+}
+
+/* ========================================================================
+   22. SPACING UTILITIES - Consistent gaps
+   ======================================================================== */
+
+.gap-xs { gap: var(--space-xs, 8px) !important; }
+.gap-sm { gap: var(--space-sm, 12px) !important; }
+.gap-md { gap: var(--space-md, 16px) !important; }
+.gap-lg { gap: var(--space-lg, 24px) !important; }
+.gap-xl { gap: var(--space-xl, 32px) !important; }
+
+/* ========================================================================
+   23. FILTER BAR - Match public styling
+   ======================================================================== */
+
+.filter-bar,
+.filters-bar,
+.filter-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: var(--space-md, 16px) !important;
+    align-items: flex-end !important;
+    margin-bottom: var(--space-lg, 24px) !important;
+    padding: var(--space-md, 16px) !important;
+    background: var(--color-bg-card) !important;
+    border-radius: var(--radius-lg, 14px) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+/* ========================================================================
+   24. MOBILE RESPONSIVE - Consistent padding on mobile
+   ======================================================================== */
+
+@media (max-width: 768px) {
+    .card,
+    .admin-card,
+    .stat-card,
+    .admin-stat-card {
+        padding: var(--space-md, 16px) !important;
+    }
+
+    .stat-value {
+        font-size: var(--text-xl, 1.25rem) !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .card,
+    .admin-card,
+    .stat-card,
+    .admin-stat-card {
+        padding: var(--space-sm, 12px) var(--space-xs, 8px) !important;
+        border-radius: var(--radius-md, 10px) !important;
+    }
+
+    .stat-value {
+        font-size: var(--text-lg, 1.125rem) !important;
+        line-height: 1 !important;
+    }
+
+    .stat-label {
+        font-size: 9px !important;
+        letter-spacing: 0 !important;
+        line-height: 1.2 !important;
+        margin-top: 2px !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: var(--space-xs, 8px) !important;
+    }
+}
+
+/* ========================================================================
+   25. TYPOGRAPHY - Consistent text sizes
+   ======================================================================== */
+
+/* Ensure admin uses same text scale as public */
+.admin-content {
+    font-size: var(--text-base, 0.875rem) !important;
+    line-height: 1.6 !important;
+}
+
+.admin-content h1 {
+    font-size: var(--text-2xl, 1.5rem) !important;
+}
+
+.admin-content h2 {
+    font-size: var(--text-xl, 1.25rem) !important;
+}
+
+.admin-content h3 {
+    font-size: var(--text-lg, 1.125rem) !important;
+}
+
+.admin-content h4 {
+    font-size: var(--text-md, 1rem) !important;
+}
+
+.admin-content p,
+.admin-content li {
+    font-size: var(--text-sm, 0.8125rem) !important;
+}
+
+/* Text muted/secondary */
+.text-muted,
+.text-secondary {
+    color: var(--color-text-secondary) !important;
+}
+
+/* ========================================================================
+   26. BORDER RADIUS - Consistent rounded corners
+   ======================================================================== */
+
+/* Small elements: 6px */
+.badge,
+.chip,
+.tag {
+    border-radius: var(--radius-sm, 6px) !important;
+}
+
+/* Medium elements: 10px */
+.btn,
+input,
+select,
+textarea,
+.alert {
+    border-radius: var(--radius-md, 10px) !important;
+}
+
+/* Large elements: 14px */
+.card,
+.admin-card,
+.stat-card,
+.modal,
+.dropdown-menu {
+    border-radius: var(--radius-lg, 14px) !important;
+}
+
+/* ========================================================================
+   27. ADMIN-SPECIFIC CLASS NAMES
+   ======================================================================== */
+
+/* Admin stats grid */
+.admin-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+    gap: var(--space-md, 16px) !important;
+    margin-bottom: var(--space-lg, 24px) !important;
+}
+
+/* Admin stat card - horizontal layout */
+.admin-stat-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: var(--space-md, 16px) !important;
+    padding: var(--space-md, 16px) !important;
+    background: var(--color-bg-card) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-lg, 14px) !important;
+    text-decoration: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.admin-stat-card:hover {
+    border-color: var(--color-accent) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+/* Admin stat icon */
+.admin-stat-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: var(--radius-md, 10px) !important;
+    flex-shrink: 0 !important;
+}
+
+.admin-stat-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* Stat icon color variants */
+.stat-icon-error,
+.admin-stat-icon.stat-icon-error {
+    background: var(--color-error-light, rgba(239, 68, 68, 0.15)) !important;
+    color: var(--color-error) !important;
+}
+
+.stat-icon-accent,
+.admin-stat-icon.stat-icon-accent {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+}
+
+.stat-icon-info,
+.admin-stat-icon.stat-icon-info {
+    background: var(--color-info-light, rgba(56, 189, 248, 0.15)) !important;
+    color: var(--color-info) !important;
+}
+
+.stat-icon-warning,
+.admin-stat-icon.stat-icon-warning {
+    background: var(--color-warning-light, rgba(251, 191, 36, 0.15)) !important;
+    color: var(--color-warning) !important;
+}
+
+.stat-icon-success,
+.admin-stat-icon.stat-icon-success {
+    background: var(--color-success-light, rgba(16, 185, 129, 0.15)) !important;
+    color: var(--color-success) !important;
+}
+
+/* Stat content */
+.stat-content {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+}
+
+.stat-content .stat-value {
+    font-size: var(--text-xl, 1.25rem) !important;
+    font-weight: var(--weight-bold, 700) !important;
+    color: var(--color-text-primary) !important;
+    line-height: 1.2 !important;
+}
+
+.stat-content .stat-label {
+    font-size: var(--text-sm, 0.8125rem) !important;
+    color: var(--color-text-secondary) !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+}
+
+/* ========================================================================
+   28. ADMIN BUTTONS
+   ======================================================================== */
+
+/* Admin button base */
+.btn-admin {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: var(--space-xs, 8px) !important;
+    padding: var(--space-sm, 12px) var(--space-md, 16px) !important;
+    font-size: var(--text-sm, 0.875rem) !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+    text-decoration: none !important;
+    border-radius: var(--radius-md, 10px) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    border: 1px solid transparent !important;
+    white-space: nowrap !important;
+}
+
+.btn-admin svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Admin button primary */
+.btn-admin-primary,
+.btn-admin.btn-admin-primary {
+    background: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: white !important;
+}
+
+.btn-admin-primary:hover,
+.btn-admin.btn-admin-primary:hover {
+    background: var(--color-accent-hover) !important;
+    border-color: var(--color-accent-hover) !important;
+}
+
+/* Admin button secondary */
+.btn-admin-secondary,
+.btn-admin.btn-admin-secondary {
+    background: transparent !important;
+    border-color: var(--color-border-strong) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.btn-admin-secondary:hover,
+.btn-admin.btn-admin-secondary:hover {
+    background: var(--color-bg-hover) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-accent) !important;
+}
+
+/* Admin button danger */
+.btn-admin-danger,
+.btn-admin.btn-admin-danger {
+    background: var(--color-error) !important;
+    border-color: var(--color-error) !important;
+    color: white !important;
+}
+
+.btn-admin-danger:hover,
+.btn-admin.btn-admin-danger:hover {
+    background: #c82333 !important;
+    border-color: #c82333 !important;
+}
+
+/* Admin button warning */
+.btn-admin-warning,
+.btn-admin.btn-admin-warning {
+    background: var(--color-warning) !important;
+    border-color: var(--color-warning) !important;
+    color: #1a1a1a !important;
+}
+
+.btn-admin-warning:hover,
+.btn-admin.btn-admin-warning:hover {
+    background: #d97706 !important;
+    border-color: #d97706 !important;
+}
+
+/* Admin button success */
+.btn-admin-success,
+.btn-admin.btn-admin-success {
+    background: var(--color-success) !important;
+    border-color: var(--color-success) !important;
+    color: white !important;
+}
+
+.btn-admin-success:hover,
+.btn-admin.btn-admin-success:hover {
+    background: #059669 !important;
+    border-color: #059669 !important;
+}
+
+/* Admin button info */
+.btn-admin-info,
+.btn-admin.btn-admin-info {
+    background: var(--color-info) !important;
+    border-color: var(--color-info) !important;
+    color: white !important;
+}
+
+.btn-admin-info:hover,
+.btn-admin.btn-admin-info:hover {
+    background: #0284c7 !important;
+    border-color: #0284c7 !important;
+}
+
+/* Admin button ghost */
+.btn-admin-ghost,
+.btn-admin.btn-admin-ghost {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--color-text-secondary) !important;
+}
+
+.btn-admin-ghost:hover,
+.btn-admin.btn-admin-ghost:hover {
+    background: var(--color-bg-hover) !important;
+    color: var(--color-accent) !important;
+}
+
+/* Admin button sizes */
+.btn-admin-sm,
+.btn-admin.btn-admin-sm {
+    padding: var(--space-xs, 8px) var(--space-sm, 12px) !important;
+    font-size: var(--text-xs, 0.75rem) !important;
+}
+
+.btn-admin-sm svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.btn-admin-lg,
+.btn-admin.btn-admin-lg {
+    padding: var(--space-md, 16px) var(--space-lg, 24px) !important;
+    font-size: var(--text-base, 1rem) !important;
+}
+
+/* ========================================================================
+   29. ADMIN FORMS
+   ======================================================================== */
+
+/* Admin form row */
+.admin-form-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: var(--space-md, 16px) !important;
+    align-items: flex-end !important;
+}
+
+/* Admin form group */
+.admin-form-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--space-xs, 8px) !important;
+}
+
+.admin-form-group.flex-1 {
+    flex: 1 !important;
+    min-width: 200px !important;
+}
+
+/* Admin form label */
+.admin-form-label {
+    font-size: var(--text-sm, 0.8125rem) !important;
+    font-weight: var(--weight-medium, 500) !important;
+    color: var(--color-text-primary) !important;
+}
+
+/* Admin form inputs */
+.admin-form-input,
+.admin-form-select,
+.admin-form-textarea {
+    padding: var(--space-sm, 12px) var(--space-md, 16px) !important;
+    font-size: var(--text-sm, 0.8125rem) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-md, 10px) !important;
+    background: var(--color-bg-surface) !important;
+    color: var(--color-text-primary) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.admin-form-input:focus,
+.admin-form-select:focus,
+.admin-form-textarea:focus {
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 3px var(--color-accent-light) !important;
+    outline: none !important;
+}
+
+/* Min-width utilities for selects */
+.min-w-120 {
+    min-width: 120px !important;
+}
+
+.min-w-140 {
+    min-width: 140px !important;
+}
+
+/* ========================================================================
+   30. CARD BODY PADDING RESET
+   ======================================================================== */
+
+.card-body.p-0,
+.card-body.p-none {
+    padding: 0 !important;
+}
+
+/* ========================================================================
+   31. ADMIN EMPTY STATE
+   ======================================================================== */
+
+.admin-empty-state {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: var(--space-2xl, 48px) var(--space-lg, 24px) !important;
+    text-align: center !important;
+    color: var(--color-text-muted) !important;
+}
+
+.admin-empty-state svg {
+    width: 48px !important;
+    height: 48px !important;
+    margin-bottom: var(--space-md, 16px) !important;
+    opacity: 0.5 !important;
+}
+
+.admin-empty-state h3 {
+    font-size: var(--text-lg, 1.125rem) !important;
+    font-weight: var(--weight-semibold, 600) !important;
+    color: var(--color-text-primary) !important;
+    margin-bottom: var(--space-xs, 8px) !important;
+}
+
+.admin-empty-state p {
+    font-size: var(--text-sm, 0.8125rem) !important;
+    color: var(--color-text-secondary) !important;
+    margin: 0 !important;
+}
+
+/* ========================================================================
+   32. ICON SIZE UTILITIES
+   ======================================================================== */
+
+.icon-xs {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.icon-sm {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.icon-md {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.icon-lg {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.icon-xl {
+    width: 32px !important;
+    height: 32px !important;
+}
+
+/* ========================================================================
+   33. MOBILE RESPONSIVE FOR ADMIN COMPONENTS
+   ======================================================================== */
+
+@media (max-width: 768px) {
+    .admin-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .admin-stat-card {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: var(--space-sm, 12px) !important;
+    }
+
+    .admin-stat-icon {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    .admin-stat-icon svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    .stat-content .stat-value {
+        font-size: var(--text-lg, 1.125rem) !important;
+    }
+
+    .admin-form-row {
+        flex-direction: column !important;
+    }
+
+    .admin-form-group.flex-1 {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-stats-grid {
+        gap: var(--space-xs, 8px) !important;
+    }
+
+    .admin-stat-card {
+        padding: var(--space-xs, 8px) !important;
+    }
+
+    .stat-content .stat-value {
+        font-size: var(--text-md, 1rem) !important;
+    }
+
+    .stat-content .stat-label {
+        font-size: var(--text-xs, 0.75rem) !important;
+    }
+}
+
+/* ========================================================================
+   34. MARGIN AND SPACING UTILITIES
+   ======================================================================== */
+
+.mr-xs { margin-right: var(--space-xs, 8px) !important; }
+.mr-sm { margin-right: var(--space-sm, 12px) !important; }
+.mr-md { margin-right: var(--space-md, 16px) !important; }
+.mr-lg { margin-right: var(--space-lg, 24px) !important; }
+
+.ml-xs { margin-left: var(--space-xs, 8px) !important; }
+.ml-sm { margin-left: var(--space-sm, 12px) !important; }
+.ml-md { margin-left: var(--space-md, 16px) !important; }
+.ml-lg { margin-left: var(--space-lg, 24px) !important; }
+
+.mb-xs { margin-bottom: var(--space-xs, 8px) !important; }
+.mb-sm { margin-bottom: var(--space-sm, 12px) !important; }
+.mb-md { margin-bottom: var(--space-md, 16px) !important; }
+.mb-lg { margin-bottom: var(--space-lg, 24px) !important; }
+
+.mt-xs { margin-top: var(--space-xs, 8px) !important; }
+.mt-sm { margin-top: var(--space-sm, 12px) !important; }
+.mt-md { margin-top: var(--space-md, 16px) !important; }
+.mt-lg { margin-top: var(--space-lg, 24px) !important; }
+
+/* ========================================================================
+   35. FLEX UTILITIES
+   ======================================================================== */
+
+.flex { display: flex !important; }
+.flex-1 { flex: 1 !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.flex-col { flex-direction: column !important; }
+.items-center { align-items: center !important; }
+.items-start { align-items: flex-start !important; }
+.items-end { align-items: flex-end !important; }
+.justify-center { justify-content: center !important; }
+.justify-between { justify-content: space-between !important; }
+.justify-end { justify-content: flex-end !important; }
+
+/* ========================================================================
+   36. DISABLED STATE
+   ======================================================================== */
+
+.btn-admin:disabled,
+.btn-admin[disabled],
+button:disabled,
+button[disabled],
+input:disabled,
+select:disabled,
+textarea:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* End of complete fix */

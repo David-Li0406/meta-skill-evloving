@@ -1,0 +1,57 @@
+{
+  "customer_name": "BSW",
+  "description": "BSW customer threshold configuration - derived from 9 daily check files (Jan 8-20, 2026)",
+  "thresholds": {
+    "response_time_smlg": {
+      "max": 1000,
+      "warning": 800,
+      "description": "SMLG response time in ms (observed range: 60-318ms)"
+    },
+    "response_time_st03n": {
+      "max": 1000,
+      "warning": 800,
+      "description": "ST03N Dialog/RFC response time in ms"
+    },
+    "dumps_today": {
+      "max": 10,
+      "warning": 5,
+      "description": "ABAP dumps today (observed range: 0-2)"
+    },
+    "dumps_yesterday": {
+      "max": 20,
+      "warning": 10,
+      "description": "ABAP dumps yesterday (observed range: 0-4)"
+    },
+    "failed_jobs": {
+      "max": 5,
+      "warning": 3,
+      "description": "Failed BASIS jobs (observed range: 0-1)"
+    },
+    "failed_updates": {
+      "max": 0,
+      "warning": 0,
+      "description": "Failed updates - should always be 0"
+    },
+    "old_locks": {
+      "max": 10,
+      "warning": 5,
+      "description": "Old locks older than 1 day"
+    },
+    "trfc_errors": {
+      "max": 0,
+      "warning": 0,
+      "description": "tRFC errors (CPICERR/SYSFAIL)"
+    },
+    "buffer_swaps": {
+      "max": 10000,
+      "warning": 5000,
+      "description": "Buffer swaps per day"
+    }
+  },
+  "validation_rules": {
+    "require_justification_for_n": true,
+    "min_justification_length": 10,
+    "check_old_locks_explanation": true
+  },
+  "systems": ["S4P", "POP", "ADS"]
+}

@@ -1,0 +1,13 @@
+# Deny direct access to GPX files for security
+# Access should be through PHP for proper authorization
+
+<FilesMatch "\.(gpx)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Allow access to specific file types if needed in the future
+# <FilesMatch "\.(jpg|jpeg|png|gif)$">
+#     Order Allow,Deny
+#     Allow from all
+# </FilesMatch>

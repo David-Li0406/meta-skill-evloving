@@ -1,0 +1,22 @@
+name: {{project_name}}
+version: {{version}}
+description: {{description}}
+author: {{author}}
+
+scripts:
+  start: "copilot --log-level all --log-dir copilot-logs --allow-all-tools -p hello-world.prompt.md"
+  codex: "RUST_LOG=debug codex --skip-git-repo-check hello-world.prompt.md"
+  llm: "llm hello-world.prompt.md -m github/gpt-4o-mini"
+
+dependencies:
+  apm:
+    - danielmeppiel/design-guidelines  # Accessibility rules + UI review workflows
+  mcp:
+    - microsoft/azure-devops-mcp
+
+# Compilation configuration (optional)
+# compilation:
+#   exclude:
+#     - "apm_modules/**"           # Exclude installed packages during compilation
+#     - "tmp/**"                   # Exclude temporary files
+#     - "**/test-fixtures/**"      # Exclude test fixtures at any depth

@@ -1,0 +1,87 @@
+{
+  "workspace": {
+    "name": "microservices-example",
+    "description": "Example microservices architecture",
+    "base_path": "./",
+    "type": "microservices",
+    "created": "2026-01-20",
+    "version": "1.0.0"
+  },
+  "repositories": [
+    {
+      "name": "frontend",
+      "path": "./frontend",
+      "type": "frontend",
+      "primary": true,
+      "tech_stack": ["react", "typescript", "vite"],
+      "port": 3000
+    },
+    {
+      "name": "api-gateway",
+      "path": "./api-gateway",
+      "type": "backend",
+      "primary": true,
+      "tech_stack": ["node", "express", "typescript"],
+      "port": 8000
+    },
+    {
+      "name": "auth-service",
+      "path": "./auth-service",
+      "type": "backend",
+      "primary": true,
+      "tech_stack": ["node", "express", "typescript", "jwt"],
+      "port": 8001
+    },
+    {
+      "name": "user-service",
+      "path": "./user-service",
+      "type": "backend",
+      "primary": true,
+      "tech_stack": ["node", "express", "typescript", "postgresql"],
+      "port": 8002
+    },
+    {
+      "name": "product-service",
+      "path": "./product-service",
+      "type": "backend",
+      "primary": true,
+      "tech_stack": ["node", "express", "typescript", "mongodb"],
+      "port": 8003
+    },
+    {
+      "name": "shared-types",
+      "path": "./shared-types",
+      "type": "shared",
+      "primary": false,
+      "tech_stack": ["typescript"]
+    }
+  ],
+  "dependency_graph": {
+    "frontend": ["api-gateway", "shared-types"],
+    "api-gateway": ["auth-service", "user-service", "product-service", "shared-types"],
+    "auth-service": ["shared-types"],
+    "user-service": ["auth-service", "shared-types"],
+    "product-service": ["auth-service", "shared-types"],
+    "shared-types": []
+  },
+  "global_conventions": {
+    "code_style": "airbnb",
+    "commit_message_format": "conventional-commits",
+    "branch_naming": "feature/*, bugfix/*, hotfix/*",
+    "api_versioning": "/api/v1",
+    "error_handling": "standardized-error-responses"
+  },
+  "infrastructure": {
+    "containerization": "docker",
+    "orchestration": "kubernetes",
+    "service_mesh": "istio",
+    "message_queue": "rabbitmq",
+    "api_gateway": "nginx"
+  },
+  "scripts": {
+    "start_all": "docker-compose up",
+    "stop_all": "docker-compose down",
+    "test_all": "./scripts/test-all.sh",
+    "deploy_all": "./scripts/deploy-all.sh"
+  }
+}

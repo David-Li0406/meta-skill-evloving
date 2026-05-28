@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Create empty TODO revision without editing (stays on current @)
+# Usage: jj-todo-create [--draft] <PARENT> <TITLE> [DESCRIPTION]
+# Example: jj-todo-create @ "implement feature X" "detailed specs here"
+# Example: jj-todo-create --draft @ "implement feature X"  # Creates with [task:draft] for later specification
+
+set -euo pipefail
+
+# Parse flags
+flag="todo"
+if [[ "${1:-}" == "--draft" ]]; then
+  flag="draft"
+  shift
+fi
+
+if [[ $# -lt 2 ]]; then
+  echo "Usage: jj-todo-create [--draft] <PARENT> <TITLE> [DESCRIPTION]" >&2
+  echo "  --draft: Create with [task:draft] flag instead of [task:todo]" >&2
+  exit 1
+fi
+
+parent="$1"
+title="$2"
+description="${3:-}"
+
+if [[ -n "$description" ]]; then
+  msg="[task:${flag}] ${title}
+
+${description}"
+else
+  msg="[task:${flag}] ${title}"
+fi
+
+jj new --no-edit "$parent" -m "$msg"

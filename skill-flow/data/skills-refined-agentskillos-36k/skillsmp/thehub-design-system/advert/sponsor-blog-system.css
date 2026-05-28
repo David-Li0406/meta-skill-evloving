@@ -1,0 +1,555 @@
+/* =============================================
+   GLOBAL SPONSOR SYSTEM STYLING
+   ============================================= */
+
+/* Sponsor Sections */
+.sponsor-section {
+    margin: var(--space-4) 0;
+    padding: var(--space-3);
+    background: var(--color-surface);
+    border-radius: var(--radius-2);
+}
+
+.sponsor-section-title {
+    font-size: var(--text-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+/* Sponsor Grid Layouts */
+.sponsor-grid {
+    display: grid;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+.sponsor-grid-header_banner {
+    grid-template-columns: 1fr;
+}
+
+.sponsor-grid-sidebar_top,
+.sponsor-grid-sidebar_mid {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+}
+
+.sponsor-grid-content_top,
+.sponsor-grid-content_bottom {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.sponsor-grid-footer {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-2);
+}
+
+/* Sponsor Items */
+.sponsor-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2);
+    background: var(--color-background);
+    border-radius: var(--radius-1);
+    transition: all 0.3s ease;
+}
+
+.sponsor-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Tier Styling */
+.sponsor-tier-title_gravityseries {
+    border: 2px solid var(--color-primary);
+    background: linear-gradient(135deg, 
+        var(--color-primary-alpha-10), 
+        transparent);
+}
+
+.sponsor-tier-title_series {
+    border: 2px solid var(--color-accent);
+}
+
+.sponsor-tier-gold {
+    border: 2px solid #FFD700;
+}
+
+.sponsor-tier-silver {
+    border: 1px solid #C0C0C0;
+}
+
+.sponsor-tier-branch {
+    border: 1px solid var(--color-border);
+}
+
+/* Sponsor Logos */
+.sponsor-logo {
+    max-width: 100%;
+    height: auto;
+    max-height: 80px;
+    object-fit: contain;
+    filter: grayscale(20%);
+    transition: filter 0.3s ease;
+}
+
+.sponsor-item:hover .sponsor-logo {
+    filter: grayscale(0%);
+}
+
+.sponsor-banner {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-1);
+}
+
+/* Sponsor Links */
+.sponsor-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Responsive Banner */
+@media (max-width: 768px) {
+    .sponsor-grid-content_top,
+    .sponsor-grid-content_bottom {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .sponsor-grid-footer {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .sponsor-logo {
+        max-height: 60px;
+    }
+}
+
+/* =============================================
+   RACE REPORTS / BLOGG SYSTEM
+   ============================================= */
+
+/* Report Grid */
+.race-reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-4);
+    margin: var(--space-4) 0;
+}
+
+/* Report Card */
+.race-report-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-2);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.race-report-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.race-report-card-featured {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Report Image */
+.race-report-image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: var(--color-background);
+}
+
+.race-report-card-featured .race-report-image {
+    aspect-ratio: 1/1;
+}
+
+/* Report Content */
+.race-report-content {
+    padding: var(--space-3);
+}
+
+.race-report-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+.race-report-author {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.race-report-author-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.race-report-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+    line-height: 1.4;
+}
+
+.race-report-card-featured .race-report-title {
+    font-size: var(--text-xl);
+}
+
+.race-report-excerpt {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-2);
+}
+
+/* Report Tags */
+.race-report-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
+}
+
+.race-report-tag {
+    padding: 2px 8px;
+    background: var(--color-background);
+    border-radius: var(--radius-1);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+/* Report Stats */
+.race-report-stats {
+    display: flex;
+    gap: var(--space-3);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.race-report-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+/* Single Report View */
+.race-report-single {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-4);
+}
+
+.race-report-single-header {
+    margin-bottom: var(--space-4);
+}
+
+.race-report-single-title {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+    line-height: 1.2;
+}
+
+.race-report-single-image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: var(--radius-2);
+    margin-bottom: var(--space-4);
+}
+
+.race-report-single-body {
+    font-size: var(--text-base);
+    line-height: 1.8;
+    color: var(--color-text);
+}
+
+.race-report-single-body p {
+    margin-bottom: var(--space-3);
+}
+
+.race-report-single-body h2 {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    margin: var(--space-4) 0 var(--space-2);
+}
+
+.race-report-single-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-1);
+    margin: var(--space-3) 0;
+}
+
+/* Instagram Embed */
+.race-report-instagram {
+    margin: var(--space-4) 0;
+    text-align: center;
+}
+
+/* Like Button */
+.race-report-like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.race-report-like-btn:hover {
+    background: var(--color-surface);
+}
+
+.race-report-like-btn.liked {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+/* Comments Section */
+.race-report-comments {
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+.race-report-comments-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-3);
+}
+
+.race-report-comment {
+    padding: var(--space-3);
+    background: var(--color-surface);
+    border-radius: var(--radius-1);
+    margin-bottom: var(--space-2);
+}
+
+.race-report-comment-reply {
+    margin-left: var(--space-4);
+}
+
+.race-report-comment-author {
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+}
+
+.race-report-comment-text {
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+}
+
+.race-report-comment-time {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    margin-top: var(--space-1);
+}
+
+/* Comment Form */
+.race-report-comment-form {
+    margin-top: var(--space-3);
+}
+
+.race-report-comment-form textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-1);
+    font-family: inherit;
+    resize: vertical;
+}
+
+/* Related Reports */
+.race-reports-related {
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+}
+
+.race-reports-related-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-3);
+}
+
+/* Filters */
+.race-reports-filters {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.race-reports-filter-btn {
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.race-reports-filter-btn:hover,
+.race-reports-filter-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .race-reports-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .race-report-card-featured {
+        grid-column: span 1;
+        grid-template-columns: 1fr;
+    }
+    
+    .race-report-single {
+        padding: var(--space-2);
+    }
+    
+    .race-report-single-title {
+        font-size: var(--text-2xl);
+    }
+    
+    .race-report-comment-reply {
+        margin-left: var(--space-2);
+    }
+}
+
+/* =============================================
+   ADMIN: SPONSOR MANAGEMENT
+   ============================================= */
+
+.sponsor-placement-matrix {
+    display: grid;
+    grid-template-columns: 200px repeat(7, 1fr);
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-1);
+    overflow: hidden;
+}
+
+.sponsor-placement-cell {
+    background: var(--color-background);
+    padding: var(--space-2);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: var(--text-xs);
+}
+
+.sponsor-placement-cell-header {
+    background: var(--color-surface);
+    font-weight: 600;
+}
+
+.sponsor-placement-cell-active {
+    background: var(--color-primary-alpha-10);
+    color: var(--color-primary);
+}
+
+/* Sponsor Stats Dashboard */
+.sponsor-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.sponsor-stat-card {
+    background: var(--color-surface);
+    padding: var(--space-3);
+    border-radius: var(--radius-2);
+    text-align: center;
+}
+
+.sponsor-stat-value {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.sponsor-stat-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-1);
+}
+
+/* Tier Benefits Display */
+.sponsor-tier-benefits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-4);
+}
+
+.sponsor-tier-card {
+    background: var(--color-surface);
+    padding: var(--space-4);
+    border-radius: var(--radius-2);
+    border: 2px solid transparent;
+}
+
+.sponsor-tier-card-title_gravityseries {
+    border-color: var(--color-primary);
+}
+
+.sponsor-tier-card-gold {
+    border-color: #FFD700;
+}
+
+.sponsor-tier-card-silver {
+    border-color: #C0C0C0;
+}
+
+.sponsor-tier-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.sponsor-tier-benefits-list {
+    list-style: none;
+    padding: 0;
+}
+
+.sponsor-tier-benefits-list li {
+    padding: var(--space-1) 0;
+    display: flex;
+    align-items: start;
+    gap: var(--space-2);
+}
+
+.sponsor-tier-benefits-list li:before {
+    content: "✓";
+    color: var(--color-primary);
+    font-weight: 700;
+}

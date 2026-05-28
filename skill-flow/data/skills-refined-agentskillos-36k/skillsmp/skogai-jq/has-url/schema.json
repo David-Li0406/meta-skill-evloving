@@ -1,0 +1,47 @@
+{
+  "name": "has-url",
+  "description": "Check if a string at specified path contains any URLs (http://, https://, ftp://)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'content.text')"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if string contains at least one URL (http://, https://, ftp://), false if no URLs found or path doesn't exist or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Has HTTP URL",
+      "input": {"text": "Visit http://example.com for more info"},
+      "args": {"path": "text"},
+      "output": true
+    },
+    {
+      "description": "Has HTTPS URL",
+      "input": {"content": "Check out https://github.com"},
+      "args": {"path": "content"},
+      "output": true
+    },
+    {
+      "description": "No URLs in text",
+      "input": {"text": "Just plain text, no links"},
+      "args": {"path": "text"},
+      "output": false
+    },
+    {
+      "description": "URL in markdown link",
+      "input": {"markdown": "See [docs](https://example.com/docs)"},
+      "args": {"path": "markdown"},
+      "output": true
+    }
+  ],
+  "tags": ["string", "url", "validation", "check", "boolean", "http", "https", "ftp"]
+}

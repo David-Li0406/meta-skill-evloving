@@ -1,0 +1,14 @@
+User: "I need to add a persistence layer for the new cache."
+
+Agent (Planner):
+1. `gr pulse` (Checks focus: gr-123 "Cache implementation")
+2. `gr star --format symbols` (Researching cache logic)
+3. Audit: Check `Cargo.toml` for `rusqlite`. Not found. Note in design.
+4. `gr update --design "1. Add rusqlite dependency.
+   2. Create SqliteStore (src/cache/sqlite.rs).
+   3. Update Manager (src/cache/mod.rs).
+   Strategy: Implement atomic traits first."
+5. `gr update --acceptance-criteria "1. cargo check (Baseline) passes.
+   2. cargo test cache::sqlite passes.
+   3. gr pulse shows SqliteStore in Rich Context."
+6. `gr update --scan-file "src/cache/sqlite.rs"`

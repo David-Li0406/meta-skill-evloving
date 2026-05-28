@@ -1,0 +1,107 @@
+[
+  {
+    "id": "explicit-coordinate",
+    "user_message": "I need to coordinate with other Claude agents working on different parts of this project",
+    "project_context": "Multi-repo project with backend and frontend",
+    "expected_activation": true,
+    "rationale": "User explicitly mentions coordinating with other Claude agents"
+  },
+  {
+    "id": "explicit-join-chat",
+    "user_message": "Join the agent chat so I can communicate with the other instances",
+    "project_context": "Part of a larger project",
+    "expected_activation": true,
+    "rationale": "User explicitly asks to join agent chat"
+  },
+  {
+    "id": "explicit-agent-communication",
+    "user_message": "Can you communicate with the other Claude Code instances working on this?",
+    "project_context": "Multi-agent development environment",
+    "expected_activation": true,
+    "rationale": "User explicitly asks about communication with other Claude Code instances"
+  },
+  {
+    "id": "broadcast-message",
+    "user_message": "Broadcast a message to the other agents that the API schema has been updated",
+    "project_context": "Multi-repo project",
+    "expected_activation": true,
+    "rationale": "User explicitly asks to broadcast to other agents"
+  },
+  {
+    "id": "check-other-agents",
+    "user_message": "Check if any other agents have sent messages about the authentication module",
+    "project_context": "Working on auth module",
+    "expected_activation": true,
+    "rationale": "User asking to check messages from other agents"
+  },
+  {
+    "id": "setup-coordination",
+    "user_message": "Set up agent coordination so we can work across the backend and frontend repos",
+    "project_context": "Multi-repo project",
+    "expected_activation": true,
+    "rationale": "User asking to set up agent coordination"
+  },
+  {
+    "id": "false-multi-repo-mention",
+    "user_message": "This is a multi-repo project with separate backend and frontend. Let's start by fixing the bug in the backend.",
+    "project_context": "Multi-repo project",
+    "expected_activation": false,
+    "rationale": "User mentions multi-repo but doesn't ask for agent coordination - just context setting"
+  },
+  {
+    "id": "false-collaboration",
+    "user_message": "I need to collaborate with my team on this feature. Can you help me create a PR?",
+    "project_context": "Team development",
+    "expected_activation": false,
+    "rationale": "User mentions collaboration but means human collaboration via git/PRs, not agent-to-agent"
+  },
+  {
+    "id": "false-api-communication",
+    "user_message": "Set up communication between the frontend and backend API",
+    "project_context": "Full-stack application",
+    "expected_activation": false,
+    "rationale": "User asking about API communication between services, not agent communication"
+  },
+  {
+    "id": "false-agent-mention",
+    "user_message": "What can Claude Code agents do?",
+    "project_context": "Learning about Claude Code",
+    "expected_activation": false,
+    "rationale": "User asking about capabilities, not requesting to use agent communication"
+  },
+  {
+    "id": "false-single-repo",
+    "user_message": "Let's work on this repository together",
+    "project_context": "Single repository",
+    "expected_activation": false,
+    "rationale": "User saying 'together' but means with Claude in single repo, not multi-agent"
+  },
+  {
+    "id": "false-git-coordination",
+    "user_message": "Coordinate the changes across these branches and merge them",
+    "project_context": "Git repository with multiple branches",
+    "expected_activation": false,
+    "rationale": "User asking about git coordination, not agent coordination"
+  },
+  {
+    "id": "connect-to-chat",
+    "user_message": "Connect to the agent chat",
+    "project_context": "Multi-agent environment",
+    "expected_activation": true,
+    "rationale": "Direct request to connect to agent chat"
+  },
+  {
+    "id": "send-message-agents",
+    "user_message": "Send a message to the other agents about the schema change",
+    "project_context": "Working on database schema",
+    "expected_activation": true,
+    "rationale": "Explicit request to send message to other agents"
+  },
+  {
+    "id": "false-user-messages",
+    "user_message": "Send a message to the team about the deployment",
+    "project_context": "Software deployment",
+    "expected_activation": false,
+    "rationale": "Sending message to human team, not agents"
+  }
+]

@@ -1,0 +1,40 @@
+# {{APP_NAME}} Module
+#
+# This module deploys {{APP_NAME}} to a tenant environment.
+# Workspace name = target tenant name (e.g., dev01, stg01, prod01)
+
+locals {
+  name   = "{{APP_NAME}}"
+  tenant = module.ctx.workspaces.tenant
+{{#IF_SHARED}}
+  shared = module.ctx.workspaces.shared
+{{/IF_SHARED}}
+}
+
+module "ctx" {
+  source  = "duplocloud/components/duplocloud//modules/context"
+  version = "{{CTX_VERSION}}"
+  admin   = true
+{{#IF_JIT_AWS}}
+  jit = {
+    aws = true
+  }
+{{/IF_JIT_AWS}}
+{{#IF_JIT_K8S}}
+  jit = {
+    k8s = true
+  }
+{{/IF_JIT_K8S}}
+  workspaces = {
+    tenant = {}
+{{#IF_SHARED}}
+    shared = {
+      nameRef = {
+        workspace = "tenant"
+        nameKey   = "shared_name"
+      }
+      prefix = "infra"
+    }
+{{/IF_SHARED}}
+  }
+}

@@ -1,0 +1,129 @@
+#!/bin/bash
+# Ralph - Fresh context loop: NEW Claude session per iteration
+# Usage: ralph <task-id>
+#
+# Reads spec from .claude/ralph-spec-<task-id>.md
+# Spawns a fresh Claude for each iteration (no stop hook)
+
+set -euo pipefail
+
+TASK_ID="${1:-}"
+
+if [[ "$TASK_ID" == "-h" ]] || [[ "$TASK_ID" == "--help" ]] || [[ -z "$TASK_ID" ]]; then
+  echo "Usage: ralph <task-id>"
+  echo ""
+  echo "Runs a fresh-context Ralph loop (new Claude per iteration)."
+  echo ""
+  echo "Available specs:"
+  ls .claude/ralph-spec-*.md 2>/dev/null | sed 's/.*ralph-spec-/  /; s/.md$//' || echo "  (none found)"
+  exit 0
+fi
+
+SPEC_FILE=".claude/ralph-spec-${TASK_ID}.md"
+
+if [[ ! -f "$SPEC_FILE" ]]; then
+  echo "❌ Spec file not found: $SPEC_FILE"
+  echo ""
+  echo "Available specs:"
+  ls .claude/ralph-spec-*.md 2>/dev/null | sed 's/.*ralph-spec-/  /; s/.md$//' || echo "  (none found)"
+  exit 1
+fi
+
+# Parse frontmatter (strip CRLF for Windows compatibility)
+FRONTMATTER=$(tr -d '\r' < "$SPEC_FILE" | sed -n '/^---$/,/^---$/{ /^---$/d; p; }')
+MAX_ITERATIONS=$(echo "$FRONTMATTER" | grep '^max_iterations:' | sed 's/max_iterations: *//' || echo "50")
+COMPLETION_PROMISE=$(echo "$FRONTMATTER" | grep '^completion_promise:' | sed 's/completion_promise: *//' | sed 's/^"\(.*\)"$/\1/')
+MODE=$(echo "$FRONTMATTER" | grep '^mode:' | sed 's/mode: *//' | sed 's/^"\(.*\)"$/\1/' || echo "yolo")
+
+# Defaults
+MAX_ITERATIONS="${MAX_ITERATIONS:-50}"
+MODE="${MODE:-yolo}"
+
+# Extract task content (everything after frontmatter, strip CRLF)
+TASK_CONTENT=$(tr -d '\r' < "$SPEC_FILE" | awk '/^---$/{i++; next} i>=2')
+
+# Output directory for iteration logs
+LOG_DIR=".claude/ralph-logs-${TASK_ID}"
+mkdir -p "$LOG_DIR"
+
+echo "🔄 Starting Fresh Context Ralph Loop: $TASK_ID"
+echo "   Mode: $MODE (fresh Claude per iteration)"
+echo "   Max iterations: $MAX_ITERATIONS"
+[[ -n "$COMPLETION_PROMISE" ]] && echo "   Promise: $COMPLETION_PROMISE"
+echo "   Logs: $LOG_DIR/"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Clean up on Ctrl+C
+trap 'echo -e "\n🛑 Loop cancelled by user"; exit 130' SIGINT
+
+for ITER in $(seq 1 "$MAX_ITERATIONS"); do
+  echo ""
+  echo "🚀 ITERATION $ITER / $MAX_ITERATIONS | $TASK_ID"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  # Build the prompt with iteration context
+  SYSTEM_CTX="You are Ralph (iteration $ITER of $MAX_ITERATIONS), an autonomous coding agent.
+Work on the task below. Make real changes to files. Be thorough but concise.
+
+AT THE END of each iteration, update .claude/ralph-progress-${TASK_ID}.md with:
+- What you completed this iteration
+- Files changed
+- Next steps
+- Any blockers"
+
+  if [[ -n "$COMPLETION_PROMISE" ]]; then
+    SYSTEM_CTX="$SYSTEM_CTX
+
+When ALL work is genuinely complete, output: <promise>$COMPLETION_PROMISE</promise>
+Do NOT output the promise until everything is done. Do NOT lie to exit early."
+  fi
+
+  FULL_PROMPT="$SYSTEM_CTX
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TASK:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$TASK_CONTENT"
+
+  # Run Claude with fresh context
+  LOG_FILE="$LOG_DIR/iteration-${ITER}.log"
+
+  echo "   Starting fresh Claude session..."
+  echo ""
+
+  # Set RALPH_FRESH_MODE=1 so stop hook allows clean exit
+  # Use -p for non-interactive, capture output, show live too
+  export RALPH_FRESH_MODE=1
+  if claude -p --dangerously-skip-permissions "$FULL_PROMPT" 2>&1 | tee "$LOG_FILE"; then
+    echo ""
+    echo "   ✅ Iteration $ITER completed"
+  else
+    echo ""
+    echo "   ⚠️ Iteration $ITER exited with error (will retry)"
+  fi
+
+  # Check for completion promise
+  if [[ -n "$COMPLETION_PROMISE" ]]; then
+    if grep -q "<promise>$COMPLETION_PROMISE</promise>" "$LOG_FILE" 2>/dev/null; then
+      echo ""
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      echo "✅ RALPH LOOP COMPLETE: $TASK_ID"
+      echo "   Detected: <promise>$COMPLETION_PROMISE</promise>"
+      echo "   Total iterations: $ITER"
+      echo "   Logs: $LOG_DIR/"
+      echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      exit 0
+    fi
+  fi
+
+  # Brief pause between iterations
+  sleep 2
+done
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🛑 MAX ITERATIONS REACHED: $MAX_ITERATIONS"
+echo "   Task may not be complete. Check logs: $LOG_DIR/"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+exit 1

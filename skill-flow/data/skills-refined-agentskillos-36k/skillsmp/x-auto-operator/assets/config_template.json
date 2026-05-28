@@ -1,0 +1,235 @@
+{
+  "$schema": "x-auto-operator-config",
+  "version": "1.0.0",
+
+  "ai_api": {
+    "provider": "anthropic",
+    "api_key": "",
+    "model": "claude-3-sonnet-20240229",
+    "fallback_model": "claude-3-haiku-20240307"
+  },
+
+  "rate_limits": {
+    "like": {
+      "min_delay_seconds": 5,
+      "max_delay_seconds": 15,
+      "hourly_limit": 30,
+      "daily_limit": 200
+    },
+    "comment": {
+      "min_delay_seconds": 60,
+      "max_delay_seconds": 120,
+      "hourly_limit": 15,
+      "daily_limit": 80
+    },
+    "retweet": {
+      "min_delay_seconds": 30,
+      "max_delay_seconds": 60,
+      "hourly_limit": 10,
+      "daily_limit": 50
+    },
+    "post": {
+      "min_delay_seconds": 1800,
+      "max_delay_seconds": 3600,
+      "hourly_limit": 3,
+      "daily_limit": 15
+    },
+    "follow": {
+      "min_delay_seconds": 60,
+      "max_delay_seconds": 120,
+      "hourly_limit": 10,
+      "daily_limit": 50
+    }
+  },
+
+  "operating_hours": {
+    "enabled": true,
+    "timezone": "Asia/Shanghai",
+    "start_hour": 7,
+    "end_hour": 23
+  },
+
+  "content_safety": {
+    "enable_keyword_check": true,
+    "enable_ai_review": true,
+    "block_on_uncertainty": true,
+    "sensitive_categories": [
+      "politics",
+      "religion",
+      "region",
+      "gender"
+    ]
+  },
+
+  "target_accounts": {
+    "tier_1_official": [
+      {
+        "handle": "OpenAI",
+        "name": "OpenAI",
+        "priority": 1,
+        "interact_frequency": "daily"
+      },
+      {
+        "handle": "AnthropicAI",
+        "name": "Anthropic",
+        "priority": 1,
+        "interact_frequency": "daily"
+      },
+      {
+        "handle": "GoogleDeepMind",
+        "name": "Google DeepMind",
+        "priority": 1,
+        "interact_frequency": "daily"
+      },
+      {
+        "handle": "MetaAI",
+        "name": "Meta AI",
+        "priority": 2,
+        "interact_frequency": "weekly"
+      },
+      {
+        "handle": "xAI",
+        "name": "xAI",
+        "priority": 2,
+        "interact_frequency": "weekly"
+      }
+    ],
+    "tier_2_researchers": [
+      {
+        "handle": "karpathy",
+        "name": "Andrej Karpathy",
+        "priority": 1,
+        "interact_frequency": "daily"
+      },
+      {
+        "handle": "ylecun",
+        "name": "Yann LeCun",
+        "priority": 2,
+        "interact_frequency": "weekly"
+      },
+      {
+        "handle": "sama",
+        "name": "Sam Altman",
+        "priority": 2,
+        "interact_frequency": "weekly"
+      },
+      {
+        "handle": "drfeifei",
+        "name": "Fei-Fei Li",
+        "priority": 2,
+        "interact_frequency": "weekly"
+      }
+    ],
+    "tier_3_kol": []
+  },
+
+  "search_queries": [
+    {
+      "query": "AI LLM",
+      "frequency": "daily",
+      "max_results": 10
+    },
+    {
+      "query": "machine learning tutorial",
+      "frequency": "daily",
+      "max_results": 5
+    },
+    {
+      "query": "Claude AI",
+      "frequency": "daily",
+      "max_results": 5
+    },
+    {
+      "query": "RAG retrieval augmented",
+      "frequency": "weekly",
+      "max_results": 10
+    },
+    {
+      "query": "fine-tuning LLM",
+      "frequency": "weekly",
+      "max_results": 10
+    },
+    {
+      "query": "prompt engineering",
+      "frequency": "weekly",
+      "max_results": 10
+    }
+  ],
+
+  "hashtags": {
+    "primary": [
+      "#AI",
+      "#LLM",
+      "#MachineLearning"
+    ],
+    "secondary": [
+      "#DeepLearning",
+      "#GPT",
+      "#Claude",
+      "#RAG",
+      "#PromptEngineering",
+      "#AIResearch"
+    ],
+    "max_per_tweet": 3
+  },
+
+  "posting_schedule": {
+    "enabled": true,
+    "slots": [
+      {
+        "name": "morning",
+        "time": "09:00",
+        "content_type": "tip",
+        "priority": "high"
+      },
+      {
+        "name": "noon",
+        "time": "12:30",
+        "content_type": "engagement",
+        "priority": "medium"
+      },
+      {
+        "name": "evening",
+        "time": "21:00",
+        "content_type": "thread",
+        "priority": "high"
+      }
+    ]
+  },
+
+  "engagement_rules": {
+    "auto_like": {
+      "enabled": true,
+      "min_quality_score": 0.6,
+      "must_be_tech_related": true
+    },
+    "auto_comment": {
+      "enabled": false,
+      "min_quality_score": 0.8,
+      "require_manual_review": true
+    },
+    "auto_retweet": {
+      "enabled": false,
+      "min_quality_score": 0.9,
+      "require_manual_review": true
+    }
+  },
+
+  "x_selectors": {
+    "tweet_article": "article",
+    "like_button": "[data-testid='like']",
+    "unlike_button": "[data-testid='unlike']",
+    "retweet_button": "[data-testid='retweet']",
+    "reply_button": "[data-testid='reply']",
+    "tweet_input": "[data-testid='tweetTextarea_0']",
+    "tweet_button": "[data-testid='tweetButton']",
+    "search_input": "[data-testid='SearchBox_Search_Input']"
+  },
+
+  "logging": {
+    "level": "INFO",
+    "file": "data/operation.log",
+    "max_size_mb": 10,
+    "backup_count": 5
+  }
+}

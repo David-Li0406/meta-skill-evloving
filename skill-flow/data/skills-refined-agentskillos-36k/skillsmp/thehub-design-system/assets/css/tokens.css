@@ -1,0 +1,127 @@
+:root{
+  /* Core spacing scale */
+  --space-2xs:4px;--space-xs:8px;--space-sm:12px;--space-md:16px;
+  --space-lg:24px;--space-xl:32px;--space-2xl:48px;--space-3xl:64px;
+
+  /* Branding-controlled tokens (can be overridden by /admin/branding) */
+  --card-padding:16px;
+  --content-padding:16px;
+  --table-cell-padding-y:12px;
+  --table-cell-padding-x:16px;
+
+  /* Typography - Font Families */
+  --font-heading:'Oswald', sans-serif;
+  --font-heading-secondary:'Cabin Condensed', sans-serif;
+  --font-body:'Manrope', sans-serif;
+  --font-link:'Roboto', sans-serif;
+  --font-mono:'SF Mono', Monaco, 'Cascadia Code', monospace;
+
+  /* Legacy fallback */
+  --font-family:'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans:var(--font-body);
+
+  /* Font sizes - Desktop */
+  --text-xs:0.75rem;--text-sm:0.8125rem;--text-base:0.875rem;
+  --text-md:1rem;--text-lg:1.125rem;--text-xl:1.25rem;
+  --text-2xl:1.5rem;--text-3xl:2rem;--text-4xl:2.5rem;
+
+  --weight-light:300;--weight-normal:400;--weight-medium:500;--weight-semibold:600;--weight-bold:700;
+
+  --radius-sm:6px;--radius-md:10px;--radius-lg:14px;--radius-xl:20px;--radius-full:9999px;
+
+  --sidebar-width:88px;--header-height:60px;--mobile-nav-height:95px;
+  --content-max-width:1400px;
+
+  /* Container padding - matches branding.json defaults */
+  --container-padding:12px;
+
+  --z-dropdown:100;--z-sticky:200;--z-fixed:300;--z-modal:500;--z-toast:600;
+
+  --transition-fast:150ms ease;--transition-base:250ms ease;
+
+  --series-enduro:#FFE009;--series-downhill:#FF6B35;--series-xc:#2E7D32;
+  --series-ges:#EF761F;--series-ggs:#8A9A5B;--series-gss:#6B4C9A;
+  --series-gravel:#795548;--series-dual:#E91E63;
+
+  /* Brand colors for UI elements */
+  --color-enduro:#FFD700;--color-enduro-hover:#E6BD00;
+
+  /* ============================================
+     ACHIEVEMENT SYSTEM COLORS
+     ============================================ */
+  --achievement-gold:#FFD700;
+  --achievement-silver:#C0C0C0;
+  --achievement-bronze:#CD7F32;
+  --achievement-green:var(--color-accent, #61CE70);
+  --achievement-orange:var(--color-ges-orange, #EF761F);
+  --achievement-blue:var(--color-gs-blue, #004a98);
+  --achievement-yellow:#FFE009;
+  --achievement-purple:#5F1D67;
+  --achievement-steel:#607D8B;
+  --achievement-olive:var(--color-ggs-green, #8A9A5B);
+
+  /* ============================================
+     BADGE SYSTEM
+     ============================================ */
+  --badge-hex-bg:#171717;
+  --badge-transition:0.25s ease;
+
+  /* ============================================
+     ICON SIZING
+     ============================================ */
+  --icon-xs:12px;
+  --icon-sm:16px;
+  --icon-md:20px;
+  --icon-lg:24px;
+  --icon-xl:32px;
+  --icon-2xl:48px;
+
+  /* ============================================
+     ADMIN GRADIENTS
+     ============================================ */
+  --admin-gradient-primary:linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+  --admin-gradient-success:linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --admin-gradient-warning:linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  --admin-gradient-danger:linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+
+  /* ============================================
+     ADMIN SHADOWS
+     ============================================ */
+  --admin-shadow-soft:0 2px 8px rgba(0, 0, 0, 0.08);
+  --admin-shadow-medium:0 4px 16px rgba(0, 0, 0, 0.12);
+  --admin-shadow-strong:0 8px 32px rgba(0, 0, 0, 0.16);
+  --admin-transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Container padding - tablet gets more breathing room */
+@media (min-width: 768px) {
+  :root {
+    --container-padding:24px;
+  }
+}
+
+/* Container padding - desktop gets full spacing */
+@media (min-width: 1024px) {
+  :root {
+    --container-padding:32px;
+  }
+}
+
+/* Responsive font sizes for mobile */
+@media (max-width: 768px) {
+  :root {
+    --text-xl:1.125rem;
+    --text-2xl:1.25rem;
+    --text-3xl:1.5rem;
+    --text-4xl:2rem;
+  }
+}
+
+/* Mobile icon sizing - slightly smaller for better mobile UX */
+@media (max-width: 599px) {
+  :root {
+    --icon-lg:20px;
+    --icon-xl:28px;
+    --icon-2xl:40px;
+  }
+}

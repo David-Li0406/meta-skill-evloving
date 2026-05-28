@@ -1,0 +1,66 @@
+[
+  {
+    "ruleId": "",
+    "ruleTitle": "mkIf - Conditional Config Blocks",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for mkIf - Conditional Config Blocks"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "mkIf - Conditional Config Blocks",
+    "type": "good",
+    "code": "config = lib.mkIf cfg.enable {\n  programs.git.enable = true;\n};",
+    "language": "nix",
+    "description": "Correct example for mkIf - Conditional Config Blocks"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "mkMerge - Combine Conditionals",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for mkMerge - Combine Conditionals"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "mkMerge - Combine Conditionals",
+    "type": "good",
+    "code": "config = lib.mkMerge [\n  # Always applied\n  { programs.bash.enable = true; }\n\n  # Conditional A\n  (lib.mkIf cfg.enableGit { programs.git.enable = true; })\n\n  # Conditional B\n  (lib.mkIf cfg.enableVim { programs.vim.enable = true; })\n];",
+    "language": "nix",
+    "description": "Correct example for mkMerge - Combine Conditionals"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "optionals - Conditional List Items",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for optionals - Conditional List Items"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "optionals - Conditional List Items",
+    "type": "good",
+    "code": "home.packages = [ pkgs.coreutils ]\n  ++ lib.optionals cfg.enableTools [ pkgs.ripgrep pkgs.fd ];",
+    "language": "nix",
+    "description": "Correct example for optionals - Conditional List Items"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "optionalString - Conditional Strings",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for optionalString - Conditional Strings"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "optionalString - Conditional Strings",
+    "type": "good",
+    "code": "shellInit = ''\n  export EDITOR=vim\n'' + lib.optionalString cfg.enableAliases ''\n  alias ll='ls -la'\n'';",
+    "language": "nix",
+    "description": "Correct example for optionalString - Conditional Strings"
+  }
+]

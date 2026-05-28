@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="reconcile" noun="MixedFiles">
+        <description>Reconcile a CSV file against a JSON file using the unified comparator.</description>
+        <in-parameters>
+            <parameter name="file1Location" required="true"/>
+            <parameter name="file2Location" required="true"/>
+            <parameter name="file1Type" required="true"/>
+            <parameter name="file2Type" required="true"/>
+            
+            <parameter name="csvIdField"/>
+            <parameter name="jsonIdField"/>
+            <parameter name="jsonSchemaFileName"/>
+            
+            <parameter name="file1Label"/>
+            <parameter name="file2Label"/>
+            
+            <parameter name="hasHeader" type="Boolean" default-value="true"/>
+            
+            <parameter name="outputLocation"/>
+            <parameter name="outputFileName"/>
+            
+            <parameter name="sparkMaster"/>
+            <parameter name="sparkAppName"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="diffLocation"/>
+            <parameter name="diffFileName"/>
+            <parameter name="differenceCount" type="Long"/>
+            <parameter name="onlyInFile1Count" type="Long"/>
+            <parameter name="onlyInFile2Count" type="Long"/>
+        </out-parameters>
+        <actions>
+            <if condition="!file1Location || !file2Location">
+                <return error="true" message="file1Location and file2Location are required"/>
+            </if>
+            <script><![CDATA[
+                def normalize = { it?.toString()?.trim() }
+                def type1 = normalize(file1Type)?.toUpperCase()
+                def type2 = normalize(file2Type)?.toUpperCase()
+                if (!type1 || !type2) throw new IllegalArgumentException("file1Type and file2Type are required")
+
+                // Assign ID fields by type
+                def file1IdField = (type1 == "CSV") ? (csvIdField ?: "id") : null
+                def file2IdField = (type2 == "CSV") ? (csvIdField ?: "id") : null
+                def file1IdExpr = (type1 == "JSON") ? (jsonIdField ?: "\$.id") : null
+                def file2IdExpr = (type2 == "JSON") ? (jsonIdField ?: "\$.id") : null
+
+                // Assign schema to whichever file is JSON
+                def file1Schema = (type1 == "JSON") ? jsonSchemaFileName : null
+                def file2Schema = (type2 == "JSON") ? jsonSchemaFileName : null
+
+                context.unifiedParams = [
+                        file1Location      : file1Location,
+                        file2Location      : file2Location,
+                        file1Type          : type1,
+                        file2Type          : type2,
+                        file1IdField       : file1IdField,
+                        file2IdField       : file2IdField,
+                        file1IdExpression  : file1IdExpr,
+                        file2IdExpression  : file2IdExpr,
+                        file1SchemaFileName: file1Schema,
+                        file2SchemaFileName: file2Schema,
+                        file1Label         : file1Label,
+                        file2Label         : file2Label,
+                        hasHeader          : hasHeader,
+                        outputLocation     : outputLocation,
+                        outputFileName     : outputFileName,
+                        sparkMaster        : sparkMaster,
+                        sparkAppName       : sparkAppName
+                ]
+            ]]></script>
+
+            <service-call name="ReconciliationCoreServices.reconcile#UnifiedFiles"
+                    in-map="unifiedParams" out-map="unifiedOut"/>
+
+            <set field="diffLocation" from="unifiedOut.diffLocation"/>
+            <set field="diffFileName" from="unifiedOut.diffFileName"/>
+            <set field="differenceCount" from="unifiedOut.differenceCount"/>
+            <set field="onlyInFile1Count" from="unifiedOut.onlyInFile1Count"/>
+            <set field="onlyInFile2Count" from="unifiedOut.onlyInFile2Count"/>
+        </actions>
+    </service>
+
+</services>

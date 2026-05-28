@@ -1,0 +1,25 @@
+# Pangu Model Configuration - Light Version
+# Lightweight 2D+3D hybrid for fast training
+
+# Temporal configuration
+input_len: 7
+output_len: 1
+in_channels: 2  # u and v components
+
+# Spatial configuration
+img_size: [240, 240]
+patch_size: [2, 4, 4]  # 3D patch size [depth, height, width]
+
+# Model architecture - LIGHT
+embed_dim: 96           # Reduced from 192
+num_heads: [3, 6, 6, 3] # Reduced from [6, 12, 12, 6]
+window_size: [2, 6, 12] # Same as standard
+
+# Regularization
+drop_path_rate: 0.1     # Reduced from 0.2
+
+# Training hints
+# - Fast training speed
+# - ~10-15M parameters
+# - Good for rapid experimentation
+

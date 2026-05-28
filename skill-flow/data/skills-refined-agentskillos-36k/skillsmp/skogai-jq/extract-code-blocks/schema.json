@@ -1,0 +1,41 @@
+{
+  "name": "extract-code-blocks",
+  "description": "Extract code blocks (``` delimited) from markdown text at a specified path",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field containing markdown (e.g., 'data.content')"
+    }
+  },
+  "output": {
+    "type": "array",
+    "description": "Array of code block strings (including ``` delimiters), or empty array if path doesn't exist, value is not a string, or no code blocks found"
+  },
+  "examples": [
+    {
+      "description": "Extract single code block",
+      "input": {"content": "text ```js\\ncode\\n``` more"},
+      "args": {"path": "content"},
+      "output": ["```js\\ncode\\n```"]
+    },
+    {
+      "description": "Extract multiple code blocks",
+      "input": {"content": "```python\\nprint()\\n``` and ```js\\nconsole.log()\\n```"},
+      "args": {"path": "content"},
+      "output": ["```python\\nprint()\\n```", "```js\\nconsole.log()\\n```"]
+    },
+    {
+      "description": "No code blocks returns empty array",
+      "input": {"content": "just plain text"},
+      "args": {"path": "content"},
+      "output": []
+    }
+  ],
+  "tags": ["string", "markdown", "code", "extract", "regex"]
+}

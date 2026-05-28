@@ -1,0 +1,526 @@
+/**
+ * Energy Flow DOL Schema
+ * Domain Ontology Language specification for thermodynamic economics
+ *
+ * This schema defines the formal types and invariants for energy accounting
+ * in the Univrs.io ecosystem, addressing Dr. Arnoux's critique about
+ * thermodynamic rigor.
+ *
+ * Generated: 2026-01-02
+ * Initiative: Thermodynamic Economics Phase 2
+ */
+
+// =============================================================================
+// PRIMITIVE TYPES
+// =============================================================================
+
+/**
+ * Physical units for energy accounting
+ */
+type Power = Float       // Watts (W)
+type Energy = Float      // Joules (J) or kWh where noted
+type Ratio = Float       // Dimensionless ratio (e.g., EROEI)
+type Percentage = Float  // 0.0 to 1.0
+type Duration = Float    // Seconds
+
+/**
+ * Geographic location for resource assessment
+ */
+type GeoLocation = {
+  latitude: Float        // Degrees (-90 to 90)
+  longitude: Float       // Degrees (-180 to 180)
+  elevation_m: Float     // Meters above sea level
+  solar_irradiance: Float // kWh/m^2/day average
+}
+
+// =============================================================================
+// DOMAIN: ENERGY ECONOMICS
+// =============================================================================
+
+domain EnergyEconomics {
+
+  // ---------------------------------------------------------------------------
+  // ENUMERATIONS
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Classification of energy sources by thermodynamic role
+   */
+  enum SourceType {
+    // Autotrophic (primary energy capture)
+    SOLAR_PV           // Photovoltaic conversion
+    SOLAR_THERMAL      // Concentrated solar power
+    WIND_ONSHORE       // Land-based wind turbines
+    WIND_OFFSHORE      // Marine wind turbines
+    HYDRO_RUN_OF_RIVER // No reservoir
+    HYDRO_RESERVOIR    // Dammed storage
+    GEOTHERMAL         // Earth heat
+    TIDAL              // Ocean tidal energy
+    WAVE               // Ocean wave energy
+
+    // Heterotrophic (derived from stored energy)
+    GRID_MIXED         // Utility grid (mixed sources)
+    GRID_RENEWABLE     // Grid with renewable certificate
+    NATURAL_GAS        // Fossil fuel
+    COAL               // Fossil fuel
+    OIL                // Fossil fuel
+    NUCLEAR_FISSION    // Nuclear power
+    BIOMASS            // Biological material
+    HYDROGEN           // Stored chemical energy
+  }
+
+  /**
+   * Layer classification in three-layer architecture
+   */
+  enum EnergyLayer {
+    AUTOTROPHIC        // Energy capture (Layer 1)
+    DISTRIBUTION       // Energy transport (Layer 2)
+    HETEROTROPHIC      // Energy consumption (Layer 3)
+  }
+
+  /**
+   * Storage technology types
+   */
+  enum StorageType {
+    BATTERY_LITHIUM    // Li-ion batteries
+    BATTERY_FLOW       // Flow batteries
+    PUMPED_HYDRO       // Pumped hydroelectric
+    COMPRESSED_AIR     // CAES
+    THERMAL_MOLTEN_SALT // High-temp thermal
+    THERMAL_ICE        // Low-temp thermal
+    HYDROGEN_TANK      // Compressed H2
+    HYDROGEN_CAVERN    // Underground H2 storage
+    FLYWHEEL           // Mechanical storage
+  }
+
+  /**
+   * Node roles in the network
+   */
+  enum NodeRole {
+    PRODUCER           // Net energy producer (autotrophic)
+    CONSUMER           // Net energy consumer (heterotrophic)
+    PROSUMER           // Both producer and consumer
+    RELAY              // Distribution node only
+  }
+
+  // ---------------------------------------------------------------------------
+  // CORE ENTITIES
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Primary energy source with EROEI accounting
+   */
+  entity EnergySource {
+    id: Identifier
+    name: String
+    type: SourceType
+    location: GeoLocation
+
+    // Capacity
+    nameplate_capacity_w: Power          // Maximum rated output
+    capacity_factor: Percentage          // Actual/nameplate ratio
+
+    // EROEI components
+    eroei: Ratio                         // Energy Return on Energy Invested
+    embodied_energy_kwh: Energy          // Manufacturing energy
+    operational_energy_kwh_year: Energy  // Annual operating energy
+    lifespan_years: Duration             // Expected operational life
+
+    // Calculated fields
+    @computed annual_output_kwh: Energy =
+      nameplate_capacity_w / 1000 * capacity_factor * 8760
+
+    @computed annual_embodied_amortized: Energy =
+      embodied_energy_kwh / lifespan_years
+
+    @computed effective_eroei: Ratio =
+      annual_output_kwh / (operational_energy_kwh_year + annual_embodied_amortized)
+  }
+
+  /**
+   * Energy storage component
+   */
+  entity EnergyStorage {
+    id: Identifier
+    name: String
+    type: StorageType
+
+    // Capacity
+    capacity_kwh: Energy                 // Total storage capacity
+    max_charge_rate_w: Power             // Maximum input power
+    max_discharge_rate_w: Power          // Maximum output power
+
+    // Efficiency
+    round_trip_efficiency: Percentage    // Energy out / Energy in
+    self_discharge_rate: Percentage      // Daily self-discharge
+
+    // Lifecycle
+    cycle_life: Integer                  // Number of charge/discharge cycles
+    embodied_energy_kwh: Energy          // Manufacturing energy
+    lifespan_years: Duration             // Calendar life
+
+    @computed energy_throughput_lifetime: Energy =
+      capacity_kwh * cycle_life * round_trip_efficiency
+
+    @computed storage_eroei: Ratio =
+      energy_throughput_lifetime / embodied_energy_kwh
+  }
+
+  /**
+   * Network node in the hyphal network
+   */
+  entity NetworkNode {
+    id: Identifier
+    name: String
+    layer: EnergyLayer
+    role: NodeRole
+    location: GeoLocation?               // Optional physical location
+
+    // Energy characteristics
+    energy_consumption_w: Power          // Operating power draw
+    energy_source: EnergySource?         // Direct energy source if any
+    storage: EnergyStorage?              // Local storage if any
+
+    // Network topology
+    connections: List<NodeConnection>    // Edges to other nodes
+    clustering_coefficient: Ratio        // Local clustering C
+
+    // Status
+    is_net_producer: Boolean             // True if produces more than consumes
+    net_energy_balance_w: Power          // Positive = surplus, Negative = deficit
+
+    @computed annual_consumption_kwh: Energy =
+      energy_consumption_w / 1000 * 8760
+
+    @invariant valid_balance:
+      is_net_producer == (net_energy_balance_w > 0)
+  }
+
+  /**
+   * Connection between two network nodes
+   */
+  entity NodeConnection {
+    id: Identifier
+    from_node: NodeId
+    to_node: NodeId
+
+    // Physical/logical properties
+    distance_km: Float                   // Physical or logical distance
+    bandwidth_mbps: Float                // Data capacity
+    latency_ms: Duration                 // Communication latency
+
+    // Energy properties
+    power_consumption_w: Power           // Power to maintain connection
+    transmission_efficiency: Percentage  // 1.0 - loss fraction
+
+    @computed annual_energy_kwh: Energy =
+      power_consumption_w / 1000 * 8760
+  }
+
+  /**
+   * Directional energy flow between nodes
+   */
+  entity EnergyFlow {
+    id: Identifier
+    timestamp: Timestamp
+    from: NodeId
+    to: NodeId
+
+    // Flow characteristics
+    power_w: Power                       // Instantaneous power
+    duration_s: Duration                 // Duration of flow
+    efficiency: Percentage               // Transfer efficiency
+
+    // Calculated
+    @computed energy_j: Energy = power_w * duration_s
+    @computed energy_kwh: Energy = energy_j / 3600000
+    @computed losses_kwh: Energy = energy_kwh * (1 - efficiency)
+    @computed delivered_kwh: Energy = energy_kwh * efficiency
+  }
+
+  // ---------------------------------------------------------------------------
+  // AGGREGATE ENTITIES
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Complete energy system (all three layers)
+   */
+  entity EnergySystem {
+    id: Identifier
+    name: String
+
+    // Components
+    sources: List<EnergySource>
+    storage_units: List<EnergyStorage>
+    nodes: List<NetworkNode>
+    flows: List<EnergyFlow>
+
+    // System metrics
+    @computed total_generation_kwh: Energy =
+      sum(sources.map(s => s.annual_output_kwh))
+
+    @computed total_consumption_kwh: Energy =
+      sum(nodes.map(n => n.annual_consumption_kwh))
+
+    @computed total_storage_capacity_kwh: Energy =
+      sum(storage_units.map(s => s.capacity_kwh))
+
+    @computed total_embodied_energy_kwh: Energy =
+      sum(sources.map(s => s.embodied_energy_kwh)) +
+      sum(storage_units.map(s => s.embodied_energy_kwh))
+
+    @computed system_eroei: Ratio =
+      total_generation_kwh /
+      (total_consumption_kwh + total_embodied_energy_kwh / avg_lifespan)
+
+    // Network topology metrics
+    @computed avg_clustering: Ratio =
+      avg(nodes.map(n => n.clustering_coefficient))
+
+    @computed avg_path_length: Float =
+      calculate_average_path_length(nodes, flows)
+
+    @computed small_world_sigma: Ratio =
+      calculate_small_world_sigma(avg_clustering, avg_path_length, nodes.length)
+  }
+
+  // ---------------------------------------------------------------------------
+  // INVARIANTS (Thermodynamic Constraints)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * First Law: Energy is conserved
+   * Total inputs must equal total outputs plus losses
+   */
+  invariant EnergyConservation {
+    forall flow in EnergyFlow:
+      flow.energy_j == flow.delivered_kwh * 3600000 + flow.losses_kwh * 3600000
+
+    description: "Energy conservation: inputs = outputs + losses"
+  }
+
+  /**
+   * Second Law: Efficiency is bounded
+   * No process can be 100% efficient (entropy always increases)
+   */
+  invariant EntropyIncrease {
+    forall flow in EnergyFlow:
+      flow.efficiency < 1.0
+
+    forall storage in EnergyStorage:
+      storage.round_trip_efficiency < 1.0
+
+    description: "Second law: all transfers have losses"
+  }
+
+  /**
+   * EROEI Viability: System must return more than invested
+   * Minimum threshold for societal sustainability is ~7:1
+   */
+  invariant EROEIViability {
+    forall system in EnergySystem:
+      system.system_eroei >= 1.0        // Absolute minimum: net positive
+
+    // Warning if below societal threshold
+    @warning below_threshold:
+      system.system_eroei >= 7.0        // Below this, infrastructure decays
+
+    description: "EROEI must exceed unity; warning if below 7:1"
+  }
+
+  /**
+   * Network Balance: Total consumption cannot exceed total generation
+   * (unless grid-connected)
+   */
+  invariant NetworkBalance {
+    forall system in EnergySystem:
+      system.total_generation_kwh >= system.total_consumption_kwh
+      OR exists source in system.sources: source.type == GRID_MIXED
+
+    description: "Generation >= Consumption, unless grid-supplemented"
+  }
+
+  /**
+   * Small-World Property: Network must exhibit small-world characteristics
+   * Sigma > 1.0 indicates small-world topology
+   */
+  invariant SmallWorldTopology {
+    forall system in EnergySystem:
+      system.small_world_sigma > 1.0
+      AND system.avg_clustering >= 0.3
+      AND system.avg_path_length <= 2 * log(system.nodes.length)
+
+    description: "Network must have small-world properties"
+  }
+
+  // ---------------------------------------------------------------------------
+  // QUERIES
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Find all nodes with energy deficit
+   */
+  query NodesWithDeficit(system: EnergySystem) -> List<NetworkNode> {
+    return system.nodes.filter(n => n.net_energy_balance_w < 0)
+  }
+
+  /**
+   * Calculate energy surplus available for productive work
+   */
+  query AvailableSurplus(system: EnergySystem) -> Energy {
+    generation = system.total_generation_kwh
+    consumption = system.total_consumption_kwh
+    storage_losses = sum(system.storage_units.map(s =>
+      s.capacity_kwh * (1 - s.round_trip_efficiency) * 365))
+
+    return max(0, generation - consumption - storage_losses)
+  }
+
+  /**
+   * Estimate nodes supportable by given solar capacity
+   */
+  query NodeCapacity(solar_mw: Float, node_power_w: Float) -> Integer {
+    capacity_factor = 0.17
+    distribution_efficiency = 0.80
+
+    annual_kwh = solar_mw * 1000 * capacity_factor * 8760
+    usable_kwh = annual_kwh * distribution_efficiency
+    per_node_kwh = node_power_w / 1000 * 8760
+
+    return floor(usable_kwh / per_node_kwh)
+  }
+
+  // ---------------------------------------------------------------------------
+  // EVENTS
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Energy flow transaction event
+   */
+  event EnergyTransfer {
+    flow: EnergyFlow
+    timestamp: Timestamp
+    validated: Boolean
+
+    @trigger update_node_balances
+  }
+
+  /**
+   * Node joins or leaves network
+   */
+  event NodeStatusChange {
+    node: NetworkNode
+    previous_status: NodeRole
+    new_status: NodeRole
+    timestamp: Timestamp
+
+    @trigger recalculate_network_metrics
+  }
+
+  /**
+   * System EROEI falls below threshold
+   */
+  event EROEIWarning {
+    system: EnergySystem
+    current_eroei: Ratio
+    threshold: Ratio
+    timestamp: Timestamp
+
+    @severity CRITICAL if current_eroei < 3.0
+    @severity WARNING if current_eroei < 7.0
+  }
+
+}
+
+// =============================================================================
+// DOMAIN: NETWORK TOPOLOGY
+// =============================================================================
+
+domain NetworkTopology {
+
+  /**
+   * Hyphal network with small-world properties
+   */
+  entity HyphalNetwork {
+    id: Identifier
+    name: String
+
+    // Nodes and edges
+    nodes: List<NetworkNode>
+    edges: List<NodeConnection>
+
+    // Topology metrics
+    node_count: Integer
+    edge_count: Integer
+    average_degree: Float
+    clustering_coefficient: Ratio
+    characteristic_path_length: Float
+
+    // Small-world metrics
+    @computed sigma: Ratio =
+      (clustering_coefficient / random_clustering) /
+      (characteristic_path_length / random_path_length)
+
+    @computed is_small_world: Boolean = sigma > 1.0
+
+    // Energy metrics
+    @computed total_edge_power_w: Power =
+      sum(edges.map(e => e.power_consumption_w))
+
+    @computed network_overhead_kwh: Energy =
+      total_edge_power_w / 1000 * 8760
+  }
+
+  /**
+   * Calculate random graph equivalents for small-world comparison
+   */
+  function random_clustering(n: Integer, k: Float) -> Ratio {
+    return k / n
+  }
+
+  function random_path_length(n: Integer, k: Float) -> Float {
+    return ln(n) / ln(k)
+  }
+
+  function calculate_small_world_sigma(
+    c: Ratio,
+    l: Float,
+    n: Integer,
+    k: Float
+  ) -> Ratio {
+    c_random = random_clustering(n, k)
+    l_random = random_path_length(n, k)
+    return (c / c_random) / (l / l_random)
+  }
+
+}
+
+// =============================================================================
+// INTEGRATION NOTES
+// =============================================================================
+
+/**
+ * Usage with eroei_calculator.py:
+ *
+ *   # Convert DOL entity to Python object
+ *   source = EnergySource.from_dol(dol_entity)
+ *   system = EnergySystem(name="test")
+ *   system.add_component(source.to_component())
+ *   analysis = system.analyze()
+ *
+ * Usage with small_world_metrics.py:
+ *
+ *   # Convert DOL network to NetworkX graph
+ *   G = nx.Graph()
+ *   for node in hyphal_network.nodes:
+ *     G.add_node(node.id)
+ *   for edge in hyphal_network.edges:
+ *     G.add_edge(edge.from_node, edge.to_node)
+ *   metrics = small_world_analysis(G)
+ *
+ * Key invariant checks for validation:
+ *   1. EnergyConservation - verify flows balance
+ *   2. EntropyIncrease - verify efficiency < 1.0
+ *   3. EROEIViability - verify EROEI >= 7:1
+ *   4. SmallWorldTopology - verify sigma > 1.0
+ */

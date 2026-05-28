@@ -1,0 +1,29 @@
+# Example CMMDatabase container with ingredients and media
+ingredients:
+  - id: cmm:ingredient-nacl
+    name: Sodium chloride
+    chemical_formula: NaCl
+    chebi_id: CHEBI:26710
+    pubchem_cid: 5234
+  - id: cmm:ingredient-glucose
+    name: D-Glucose
+    chemical_formula: C6H12O6
+    chebi_id: CHEBI:17634
+    pubchem_cid: 5793
+
+media:
+  - id: cmm:medium-lb
+    name: LB medium
+    description: Rich complex medium for general bacterial cultivation
+    medium_type: complex
+    ph: 7.0
+    sterilization_method: autoclave
+    source_reference: DSMZ:381
+    target_organisms:
+      - General bacteria
+    has_ingredient_component:
+      - ingredient: cmm:ingredient-nacl
+        concentration_value: 10.0
+        concentration_unit: g_per_L
+        roles:
+          - mineral

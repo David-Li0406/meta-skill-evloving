@@ -1,0 +1,34 @@
+/* Negative utilities: separate positive and negative */
+
+/* Positive */
+@utility slide-x-* {
+  transform: translateX(calc(--value(integer) * 0.25rem));
+  transform: translateX(--value([length]));
+}
+
+/* Negative (leading dash) */
+@utility -slide-x-* {
+  transform: translateX(calc(--value(integer) * -0.25rem));
+  transform: translateX(calc(--value([length]) * -1));
+}
+/* Usage: slide-x-4, -slide-x-4, slide-x-[2rem], -slide-x-[50%] */
+
+/* Using --spacing() theme function */
+@utility push-* {
+  inset: --spacing(--value(integer));
+}
+
+@utility -push-* {
+  inset: calc(--spacing(--value(integer)) * -1);
+}
+/* Usage: push-4 → inset: 1rem, -push-4 → inset: -1rem */
+
+/* Rotation */
+@utility rotate-* {
+  transform: rotate(calc(--value(integer) * 1deg));
+}
+
+@utility -rotate-* {
+  transform: rotate(calc(--value(integer) * -1deg));
+}
+/* Usage: rotate-45, -rotate-90 */

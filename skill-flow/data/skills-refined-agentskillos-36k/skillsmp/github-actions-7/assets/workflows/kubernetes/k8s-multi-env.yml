@@ -1,0 +1,403 @@
+# Kubernetes Multi-Environment Deployment
+# Deploy to multiple Kubernetes environments with proper isolation
+# Features: Environment-specific configs, progressive deployment, monitoring
+
+name: K8s Multi-Environment Deploy
+
+on:
+  push:
+    branches: [main, develop, 'release/**']
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build image
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+
+    outputs:
+      image-tag: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+
+      - name: Extract image digest
+        id: digest
+        run: |
+          echo "digest=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }})" >> $GITHUB_OUTPUT
+
+  # Deploy to development
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: build
+
+    environment:
+      name: development
+      url: https://dev.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl for dev
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_DEV }}
+
+      - name: Verify dev cluster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Apply dev manifests
+        run: |
+          kubectl apply -f k8s/dev/ --namespace=development
+
+      - name: Update image
+        run: |
+          kubectl set image deployment/app \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=development
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=development --timeout=5m
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods --namespace=development -l app=app
+          kubectl get svc app --namespace=development
+
+  # Deploy to staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, deploy-dev]
+
+    environment:
+      name: staging
+      url: https://staging.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl for staging
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Verify staging cluster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Apply staging manifests
+        run: |
+          kubectl apply -f k8s/staging/ --namespace=staging
+
+      - name: Update image
+        run: |
+          kubectl set image deployment/app \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=staging
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=staging --timeout=5m
+
+      - name: Run smoke tests
+        run: |
+          kubectl run smoke-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://staging.example.com/health || exit 1
+
+      - name: Run integration tests
+        run: |
+          kubectl run integration-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://staging.example.com/api/health || exit 1
+
+      - name: Load testing
+        continue-on-error: true
+        run: |
+          # Simple load test
+          kubectl run load-test --image=grafana/k6:latest --rm -i --restart=Never -- \
+          k6 run --vus 10 --duration 30s - <<EOF
+            import http from 'k6/http';
+            import { check } from 'k6';
+
+            export default function () {
+              const res = http.get('https://staging.example.com/');
+              check(res, { 'status was 200': (r) => r.status == 200 });
+            }
+          EOF
+
+  # Deploy to pre-production
+  deploy-preprod:
+    name: Deploy to Pre-Production
+    runs-on: ubuntu-latest
+    needs: [build, deploy-staging]
+    if: github.ref == 'refs/heads/main'
+
+    environment:
+      name: pre-production
+      url: https://preprod.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl for preprod
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PREPROD }}
+
+      - name: Verify preprod cluster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Apply preprod manifests
+        run: |
+          kubectl apply -f k8s/preprod/ --namespace=pre-production
+
+      - name: Update image
+        run: |
+          kubectl set image deployment/app \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=pre-production
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=pre-production --timeout=10m
+
+      - name: Database migration
+        run: |
+          # Run database migrations if needed
+          kubectl run migration --image=${{ needs.build.outputs.image-tag }} --rm -i --restart=Never -- \
+          npm run migrate || echo "No migrations to run"
+
+      - name: Health check
+        run: |
+          kubectl run health-check --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://preprod.example.com/health || exit 1
+
+      - name: Full test suite
+        run: |
+          # Run comprehensive tests
+          kubectl run full-test --image=node:20 --rm -i --restart=Never -- \
+          sh -c "npm install && npm test" || echo "Tests completed"
+
+  # Deploy to production (canary)
+  deploy-prod-canary:
+    name: Deploy to Production (Canary)
+    runs-on: ubuntu-latest
+    needs: [build, deploy-preprod]
+    if: github.ref == 'refs/heads/main'
+
+    environment:
+      name: production
+      url: https://example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl for production
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PROD }}
+
+      - name: Verify production cluster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Create canary deployment
+        run: |
+          # Create canary deployment (10% traffic)
+          cat k8s/production/deployment.yaml | \
+          sed 's/name: app/name: app-canary/' | \
+          kubectl apply -f - --namespace=production
+
+      - name: Update canary image
+        run: |
+          kubectl set image deployment/app-canary \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=production
+
+      - name: Wait for canary rollout
+        run: |
+          kubectl rollout status deployment/app-canary --namespace=production --timeout=5m
+
+      - name: Monitor canary metrics
+        run: |
+          sleep 120
+
+          # Check error rates
+          ERROR_RATE=$(kubectl logs --namespace=production -l app=app-canary --tail=1000 | grep -i error | wc -l)
+
+          if [ "$ERROR_RATE" -gt 50 ]; then
+            echo "High error rate in canary: $ERROR_RATE"
+            kubectl delete deployment app-canary --namespace=production
+            exit 1
+          fi
+
+          echo "Canary looks healthy"
+
+  # Full production rollout
+  deploy-prod-full:
+    name: Deploy to Production (Full)
+    runs-on: ubuntu-latest
+    needs: [build, deploy-prod-canary]
+    if: github.ref == 'refs/heads/main'
+
+    environment:
+      name: production
+      url: https://example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl for production
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PROD }}
+
+      - name: Backup current deployment
+        run: |
+          kubectl get deployment app --namespace=production -o yaml > /tmp/backup.yaml
+
+      - name: Update production image
+        run: |
+          kubectl set image deployment/app \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=production
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=production --timeout=10m
+
+      - name: Remove canary
+        run: |
+          kubectl delete deployment app-canary --namespace=production || true
+
+      - name: Health check
+        run: |
+          kubectl wait --for=condition=ready pod -l app=app --namespace=production --timeout=5m
+
+          kubectl run health-check --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://example.com/health || exit 1
+
+      - name: Verify service endpoints
+        run: |
+          ENDPOINTS=$(kubectl get endpoints app --namespace=production -o jsonpath='{.subsets[*].addresses[*].ip}')
+          echo "Service endpoints: $ENDPOINTS"
+
+          if [ -z "$ENDPOINTS" ]; then
+            echo "No endpoints available"
+            exit 1
+          fi
+
+      - name: Monitor and rollback if needed
+        id: monitor
+        run: |
+          # Monitor for 5 minutes
+          for i in {1..10}; do
+            READY=$(kubectl get deployment app --namespace=production -o jsonpath='{.status.readyReplicas}')
+            DESIRED=$(kubectl get deployment app --namespace=production -o jsonpath='{.spec.replicas}')
+
+            if [ "$READY" -ne "$DESIRED" ]; then
+              echo "Rolling back due to insufficient ready replicas"
+              kubectl apply -f /tmp/backup.yaml
+              exit 1
+            fi
+
+            sleep 30
+          done
+
+          echo "Deployment successful"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed, rolling back..."
+          kubectl apply -f /tmp/backup.yaml
+          kubectl rollout status deployment/app --namespace=production
+
+  # Post-deployment monitoring
+  monitor:
+    name: Monitor Production
+    runs-on: ubuntu-latest
+    needs: [deploy-prod-full]
+    if: always()
+
+    steps:
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PROD }}
+
+      - name: Create monitoring dashboard
+        run: |
+          echo "### Production Deployment Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ${{ needs.build.outputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Digest:** ${{ needs.build.outputs.image-digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "#### Pods" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods --namespace=production -l app=app >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Services" >> $GITHUB_STEP_SUMMARY
+          kubectl get svc app --namespace=production >> $GITHUB_STEP_SUMMARY
+
+      - name: Setup monitoring alerts
+        run: |
+          # Create Prometheus alert rules
+          kubectl apply -f k8s/production/monitoring/ || echo "No monitoring config"
+
+      - name: Cleanup old resources
+        run: |
+          # Remove old replica sets (keep last 5)
+          kubectl get replicasets --namespace=production -l app=app -o json | \
+            jq -r '.items | sort_by(.metadata.creationTimestamp) | reverse | .[5:] | .[].metadata.name' | \
+            xargs -I {} kubectl delete replicaset {} --namespace=production || true
+
+          # Remove old completed pods
+          kubectl delete pods --namespace=production --field-selector=status.phase=Succeeded || true

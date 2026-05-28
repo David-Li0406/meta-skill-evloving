@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="poll" noun="SftpAndReconcile" type="script" location="component://darpan/src/reconciliation/automation/pollSftpAndRunReconciliation.groovy" authenticate="anonymous-all">
+        <description>Check configured SFTP locations for available files and run reconciliation using mapping metadata.</description>
+        <in-parameters>
+            <parameter name="reconciliationMappingId" required="true">
+                <description>Mapping that defines file types, schemas, and ID fields per system.</description>
+            </parameter>
+            <parameter name="reconciliationRunId">
+                <description>Optional run identifier for logging/context only.</description>
+            </parameter>
+
+            <parameter name="file1SystemEnumId" required="true"/>
+            <parameter name="file2SystemEnumId" required="true"/>
+            <parameter name="file1SftpServerId" required="true">
+                <description>SftpServer ID for file 1.</description>
+            </parameter>
+            <parameter name="file2SftpServerId" required="true">
+                <description>SftpServer ID for file 2.</description>
+            </parameter>
+            <parameter name="file1FileTypeEnumId">
+                <description>Optional override for file 1 type (DftCsv, DftJson).</description>
+            </parameter>
+            <parameter name="file2FileTypeEnumId">
+                <description>Optional override for file 2 type (DftCsv, DftJson).</description>
+            </parameter>
+            <parameter name="file1SchemaFileName">
+                <description>Optional override for file 1 JSON schema (required when JSON).</description>
+            </parameter>
+            <parameter name="file2SchemaFileName">
+                <description>Optional override for file 2 JSON schema (required when JSON).</description>
+            </parameter>
+            <parameter name="file1RemotePath">
+                <description>Remote path for file 1 (required if only referencing a server).</description>
+            </parameter>
+            <parameter name="file2RemotePath">
+                <description>Remote path for file 2 (required if only referencing a server).</description>
+            </parameter>
+            <parameter name="archiveSubdir" default-value="archive">
+                <description>Folder name (under the remote/local directory) where consumed files will be moved.</description>
+            </parameter>
+
+            <parameter name="hasHeader" type="Boolean" default-value="true"/>
+            <parameter name="stageLocation" default-value="runtime://tmp/reconciliation/automation/input">
+                <description>Where staged copies of SFTP files will be written before reconciliation.</description>
+            </parameter>
+            <parameter name="outputLocation">
+                <description>Override for reconciliation outputs. Defaults to a `reconciled` subfolder under the stage directory.</description>
+            </parameter>
+            <parameter name="sparkMaster"/>
+            <parameter name="sparkAppName" default-value="SftpReconciliation"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="dataAvailable" type="Boolean"/>
+            <parameter name="statusMessage"/>
+
+            <parameter name="file1Source"/>
+            <parameter name="file2Source"/>
+            <parameter name="file1SelectedName"/>
+            <parameter name="file2SelectedName"/>
+            <parameter name="file1StagedLocation"/>
+            <parameter name="file2StagedLocation"/>
+
+            <parameter name="file1Type"/>
+            <parameter name="file2Type"/>
+            <parameter name="reconciliationType"/>
+
+            <parameter name="diffLocation"/>
+            <parameter name="diffFileName"/>
+            <parameter name="differenceCount" type="Integer"/>
+            <parameter name="onlyInFile1Count" type="Integer"/>
+            <parameter name="onlyInFile2Count" type="Integer"/>
+            <parameter name="validationErrors">
+                <parameter name="errorMessage"/>
+            </parameter>
+            <parameter name="processingWarnings">
+                <parameter name="warningMessage"/>
+            </parameter>
+        </out-parameters>
+    </service>
+
+</services>

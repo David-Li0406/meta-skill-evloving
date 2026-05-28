@@ -1,0 +1,124 @@
+# {{prdName}}
+
+> {{prdDescription}}
+
+**Progress:** {{prdCompletedCount}} of {{prdTotalCount}} stories complete | **Iteration:** {{currentIteration}}
+
+---
+## Current Task: {{taskId}} - {{taskTitle}}
+
+### Description
+{{taskDescription}}
+
+### Acceptance Criteria
+{{acceptanceCriteria}}
+
+{{#if notes}}
+### Notes
+{{notes}}
+{{/if}}
+
+{{#if dependsOn}}
+### Prerequisites
+Requires: **{{dependsOn}}** - Review their implementation in progress.md before starting.
+{{/if}}
+
+---
+## Context Files
+**Required:** Read `.ralph-tui/progress.md` first
+- Contains iteration history, learnings, and patterns from previous work
+- Study what was done, what files were changed, and any gotchas discovered
+**Reference (if needed):** `PRD.md` in the same directory as `prd.json`
+- Contains complete project goals, architecture, testing strategy, and all user stories
+- Refer to this if you need more context about the overall project, previous tasks, or upcoming work
+
+{{#if codebasePatterns}}
+---
+## Codebase Patterns (Quick Reference)
+{{codebasePatterns}}
+{{/if}}
+
+---
+
+## Workflow
+### Phase 1: Context Gathering
+1. Read `.ralph-tui/progress.md` completely - understand what iterations came before
+2. Check if this task's work already exists - if so, verify and signal COMPLETE
+3. If you need more context about the overall project or other tasks, refer to PRD.md
+### Phase 2: Implementation
+4. Implement this single story following acceptance criteria exactly
+5. Run quality checks as specified in CLAUDE.md
+6. Commit with message: `feat: {{taskId}} - {{taskTitle}}`
+### Phase 3: Documentation
+7. **Clean up progress.md** - Remove any malformed entries (JSON fragments, gibberish in Notes sections, duplicate iteration headers)
+8. **Append your progress entry** using the exact format below
+9. Signal completion
+
+---
+## Progress Entry Format
+APPEND to `.ralph-tui/progress.md` using this **exact format** (be thorough and detailed):
+```markdown
+## ✓ Iteration {{currentIteration}} - {{taskId}}: {{taskTitle}}
+
+**What was implemented:**
+- [Detailed description of what was built, changed, or verified]
+- [Include specific function names, class names, file paths]
+- [Document any verification performed even if no code changes were needed]
+**Files changed:**
+- `path/to/file.ext` (new|modified - description of changes)
+- [List ALL files touched with meaningful descriptions]
+**Learnings:**
+- [Key patterns discovered that future iterations should know]
+- [Gotchas, edge cases, or unexpected behaviors encountered]
+- [Architecture insights, dependency relationships, or code flow understanding]
+- [What worked well and what to avoid]
+**Quality gate:**
+- [Full command output: PASSED/FAILED with test counts]
+- [Any warnings or pre-existing issues to be aware of]
+
+---
+```
+**Rules for progress entries:**
+- Be thorough - future iterations start with no memory
+- Document everything unique from your session
+- Include specific details: function names, line numbers, patterns
+- Explain WHY things work the way they do, not just WHAT
+- If you see malformed entries (JSON fragments, `"type":"message"`, gibberish), DELETE them
+
+---
+## Loop Context
+
+You are in **Iteration {{currentIteration}}** of a Ralph autonomous loop.
+
+Each iteration:
+- Starts fresh with no memory of previous runs
+- Must read `.ralph-tui/progress.md` for context from previous iterations
+- Must document work for future iterations to understand
+- Must signal completion to proceed to next task
+
+---
+## Completion Signals
+**When all acceptance criteria are met:**
+```
+<promise>COMPLETE</promise>
+```
+**When blocked and need human input:**
+```
+<promise>BLOCKED</promise>
+Reason: [what you need]
+```
+**When non-critical task cannot be completed:**
+```
+<promise>SKIP</promise>
+Reason: [why] | Attempted: [what you tried]
+```
+**When critical failure requires human intervention:**
+```
+<promise>EJECT</promise>
+Reason: [the issue] | Impact: [what's blocked]
+```
+**Rules:**
+- Verify ALL acceptance criteria before signaling COMPLETE
+- NEVER signal COMPLETE if tests fail
+- If work already exists and meets criteria → verify then COMPLETE immediately
+- Clean up any gibberish in progress.md before adding your entry

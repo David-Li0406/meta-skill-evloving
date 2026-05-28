@@ -1,0 +1,50 @@
+[
+  {
+    "ruleId": "",
+    "ruleTitle": "Automated Tools",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Automated Tools"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Automated Tools",
+    "type": "good",
+    "code": "# Before commit\nnixfmt --check .\nstatix check .\ndeadnix .",
+    "language": "bash",
+    "description": "Correct example for Automated Tools"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Common Errors",
+    "type": "bad",
+    "code": "rec {\n  # Self-reference cycle\n  x = y;\n  y = x;\n}",
+    "language": "nix",
+    "description": "Incorrect example for Common Errors"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Common Errors",
+    "type": "good",
+    "code": "{\n  x = \"value\";\n  y = \"value\"; # Or use let binding\n}",
+    "language": "nix",
+    "description": "Correct example for Common Errors"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Manual Checks",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Manual Checks"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Manual Checks",
+    "type": "good",
+    "code": "# Check if it builds (without actually building)\nnix build .#nixosConfigurations.host.config.system.build.toplevel --dry-run\n\n# Check syntax fast\nnix-instantiate --parse file.nix > /dev/null",
+    "language": "bash",
+    "description": "Correct example for Manual Checks"
+  }
+]

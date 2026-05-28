@@ -1,0 +1,39 @@
+# =============================================================================
+# DEVELOPMENT DOCKERFILE FOR FASTAPI
+# Features: Hot-reload, volume mounting, debug mode
+# =============================================================================
+
+FROM python:3.12-slim AS development
+
+# Install UV
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Install system dependencies for development
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install ALL dependencies including dev tools
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
+
+# Environment for development
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=development \
+    DEBUG=true
+
+# Source code mounted as volume - not copied
+# This allows hot-reload to work
+
+EXPOSE 8000
+
+# Development server with auto-reload
+CMD ["fastapi", "dev", "app/main.py", "--host", "0.0.0.0", "--port", "8000"]

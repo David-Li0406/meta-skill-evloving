@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>市场漏斗示例 - McKinsey Style</title>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .funnel-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 40px;
+            margin: 40px 0;
+        }
+
+        .funnel-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .funnel-card h3 {
+            color: var(--accent-blue);
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .market-funnel {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 30px 0;
+        }
+
+        .funnel-stage {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .funnel-stage:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+
+        .stage-label {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .stage-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .stage-conversion {
+            font-size: 14px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .arrow-down {
+            color: var(--text-light);
+            font-size: 24px;
+            margin: -8px 0;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .metric-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+        }
+
+        @media (max-width: 768px) {
+            .funnel-showcase {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 市场漏斗示例</h1>
+        <p class="description">
+            McKinsey 风格市场转化可视化 | 逐层衰减漏斗<br>
+            适用于市场分析、客户转化、销售漏斗等场景
+        </p>
+
+        <div class="funnel-showcase">
+            <div class="funnel-card">
+                <h3>B2B销售漏斗</h3>
+                <div class="market-funnel">
+                    <div class="funnel-stage" style="width: 100%; background: var(--accent-blue); padding: 20px;">
+                        <div class="stage-label">潜在市场</div>
+                        <div class="stage-value">100,000</div>
+                        <div class="stage-conversion">100%</div>
+                    </div>
+
+                    <div class="arrow-down">▼</div>
+
+                    <div class="funnel-stage" style="width: 85%; background: var(--accent-green); padding: 20px;">
+                        <div class="stage-label">营销触达</div>
+                        <div class="stage-value">85,000</div>
+                        <div class="stage-conversion">85%</div>
+                    </div>
+
+                    <div class="arrow-down">▼</div>
+
+                    <div class="funnel-stage" style="width: 70%; background: var(--accent-blue-light); padding: 20px;">
+                        <div class="stage-label">销售机会</div>
+                        <div class="stage-value">42,500</div>
+                        <div class="stage-conversion">50%</div>
+                    </div>
+
+                    <div class="arrow-down">▼</div>
+
+                    <div class="funnel-stage" style="width: 55%; background: var(--accent-yellow); padding: 20px;">
+                        <div class="stage-label">商机转化</div>
+                        <div class="stage-value">12,750</div>
+                        <div class="stage-conversion">30%</div>
+                    </div>
+
+                    <div class="arrow-down">▼</div>
+
+                    <div class="funnel-stage" style="width: 40%; background: var(--accent-primary); padding: 20px;">
+                        <div class="stage-label">成交客户</div>
+                        <div class="stage-value">5,100</div>
+                        <div class="stage-conversion">40%</div>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-value">5.1%</div>
+                        <div class="metric-label">总体转化率</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">¥5.1M</div>
+                        <div class="metric-label">预计成交金额</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">90天</div>
+                        <div class="metric-label">平均销售周期</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">¥100K</div>
+                        <div class="metric-label">平均客单价</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="funnel-card">
+                <h3>用户转化漏斗</h3>
+                <div class="market-funnel">
+                    <div class="funnel-stage" style="width: 100%; background: var(--accent-blue); padding: 20px;">
+                        <div class="stage-label">访问用户</div>
+                        <div class="stage-value">100,000</div>
+                        <div class="stage-conversion">100%</div>
+                    </div>
+
+                    <div class="arrow-down">▼</div>
+
+                    <div class="funnel-stage" style="width: 80%; background: var(--accent-green); padding: 20px;">
+                        <div class="stage-label">注册用户</div>
+                        <div class="stage-value">60,000</div>
+                        <div class="stage-conversion">60%</div>
+                    </div>
+
+                    <div class="arrow-down">▼</div>
+
+                    <div class="funnel-stage" style="width: 60%; background: var(--accent-blue-light); padding: 20px;">
+                        <div class="stage-label">活跃用户</div>
+                        <div class="stage-value">18,000</div>
+                        <div class="stage-conversion">30%</div>
+                    </div>
+
+                    <div class="arrow-down">▼</div>
+
+                    <div class="funnel-stage" style="width: 40%; background: var(--accent-yellow); padding: 20px;">
+                        <div class="stage-label">付费用户</div>
+                        <div class="stage-value">3,600</div>
+                        <div class="stage-conversion">20%</div>
+                    </div>
+
+                    <div class="arrow-down">▼</div>
+
+                    <div class="funnel-stage" style="width: 25%; background: var(--accent-primary); padding: 20px;">
+                        <div class="stage-label">留存用户</div>
+                        <div class="stage-value">2,880</div>
+                        <div class="stage-conversion">80%</div>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-value">2.9%</div>
+                        <div class="metric-label">整体留存率</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">¥108K</div>
+                        <div class="metric-label">预计月收入</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">¥30</div>
+                        <div class="metric-label">平均客单价</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value">80%</div>
+                        <div class="metric-label">付费转化率</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>💡 漏斗分析要点</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>转化率监控</strong>：逐层分析转化率，识别流失点</li>
+                <li><strong>瓶颈识别</strong>：转化率骤降的环节即为瓶颈</li>
+                <li><strong>优化重点</strong>：针对瓶颈环节进行产品和运营优化</li>
+                <li><strong>A/B测试</strong>：对不同方案进行A/B测试，持续改进</li>
+            </ul>
+        </div>
+
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>市场分析</h4>
+                <p>TAM/SAM/SOM、市场机会、客户群体</p>
+            </div>
+            <div class="use-case-card">
+                <h4>销售管理</h4>
+                <p>销售漏斗、商机管理、成交预测</p>
+            </div>
+            <div class="use-case-card">
+                <h4>用户转化</h4>
+                <p>用户漏斗、激活率、留存率</p>
+            </div>
+            <div class="use-case-card">
+                <h4>营销效果</h4>
+                <p>投放转化、点击率、ROI分析</p>
+            </div>
+            <div class="use-case-card">
+                <h4>招聘流程</h4>
+                <p>简历投递、面试通过、Offer接受</p>
+            </div>
+            <div class="use-case-card">
+                <h4>流程优化</h4>
+                <p>流程效率、瓶颈识别、改进效果</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>HTML Presentation Beautifier - McKinsey Style Market Funnel Example</p>
+            <p>逐层衰减的市场转化可视化</p>
+        </footer>
+    </div>
+</body>
+</html>

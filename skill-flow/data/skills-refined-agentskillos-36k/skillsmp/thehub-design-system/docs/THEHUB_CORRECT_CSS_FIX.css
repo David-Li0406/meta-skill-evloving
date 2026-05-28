@@ -1,0 +1,518 @@
+/**
+ * =========================================================================
+ * THEHUB ADMIN CSS FIX - Tillbaka till korrekt design från originalbilden
+ * =========================================================================
+ * 
+ * PROBLEM SOM FIXAS:
+ * 1. Accent color: Cyan (#37d4d6) → Korrekt blue (#0066CC)
+ * 2. Stat cards: Färgade gradients → Vita cards med subtle shadows
+ * 3. Icon sizing: Enorma ikoner → Små, subtila ikoner
+ * 4. Action buttons: Stora cyan buttons → Clean, minimal buttons
+ * 5. Färgkaos: Flera färger → EN primary blue
+ * 
+ * USAGE: Ladda denna CSS SIST efter alla andra CSS-filer
+ * =========================================================================
+ */
+
+/* =========================================================================
+   1. FIX ACCENT COLOR - Från Cyan till Korrekt Blue
+   ========================================================================= */
+
+:root,
+html[data-theme="dark"] {
+    /* Korrekt Blue accent istället för Cyan */
+    --color-accent: #0066CC;
+    --color-accent-hover: #0052A3;
+    --color-accent-light: rgba(0, 102, 204, 0.1);
+    --color-accent-text: #0066CC;
+    --color-accent-glow: rgba(0, 102, 204, 0.3);
+    --color-accent-glow-strong: rgba(0, 102, 204, 0.5);
+    
+    /* Fix borders - subtila grå istället för cyan */
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-strong: rgba(255, 255, 255, 0.15);
+}
+
+html[data-theme="light"] {
+    /* Korrekt Blue accent istället för Cyan */
+    --color-accent: #0066CC;
+    --color-accent-hover: #0052A3;
+    --color-accent-light: rgba(0, 102, 204, 0.08);
+    --color-accent-text: #0066CC;
+    --color-accent-glow: rgba(0, 102, 204, 0.2);
+    --color-accent-glow-strong: rgba(0, 102, 204, 0.35);
+    
+    /* Fix borders - subtila grå istället för cyan */
+    --color-border: rgba(0, 0, 0, 0.1);
+    --color-border-strong: rgba(0, 0, 0, 0.15);
+}
+
+/* =========================================================================
+   2. FIX STAT CARDS - Tillbaka till vita cards istället för färgade
+   ========================================================================= */
+
+/* Remove colored gradients completely */
+.admin-stat-card.stat-primary,
+.admin-stat-card.stat-success,
+.admin-stat-card.stat-warning,
+.admin-stat-card.stat-danger,
+.admin-stat-card.stat-info {
+    /* Override gradient backgrounds */
+    background: var(--color-bg-card) !important;
+    color: var(--color-text-primary) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+/* All stat cards should be white/surface color */
+.admin-stat-card {
+    background: var(--color-bg-card) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: visible;
+}
+
+/* Hover state - subtle blue border */
+.admin-stat-card:hover {
+    border-color: var(--color-accent) !important;
+    box-shadow: var(--shadow-md);
+    transform: none !important; /* No lift effect */
+    background: var(--color-bg-card) !important;
+}
+
+/* Remove decorative gradient elements */
+.admin-stat-card::before {
+    display: none !important;
+}
+
+/* Fix stat card text colors */
+.admin-stat-card .stat-value,
+.admin-stat-card.stat-primary .stat-value,
+.admin-stat-card.stat-success .stat-value,
+.admin-stat-card.stat-warning .stat-value,
+.admin-stat-card.stat-danger .stat-value {
+    color: var(--color-text-primary) !important;
+    font-weight: var(--weight-bold);
+}
+
+.admin-stat-card .stat-label,
+.admin-stat-card.stat-primary .stat-label,
+.admin-stat-card.stat-success .stat-label,
+.admin-stat-card.stat-warning .stat-label,
+.admin-stat-card.stat-danger .stat-label {
+    color: var(--color-text-secondary) !important;
+    font-size: var(--text-sm);
+}
+
+/* =========================================================================
+   3. FIX STAT CARD ICONS - Små, subtila istället för stora färgade
+   ========================================================================= */
+
+.admin-stat-card .stat-icon,
+.admin-stat-card .admin-stat-icon,
+.admin-stat-card.stat-primary .stat-icon,
+.admin-stat-card.stat-success .stat-icon,
+.admin-stat-card.stat-warning .stat-icon,
+.admin-stat-card.stat-danger .stat-icon {
+    /* Small, clean icon container */
+    width: 40px !important;
+    height: 40px !important;
+    background: transparent !important;
+    color: var(--color-accent) !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0 !important;
+}
+
+.admin-stat-card .stat-icon svg,
+.admin-stat-card .admin-stat-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+    color: var(--color-accent) !important;
+}
+
+/* =========================================================================
+   4. FIX GRADIENT DEFINITIONS - Remove colored gradients
+   ========================================================================= */
+
+:root {
+    /* Override admin gradients - use subtle gray instead */
+    --admin-gradient-primary: var(--color-bg-card);
+    --admin-gradient-success: var(--color-bg-card);
+    --admin-gradient-warning: var(--color-bg-card);
+    --admin-gradient-danger: var(--color-bg-card);
+}
+
+/* =========================================================================
+   5. FIX ACTION CARDS - Clean, minimal istället för stora färgade
+   ========================================================================= */
+
+/* Quick action cards */
+.quick-action-card,
+.action-card,
+[class*="action-card"] {
+    background: var(--color-bg-card) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.quick-action-card:hover,
+.action-card:hover {
+    border-color: var(--color-accent) !important;
+    background: var(--color-bg-hover) !important;
+}
+
+/* Remove large colored icon backgrounds */
+.quick-action-card .action-icon,
+.action-card .action-icon,
+[class*="action-icon"] {
+    background: transparent !important;
+    color: var(--color-accent) !important;
+    width: 32px !important;
+    height: 32px !important;
+}
+
+/* =========================================================================
+   6. FIX BUTTONS - Subtle design istället för stora gradients
+   ========================================================================= */
+
+.btn-admin-primary,
+.admin-btn-primary {
+    background: var(--color-accent) !important;
+    border: 1px solid var(--color-accent) !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+.btn-admin-primary:hover,
+.admin-btn-primary:hover {
+    background: var(--color-accent-hover) !important;
+    border-color: var(--color-accent-hover) !important;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+/* Secondary buttons */
+.btn-admin-secondary,
+.admin-btn-secondary {
+    background: var(--color-bg-surface) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.btn-admin-secondary:hover {
+    background: var(--color-bg-hover) !important;
+    border-color: var(--color-border-strong) !important;
+}
+
+/* =========================================================================
+   7. FIX ICON SIZING - Konsekvent small sizing
+   ========================================================================= */
+
+/* Override large icon sizes globally */
+svg[style*="width: 48px"],
+svg[style*="width:48px"],
+.icon-lg {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+svg[style*="width: 64px"],
+svg[style*="width:64px"],
+.icon-xl {
+    width: 32px !important;
+    height: 32px !important;
+}
+
+/* =========================================================================
+   8. FIX DASHBOARD STATS GRID - Clean white cards
+   ========================================================================= */
+
+.stats-grid,
+.admin-stats-grid,
+[class*="stats-grid"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+}
+
+/* =========================================================================
+   9. FIX SERIES CARDS - No colored backgrounds
+   ========================================================================= */
+
+/* Series stat cards should be white, not colored */
+.series-stat-card,
+[class*="series-stat"] {
+    background: var(--color-bg-card) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text-primary) !important;
+}
+
+/* Series icons should be blue accent, not colored by series type */
+.series-stat-card .stat-icon svg {
+    color: var(--color-accent) !important;
+}
+
+/* =========================================================================
+   10. FIX PAGE HEADERS - Clean, minimal
+   ========================================================================= */
+
+.page-header,
+.admin-page-header {
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.page-title,
+.admin-page-title {
+    color: var(--color-text-primary);
+    font-weight: var(--weight-bold);
+}
+
+/* =========================================================================
+   11. FIX CARDS - Consistent white/surface design
+   ========================================================================= */
+
+.card,
+.admin-card,
+[class*="-card"] {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.card:hover,
+.admin-card:hover {
+    border-color: var(--color-accent);
+}
+
+/* =========================================================================
+   12. FIX BADGES - Subtle design istället för loud colors
+   ========================================================================= */
+
+.badge-primary,
+.admin-badge-primary {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+    border: 1px solid var(--color-accent) !important;
+}
+
+/* =========================================================================
+   13. FIX TABLES - Clean borders with blue accents
+   ========================================================================= */
+
+.admin-table th {
+    background: var(--color-bg-sunken);
+    color: var(--color-text-secondary);
+    font-weight: var(--weight-semibold);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.admin-table tbody tr:hover {
+    background: var(--color-bg-hover);
+}
+
+.admin-table a {
+    color: var(--color-accent);
+}
+
+.admin-table a:hover {
+    color: var(--color-accent-hover);
+}
+
+/* =========================================================================
+   14. FIX TABS - Blue accent for active state
+   ========================================================================= */
+
+.admin-tab.is-active,
+.tab.is-active {
+    color: var(--color-accent) !important;
+    border-bottom-color: var(--color-accent) !important;
+}
+
+/* =========================================================================
+   15. FIX ALERTS - Subtle colors, not loud
+   ========================================================================= */
+
+.alert,
+.admin-alert {
+    border-radius: var(--radius-md);
+    border-width: 1px;
+    border-style: solid;
+}
+
+.alert-info,
+.admin-alert-info {
+    background: rgba(0, 102, 204, 0.1);
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+/* =========================================================================
+   16. FIX DASHBOARD QUICK ACTIONS - Clean icon buttons
+   ========================================================================= */
+
+.quick-action-btn,
+.dashboard-action {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    text-decoration: none;
+    color: var(--color-text-primary);
+    transition: all 0.2s ease;
+}
+
+.quick-action-btn:hover,
+.dashboard-action:hover {
+    border-color: var(--color-accent);
+    background: var(--color-bg-hover);
+}
+
+.quick-action-btn svg,
+.dashboard-action svg {
+    width: 24px;
+    height: 24px;
+    color: var(--color-accent);
+}
+
+/* =========================================================================
+   17. FIX FORMS - Blue focus states
+   ========================================================================= */
+
+.admin-input:focus,
+.admin-select:focus,
+.admin-textarea:focus,
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 3px var(--color-accent-light), var(--shadow-glow) !important;
+}
+
+/* =========================================================================
+   18. FIX LINKS - Blue accent color
+   ========================================================================= */
+
+a.text-primary,
+.admin-link-primary,
+a:not([class]) {
+    color: var(--color-accent);
+}
+
+a.text-primary:hover,
+.admin-link-primary:hover,
+a:not([class]):hover {
+    color: var(--color-accent-hover);
+}
+
+/* =========================================================================
+   19. FIX STATUS INDICATORS - Appropriate colors
+   ========================================================================= */
+
+.status-active,
+.status-published {
+    color: var(--color-success);
+}
+
+.status-pending,
+.status-draft {
+    color: var(--color-warning);
+}
+
+.status-inactive,
+.status-unpublished {
+    color: var(--color-error);
+}
+
+/* =========================================================================
+   20. FIX EVENT CARDS - Clean design like original
+   ========================================================================= */
+
+.event-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.event-card:hover {
+    border-color: var(--color-accent);
+}
+
+.event-date-badge {
+    background: var(--color-accent);
+    color: white;
+    border-radius: var(--radius-md);
+    padding: var(--space-xs) var(--space-sm);
+    font-weight: var(--weight-semibold);
+}
+
+/* =========================================================================
+   21. REMOVE LARGE BOTTOM ICONS (from dashboard screenshot)
+   ========================================================================= */
+
+/* The huge black icons at bottom of dashboard */
+.dashboard-large-icons,
+.bottom-icon-grid,
+[style*="font-size: 48px"],
+[style*="font-size:48px"] {
+    display: none !important;
+}
+
+/* If there are large decorative icons, hide them */
+.decorative-icon-large {
+    display: none !important;
+}
+
+/* =========================================================================
+   22. FIX SIDEBAR ACTIVE STATE - Blue instead of cyan
+   ========================================================================= */
+
+.sidebar-link.is-active,
+.nav-item.active {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+}
+
+.sidebar-link.is-active::before,
+.nav-item.active::before {
+    background: var(--color-accent) !important;
+}
+
+/* =========================================================================
+   23. CONSISTENT SPACING
+   ========================================================================= */
+
+.admin-content {
+    padding: var(--space-lg);
+}
+
+.admin-main {
+    background: var(--color-bg-page);
+}
+
+/* =========================================================================
+   24. FIX ANY REMAINING CYAN REFERENCES
+   ========================================================================= */
+
+/* Override any hardcoded cyan colors */
+[style*="#37d4d6"],
+[style*="#37D4D6"],
+[style*="rgb(55, 212, 214)"],
+.text-cyan,
+.bg-cyan,
+.border-cyan {
+    color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    background-color: var(--color-accent) !important;
+}
+
+/* =========================================================================
+   DONE - Admin should now match original screenshot design
+   ========================================================================= */

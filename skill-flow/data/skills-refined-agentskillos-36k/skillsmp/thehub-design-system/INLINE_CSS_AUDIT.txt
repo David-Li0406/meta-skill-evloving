@@ -1,0 +1,36 @@
+========================================
+INLINE CSS ANALYS - layout-header.php
+========================================
+
+--- Inline <style> block ---
+131:    <style>
+153:    </style>
+333:    </style>
+
+--- Antal rader mellan <style> tags ---
+23
+
+--- Innehåll (första 50 rader av inline CSS) ---
+    <style>
+        html, body {
+            background: var(--color-bg-page);
+            color: var(--color-text-primary);
+            margin: 0;
+            padding: 0;
+        }
+        /* FOUC Prevention: Hide main content until CSS is loaded */
+        .main-content {
+            opacity: 0;
+            transition: opacity 0.1s ease-out;
+        }
+        .main-content.css-ready {
+            opacity: 1;
+        }
+        /* Fallback: Show content after 500ms even if JS fails */
+        @keyframes fouc-fallback {
+            to { opacity: 1; }
+        }
+        .main-content {
+            animation: fouc-fallback 0.1s ease-out 0.5s forwards;
+        }
+    </style>

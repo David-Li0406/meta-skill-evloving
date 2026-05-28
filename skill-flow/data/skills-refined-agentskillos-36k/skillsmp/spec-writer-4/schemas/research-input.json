@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Research Input Schema",
+  "description": "Schema for log-research.py JSON input. Documents research findings and investigations.",
+  "type": "object",
+  "required": ["title", "question"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Short title for the research",
+      "examples": ["Database performance comparison", "Authentication library evaluation"]
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Research question being investigated",
+      "examples": ["Which database provides better performance for our use case?"]
+    },
+    "approach": {
+      "type": "string",
+      "description": "How the research was conducted",
+      "examples": ["Benchmarked PostgreSQL vs MySQL with realistic dataset"]
+    },
+    "findings": {
+      "type": "string",
+      "description": "What was discovered",
+      "examples": ["PostgreSQL 15% faster for complex joins, MySQL better for simple queries"]
+    },
+    "implications": {
+      "type": "string",
+      "description": "Impact and consequences of findings",
+      "examples": ["Our workload is join-heavy, PostgreSQL is better fit"]
+    },
+    "recommendations": {
+      "type": "string",
+      "description": "Suggested actions based on research",
+      "examples": ["Proceed with PostgreSQL, optimize join queries"]
+    },
+    "sources": {
+      "type": "string",
+      "description": "References and sources consulted",
+      "examples": ["Official docs, Stack Overflow performance discussion, blog.example.com/db-comparison"]
+    },
+    "questions": {
+      "description": "Related question IDs. Can be single ID, comma-separated string, or array.",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^Q-?\\d+$",
+          "description": "Single question ID"
+        },
+        {
+          "type": "string",
+          "pattern": "^Q-?\\d+(,\\s*Q-?\\d+)*$",
+          "description": "Comma-separated question IDs"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^Q-?\\d+$"
+          },
+          "description": "Array of question IDs"
+        }
+      ]
+    },
+    "stories": {
+      "description": "Related story numbers. Can be single story, comma-separated string, or array.",
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Single story number"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\d+(,\\s*\\d+)*$",
+          "description": "Comma-separated story numbers"
+        },
+        {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "description": "Array of story numbers"
+        }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "title": "Database performance comparison",
+      "question": "Which database performs better for our workload?",
+      "approach": "Benchmarked PostgreSQL vs MySQL with realistic dataset",
+      "findings": "PostgreSQL 15% faster for complex joins",
+      "implications": "Our workload is join-heavy, PostgreSQL is better fit",
+      "recommendations": "Proceed with PostgreSQL",
+      "sources": "Official docs, performance blog posts",
+      "questions": ["Q12", "Q15"],
+      "stories": [1, 3]
+    },
+    {
+      "title": "Authentication library evaluation",
+      "question": "Which auth library best fits our needs?",
+      "approach": "Evaluated Passport.js, Auth0, and custom implementation",
+      "questions": "Q5, Q8"
+    }
+  ]
+}

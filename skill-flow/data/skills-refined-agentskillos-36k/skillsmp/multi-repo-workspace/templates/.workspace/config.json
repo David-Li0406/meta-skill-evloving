@@ -1,0 +1,44 @@
+{
+  "workspace": {
+    "name": "my-workspace",
+    "description": "Multi-repository workspace description",
+    "base_path": "/path/to/workspace",
+    "created": "2026-01-20",
+    "version": "1.0.0"
+  },
+  "repositories": [
+    {
+      "name": "frontend-app",
+      "path": "./frontend",
+      "type": "frontend",
+      "primary": true
+    },
+    {
+      "name": "backend-api",
+      "path": "./backend",
+      "type": "backend",
+      "primary": true
+    },
+    {
+      "name": "shared-lib",
+      "path": "./packages/shared",
+      "type": "shared",
+      "primary": false
+    }
+  ],
+  "dependency_graph": {
+    "frontend-app": ["shared-lib", "backend-api"],
+    "backend-api": ["shared-lib"],
+    "shared-lib": []
+  },
+  "global_conventions": {
+    "commit_message_format": "conventional-commits",
+    "branch_naming": "feature/*, bugfix/*, hotfix/*",
+    "pr_template": true
+  },
+  "scripts": {
+    "install_all": "npm install in all repos",
+    "test_all": "npm test in all repos",
+    "build_all": "npm run build in all repos"
+  }
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>View Transition Toggle</title>
+    <meta
+      name="description"
+      content="View transitions with minimal JS and CSS-defined animations."
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#f4f2ef, #0d0e11);
+        --fg: light-dark(#1c1c1f, #eff0f4);
+        --surface: light-dark(#ffffff, #15171d);
+        --border: light-dark(#dcdad5, #2c2f36);
+        --accent: light-dark(#2d60f3, #8fb1ff);
+        --radius: 1rem;
+        --space-sm: clamp(0.5rem, 1.2cqi, 0.9rem);
+        --space-md: clamp(0.9rem, 2cqi, 1.4rem);
+        --space-lg: clamp(1.4rem, 3cqi, 2.2rem);
+        --text-sm: clamp(0.9rem, 2cqi, 1rem);
+        --text-md: clamp(1.1rem, 3cqi, 1.35rem);
+        --text-lg: clamp(1.4rem, 4cqi, 1.9rem);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+        line-height: 1.5;
+        padding: var(--space-lg);
+      }
+
+      main {
+        max-inline-size: 56rem;
+        margin-inline: auto;
+        display: grid;
+        gap: var(--space-md);
+      }
+
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: var(--text-lg);
+      }
+
+      button {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--fg);
+        padding: var(--space-sm) var(--space-md);
+        border-radius: 999rem;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 0.2rem;
+      }
+
+      .stage {
+        display: grid;
+        gap: var(--space-md);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        transition: border-color 0.2s ease;
+      }
+
+      .hero {
+        view-transition-name: hero;
+        border-radius: var(--radius);
+        background: linear-gradient(120deg, var(--accent), transparent 70%);
+        padding: var(--space-lg);
+        min-block-size: 9rem;
+        display: grid;
+        align-content: end;
+        color: var(--fg);
+      }
+
+      .hero h2 {
+        margin: 0;
+        font-size: var(--text-md);
+      }
+
+      .columns {
+        display: grid;
+        gap: var(--space-md);
+        grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+      }
+
+      .card {
+        view-transition-name: panel;
+        border: 1px solid var(--border);
+        border-radius: 0.8rem;
+        padding: var(--space-md);
+        background: color-mix(in oklab, var(--surface) 88%, var(--bg));
+      }
+
+      .card h3 {
+        margin: 0 0 var(--space-sm);
+        font-size: var(--text-md);
+      }
+
+      .card p {
+        margin: 0;
+        font-size: var(--text-sm);
+      }
+
+      body.is-alt .stage {
+        border-color: var(--accent);
+      }
+
+      body.is-alt .hero {
+        align-content: center;
+        text-align: center;
+      }
+
+      body.is-alt .columns {
+        grid-template-columns: 1fr;
+      }
+
+      ::view-transition-old(hero),
+      ::view-transition-new(hero) {
+        animation-duration: 0.35s;
+        animation-timing-function: ease;
+      }
+
+      ::view-transition-old(hero) {
+        animation-name: hero-exit;
+      }
+
+      ::view-transition-new(hero) {
+        animation-name: hero-enter;
+      }
+
+      @keyframes hero-exit {
+        from {
+          opacity: 1;
+          transform: scale(1);
+        }
+        to {
+          opacity: 0;
+          transform: scale(0.98);
+        }
+      }
+
+      @keyframes hero-enter {
+        from {
+          opacity: 0;
+          transform: scale(1.02);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        ::view-transition-old(hero),
+        ::view-transition-new(hero) {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>View Transition Toggle</h1>
+        <button type="button" id="toggle-layout">Toggle layout</button>
+      </header>
+
+      <section class="stage">
+        <div class="hero">
+          <h2>Compact to focused hero</h2>
+          <p>View transitions animate layout changes smoothly.</p>
+        </div>
+
+        <div class="columns">
+          <article class="card">
+            <h3>Plan overview</h3>
+            <p>Baseline APIs keep transitions smooth across browsers.</p>
+          </article>
+          <article class="card">
+            <h3>Usage insights</h3>
+            <p>Toggle the layout to see the hero animate.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      const toggle = document.getElementById("toggle-layout");
+      const root = document.body;
+
+      const swapLayout = () => {
+        root.classList.toggle("is-alt");
+      };
+
+      toggle.addEventListener("click", () => {
+        if ("startViewTransition" in document) {
+          document.startViewTransition(swapLayout);
+        } else {
+          swapLayout();
+        }
+      });
+    </script>
+  </body>
+</html>

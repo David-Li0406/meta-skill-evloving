@@ -1,0 +1,41 @@
+{
+  "name": "crud-delete",
+  "description": "Delete value at a nested path in a JSON object",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to delete (e.g., 'user.profile.age')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Modified object with value removed at the specified path"
+  },
+  "examples": [
+    {
+      "description": "Delete nested field",
+      "input": {"user": {"name": "skogix", "email": "test@example.com"}},
+      "args": {"path": "user.email"},
+      "output": {"user": {"name": "skogix"}}
+    },
+    {
+      "description": "Delete deeply nested field",
+      "input": {"data": {"user": {"profile": {"age": 30, "location": "sweden"}}}},
+      "args": {"path": "data.user.profile.age"},
+      "output": {"data": {"user": {"profile": {"location": "sweden"}}}}
+    },
+    {
+      "description": "Delete non-existent path (no change)",
+      "input": {"user": {"name": "skogix"}},
+      "args": {"path": "user.phone"},
+      "output": {"user": {"name": "skogix"}}
+    }
+  ],
+  "tags": ["crud", "delete", "object", "mutation"]
+}

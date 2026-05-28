@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Quick status check for PostgreSQL 17 replica on hal9000
+set -euo pipefail
+
+ssh hal9000 "sudo -u postgres psql -h localhost -p 5432 -c \"SELECT pg_is_in_recovery() as is_replica, pg_last_wal_replay_lsn() as replayed_lsn, pg_last_xact_replay_timestamp() as last_replay_time;\""

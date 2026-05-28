@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Find revisions with status flags
+# Usage: jj-find-flagged [FLAG]
+# FLAG: draft, todo, wip, untested, standby, review, blocked, done (omit for all)
+
+set -euo pipefail
+
+flag="${1:-}"
+
+if [[ -n "$flag" ]]; then
+  # Specific flag
+  jj log -r "description(substring:\"[task:${flag}]\")"
+else
+  # All task-flagged revisions
+  jj log -r 'description(substring:"[task:")'
+fi

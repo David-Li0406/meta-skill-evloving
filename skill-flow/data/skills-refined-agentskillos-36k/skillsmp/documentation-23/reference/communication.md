@@ -1,0 +1,1 @@
+../../../rules/core/communication.md

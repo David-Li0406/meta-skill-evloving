@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <entity entity-name="JsonSchema" package="darpan.reconciliation" use="configuration">
+        <description>Stores JSON Schemas for reconciliation.</description>
+        <field name="jsonSchemaId" type="id" is-pk="true"/>
+        <field name="schemaName" type="text-medium" enable-audit-log="true"/>
+        <field name="description" type="text-long"/>
+        <field name="schemaText" type="text-very-long"/>
+        <field name="statusId" type="id"/>
+        <field name="createdDate" type="date-time"/>
+
+        
+        <index name="JSON_SCHEMA_NAME" unique="true">
+            <index-field name="schemaName"/>
+        </index>
+    </entity>
+</entities>

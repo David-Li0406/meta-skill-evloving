@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Debugging Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #3e3e3e;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            color: #4ec9b0;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        header p {
+            color: #858585;
+            font-size: 1.1em;
+        }
+        .console-hint {
+            background: #264f78;
+            color: #9cdcfe;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #569cd6;
+        }
+        .console-hint strong {
+            color: #4ec9b0;
+        }
+        .action-panel {
+            background: #2d2d2d;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #3e3e3e;
+            margin-bottom: 20px;
+        }
+        .action-panel h2 {
+            color: #4fc3f7;
+            margin-bottom: 15px;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        button {
+            padding: 15px 20px;
+            font-size: 1em;
+            font-family: inherit;
+            border: 1px solid #3e3e3e;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .btn-log {
+            background: #0e639c;
+            color: white;
+        }
+        .btn-info {
+            background: #007acc;
+            color: white;
+        }
+        .btn-warn {
+            background: #cd9731;
+            color: #1e1e1e;
+        }
+        .btn-error {
+            background: #f48771;
+            color: #1e1e1e;
+        }
+        .btn-debug {
+            background: #b267e6;
+            color: white;
+        }
+        .btn-trace {
+            background: #4ec9b0;
+            color: #1e1e1e;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .output-area {
+            background: #2d2d2d;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #3e3e3e;
+            min-height: 200px;
+        }
+        .output-area h2 {
+            color: #4fc3f7;
+            margin-bottom: 15px;
+        }
+        .log-entry {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 0.95em;
+            border-left: 3px solid;
+        }
+        .log-entry.info {
+            background: #1a2332;
+            border-color: #007acc;
+            color: #9cdcfe;
+        }
+        .log-entry.warn {
+            background: #332b1f;
+            border-color: #cd9731;
+            color: #dcdcaa;
+        }
+        .log-entry.error {
+            background: #331a1a;
+            border-color: #f48771;
+            color: #f48771;
+        }
+        .log-entry.success {
+            background: #1a3320;
+            border-color: #4ec9b0;
+            color: #4ec9b0;
+        }
+        .counter {
+            background: #264f78;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .counter-value {
+            font-size: 3em;
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+        .counter-label {
+            color: #9cdcfe;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐛 Console Debugging Demo</h1>
+            <p>Monitor browser console output to debug JavaScript issues</p>
+        </header>
+
+        <div class="console-hint">
+            <strong>💡 Tip:</strong> Open your browser's DevTools (F12) and watch the Console tab while clicking buttons below.
+            In Playwright tests, you can capture all these console messages programmatically!
+        </div>
+
+        <!-- Log Level Actions -->
+        <div class="action-panel">
+            <h2>Console Log Levels</h2>
+            <div class="button-grid">
+                <button class="btn-log" onclick="logMessage()">console.log()</button>
+                <button class="btn-info" onclick="logInfo()">console.info()</button>
+                <button class="btn-warn" onclick="logWarning()">console.warn()</button>
+                <button class="btn-error" onclick="logError()">console.error()</button>
+                <button class="btn-debug" onclick="logDebug()">console.debug()</button>
+                <button class="btn-trace" onclick="logTrace()">console.trace()</button>
+            </div>
+        </div>
+
+        <!-- Application Actions -->
+        <div class="action-panel">
+            <h2>Simulated Application Actions</h2>
+            <div class="button-grid">
+                <button class="btn-info" onclick="loadUserData()">Load User Data</button>
+                <button class="btn-error" onclick="failedAPICall()">Failed API Call</button>
+                <button class="btn-warn" onclick="deprecatedFeature()">Use Deprecated Feature</button>
+                <button class="btn-log" onclick="performCalculation()">Perform Calculation</button>
+                <button class="btn-error" onclick="throwError()">Throw Error</button>
+                <button class="btn-info" onclick="successfulOperation()">Successful Operation</button>
+            </div>
+        </div>
+
+        <!-- Counter -->
+        <div class="counter">
+            <div class="counter-value" id="counter">0</div>
+            <div class="counter-label">Actions Performed</div>
+        </div>
+
+        <!-- Visual Output -->
+        <div class="output-area">
+            <h2>Visual Log Output</h2>
+            <div id="outputLog">
+                <div class="log-entry info">
+                    Application initialized. Waiting for user interaction...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let actionCounter = 0;
+
+        function incrementCounter() {
+            actionCounter++;
+            document.getElementById('counter').textContent = actionCounter;
+        }
+
+        function addVisualLog(message, type = 'info') {
+            const outputLog = document.getElementById('outputLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            outputLog.appendChild(entry);
+
+            // Keep only last 10 entries
+            while (outputLog.children.length > 10) {
+                outputLog.removeChild(outputLog.firstChild);
+            }
+        }
+
+        // Console log level demonstrations
+        function logMessage() {
+            console.log('This is a regular log message');
+            console.log('You can log objects:', { name: 'Test', value: 123 });
+            console.log('And arrays:', [1, 2, 3, 4, 5]);
+            addVisualLog('Regular log messages sent to console', 'info');
+            incrementCounter();
+        }
+
+        function logInfo() {
+            console.info('ℹ️ Information: User session started');
+            console.info('Session ID:', Math.random().toString(36).substr(2, 9));
+            addVisualLog('Info messages sent to console', 'info');
+            incrementCounter();
+        }
+
+        function logWarning() {
+            console.warn('⚠️ Warning: This feature will be deprecated in version 2.0');
+            console.warn('Please update your code to use the new API');
+            addVisualLog('Warning messages sent to console', 'warn');
+            incrementCounter();
+        }
+
+        function logError() {
+            console.error('❌ Error: Failed to validate input');
+            console.error('Error details:', { code: 'VALIDATION_ERROR', field: 'email' });
+            addVisualLog('Error messages sent to console', 'error');
+            incrementCounter();
+        }
+
+        function logDebug() {
+            console.debug('🔍 Debug: Processing user input');
+            console.debug('Input value:', document.getElementById('counter').textContent);
+            addVisualLog('Debug messages sent to console', 'info');
+            incrementCounter();
+        }
+
+        function logTrace() {
+            console.trace('📍 Stack trace - showing call stack');
+            addVisualLog('Trace sent to console (check DevTools)', 'info');
+            incrementCounter();
+        }
+
+        // Simulated application actions
+        function loadUserData() {
+            console.log('🔄 Loading user data...');
+            addVisualLog('Loading user data...', 'info');
+
+            setTimeout(() => {
+                const user = {
+                    id: 12345,
+                    name: 'John Doe',
+                    email: 'john@example.com'
+                };
+                console.log('✅ User data loaded successfully:', user);
+                addVisualLog('User data loaded successfully', 'success');
+            }, 500);
+
+            incrementCounter();
+        }
+
+        function failedAPICall() {
+            console.log('🌐 Making API call to /api/data...');
+            addVisualLog('Making API call...', 'info');
+
+            setTimeout(() => {
+                console.error('❌ API Error: Network request failed');
+                console.error('Status: 500 - Internal Server Error');
+                console.error('Response:', { error: 'Database connection failed' });
+                addVisualLog('API call failed with error', 'error');
+            }, 500);
+
+            incrementCounter();
+        }
+
+        function deprecatedFeature() {
+            console.warn('⚠️ Warning: Using deprecated method "getUserInfo()"');
+            console.warn('This method will be removed in v3.0');
+            console.warn('Please use "fetchUserData()" instead');
+            addVisualLog('Deprecated feature warning', 'warn');
+            incrementCounter();
+        }
+
+        function performCalculation() {
+            console.log('🧮 Starting calculation...');
+            const a = 42;
+            const b = 13;
+            const result = a + b;
+
+            console.log(`Calculating: ${a} + ${b} = ${result}`);
+            console.log('Calculation completed successfully');
+            addVisualLog(`Calculation: ${a} + ${b} = ${result}`, 'success');
+            incrementCounter();
+        }
+
+        function throwError() {
+            console.log('💥 About to throw an error...');
+            addVisualLog('Throwing error...', 'warn');
+
+            setTimeout(() => {
+                try {
+                    // This will throw an error
+                    throw new Error('Something went wrong!');
+                } catch (e) {
+                    console.error('❌ Caught error:', e.message);
+                    console.error('Error stack:', e.stack);
+                    addVisualLog('Error caught and logged', 'error');
+                }
+            }, 300);
+
+            incrementCounter();
+        }
+
+        function successfulOperation() {
+            console.log('✨ Performing successful operation...');
+            addVisualLog('Performing operation...', 'info');
+
+            setTimeout(() => {
+                console.log('Step 1: Validating input... ✅');
+                console.log('Step 2: Processing data... ✅');
+                console.log('Step 3: Saving results... ✅');
+                console.log('🎉 Operation completed successfully!');
+                addVisualLog('Operation completed successfully', 'success');
+            }, 500);
+
+            incrementCounter();
+        }
+
+        // Log on page load
+        console.log('='.repeat(60));
+        console.log('🐛 Console Debugging Demo App');
+        console.log('='.repeat(60));
+        console.log('Application initialized successfully');
+        console.log('Try clicking the buttons to see different console outputs');
+        console.log('In Playwright, you can capture all these messages programmatically!');
+        console.log('='.repeat(60));
+    </script>
+</body>
+</html>

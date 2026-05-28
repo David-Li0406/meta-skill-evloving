@@ -1,0 +1,2490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图表类型示例大全</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+/* McKinsey/BCG Style Presentation CSS */
+
+/* Color Variables */
+:root {
+    --primary-bg: #FFFFFF;
+    --header-bg: #000000;
+    --primary-accent: #F85d42;
+    --secondary-accent: #74788d;
+    --deep-blue: #556EE6;
+    --green: #34c38f;
+    --blue: #50a5f1;
+    --yellow: #f1b44c;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    --text-light: #FFFFFF;
+}
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Navigation Bar */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--header-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    z-index: 1000;
+}
+
+.nav-btn {
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #e04a31;
+}
+
+.nav-btn:disabled {
+    background-color: var(--secondary-accent);
+    cursor: not-allowed;
+}
+
+.slide-counter {
+    color: var(--text-light);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Presentation Container */
+.presentation-container {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    max-height: calc(100vh - 60px);
+}
+
+/* Slide Styles */
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 60px 80px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+}
+
+/* Title Slide */
+.title-slide {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.title {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--primary-accent);
+    margin-bottom: 20px;
+}
+
+.date {
+    font-size: 20px;
+    color: var(--secondary-accent);
+    font-weight: 400;
+}
+
+/* Header Bar */
+.header-bar {
+    background-color: var(--header-bg);
+    padding: 20px 40px;
+    margin: -60px -80px 40px -80px;
+}
+
+.slide-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: -0.5px;
+}
+
+/* Slide Content */
+.slide-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Key Points */
+.key-points {
+    list-style: none;
+    padding: 0;
+}
+
+.key-point {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 20px 0;
+    border-bottom: 2px solid var(--secondary-accent);
+    margin-bottom: 10px;
+}
+
+.key-point::before {
+    content: "✓ ";
+    color: var(--primary-accent);
+    margin-right: 15px;
+    font-weight: 700;
+}
+
+/* Two-Column Layout */
+.two-column {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+.column {
+    flex: 1;
+}
+
+.chart-container {
+    min-height: 400px;
+    max-height: 450px;
+    position: relative;
+}
+
+.chart-caption {
+    text-align: center;
+    font-size: 14px;
+    color: var(--secondary-accent);
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Section Header */
+.section-header {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.accent-text {
+    color: var(--primary-accent);
+}
+
+/* Body Text */
+.body-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+/* Bullet Points */
+.bullet-points {
+    list-style: none;
+    padding: 0;
+}
+
+.bullet-points li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 12px 0 12px 30px;
+    position: relative;
+}
+
+.bullet-points li::before {
+    content: "•";
+    color: var(--primary-accent);
+    font-size: 24px;
+    position: absolute;
+    left: 0;
+    top: 8px;
+}
+
+/* Conclusions Grid */
+.conclusions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.conclusion-card {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.card-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+/* Recommendations Box */
+.recommendations-box {
+    background-color: #fff3e0;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--yellow);
+    margin: 30px 0;
+}
+
+/* Numbered List */
+.numbered-list {
+    list-style: none;
+    counter-reset: recommendation-counter;
+    padding: 0;
+}
+
+.numbered-list li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 15px 0 15px 40px;
+    position: relative;
+    counter-increment: recommendation-counter;
+}
+
+.numbered-list li::before {
+    content: counter(recommendation-counter);
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Full-screen Button */
+.fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--header-bg);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: background-color 0.3s ease;
+}
+
+.fullscreen-btn:hover {
+    background-color: var(--secondary-accent);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .slide {
+        padding: 60px 40px;
+    }
+
+    .two-column {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .conclusions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .title {
+        font-size: 48px;
+    }
+
+    .slide-title {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 20px;
+    }
+
+    .slide {
+        padding: 40px 20px;
+    }
+
+    .title {
+        font-size: 36px;
+    }
+
+    .slide-title {
+        font-size: 28px;
+    }
+
+    .subtitle {
+        font-size: 24px;
+    }
+
+    .key-point {
+        font-size: 18px;
+    }
+}
+
+/* Scrollbar Styles */
+.slide::-webkit-scrollbar {
+    width: 8px;
+}
+
+.slide::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.slide::-webkit-scrollbar-thumb {
+    background: var(--secondary-accent);
+    border-radius: 4px;
+}
+
+.slide::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-accent);
+}
+
+/* Special Chart Type Styles */
+/* Radar Chart Container */
+.chart-container.radar-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Bubble Chart Container */
+.chart-container.bubble-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Polar Area Chart Container */
+.chart-container.polar-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Doughnut Chart Container - Center Text */
+.doughnut-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.doughnut-center-value {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* ===== ENHANCED VISUAL DESIGN - PHASE 3 ===== */
+
+/* Enhanced Typography */
+.slide-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+.section-header {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+}
+
+.body-text {
+    font-size: 18px;
+    line-height: 1.8;
+    letter-spacing: 0.2px;
+}
+
+.bullet-points li, .numbered-list li {
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.chart-caption {
+    font-size: 14px;
+    color: var(--secondary-accent);
+    margin-top: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* Enhanced Animations */
+@keyframes chartEntryUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes chartEntryLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.chart-container {
+    animation: chartEntryUp 0.6s ease-out;
+}
+
+.chart-container.bar-chart {
+    animation: chartEntryLeft 0.6s ease-out;
+}
+
+.chart-container.pie-chart {
+    animation: chartEntryUp 0.8s ease-out;
+}
+
+.data-point:hover {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+/* Colorblind-Safe Palettes */
+.colorblind-viridis {
+    --cb-1: #440154;
+    --cb-2: #31688e;
+    --cb-3: #35b779;
+    --cb-4: #fde725;
+    --cb-5: #f0f921;
+}
+
+.colorblind-plasma {
+    --cb-1: #0d0887;
+    --cb-2: #6a00a8;
+    --cb-3: #b12a9b;
+    --cb-4: #e16462;
+    --cb-5: #fca636;
+}
+
+.colorblind-cividis {
+    --cb-1: #003c30;
+    --cb-2: #54986b;
+    --cb-3: #b1b29b;
+    --cb-4: #fec52d;
+    --cb-5: #ffffe0;
+}
+
+/* Apply colorblind palette to charts */
+.chart-container.colorblind-viridis canvas,
+.chart-container.colorblind-viridis .chartjs-render-monitor {
+    --primary-accent: var(--cb-1);
+    --deep-blue: var(--cb-2);
+    --green: var(--cb-3);
+    --blue: var(--cb-4);
+    --yellow: var(--cb-5);
+}
+
+/* Enhanced Tooltip Styling */
+#chartjs-tooltip {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#chartjs-tooltip .tooltip-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 6px;
+}
+
+#chartjs-tooltip .tooltip-body {
+    font-size: 14px;
+    color: var(--text-light);
+    line-height: 1.5;
+}
+
+/* ===== RESPONSIVE DESIGN - PHASE 6 ===== */
+
+/* Mobile Portrait (<480px) */
+@media (max-width: 480px) {
+    .chart-container {
+        min-height: 250px !important;
+        max-height: 300px !important;
+    }
+    
+    .chart-caption {
+        font-size: 12px;
+    }
+    
+    /* Horizontal bars on mobile for better readability */
+    .chart-container[data-chart-type="bar"] canvas {
+        writing-mode: horizontal-tb;
+    }
+    
+    /* Hide legend/data labels on mobile */
+    .chartjs-plugin-legend,
+    .chartjs-plugin-datalabels {
+        display: none;
+    }
+    
+    /* Mobile navigation adjustments */
+    .navbar {
+        padding: 0 20px;
+    }
+    
+    .slide {
+        padding: 40px 20px;
+    }
+    
+    .title {
+        font-size: 36px;
+    }
+    
+    .slide-title {
+        font-size: 28px;
+    }
+}
+
+/* Mobile Landscape (481-767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+    .chart-container {
+        min-height: 300px !important;
+        max-height: 350px !important;
+    }
+}
+
+/* Tablet (768-1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .two-column {
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    .chart-container {
+        min-height: 350px !important;
+        max-height: 400px !important;
+    }
+    
+    .chartjs-plugin-legend {
+        position: 'bottom';
+        labels: {
+            box-width: 12px;
+            padding: 10px;
+            font: {
+                size: 11px;
+            }
+        }
+    }
+}
+
+/* Desktop (>1024px) */
+@media (min-width: 1025px) {
+    .chart-container {
+        min-height: 400px !important;
+        max-height: 450px !important;
+    }
+    
+    .chart-caption {
+        font-size: 16px;
+    }
+}
+
+/* Ultra-wide screens (>1600px) */
+@media (min-width: 1600px) {
+    .chart-container {
+        max-height: 500px !important;
+    }
+    
+    .chart-caption {
+        font-size: 16px;
+    }
+}
+
+/* ===== ACCESSIBILITY - PHASE 4 ===== */
+
+/* ARIA labels and roles */
+canvas {
+    role: img;
+}
+
+.canvas-data-table {
+    display: none;
+}
+
+canvas[aria-describedby] + .canvas-data-table {
+    display: block;
+    margin-top: 20px;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.canvas-data-table thead {
+    background-color: var(--header-bg);
+    color: var(--text-light);
+}
+
+.canvas-data-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.canvas-data-table tbody tr {
+    border-bottom: 1px solid var(--secondary-accent);
+}
+
+.canvas-data-table td {
+    padding: 10px;
+    border-right: 1px solid #e0e0e0;
+}
+
+.canvas-data-table td:last-child {
+    border-right: none;
+}
+
+.canvas-data-table tr:last-child {
+    border-bottom: none;
+}
+
+/* Keyboard navigation focus styles */
+.chart-wrapper:focus,
+.chart-container:focus {
+    outline: 3px solid var(--primary-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.chart-wrapper:focus-visible {
+    outline: 3px solid var(--primary-accent);
+    animation: focusPulse 1s ease-in-out;
+}
+
+@keyframes focusPulse {
+    0%, 100% {
+        outline-color: var(--primary-accent);
+        outline-width: 3px;
+    }
+    50% {
+        outline-color: var(--deep-blue);
+        outline-width: 5px;
+    }
+}
+
+/* ===== PERFORMANCE - PHASE 5 ===== */
+
+/* Lazy loading styles */
+.chart-lazy {
+    position: relative;
+    min-height: 400px;
+}
+
+.chart-lazy[data-loaded="false"] {
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.chart-lazy[data-loaded="true"] {
+    opacity: 1;
+}
+
+.chart-loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: var(--secondary-accent);
+}
+
+.chart-loading-indicator .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--secondary-accent);
+    border-top: 4px solid var(--primary-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+        border-top-color: var(--secondary-accent);
+        border-right-color: var(--secondary-accent);
+    }
+    25% {
+        transform: rotate(90deg);
+        border-top-color: var(--primary-accent);
+        border-right-color: var(--secondary-accent);
+    }
+    50% {
+        transform: rotate(180deg);
+        border-top-color: var(--secondary-accent);
+        border-right-color: var(--secondary-accent);
+    }
+    75% {
+        transform: rotate(270deg);
+        border-top-color: var(--primary-accent);
+        border-right-color: var(--secondary-accent);
+    }
+    100% {
+        transform: rotate(360deg);
+        border-top-color: var(--secondary-accent);
+        border-right-color: var(--secondary-accent);
+    }
+}
+
+.doughnut-center-label {
+    font-size: 16px;
+    color: var(--secondary-accent);
+    margin-top: 5px;
+}
+
+/* Multi-Chart Layout */
+.multi-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin: 20px 0;
+}
+
+.multi-chart-grid.three-col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Chart Type Badge */
+.chart-type-badge {
+    display: inline-block;
+    background-color: var(--secondary-accent);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Comparison Chart Styles */
+.comparison-bar-positive {
+    background-color: var(--green);
+}
+
+.comparison-bar-negative {
+    background-color: var(--primary);
+}
+
+/* Matrix Chart Container */
+.matrix-chart-container {
+    min-height: 500px;
+    max-height: 550px;
+    position: relative;
+}
+
+/* Heatmap Styles */
+.heatmap-cell {
+    border-radius: 2px;
+    transition: opacity 0.2s;
+}
+
+.heatmap-cell:hover {
+    opacity: 0.8;
+}
+
+/* Funnel Chart Styles */
+.funnel-bar {
+    margin: 10px auto;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.funnel-bar:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress Ring Styles */
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.35s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+/* Gauge Chart Styles */
+.gauge-needle {
+    transition: transform 1s ease-out;
+    transform-origin: 50% 50%;
+}
+
+/* Waterfall Chart Styles */
+.waterfall-bar-positive {
+    background-color: var(--green);
+}
+
+.waterfall-bar-negative {
+    background-color: var(--primary);
+}
+
+.waterfall-bar-total {
+    background-color: var(--header-bg);
+}
+
+/* Bullet Chart Styles */
+.bullet-background {
+    fill: #e0e0e0;
+}
+
+.bullet-measure {
+    fill: var(--deep-blue);
+}
+
+.bullet-marker {
+    fill: var(--primary);
+}
+
+/* Scatter Plot with Size */
+.bubble-chart-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Strategic Matrix Quadrants */
+.matrix-quadrant {
+    position: absolute;
+    border: 1px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--secondary-accent);
+}
+
+/* Responsive Adjustments for Special Charts */
+@media (max-width: 1200px) {
+    .multi-chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .multi-chart-grid.three-col {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container.radar-chart,
+    .chart-container.bubble-chart,
+    .chart-container.polar-chart {
+        min-height: 350px;
+        max-height: 400px;
+    }
+
+    .matrix-chart-container {
+        min-height: 400px;
+        max-height: 450px;
+    }
+}
+
+/* Animation for Chart Entry */
+@keyframes chartFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chart-container {
+    animation: chartFadeIn 0.5s ease-out;
+}
+
+/* Chart Legend Customization */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--secondary-accent);
+}
+
+.chart-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 5px;
+}
+
+/* ===== Conceptual Visualization Styles ===== */
+
+/* Pyramid Container */
+.pyramid-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 400px;
+}
+
+.pyramid-level {
+    padding: 15px 30px;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    max-width: 80%;
+}
+
+.pyramid-level:hover {
+    transform: scale(1.05);
+}
+
+.pyramid-text {
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Progression/Step Container */
+.progression-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px 20px;
+    flex-wrap: wrap;
+}
+
+.progression-step {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--primary-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text-secondary);
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+}
+
+.step-arrow {
+    font-size: 32px;
+    color: var(--secondary-accent);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Emphasis Box Container */
+.emphasis-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.emphasis-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 25px 30px;
+    border-radius: 12px;
+    border-left: 6px solid var(--primary-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.emphasis-box:hover {
+    transform: translateX(10px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.emphasis-icon {
+    font-size: 36px;
+    color: var(--primary-accent);
+    flex-shrink: 0;
+}
+
+.emphasis-text {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Cycle/Circle Container */
+.cycle-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.cycle-center {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: var(--header-bg);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    z-index: 10;
+}
+
+.cycle-node {
+    position: absolute;
+    padding: 20px;
+    border-radius: 50%;
+    color: white;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+    max-width: 150px;
+}
+
+.cycle-node:hover {
+    transform: scale(1.15) !important;
+    z-index: 20;
+}
+
+.cycle-text {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Comparison Container */
+.comparison-container {
+    display: flex;
+    align-items: stretch;
+    gap: 30px;
+    padding: 40px 20px;
+    min-height: 400px;
+}
+
+.comparison-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.comparison-header {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-accent);
+    text-align: center;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.comparison-item {
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.comparison-item.left {
+    background-color: #e3f2fd;
+    border-left: 4px solid var(--blue);
+}
+
+.comparison-item.right {
+    background-color: #e8f5e9;
+    border-left: 4px solid var(--green);
+}
+
+.comparison-divider {
+    display: flex;
+    align-items: center;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--primary-accent);
+    padding: 0 20px;
+}
+
+/* Framework Container */
+.framework-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.framework-item {
+    display: flex;
+    gap: 20px;
+    padding: 25px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    border-top: 5px solid var(--deep-blue);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.framework-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.framework-label {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: var(--deep-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.framework-content {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Responsive adjustments for conceptual visualizations */
+@media (max-width: 1200px) {
+    .progression-container {
+        flex-direction: column;
+    }
+
+    .progression-step {
+        width: 100%;
+    }
+
+    .comparison-container {
+        flex-direction: column;
+    }
+
+    .comparison-divider {
+        transform: rotate(90deg);
+    }
+
+    .cycle-container {
+        height: 350px;
+    }
+
+    .framework-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .pyramid-level {
+        font-size: 14px;
+        padding: 12px 20px;
+    }
+
+    .emphasis-box {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .step-content {
+        font-size: 14px;
+    }
+
+    .framework-item {
+        padding: 20px;
+    }
+}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← Previous</button>
+        <span class="slide-counter">Slide <span id="currentSlide">1</span> of <span id="totalSlides">1</span></span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+    </nav>
+
+    <!-- Slides Container -->
+    <div class="presentation-container">
+        <div class="slide active" data-slide="1">
+            <div class="title-slide">
+                <h1 class="title">图表类型示例大全</h1>
+                <h2 class="subtitle">Data Analysis & Insights</h2>
+                <p class="date">Date: January 2026</p>
+            </div>
+        </div>
+        <div class="slide" data-slide="2">
+            <div class="header-bar">
+                <h1 class="slide-title">Executive Summary</h1>
+            </div>
+            <div class="slide-content">
+                <ul class="key-points">
+                <li class="key-point">柱状图适合类别对比，清晰展示差异</li>
+                <li class="key-point">折线图最适合展示时间序列趋势变化</li>
+                <li class="key-point">饼图和环形图适合展示占比关系</li>
+                <li class="key-point">雷达图完美展示多维度能力对比</li>
+                <li class="key-point">概念性图表让观点表达更生动</li>
+                </ul>
+            </div>
+        </div>
+        <div class="slide" data-slide="3">
+            <div class="header-bar">
+                <h1 class="slide-title">柱状图示例 - 产品销售对比</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">柱状图 (Bar Chart)</span>
+                    <canvas id="chart1" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">柱状图示例 - 产品销售对比 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="4">
+            <div class="header-bar">
+                <h1 class="slide-title">折线图示例 - 年度收入趋势</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">折线图 (Line Chart)</span>
+                    <canvas id="chart2" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">折线图示例 - 年度收入趋势 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="5">
+            <div class="header-bar">
+                <h1 class="slide-title">饼图示例 - 市场份额分布</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">环形图 (Doughnut Chart)</span>
+                    <canvas id="chart3" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">饼图示例 - 市场份额分布 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="6">
+            <div class="header-bar">
+                <h1 class="slide-title">环形图示例 - 预算分配</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">环形图 (Doughnut Chart)</span>
+                    <canvas id="chart4" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">环形图示例 - 预算分配 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="7">
+            <div class="header-bar">
+                <h1 class="slide-title">雷达图示例 - 能力评估</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container radar-chart">
+                    <span class="chart-type-badge">雷达图 (Radar Chart)</span>
+                    <canvas id="chart5" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">雷达图示例 - 能力评估 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="8">
+            <div class="header-bar">
+                <h1 class="slide-title">玫瑰图示例 - 季度销售分布</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">折线图 (Line Chart)</span>
+                    <canvas id="chart6" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">玫瑰图示例 - 季度销售分布 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="9">
+            <div class="header-bar">
+                <h1 class="slide-title">气泡图示例 - 产品分析</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container bubble-chart">
+                    <span class="chart-type-badge">散点图 (Scatter Plot)</span>
+                    <canvas id="chart7" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">气泡图示例 - 产品分析 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="10">
+            <div class="header-bar">
+                <h1 class="slide-title">散点图示例 - 相关性分析</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">柱状图 (Bar Chart)</span>
+                    <canvas id="chart8" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">散点图示例 - 相关性分析 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="11">
+            <div class="header-bar">
+                <h1 class="slide-title">金字塔层级示例</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">金字塔图 (Pyramid)</span>
+                <div class="pyramid-container">
+            <div class="pyramid-level" style="width: 100%; background-color: var(--primary-accent); margin: 0 auto 8px;">
+                <div class="pyramid-text">企业愿景：全球领先</div>
+            </div>
+            <div class="pyramid-level" style="width: 85%; background-color: var(--deep-blue); margin: 0 auto 8px;">
+                <div class="pyramid-text">业务战略：市场拓展</div>
+            </div>
+            <div class="pyramid-level" style="width: 70%; background-color: var(--green); margin: 0 auto 8px;">
+                <div class="pyramid-text">职能战略：运营优化</div>
+            </div>
+            <div class="pyramid-level" style="width: 55%; background-color: var(--blue); margin: 0 auto 8px;">
+                <div class="pyramid-text">执行计划：年度目标</div>
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="12">
+            <div class="header-bar">
+                <h1 class="slide-title">递进流程示例</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">递进图 (Progression)</span>
+                <div class="progression-container">
+            <div class="progression-step">
+                <div class="step-number">1</div>
+                <div class="step-content">需求分析：明确产品定位</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">2</div>
+                <div class="step-content">设计开发：完成原型制作</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">3</div>
+                <div class="step-content">测试验证：确保质量标准</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">4</div>
+                <div class="step-content">发布上线：推向市场</div>
+                
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="13">
+            <div class="header-bar">
+                <h1 class="slide-title">强调要点示例</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">强调框 (Emphasis)</span>
+                <div class="emphasis-container">
+            <div class="emphasis-box" style="animation-delay: 0.1s;">
+                <div class="emphasis-icon">✦</div>
+                <div class="emphasis-text">技术领先：拥有核心技术</div>
+            </div>
+            <div class="emphasis-box" style="animation-delay: 0.2s;">
+                <div class="emphasis-icon">✦</div>
+                <div class="emphasis-text">团队优秀：专业经验丰富</div>
+            </div>
+            <div class="emphasis-box" style="animation-delay: 0.30000000000000004s;">
+                <div class="emphasis-icon">✦</div>
+                <div class="emphasis-text">市场广阔：发展潜力巨大</div>
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="14">
+            <div class="header-bar">
+                <h1 class="slide-title">循环改进示例</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">循环图 (Cycle)</span>
+                <div class="cycle-container">
+            <div class="cycle-center">核心</div>
+            <div class="cycle-node" style="transform: rotate(0.0deg) translate(120px) rotate(-0.0deg); background-color: var(--primary-accent);">
+                <div class="cycle-text">Plan计划：制定改进方案</div>
+            </div>
+            <div class="cycle-node" style="transform: rotate(90.0deg) translate(120px) rotate(-90.0deg); background-color: var(--deep-blue);">
+                <div class="cycle-text">Do执行：实施改进措施</div>
+            </div>
+            <div class="cycle-node" style="transform: rotate(180.0deg) translate(120px) rotate(-180.0deg); background-color: var(--green);">
+                <div class="cycle-text">Check检查：评估改进效果</div>
+            </div>
+            <div class="cycle-node" style="transform: rotate(270.0deg) translate(120px) rotate(-270.0deg); background-color: var(--blue);">
+                <div class="cycle-text">Act行动：标准化并持续优化</div>
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="15">
+            <div class="header-bar">
+                <h1 class="slide-title">对比分析示例</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">递进图 (Progression)</span>
+                <div class="progression-container">
+            <div class="progression-step">
+                <div class="step-number">1</div>
+                <div class="step-content">转型前：效率低下，手工操作</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">2</div>
+                <div class="step-content">转型后：效率提升300%，自动化流程</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">3</div>
+                <div class="step-content">转型前：客户满意度70%</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">4</div>
+                <div class="step-content">转型后：客户满意度95%</div>
+                
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="16">
+            <div class="header-bar">
+                <h1 class="slide-title">框架模型示例</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">框架图 (Framework)</span>
+                <div class="framework-container">
+            <div class="framework-item">
+                <div class="framework-label">1</div>
+                <div class="framework-content">Situation情境：面临市场份额下降挑战</div>
+            </div>
+            <div class="framework-item">
+                <div class="framework-label">2</div>
+                <div class="framework-content">Task任务：负责制定复兴计划</div>
+            </div>
+            <div class="framework-item">
+                <div class="framework-label">3</div>
+                <div class="framework-content">Action行动：实施全面营销策略</div>
+            </div>
+            <div class="framework-item">
+                <div class="framework-label">4</div>
+                <div class="framework-content">Result结果：6个月内市场份额增长25%</div>
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="17">
+            <div class="header-bar">
+                <h1 class="slide-title">环形图示例 - 预算分配</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="18">
+            <div class="header-bar">
+                <h1 class="slide-title">雷达图示例 - 能力评估</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="19">
+            <div class="header-bar">
+                <h1 class="slide-title">玫瑰图示例 - 季度销售分布</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="20">
+            <div class="header-bar">
+                <h1 class="slide-title">气泡图示例 - 产品分析</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="21">
+            <div class="header-bar">
+                <h1 class="slide-title">散点图示例 - 相关性分析</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="22">
+            <div class="header-bar">
+                <h1 class="slide-title">金字塔层级示例</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="23">
+            <div class="header-bar">
+                <h1 class="slide-title">递进流程示例</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="24">
+            <div class="header-bar">
+                <h1 class="slide-title">强调要点示例</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="25">
+            <div class="header-bar">
+                <h1 class="slide-title">循环改进示例</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="26">
+            <div class="header-bar">
+                <h1 class="slide-title">对比分析示例</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="27">
+            <div class="header-bar">
+                <h1 class="slide-title">框架模型示例</h1>
+            </div>
+            <div class="slide-content">
+            <p class="body-text">- Situation情境：面临市场份额下降挑战</p>
+            <p class="body-text">- Result结果：6个月内市场份额增长25%</p>
+            </div>
+        </div>
+        <div class="slide" data-slide="28">
+            <div class="header-bar">
+                <h1 class="slide-title">关键洞察</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="29">
+            <div class="header-bar">
+                <h1 class="slide-title">Conclusions & Recommendations</h1>
+            </div>
+            <div class="slide-content">
+                <div class="conclusions-grid">
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 1</h3>
+                    <p class="card-text">柱状图适合类别对比，清晰展示差异</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 2</h3>
+                    <p class="card-text">折线图最适合展示时间序列趋势变化</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 3</h3>
+                    <p class="card-text">饼图和环形图适合展示占比关系</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 4</h3>
+                    <p class="card-text">雷达图完美展示多维度能力对比</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 5</h3>
+                    <p class="card-text">概念性图表让观点表达更生动</p>
+                </div>
+                </div>
+
+                <div class="recommendations-box">
+                    <h3 class="section-header accent-text">Key Recommendations</h3>
+                    <ol class="numbered-list">
+                        <li><li>柱状图适合类别对比，清晰展示差异</li>
+                    <li>折线图最适合展示时间序列趋势变化</li>
+                    <li>饼图和环形图适合展示占比关系</li>
+                    <li>雷达图完美展示多维度能力对比</li>
+                    <li>概念性图表让观点表达更生动</li></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+    <script>
+        let currentSlide = 1;
+        let totalSlides = 0;
+
+        function init() {
+            const slides = document.querySelectorAll('.slide');
+            totalSlides = slides.length;
+            document.getElementById('totalSlides').textContent = totalSlides;
+
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function navigate(direction) {
+            const newSlide = currentSlide + direction;
+
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = newSlide;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                navigate(-1);
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Chart.js configurations
+new Chart(document.getElementById('chart1'), {
+        type: 'bar',
+        data: {
+        "labels": [
+                "\u4ea7\u54c1A\u9500\u552e",
+                "\u4ea7\u54c1B\u9500\u552e",
+                "\u4ea7\u54c1C\u9500\u552e",
+                "\u4ea7\u54c1D\u9500\u552e"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                120,
+                                95,
+                                88,
+                                76
+                        ],
+                        "backgroundColor": [
+                                "rgba(85, 110, 230, 0.7)",
+                                "rgba(52, 195, 143, 0.7)",
+                                "rgba(80, 165, 241, 0.7)",
+                                "rgba(241, 180, 76, 0.7)"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart2'), {
+        type: 'line',
+        data: {
+        "labels": [
+                "2020\u5e74\u6536\u5165",
+                "2021\u5e74\u6536\u5165",
+                "2022\u5e74\u6536\u5165",
+                "2023\u5e74\u6536\u5165",
+                "2024\u5e74\u6536\u5165"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                4500,
+                                5200,
+                                6100,
+                                7500,
+                                9200
+                        ],
+                        "backgroundColor": [
+                                "rgba(85, 110, 230, 0.7)",
+                                "rgba(52, 195, 143, 0.7)",
+                                "rgba(80, 165, 241, 0.7)",
+                                "rgba(241, 180, 76, 0.7)",
+                                "rgba(248, 93, 66, 0.7)"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderWidth": 2,
+                        "borderRadius": 4,
+                        "fill": true,
+                        "tension": 0.3,
+                        "pointRadius": 5,
+                        "pointHoverRadius": 7
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart3'), {
+        type: 'doughnut',
+        data: {
+        "labels": [
+                "\u54c1\u724cA\u5e02\u573a\u4efd\u989d",
+                "\u54c1\u724cB\u5e02\u573a\u4efd\u989d",
+                "\u54c1\u724cC\u5e02\u573a\u4efd\u989d",
+                "\u54c1\u724cD\u5e02\u573a\u4efd\u989d",
+                "\u54c1\u724cE\u5e02\u573a\u4efd\u989d"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                35,
+                                25,
+                                20,
+                                12,
+                                8
+                        ],
+                        "backgroundColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": true,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart4'), {
+        type: 'doughnut',
+        data: {
+        "labels": [
+                "\u7814\u53d1\u9884\u7b97",
+                "\u5e02\u573a\u9884\u7b97",
+                "\u8fd0\u8425\u9884\u7b97",
+                "\u4eba\u529b\u9884\u7b97",
+                "\u5176\u4ed6\u9884\u7b97"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                40,
+                                25,
+                                20,
+                                10,
+                                5
+                        ],
+                        "backgroundColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": true,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart5'), {
+        type: 'radar',
+        data: {
+        "labels": [
+                "\u6280\u672f\u80fd\u529b",
+                "\u6c9f\u901a\u80fd\u529b",
+                "\u9886\u5bfc\u80fd\u529b",
+                "\u521b\u65b0\u80fd\u529b",
+                "\u6267\u884c\u80fd\u529b"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                85,
+                                75,
+                                90,
+                                80,
+                                88
+                        ],
+                        "backgroundColor": "rgba(85, 110, 230, 0.2)",
+                        "borderColor": "#556EE6",
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false,
+                        "pointBackgroundColor": "#556EE6"
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": true,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "r": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "angleLines": {
+                                "color": "#e0e0e0"
+                        },
+                        "pointLabels": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart6'), {
+        type: 'line',
+        data: {
+        "labels": [
+                "\u7b2c\u4e00\u5b63\u5ea6\u9500\u552e",
+                "\u7b2c\u4e8c\u5b63\u5ea6\u9500\u552e",
+                "\u7b2c\u4e09\u5b63\u5ea6\u9500\u552e",
+                "\u7b2c\u56db\u5b63\u5ea6\u9500\u552e"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                2200,
+                                2800,
+                                2600,
+                                3500
+                        ],
+                        "backgroundColor": [
+                                "rgba(85, 110, 230, 0.7)",
+                                "rgba(52, 195, 143, 0.7)",
+                                "rgba(80, 165, 241, 0.7)",
+                                "rgba(241, 180, 76, 0.7)"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c"
+                        ],
+                        "borderWidth": 2,
+                        "borderRadius": 4,
+                        "fill": true,
+                        "tension": 0.3,
+                        "pointRadius": 5,
+                        "pointHoverRadius": 7
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart7'), {
+        type: 'scatter',
+        data: {
+        "labels": [
+                "\u4ea7\u54c1A\u5b9a\u4f4d",
+                "\u4ea7\u54c1B\u5b9a\u4f4d",
+                "\u4ea7\u54c1C\u5b9a\u4f4d",
+                "\u4ea7\u54c1D\u5b9a\u4f4d"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                {
+                                        "x": 0,
+                                        "y": 75
+                                },
+                                {
+                                        "x": 1,
+                                        "y": 82
+                                },
+                                {
+                                        "x": 2,
+                                        "y": 68
+                                },
+                                {
+                                        "x": 3,
+                                        "y": 90
+                                }
+                        ],
+                        "backgroundColor": [
+                                "rgba(85, 110, 230, 0.7)",
+                                "rgba(52, 195, 143, 0.7)",
+                                "rgba(80, 165, 241, 0.7)",
+                                "rgba(241, 180, 76, 0.7)"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "x": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart8'), {
+        type: 'bar',
+        data: {
+        "labels": [
+                "\u76f8\u5173\u6027\u6d4b\u8bd51",
+                "\u76f8\u5173\u6027\u6d4b\u8bd52",
+                "\u76f8\u5173\u6027\u6d4b\u8bd53",
+                "\u76f8\u5173\u6027\u6d4b\u8bd54"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                45,
+                                60,
+                                72,
+                                85
+                        ],
+                        "backgroundColor": [
+                                "rgba(85, 110, 230, 0.7)",
+                                "rgba(52, 195, 143, 0.7)",
+                                "rgba(80, 165, 241, 0.7)",
+                                "rgba(241, 180, 76, 0.7)"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+    </script>
+</body>
+</html>

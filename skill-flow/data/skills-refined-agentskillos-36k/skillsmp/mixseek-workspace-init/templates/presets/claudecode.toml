@@ -1,0 +1,22 @@
+# ClaudeCode Tool Settings Presets
+#
+# 使用方法:
+#   [team.leader.tool_settings]
+#   claudecode = { preset = "delegate_only" }
+#
+#   [team.members.metadata.tool_settings]
+#   claudecode = { preset = "full_access" }
+
+[delegate_only]
+# Leaderがタスク振り分けのみ行う場合（組み込みツール無効）
+permission_mode = "bypassPermissions"
+disallowed_tools = ["Bash", "Write", "Edit", "Read", "Glob", "Grep", "WebFetch", "WebSearch", "NotebookEdit", "Task"]
+
+[full_access]
+# Memberが自律的にタスク実行する場合（全ツールアクセス許可）
+permission_mode = "bypassPermissions"
+
+[read_only]
+# 調査・分析専用エージェント（書き込み系ツール無効）
+permission_mode = "bypassPermissions"
+disallowed_tools = ["Write", "Edit", "NotebookEdit"]

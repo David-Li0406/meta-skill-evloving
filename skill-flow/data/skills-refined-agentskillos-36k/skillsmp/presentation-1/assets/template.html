@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}" dir="{{DIR}}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family={{FONT_FAMILY}}:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: {{ACCENT_COLOR}};
+      --accent-glow: {{ACCENT_GLOW}};
+      /* Chapter accent palette */
+      --accent-1: #00ff88;
+      --accent-2: #00d4ff;
+      --accent-3: #ffd700;
+      --accent-4: #ff6b9d;
+      --accent-5: #a855f7;
+      --accent-6: #3b82f6;
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-tertiary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #888888;
+      --text-muted: #555555;
+      --border-color: #222222;
+      --nav-width: 240px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: '{{FONT_FAMILY}}', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Chapter Navigation */
+    .chapter-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--nav-width);
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      padding: 2rem 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    [dir="rtl"] .chapter-nav {
+      left: auto;
+      right: 0;
+      border-right: none;
+      border-left: 1px solid var(--border-color);
+    }
+
+    .chapter-nav h2 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      padding: 0 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .chapter-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+      cursor: pointer;
+    }
+
+    [dir="rtl"] .chapter-link {
+      border-left: none;
+      border-right: 3px solid transparent;
+    }
+
+    .chapter-link:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+    }
+
+    .chapter-link.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    [dir="rtl"] .chapter-link.active {
+      border-left-color: transparent;
+      border-right-color: var(--accent);
+    }
+
+    .chapter-number {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 1.5rem;
+    }
+
+    /* Slide Container */
+    .slide-container {
+      margin-left: var(--nav-width);
+      width: calc(100vw - var(--nav-width));
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    [dir="rtl"] .slide-container {
+      margin-left: 0;
+      margin-right: var(--nav-width);
+    }
+
+    /* Slides */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(20px);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [dir="rtl"] .slide {
+      transform: translateX(-20px);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+    }
+
+    /* Slide Content Types */
+    .slide-content {
+      max-width: 900px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Hero Number Slide */
+    .hero-number {
+      font-size: clamp(80px, 15vw, 200px);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--accent);
+      text-shadow: 0 0 60px var(--accent-glow);
+      margin-bottom: 1rem;
+    }
+
+    .hero-context {
+      font-size: clamp(1rem, 2vw, 1.5rem);
+      font-weight: 400;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Key Point Slide */
+    .key-point {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text-primary);
+    }
+
+    .key-point em {
+      color: var(--accent);
+      font-style: normal;
+    }
+
+    /* Chapter Title Slide */
+    .chapter-title {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .chapter-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    /* List Slide */
+    .slide-list {
+      list-style: none;
+      text-align: left;
+      font-size: clamp(1.25rem, 2.5vw, 2rem);
+      line-height: 2;
+    }
+
+    [dir="rtl"] .slide-list {
+      text-align: right;
+      direction: rtl;
+    }
+
+    .slide-list li {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--text-primary);
+    }
+
+    .slide-list li::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Quote Slide */
+    .quote-text {
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      font-weight: 500;
+      font-style: italic;
+      color: var(--text-primary);
+      line-height: 1.5;
+      max-width: 800px;
+      margin-bottom: 2rem;
+    }
+
+    .quote-text::before {
+      content: '"';
+      color: var(--accent);
+    }
+
+    .quote-text::after {
+      content: '"';
+      color: var(--accent);
+    }
+
+    .quote-attribution {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Comparison Slide */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      width: 100%;
+    }
+
+    .comparison-item {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 2.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .comparison-item.highlighted {
+      border-color: var(--accent);
+      box-shadow: 0 0 30px var(--accent-glow);
+    }
+
+    .comparison-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .comparison-value {
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Card Grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 2rem;
+      border: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    [dir="rtl"] .card {
+      text-align: right;
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-description {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Slide Counter */
+    .slide-counter {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      z-index: 100;
+    }
+
+    [dir="rtl"] .slide-counter {
+      right: auto;
+      left: 1.5rem;
+    }
+
+    /* Print Styles */
+    @media print {
+      .chapter-nav {
+        display: none;
+      }
+
+      .slide-container {
+        margin: 0;
+        width: 100%;
+      }
+
+      .slide {
+        position: relative;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        page-break-after: always;
+        height: 100vh;
+        background: white;
+        color: #111;
+      }
+
+      .slide-counter {
+        display: none;
+      }
+
+      .hero-number {
+        color: #111;
+        text-shadow: none;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .key-point em {
+        color: #333;
+      }
+
+      .card, .comparison-item {
+        background: #f5f5f5;
+        border-color: #ddd;
+      }
+    }
+
+    /* Keyboard hint */
+    .keyboard-hint {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    [dir="rtl"] .keyboard-hint {
+      right: auto;
+      left: 1.5rem;
+      direction: ltr; /* Prevent flex order reversal; arrow content swap handles RTL */
+    }
+
+    /* RTL: swap arrow meanings - left arrow goes forward (next), right goes back (prev) */
+    [dir="rtl"] .prev-key::before { content: '→'; }
+    [dir="rtl"] .next-key::before { content: '←'; }
+    [dir="rtl"] .prev-key { font-size: 0; }
+    [dir="rtl"] .next-key { font-size: 0; }
+    [dir="rtl"] .prev-key::before, [dir="rtl"] .next-key::before { font-size: 0.7rem; }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 1.5rem;
+      height: 1.5rem;
+      padding: 0 0.5rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <nav class="chapter-nav">
+    <h2>Chapters</h2>
+    {{CHAPTER_NAV}}
+  </nav>
+
+  <div class="slide-container">
+    {{SLIDES}}
+  </div>
+
+  <div class="slide-counter">
+    <span class="current">1</span>/<span class="total">{{TOTAL_SLIDES}}</span>
+  </div>
+
+  <div class="keyboard-hint">
+    <span class="key prev-key">←</span>
+    <span class="key next-key">→</span>
+    <span class="hint-text">to navigate</span>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const chapterLinks = document.querySelectorAll('.chapter-link');
+    const currentSpan = document.querySelector('.slide-counter .current');
+    const totalSpan = document.querySelector('.slide-counter .total');
+    const isRTL = document.documentElement.dir === 'rtl';
+    let currentSlide = 0;
+
+    // Chapter color palette
+    const chapterColors = {
+      1: { accent: '#00ff88', glow: 'rgba(0,255,136,0.3)' },
+      2: { accent: '#00d4ff', glow: 'rgba(0,212,255,0.3)' },
+      3: { accent: '#ffd700', glow: 'rgba(255,215,0,0.3)' },
+      4: { accent: '#ff6b9d', glow: 'rgba(255,107,157,0.3)' },
+      5: { accent: '#a855f7', glow: 'rgba(168,85,247,0.3)' },
+      6: { accent: '#3b82f6', glow: 'rgba(59,130,246,0.3)' }
+    };
+
+    // Build chapter index map
+    const chapterOrder = [];
+    chapterLinks.forEach(link => {
+      const ch = link.dataset.chapter;
+      if (!chapterOrder.includes(ch)) chapterOrder.push(ch);
+    });
+
+    function getChapterIndex(chapter) {
+      return chapterOrder.indexOf(chapter) + 1;
+    }
+
+    function setChapterColor(chapter) {
+      const idx = getChapterIndex(chapter);
+      const colors = chapterColors[idx] || chapterColors[1];
+      document.documentElement.style.setProperty('--accent', colors.accent);
+      document.documentElement.style.setProperty('--accent-glow', colors.glow);
+    }
+
+    totalSpan.textContent = slides.length;
+
+    function showSlide(index) {
+      if (index < 0 || index >= slides.length) return;
+
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+      });
+
+      currentSlide = index;
+      currentSpan.textContent = index + 1;
+
+      // Update active chapter and color
+      const currentChapter = slides[index].dataset.chapter;
+      chapterLinks.forEach(link => {
+        link.classList.toggle('active', link.dataset.chapter === currentChapter);
+      });
+      setChapterColor(currentChapter);
+    }
+
+    function nextSlide() {
+      showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      showSlide(currentSlide - 1);
+    }
+
+    function goToChapter(chapter) {
+      const slideIndex = Array.from(slides).findIndex(s => s.dataset.chapter === chapter);
+      if (slideIndex !== -1) {
+        showSlide(slideIndex);
+      }
+    }
+
+    // Keyboard navigation (RTL-aware)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        isRTL ? prevSlide() : nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        isRTL ? nextSlide() : prevSlide();
+      }
+    });
+
+    // Chapter click navigation
+    chapterLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        goToChapter(link.dataset.chapter);
+      });
+    });
+
+    // Initialize
+    showSlide(0);
+  </script>
+</body>
+</html>

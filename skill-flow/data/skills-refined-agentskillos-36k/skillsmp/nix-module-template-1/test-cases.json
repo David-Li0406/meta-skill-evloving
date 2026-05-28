@@ -1,0 +1,66 @@
+[
+  {
+    "ruleId": "",
+    "ruleTitle": "Standard Structure",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Standard Structure"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Standard Structure",
+    "type": "good",
+    "code": "{ config, lib, ... }:\nlet\n  cfg = config.path.to.module;\nin\n{\n  options.path.to.module = {\n    enable = lib.mkEnableOption \"Description\";\n  };\n\n  config = lib.mkIf cfg.enable {\n    # ...\n  };\n}",
+    "language": "nix",
+    "description": "Correct example for Standard Structure"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "nix-darwin Module",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for nix-darwin Module"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "nix-darwin Module",
+    "type": "good",
+    "code": "{ config, lib, ... }:\nlet\n  cfg = config.system.defaults.custom;\nin\n{\n  options.system.defaults.custom.enable = lib.mkEnableOption \"macOS tweaks\";\n\n  config = lib.mkIf cfg.enable {\n    system.defaults.dock.autohide = true;\n  };\n}",
+    "language": "nix",
+    "description": "Correct example for nix-darwin Module"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Home Manager Module",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Home Manager Module"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Home Manager Module",
+    "type": "good",
+    "code": "{ config, lib, pkgs, ... }:\nlet\n  cfg = config.programs.myApp;\nin\n{\n  options.programs.myApp.enable = lib.mkEnableOption \"My App\";\n\n  config = lib.mkIf cfg.enable {\n    home.packages = [ pkgs.myApp ];\n    xdg.configFile.\"myapp/config\".text = \"example\";\n  };\n}",
+    "language": "nix",
+    "description": "Correct example for Home Manager Module"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "NixOS System Module",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for NixOS System Module"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "NixOS System Module",
+    "type": "good",
+    "code": "{ config, lib, pkgs, ... }:\nlet\n  cfg = config.services.myService;\nin\n{\n  options.services.myService.enable = lib.mkEnableOption \"My Service\";\n\n  config = lib.mkIf cfg.enable {\n    systemd.services.my-service = {\n      wantedBy = [ \"multi-user.target\" ];\n      serviceConfig.ExecStart = \"${pkgs.myService}/bin/start\";\n    };\n  };\n}",
+    "language": "nix",
+    "description": "Correct example for NixOS System Module"
+  }
+]

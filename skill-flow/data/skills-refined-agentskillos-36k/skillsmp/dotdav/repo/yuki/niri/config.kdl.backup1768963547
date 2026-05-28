@@ -1,0 +1,527 @@
+// 此配置使用 KDL 格式: https://kdl.dev
+// "/-" 注释掉下面的节点
+// 查看 wiki 获取完整的配置说明:
+// https://yalter.github.io/niri/Configuration:-Introduction
+
+// Niri 环境变量
+environment {
+    // 设置 Qt 平台主题为 qt6ct
+    QT_QPA_PLATFORMTHEME "qt6ct"
+    QT_QPA_PLATFORMTHEME_QT6 "qt6ct"
+
+    // 设置语言为中文 UTF-8
+    LANG "zh_CN.UTF-8"
+
+    // 设置默认输入法为 fcitx5
+    XMODIFIERS "@im=fcitx"
+    QT_IM_MODULE "fcitx"
+
+    // 尝试解决部分软件的缩放问题
+    // 令 QT 软件通过 wayland运行
+    QT_QPA_PLATFORM "wayland"
+    // QT5 自动缩放
+    QT_AUTO_SCREEN_SCALE_FACTOR "1"
+    // QT5 分数缩放
+    //QT_SCALE_FACTOR_ROUNDING_POLICY "PassThrough"
+
+    // 默认编辑器
+    EDITOR "nvim"
+}
+
+// 输入设备配置
+// 在 wiki 上查看完整选项列表:
+// https://yalter.github.io/niri/Configuration:-Input
+input {
+    keyboard {
+        xkb {
+            // 可以设置 rules, model, layout, variant 和 options
+            // 更多信息请参考 xkeyboard-config(7)
+            layout "us"
+            variant ""
+            // 显式声明：使用美式 QWERTY 布局，无变体
+            options "caps:ctrl_modifier,ctrl:nocaps"
+        }
+
+        // 启动时启用数字锁，省略此设置会禁用它
+        numlock
+    }
+
+    touchpad {
+        tap
+        natural-scroll
+    }
+
+    mouse {
+        // off
+        // natural-scroll
+        // accel-speed 0.2
+        // accel-profile "flat"
+        // scroll-method "no-scroll"
+    }
+
+    trackpoint {
+        // off
+        // natural-scroll
+        // accel-speed 0.2
+        // accel-profile "flat"
+        // scroll-method "on-button-down"
+        // scroll-button 273
+        // scroll-button-lock
+        // middle-emulation
+    }
+
+    // 取消注释以使鼠标移动到新焦点窗口的中心
+    // warp-mouse-to-focus
+
+    // 移动鼠标时自动对焦窗口和输出
+    // focus-follows-mouse max-scroll-amount="0%"
+}
+
+
+// 可按名称配置输出，使用 `niri msg outputs` 获取名称
+// 内置笔记本显示器通常称为 "eDP-1"
+// wiki 上的更多信息: https://yalter.github.io/niri/Configuration:-Outputs
+// 内置屏幕高分高刷模式
+output "eDP-1" {
+    // 取消注释此行以禁用此输出
+    //off
+
+    // 分辨率和可选的刷新率
+    mode "2880x1800@60.01"
+    //mode "1920x1200@90.001"
+
+    // 缩放因子
+    scale 2
+
+    // 变换设置
+    transform "normal"
+
+    // 输出在全局坐标系中的位置
+    position x=220 y=1080
+}
+/-output "eDP-1" {
+    mode "1920x1200@90.001"
+
+    scale 1.25
+
+    transform "normal"
+
+    position x=201 y=1152
+}
+
+output "DP-2" {
+    off
+    mode "1920x1080@60.00"
+
+    scale 1.0
+    transform "normal"
+
+    position x=0 y=0
+}
+
+
+// 启动时生成进程的行
+spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store &"
+
+// Polkit agent
+spawn-at-startup "systemctl" "--user" "start" "hyprpolkitagent"
+
+// Starts DankShell
+spawn-at-startup "dms" "run"
+
+// Start Fcitx5
+spawn-at-startup "fcitx5"
+
+// DankShell 将提供配置加载错误通知
+config-notification {
+    disable-failed
+}
+
+// 要运行 shell 命令（带变量、管道等），请使用 spawn-sh-at-startup：
+// spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
+
+hotkey-overlay {
+    // 取消注释此行以禁用启动时的"重要快捷键"弹窗
+    skip-at-startup
+}
+
+// 取消注释此行以请求客户端尽可能省略其客户端装饰
+// 如果客户端特别请求 CSD，则该请求将被尊重
+// 此外，客户端将被告知它们是平铺的，从而去除一些客户端侧的圆角
+// 此选项还将修复某些半透明窗口后面边框/焦点环绘制的问题
+// 启用或禁用此选项后，您需要重新启动应用程序以使其生效
+prefer-no-csd
+
+// 您可以更改截图保存的路径
+// 前面的 ~ 将扩展为主目录
+// 路径使用 strftime(3) 格式化，以显示截图的日期和时间
+screenshot-path "~/Pictures/Screenshots/Screenshot at %Y-%m-%d %H-%M-%S.png"
+
+// 您也可以将其设置为 null，以禁用将截图保存到磁盘
+// screenshot-path null
+
+// 动画设置
+// wiki 解释了如何配置单个动画:
+// https://yalter.github.io/niri/Configuration:-Animations
+animations {
+    // 取消注释以关闭所有动画
+    // off
+
+    // 按此因子减慢所有动画。小于 1 的值会加快动画
+    // slowdown 3.0
+}
+
+// 光标设置
+cursor {
+    xcursor-theme "Catppuccin-Mocha-Blue-Cursors"
+}
+
+// 窗口规则让您可以调整各个窗口的行为
+// 在 wiki 上找到更多信息:
+// https://yalter.github.io/niri/Configuration:-Window-Rules
+
+// 解决 WezTerm 的初始配置错误
+// 通过设置一个空的 default-column-width。
+/-window-rule {
+    // 此正则表达式故意尽可能具体，
+    // 因为这是默认配置，我们不希望出现误判。
+    // 如果你愿意，可以只用 app-id="wezterm"。
+    match app-id=r#"^org\.wezfurlong\.wezterm$"#
+    default-column-width {}
+}
+
+// Workspace settings.
+workspace "work"
+workspace "media"
+workspace "chat"
+workspace "game"
+
+// Buttercup 浮动打开
+window-rule {
+    match app-id="Buttercup"
+    open-floating true
+}
+window-rule {
+    match app-id="Zotero"
+    open-floating true
+    default-floating-position x=20 y=20 relative-to="bottom-right"
+    open-focused false
+    open-on-workspace "work"
+}
+// QQ
+window-rule {
+    match app-id="QQ"
+    default-column-width { proportion 0.75; }
+    open-on-workspace "chat"
+}
+// 资料卡悬浮显示
+window-rule {
+    match app-id="QQ" title="资料卡"
+    open-floating true
+}
+// 图片查看器悬浮显示
+window-rule {
+    match app-id="QQ" title="图片查看器"
+    open-floating true
+}
+
+// 微信
+window-rule {
+    match app-id="wechat"
+    default-column-width { proportion 0.75; }
+    open-on-workspace "chat"
+}
+// 图片查看器悬浮显示
+window-rule {
+    match app-id="wechat" title="图片和视频"
+    open-floating true
+}
+window-rule {
+    match app-id="org.telegram.desktop"
+    default-column-width {
+        proportion 0.75
+    }
+    open-on-workspace "chat"
+}
+
+// 以浮窗形式打开 Microsoft-edge 画中画播放器
+window-rule {
+    match app-id="" title="画中画"
+    open-floating true
+}
+
+// waylyrics
+window-rule {
+    match app-id="waylyrics"
+
+    // 悬浮启动
+    open-floating true
+    // 满宽占据
+    default-column-width { proportion 1.0; }
+    // 靠左下角
+    default-floating-position x=0 y=0 relative-to="bottom-left"
+}
+// 鼠标点击穿透
+layer-rule {
+    match namespace="waylyrics"
+
+    place-within-backdrop true
+}
+
+
+// 快捷键绑定
+binds {
+    // 按键由修饰符（用 + 号分隔）加上 XKB 按键名称组成
+    // 使用 wev 程序可查找特定按键的 XKB 名称
+    
+    // Mod-Shift-/ 显示重要快捷键列表
+    Mod+Shift+Slash { show-hotkey-overlay; }
+
+    // 打开终端、应用启动器、屏幕锁定的建议快捷键
+    Mod+T hotkey-overlay-title="打开终端: ghostty" { spawn "ghostty"; }
+    Mod+B { spawn "microsoft-edge-stable"; }
+    Mod+E { spawn "nautilus"; }
+    Super+Alt+L hotkey-overlay-title="锁定屏幕: dms ipc lock lock" { spawn "dms" "ipc" "lock" "lock"; }
+
+    // 使用 spawn-sh 运行 shell 命令。如果需要管道、多个命令等，请执行此操作。
+    // 注意：整个命令作为单个参数传递。它是逐字传递给 `sh -c` 的。
+    // 例如，这是一个切换屏幕阅读器（orca）的标准绑定。
+    //Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
+
+    // 音量键映射
+    XF86AudioRaiseVolume allow-when-locked=true {  spawn "dms" "ipc" "call" "audio" "increment" "3"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "decrement" "3"; }
+    XF86AudioMute allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "mute"; }
+    XF86AudioMicMute allow-when-locked=true { spawn "dms" "ipc" "call" "audio" "micmute"; }
+
+    // 亮度键映射
+    XF86MonBrightnessUp allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "increment" "5" ""; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "dms" "ipc" "call" "brightness" "decrement" "5" ""; }
+
+    // 打开/关闭概览视图
+    Mod+TAB repeat=false { toggle-overview; }
+
+    Mod+Q repeat=false { close-window; }
+
+    // 焦点导航
+    Mod+Left { focus-column-left; }
+    Mod+Down { focus-window-down; }
+    Mod+Up { focus-window-up; }
+    Mod+Right { focus-column-right; }
+    Mod+H { focus-column-left; }
+    //Mod+J { focus-window-down; }
+    //Mod+K { focus-window-up; }
+    Mod+L { focus-column-right; }
+
+    // 移动窗口
+    Mod+Ctrl+Left { move-column-left; }
+    Mod+Ctrl+Down { move-window-down; }
+    Mod+Ctrl+Up { move-window-up; }
+    Mod+Ctrl+Right { move-column-right; }
+    Mod+Ctrl+H { move-column-left; }
+    //Mod+Ctrl+J { move-window-down; }
+    //Mod+Ctrl+K { move-window-up; }
+    Mod+Ctrl+L { move-column-right; }
+
+    // Alternative commands that move across workspaces when reaching
+    // the first or last window in a column.
+    Mod+J     { focus-window-or-workspace-down; }
+    Mod+K     { focus-window-or-workspace-up; }
+    Mod+Ctrl+J     { move-window-down-or-to-workspace-down; }
+    Mod+Ctrl+K     { move-window-up-or-to-workspace-up; }
+
+    Mod+Home { focus-column-first; }
+    Mod+End { focus-column-last; }
+    Mod+Ctrl+Home { move-column-to-first; }
+    Mod+Ctrl+End { move-column-to-last; }
+
+    // 监视器焦点导航
+    Mod+Shift+Left { focus-monitor-left; }
+    Mod+Shift+Down { focus-monitor-down; }
+    Mod+Shift+Up { focus-monitor-up; }
+    Mod+Shift+Right { focus-monitor-right; }
+    Mod+Shift+H { focus-monitor-left; }
+    Mod+Shift+J { focus-monitor-down; }
+    Mod+Shift+K { focus-monitor-up; }
+    Mod+Shift+L { focus-monitor-right; }
+
+    // 移动列到其他监视器
+    Mod+Shift+Ctrl+Left { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+Down { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+Up { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
+    Mod+Shift+Ctrl+H { move-column-to-monitor-left; }
+    Mod+Shift+Ctrl+J { move-column-to-monitor-down; }
+    Mod+Shift+Ctrl+K { move-column-to-monitor-up; }
+    Mod+Shift+Ctrl+L { move-column-to-monitor-right; }
+
+    // Alternatively, there are commands to move just a single window:
+    // Mod+Shift+Ctrl+Left  { move-window-to-monitor-left; }
+    // ...
+
+    // And you can also move a whole workspace to another monitor:
+    // Mod+Shift+Ctrl+Left  { move-workspace-to-monitor-left; }
+    // ...
+
+    Mod+Page_Down { focus-workspace-down; }
+    Mod+Page_Up { focus-workspace-up; }
+    Mod+U { focus-workspace-down; }
+    Mod+I { focus-workspace-up; }
+    Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
+    Mod+Ctrl+Page_Up { move-column-to-workspace-up; }
+    Mod+Ctrl+U { move-column-to-workspace-down; }
+    Mod+Ctrl+I { move-column-to-workspace-up; }
+
+    // Alternatively, there are commands to move just a single window:
+    // Mod+Ctrl+Page_Down { move-window-to-workspace-down; }
+    // ...
+
+    Mod+Shift+Page_Down { move-workspace-down; }
+    Mod+Shift+Page_Up { move-workspace-up; }
+    Mod+Shift+U { move-workspace-down; }
+    Mod+Shift+I { move-workspace-up; }
+
+    // 您可以绑定鼠标滚轮滚动刻度
+    // 这些绑定将根据 natural-scroll 设置改变方向
+    //
+    // 为了避免快速滚动工作区，您可以使用
+    // cooldown-ms 属性。绑定将被限制为此值。
+    // 您可以在任何绑定上设置冷却时间，但它对滚轮特别有用。
+    Mod+WheelScrollDown cooldown-ms=150 { focus-workspace-down; }
+    Mod+WheelScrollUp cooldown-ms=150 { focus-workspace-up; }
+    Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
+    Mod+Ctrl+WheelScrollUp cooldown-ms=150 { move-column-to-workspace-up; }
+
+    Mod+WheelScrollRight { focus-column-right; }
+    Mod+WheelScrollLeft { focus-column-left; }
+    Mod+Ctrl+WheelScrollRight { move-column-right; }
+    Mod+Ctrl+WheelScrollLeft { move-column-left; }
+
+    // 通常在应用程序中按住 Shift 滚动上下会导致
+    // 水平滚动；这些绑定复制了该行为。
+    Mod+Shift+WheelScrollDown { focus-column-right; }
+    Mod+Shift+WheelScrollUp { focus-column-left; }
+    Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
+    Mod+Ctrl+Shift+WheelScrollUp { move-column-left; }
+
+    // 类似地，您可以绑定触控板滚动 "刻度"。
+    // 触控板滚动是连续的，因此对于这些绑定，它被分成
+    // 离散间隔。
+    // 这些绑定也受触控板自然滚动的影响，因此这些
+    // 示例绑定是 "反向的"，因为我们默认为触控板启用了自然滚动。
+    // Mod+TouchpadScrollDown { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.02+"; }
+    // Mod+TouchpadScrollUp   { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.02-"; }
+
+    // 您可以通过索引引用工作区。但是，请记住
+    // niri 是一个动态工作区系统，因此这些命令有点像
+    // "尽力而为"。尝试引用大于
+    // 当前工作区计数的工作区索引将改为引用最底部
+    // （空）工作区。
+    //
+    // 例如，具有 2 个工作区 + 1 个空工作区时，索引 3、4、5 等等
+    // 将全部引用第 3 个工作区。
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+    Mod+Ctrl+1 { move-column-to-workspace 1; }
+    Mod+Ctrl+2 { move-column-to-workspace 2; }
+    Mod+Ctrl+3 { move-column-to-workspace 3; }
+    Mod+Ctrl+4 { move-column-to-workspace 4; }
+    Mod+Ctrl+5 { move-column-to-workspace 5; }
+    Mod+Ctrl+6 { move-column-to-workspace 6; }
+    Mod+Ctrl+7 { move-column-to-workspace 7; }
+    Mod+Ctrl+8 { move-column-to-workspace 8; }
+    Mod+Ctrl+9 { move-column-to-workspace 9; }
+
+    // Alternatively, there are commands to move just a single window:
+    // Mod+Ctrl+1 { move-window-to-workspace 1; }
+
+    // 切换当前工作区和上一个工作区之间的焦点
+    // Mod+Tab { focus-workspace-previous; }
+
+    // 以下绑定在列中将焦点窗口移入和移出列。
+    // 如果窗口是单独的，它们将把窗口合并到旁边的列中。
+    // 如果窗口已经在列中，它们将将其驱逐出去。
+    Mod+BracketLeft { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+
+    // 从右侧获取一个窗口到底部的焦点列。
+    Mod+Comma { consume-window-into-column; }
+    // 将底部窗口驱逐出焦点列到右侧。
+    Mod+Period { expel-window-from-column; }
+
+    Mod+R { switch-preset-column-width; }
+    // 也可以反向循环预设。
+    // Mod+R { switch-preset-column-width-back; }
+    Mod+Shift+R { switch-preset-window-height; }
+    Mod+Ctrl+R { reset-window-height; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+
+    // 扩展焦点列以填充未被其他完全可见列占用的空间。
+    // 使列 "填充其余空间"。
+    Mod+Ctrl+F { expand-column-to-available-width; }
+
+    Mod+C { center-column; }
+
+    // 居中所有完全可见的列。
+    Mod+Ctrl+C { center-visible-columns; }
+
+    // 精细宽度调整。
+    // 此命令还可以：
+    // * 以像素设置宽度："1000"
+    // * 以像素调整宽度："-5" 或 "+5"
+    // * 以屏幕宽度的百分比设置宽度："25%"
+    // * 以百分比调整宽度："-10%" 或 "+10%"
+    // 像素大小使用逻辑像素或缩放像素。即在缩放为 2.0 的输出上，
+    // set-column-width "100" 将使列占据 200 个物理屏幕像素。
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+
+    // 精细高度调整
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    // 在浮窗和平铺之间切换窗口
+    Mod+Backslash { toggle-window-floating; }
+    Mod+Shift+Backslash { switch-focus-between-floating-and-tiling; }
+
+    // 切换选项卡列显示模式
+    Mod+W { toggle-column-tabbed-display; }
+
+    // 截图快捷键
+    Print { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print { screenshot-window; }
+
+    // 切换键盘快捷键抑制器（远程桌面和 KVM 交换机使用）
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+
+    // 退出（显示确认对话框）
+    Mod+Shift+E { quit; }
+    Ctrl+Alt+Delete { quit; }
+
+    // 关闭监视器电源
+    Mod+Shift+P { power-off-monitors; }
+
+    // Dank Shell 快捷键
+    Mod+Space hotkey-overlay-title="应用启动器" {
+      spawn "dms" "ipc" "call" "spotlight" "toggle";
+    }
+    Mod+V hotkey-overlay-title="剪贴板管理器" {
+      spawn "dms" "ipc" "call" "clipboard" "toggle";
+   }
+   Mod+N hotkey-overlay-title="记事本" {
+      spawn "dms" "ipc" "call" "notepad" "toggle";
+   }
+}
+
+// 包含布局和颜色配置文件，由 dms 提供
+include "dms/layout.kdl"
+include "dms/colors.kdl"

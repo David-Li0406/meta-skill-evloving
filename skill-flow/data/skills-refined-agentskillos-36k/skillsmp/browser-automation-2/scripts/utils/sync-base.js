@@ -1,0 +1,263 @@
+import fs from 'fs-extra';
+import path from 'path';
+import chalk from 'chalk';
+import crypto from 'crypto';
+import { downloadFile, getFilesRecursively } from './github-utils.js';
+import { getLocalFiles } from './sync-utils.js';
+
+/**
+ * Generic sync function for syncing files from a GitHub repository
+ * @param {Object} config - Configuration object
+ * @param {string} config.repoOwner - GitHub repository owner
+ * @param {string} config.repoName - GitHub repository name
+ * @param {string} config.remoteDir - Remote directory to sync from
+ * @param {string} config.localDir - Local directory to sync to
+ * @param {string[]} config.acceptedExtensions - Array of accepted file extensions
+ * @param {string} config.resourceType - Type of resource being synced (for logging)
+ * @param {string} config.token - GitHub token (optional)
+ * @param {string[]} config.syncPatterns - Optional glob patterns to filter files
+ * @param {boolean} config.dryRun - If true, simulate actions without making changes (default: false)
+ */
+export async function syncFromGitHub(config) {
+  const {
+    repoOwner,
+    repoName,
+    remoteDir,
+    localDir,
+    acceptedExtensions,
+    resourceType,
+    token = null,
+    syncPatterns = null,
+    dryRun = false
+  } = config;
+
+  if (dryRun) {
+    console.log(chalk.blue.bold(`\n=== [DRY RUN] Syncing ${resourceType} from ${repoOwner}/${repoName} ===\n`));
+    console.log(chalk.yellow('⚠ Dry-run mode: No files will be modified\n'));
+  } else {
+    console.log(chalk.blue.bold(`\n=== Syncing ${resourceType} from ${repoOwner}/${repoName} ===\n`));
+  }
+  
+  // Ensure local directory exists
+  if (!dryRun) {
+    await fs.ensureDir(localDir);
+  }
+  
+  // Load previously synced files metadata
+  const metadataPath = path.join(localDir, '.upstream-sync.json');
+  let previouslySynced = new Set();
+  let previousMetadata = null;
+  let currentSource = `${repoOwner}/${repoName}/${remoteDir}`;
+  
+  if (await fs.pathExists(metadataPath)) {
+    try {
+      previousMetadata = await fs.readJson(metadataPath);
+      
+      // Support both old format (single source) and new format (multiple sources)
+      if (previousMetadata.sources && Array.isArray(previousMetadata.sources)) {
+        // New format: find files from the current source
+        const sourceEntry = previousMetadata.sources.find(s => s.source === currentSource);
+        if (sourceEntry) {
+          previouslySynced = new Set(sourceEntry.files || []);
+        }
+      } else if (previousMetadata.source && previousMetadata.files) {
+        // Old format: migrate to new format if source matches
+        if (previousMetadata.source === currentSource) {
+          previouslySynced = new Set(previousMetadata.files || []);
+        }
+      }
+    } catch (error) {
+      console.warn(chalk.yellow('Warning: Could not read sync metadata, will not delete any files'));
+    }
+  }
+  
+  let successCount = 0;
+  let failCount = 0;
+  let deleteCount = 0;
+  let createCount = 0;
+  let updateCount = 0;
+  
+  try {
+    console.log(chalk.blue(`Fetching ${resourceType} from ${remoteDir}...`));
+    if (syncPatterns && syncPatterns.length > 0) {
+      console.log(chalk.dim(`  Using sync patterns: ${syncPatterns.join(', ')}`));
+    }
+    const files = await getFilesRecursively(repoOwner, repoName, remoteDir, '', acceptedExtensions, token, syncPatterns);
+    
+    console.log(chalk.blue(`Found ${files.length} ${resourceType} file(s)\n`));
+    
+    // Track remote file paths
+    const remoteFilePaths = new Set(files.map(f => f.path));
+    
+    for (const file of files) {
+      try {
+        const destPath = path.join(localDir, file.path);
+        // Check file existence upfront - needed for both modes to determine create vs update
+        const fileExists = await fs.pathExists(destPath);
+        
+        if (dryRun) {
+          // Use SHA comparison for efficiency instead of downloading full content
+          // Note: We use the SHA field from the GitHub Contents API to detect changes
+          // without downloading full file content. For even better performance with
+          // large repositories, consider using Git tree comparisons or caching.
+          if (fileExists) {
+            // Calculate SHA of local file to compare with remote SHA
+            // Read as buffer to handle both text and binary files correctly
+            const localContent = await fs.readFile(destPath);
+            const localSha = crypto.createHash('sha1')
+              .update('blob ' + localContent.length + '\0')
+              .update(localContent)
+              .digest('hex');
+            
+            if (localSha !== file.sha) {
+              console.log(chalk.yellow(`  [DRY RUN] Would update: ${file.path}`));
+              updateCount++;
+              successCount++;
+            }
+            // If SHA is the same, don't log anything and don't count as success
+          } else {
+            console.log(chalk.green(`  [DRY RUN] Would create: ${file.path}`));
+            createCount++;
+            successCount++;
+          }
+        } else {
+          await downloadFile(file.download_url, destPath, token);
+          if (fileExists) {
+            console.log(chalk.dim(`  Updated: ${file.path}`));
+            updateCount++;
+          } else {
+            console.log(chalk.dim(`  Created: ${file.path}`));
+            createCount++;
+          }
+          successCount++;
+        }
+      } catch (error) {
+        console.error(chalk.red(`  ✗ Failed to download ${file.path}:`), error.message);
+        failCount++;
+      }
+    }
+    
+    // Delete local files that no longer exist upstream, but only if they were previously synced
+    console.log(chalk.blue(`\nChecking for deleted files...`));
+    const localFiles = await getLocalFiles(localDir, acceptedExtensions);
+    
+    for (const localFile of localFiles) {
+      if (!remoteFilePaths.has(localFile) && previouslySynced.has(localFile)) {
+        const filePath = path.join(localDir, localFile);
+        try {
+          if (dryRun) {
+            console.log(chalk.yellow(`  [DRY RUN] Would delete: ${localFile}`));
+          } else {
+            await fs.remove(filePath);
+            console.log(chalk.yellow(`  Deleted: ${localFile}`));
+          }
+          deleteCount++;
+        } catch (error) {
+          console.error(chalk.red(`  ✗ Failed to delete ${localFile}:`), error.message);
+        }
+      }
+    }
+    
+    // Save metadata of currently synced files
+    // Only update lastSync if the file list has changed
+    if (!dryRun) {
+      try {
+        const currentFiles = Array.from(remoteFilePaths).sort();
+        
+        // Prepare sources array - migrate old format or update existing new format
+        let sources = [];
+        
+        // Load existing sources from new format or convert from old format
+        if (previousMetadata) {
+          if (previousMetadata.sources && Array.isArray(previousMetadata.sources)) {
+            // New format: copy existing sources
+            sources = [...previousMetadata.sources];
+          } else if (previousMetadata.source && previousMetadata.files) {
+            // Old format: convert to new format
+            sources = [{
+              source: previousMetadata.source,
+              lastSync: previousMetadata.lastSync,
+              files: previousMetadata.files
+            }];
+          }
+        }
+        
+        // Find or create entry for current source
+        const existingSourceIndex = sources.findIndex(s => s.source === currentSource);
+        const previousFiles = existingSourceIndex >= 0 
+          ? [...sources[existingSourceIndex].files].sort()
+          : [];
+        
+        // Check if file lists are different
+        // Note: If files fail to download, they won't be in remoteFilePaths, so the comparison
+        // may show files changed. However, when failCount > 0 the script exits with code 1 in the
+        // failure handling section, preventing the metadata from being committed by CI/workflows.
+        const filesChanged = currentFiles.length !== previousFiles.length ||
+          currentFiles.some((file, index) => file !== previousFiles[index]);
+        
+        const sourceEntry = {
+          source: currentSource,
+          lastSync: filesChanged 
+            ? new Date().toISOString() 
+            : (existingSourceIndex >= 0 ? sources[existingSourceIndex].lastSync : new Date().toISOString()),
+          files: currentFiles
+        };
+        
+        // Update or add the source entry
+        if (existingSourceIndex >= 0) {
+          sources[existingSourceIndex] = sourceEntry;
+        } else {
+          sources.push(sourceEntry);
+        }
+        
+        // Create new metadata structure
+        const metadata = { sources };
+        
+        await fs.writeJson(metadataPath, metadata, { spaces: 2 });
+      } catch (error) {
+        console.error(chalk.red('Warning: Failed to save sync metadata:'), error.message);
+      }
+    } else {
+      console.log(chalk.dim('\n[DRY RUN] Would update sync metadata'));
+    }
+  } catch (error) {
+    console.error(chalk.red(`Error fetching ${resourceType}:`), error.message);
+    failCount++;
+  }
+  
+  if (dryRun) {
+    console.log(chalk.blue.bold('\n=== [DRY RUN] Sync Complete ==='));
+    if (createCount > 0) {
+      console.log(chalk.green(`✓ Would create: ${createCount} ${resourceType}`));
+    }
+    if (updateCount > 0) {
+      console.log(chalk.yellow(`⚠ Would update: ${updateCount} ${resourceType}`));
+    }
+    if (deleteCount > 0) {
+      console.log(chalk.yellow(`⚠ Would delete: ${deleteCount} ${resourceType}`));
+    }
+    if (createCount === 0 && updateCount === 0 && deleteCount === 0) {
+      console.log(chalk.green(`✓ No changes needed - all ${resourceType} are up to date`));
+    }
+    if (failCount > 0) {
+      console.log(chalk.red(`✗ Failed to sync: ${failCount} ${resourceType}`));
+      process.exit(1);
+    }
+  } else {
+    console.log(chalk.blue.bold('\n=== Sync Complete ==='));
+    if (createCount > 0) {
+      console.log(chalk.green(`✓ Created: ${createCount} ${resourceType}`));
+    }
+    if (updateCount > 0) {
+      console.log(chalk.green(`✓ Updated: ${updateCount} ${resourceType}`));
+    }
+    if (deleteCount > 0) {
+      console.log(chalk.yellow(`⚠ Deleted: ${deleteCount} ${resourceType}`));
+    }
+    console.log(chalk.green(`✓ Total synced: ${successCount} ${resourceType}`));
+    if (failCount > 0) {
+      console.log(chalk.red(`✗ Failed to sync: ${failCount} ${resourceType}`));
+      process.exit(1);
+    }
+  }
+}

@@ -1,0 +1,22 @@
+<div class="container">
+  <div class="logo-container">
+    <%= image_tag "promiseKitsLogo.png", alt: "Promise Kits", class: "page-logo" %>
+  </div>
+
+  <% if @promise_fitness_kits.empty? %>
+    <p class="empty-state">No fitness kits available at this time.</p>
+  <% else %>
+    <div class="fitness-kits">
+      <% @promise_fitness_kits.each do |kit| %>
+        <div class="kit-card">
+          <%= image_tag "#{kit.name}.png", alt: kit.name, class: 'kit-image' %>
+          <div class="kit-card-text">
+            <h2><%= kit.name %></h2>
+            <p class="kit-description"><%= kit.description %></p>
+            <%= link_to 'Order This Kit', fitness_kit_order_path(slug: kit.slug), class: 'btn btn-primary' %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

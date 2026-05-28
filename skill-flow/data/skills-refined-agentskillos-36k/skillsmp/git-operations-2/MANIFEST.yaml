@@ -1,0 +1,78 @@
+# Skill Manifest - Progressive Disclosure Index
+# Token estimation: 1 token ≈ 0.75 words (or ~4 characters)
+# Content multipliers: prose 1.0x, code 1.2x, tables 1.3x, cheatsheets 1.4x
+
+skill: git-operations
+version: "1.0"
+specification: agentskills.io/v1
+
+progressive_disclosure:
+  # ---------------------------------------------------------------------------
+  # LEVEL 1: METADATA (~120 tokens)
+  # Range: 80-150 | We use: 120
+  # Rationale: name (~10) + description (~100) + YAML overhead (~10)
+  # ---------------------------------------------------------------------------
+  metadata:
+    estimated_tokens: 120
+    fields: [name, description]
+
+  # ---------------------------------------------------------------------------
+  # LEVEL 2: INSTRUCTIONS (~1600 tokens)
+  # Range: 1000-2500 | We use: 1600
+  # Rationale: Operational skill with quick references, full specs in resources
+  # ---------------------------------------------------------------------------
+  instructions:
+    estimated_tokens: 1600
+    file: SKILL.md
+
+  resources:
+    # -------------------------------------------------------------------------
+    # BRANCH-NAMING.md (~1500 tokens)
+    # Range: 1200-1800 | We use: 1500
+    # Rationale:
+    #   - Mostly tables and short examples
+    #   - Regex patterns (high token density)
+    #   - ~110 lines, moderate code blocks
+    #   - Less dense than commit conventions
+    # -------------------------------------------------------------------------
+    - path: references/BRANCH-NAMING.md
+      purpose: Branch naming conventions, patterns, and validation rules
+      estimated_tokens: 1500
+      load_when:
+        - Creating a new branch
+        - Branch name validation fails
+        - User asks about naming conventions
+      keywords: [branch, naming, feature, fix, convention]
+
+    # -------------------------------------------------------------------------
+    # COMMIT-CONVENTIONS.md (~1800 tokens)
+    # Range: 1500-2200 | We use: 1800
+    # Rationale:
+    #   - Many commit message examples (code blocks)
+    #   - Tables for types and scopes
+    #   - Regex and pre-commit hook code
+    #   - ~160 lines, example-heavy
+    # -------------------------------------------------------------------------
+    - path: references/COMMIT-CONVENTIONS.md
+      purpose: Conventional commits format, types, scopes, and examples
+      estimated_tokens: 1800
+      load_when:
+        - Writing a commit message
+        - Commit message validation fails
+        - User asks about commit format
+      keywords: [commit, message, conventional, feat, fix, type]
+
+loading_strategy:
+  recommendation: |
+    1. Start with SKILL.md for basic operations
+    2. Load BRANCH-NAMING.md when creating branches
+    3. Load COMMIT-CONVENTIONS.md when committing
+
+  fallback: |
+    SKILL.md contains quick reference for branch and commit formats.
+    Reference files provide complete specifications.
+
+token_summary:
+  metadata_only: 120
+  with_instructions: 1720
+  with_all_resources: 5020

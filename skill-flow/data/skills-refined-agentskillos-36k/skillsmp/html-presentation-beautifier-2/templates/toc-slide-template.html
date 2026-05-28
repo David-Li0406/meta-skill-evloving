@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>目录页模板 - McKinsey 风格</title>
+    <style>
+        /* ===== McKinsey Design System - 精确颜色系统 ===== */
+        :root {
+            --primary-background: #FFFFFF;
+            --header-background: #000000;
+            --primary-accent: #F85d42;
+            --secondary-accent: #74788d;
+            --deep-blue: #556EE6;
+            --green: #34c38f;
+            --blue: #50a5f1;
+            --yellow: #f1b44c;
+            --text-dark: #333333;
+            --text-black: #000000;
+            --text-light: #FFFFFF;
+        }
+
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--primary-background);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ===== 导航栏 ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: var(--header-background);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn {
+            background-color: var(--primary-accent);
+            color: var(--text-light);
+            border: none;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background-color: #e04a31;
+            transform: translateY(-1px);
+        }
+
+        .nav-btn:disabled {
+            background-color: var(--secondary-accent);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .slide-counter {
+            color: var(--text-light);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* ===== 演示文稿容器 ===== */
+        .presentation-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        /* ===== 幻灯片样式 ===== */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 60px;
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* ===== 目录页样式 ===== */
+        .slide.toc-slide {
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .toc-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .toc-title {
+            font-size: 56px;
+            font-weight: bold;
+            color: var(--text-black);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .toc-subtitle {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary-accent);
+        }
+
+        .toc-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        .toc-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            border-left: 6px solid var(--primary-accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+
+        .toc-section:hover {
+            transform: translateX(10px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            border-left-color: var(--deep-blue);
+        }
+
+        .toc-number {
+            display: inline-block;
+            background: var(--primary-accent);
+            color: var(--text-light);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .toc-section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-black);
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .toc-section-subtitle {
+            font-size: 16px;
+            color: var(--text-dark);
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        /* ===== 分隔线样式 ===== */
+        .toc-divider {
+            grid-column: 1 / -1;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--secondary-accent), transparent);
+            margin: 40px 0;
+        }
+
+        /* ===== 底部信息 ===== */
+        .toc-footer {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(248, 93, 66, 0.05);
+            border-radius: 8px;
+        }
+
+        .toc-footer-text {
+            font-size: 18px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .toc-footer-text strong {
+            color: var(--primary-accent);
+        }
+
+        /* ===== 响应式设计 ===== */
+        @media (max-width: 1200px) {
+            .toc-container {
+                grid-template-columns: 1fr;
+            }
+
+            .toc-title {
+                font-size: 42px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 30px;
+            }
+
+            .toc-title {
+                font-size: 36px;
+            }
+
+            .toc-subtitle {
+                font-size: 22px;
+            }
+
+            .toc-section {
+                padding: 20px;
+            }
+
+            .toc-section-title {
+                font-size: 18px;
+            }
+        }
+
+        /* ===== 全屏按钮 ===== */
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--header-background);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .fullscreen-btn:hover {
+            background-color: var(--secondary-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== 滚动条样式 ===== */
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: var(--secondary-accent);
+            border-radius: 4px;
+        }
+
+        .slide::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-accent);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">◀ 上一张</button>
+        <span class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">1</span>
+        </span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">下一张 ▶</button>
+    </nav>
+
+    <!-- 演示文稿容器 -->
+    <div class="presentation-container">
+
+        <!-- 目录页幻灯片 -->
+        <div class="slide toc-slide active" data-slide="1">
+            <div class="toc-header">
+                <h1 class="toc-title">目录</h1>
+                <p class="toc-subtitle">Table of Contents</p>
+            </div>
+
+            <div class="toc-container">
+                <!-- 第一部分 -->
+                <a href="#section1" class="toc-section" onclick="jumpToSlide(2); return false;">
+                    <div class="toc-number">1</div>
+                    <div class="toc-section-title">第一部分：商业模式介绍</div>
+                    <div class="toc-section-subtitle">亚马逊品牌流量价值转化模式</div>
+                </a>
+
+                <!-- 第二部分 -->
+                <a href="#section2" class="toc-section" onclick="jumpToSlide(7); return false;">
+                    <div class="toc-number">2</div>
+                    <div class="toc-section-title">第二部分：为什么选择开学季为抓手切入？</div>
+                    <div class="toc-section-subtitle">市场规模、产品契合、营销优势</div>
+                </a>
+
+                <!-- 第三部分 -->
+                <a href="#section3" class="toc-section" onclick="jumpToSlide(18); return false;">
+                    <div class="toc-number">3</div>
+                    <div class="toc-section-title">第三部分：简优赛道定义</div>
+                    <div class="toc-section-subtitle">学童优选 - 3-12岁学龄儿童开学用品+成长辅助一站式服务</div>
+                </a>
+
+                <!-- 第四部分 -->
+                <a href="#section4" class="toc-section" onclick="jumpToSlide(31); return false;">
+                    <div class="toc-number">4</div>
+                    <div class="toc-section-title">第四部分：对标案例</div>
+                    <div class="toc-section-subtitle">School Supply Boxes 成功经验借鉴</div>
+                </a>
+
+                <!-- 第五部分 -->
+                <a href="#section5" class="toc-section" onclick="jumpToSlide(35); return false;">
+                    <div class="toc-number">5</div>
+                    <div class="toc-section-title">第五部分：简优品牌战略规划</div>
+                    <div class="toc-section-subtitle">SchoolReady™ 品牌定位与阶段目标</div>
+                </a>
+
+                <!-- 分隔线 -->
+                <div class="toc-divider"></div>
+
+                <!-- 底部信息 -->
+                <div class="toc-footer">
+                    <p class="toc-footer-text">
+                        <strong>共 47 张幻灯片</strong> | 预计演示时间：<strong>45-60 分钟</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 全屏按钮 -->
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">全屏 ⛶</button>
+
+    <!-- 导航JavaScript -->
+    <script>
+        let currentSlide = 1;
+        let totalSlides = 47; // 根据实际幻灯片数量调整
+
+        function init() {
+            document.getElementById('totalSlides').textContent = totalSlides;
+            document.addEventListener('keydown', handleKeyPress);
+            updateNavButtons();
+        }
+
+        function navigate(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = newSlide;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigate(-1);
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                jumpToSlide(1);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                jumpToSlide(totalSlides);
+            }
+        }
+
+        function jumpToSlide(slideNumber) {
+            if (slideNumber >= 1 && slideNumber <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = slideNumber;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

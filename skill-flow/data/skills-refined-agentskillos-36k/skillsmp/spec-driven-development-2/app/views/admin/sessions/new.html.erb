@@ -1,0 +1,26 @@
+<div class="admin-login-container">
+  <div class="admin-login-card">
+    <h1>Admin Login</h1>
+    <p>Please log in to access the admin dashboard</p>
+
+    <%= form_with url: admin_login_path, method: :post, local: true do |f| %>
+      <div class="form-group">
+        <%= label_tag :username, "Username" %>
+        <%= text_field_tag :username, params[:username], class: "form-control", autofocus: true, required: true %>
+      </div>
+
+      <div class="form-group">
+        <%= label_tag :password, "Password" %>
+        <%= password_field_tag :password, nil, class: "form-control", required: true %>
+      </div>
+
+      <div class="form-actions">
+        <%= submit_tag "Log In", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+
+    <div class="login-footer">
+      <%= link_to "← Back to Site", root_path, class: "back-link" %>
+    </div>
+  </div>
+</div>

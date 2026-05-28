@@ -1,0 +1,30 @@
+# OceanFuxi Model Configuration - Lightweight Version
+# Reduced complexity for faster training and lower memory usage
+
+# Temporal configuration
+input_len: 7          # Number of input frames
+output_len: 1         # Number of output frames
+in_channels: 2        # Number of channels (u, v velocity components)
+
+# Spatial configuration
+img_size: [240, 240]  # Input image size (H, W)
+patch_size: [8, 8]    # Larger patch size for efficiency (240/8 = 30)
+
+# Model architecture parameters - LIGHTWEIGHT
+embed_dim: 256        # Reduced from 512
+num_groups: 16        # Reduced from 32
+num_heads: 4          # Reduced from 8
+window_size: 6        # Reduced from 10
+                      # After patching: 30x30, after downsample: 15x15
+                      # window_size=5 divides 15 evenly
+
+depth: 12             # Significantly reduced from 48
+
+# Dual path configuration
+use_3d_path: false    # Disable 3D path to save memory
+pseudo_depth: 2       # Not used when use_3d_path=false
+
+# Expected metrics:
+# - Parameters: ~16M (much smaller than 255M)
+# - Memory usage: ~2-3 GB for batch_size=2
+# - Training speed: ~3-4x faster than full model

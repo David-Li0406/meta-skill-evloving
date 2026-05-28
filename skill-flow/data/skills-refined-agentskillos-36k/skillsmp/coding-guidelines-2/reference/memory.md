@@ -1,0 +1,1 @@
+../../../rules/coding/memory.md

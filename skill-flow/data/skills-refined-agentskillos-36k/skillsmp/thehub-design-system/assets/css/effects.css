@@ -1,0 +1,401 @@
+/* ============================================
+   THEHUB - EVCS EFFECTS
+   Glass morphism, Glow effects, Blur
+   ============================================ */
+
+/* ============================================
+   GLASS MORPHISM CARDS
+   ============================================ */
+.card--glass {
+  background: var(--color-bg-glass);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--color-border);
+}
+
+.card--glass-strong {
+  background: var(--color-bg-glass-strong);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--color-border-strong);
+}
+
+/* ============================================
+   GLOW EFFECTS
+   ============================================ */
+
+/* Accent glow - För interaktiva element */
+.glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--color-accent-glow), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.glow:hover::before {
+  opacity: 1;
+}
+
+/* Permanent glow - För accent elements */
+.glow--active {
+  box-shadow: var(--shadow-glow);
+}
+
+.glow--strong {
+  box-shadow: var(--shadow-glow-strong);
+}
+
+/* Animated glow pulse */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--color-accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--color-accent-glow-strong);
+  }
+}
+
+.glow--pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   BUTTON GLOW EFFECTS
+   ============================================ */
+.btn--glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn--glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    var(--color-accent-glow) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  pointer-events: none;
+}
+
+.btn--glow:hover::after {
+  opacity: 1;
+}
+
+/* Primary button with glow */
+.btn--primary {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-color: var(--color-accent);
+  transition: all var(--transition-fast);
+}
+
+.btn--primary:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   GRADIENT OVERLAYS
+   ============================================ */
+.gradient-overlay {
+  position: relative;
+}
+
+.gradient-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-fade-up);
+  pointer-events: none;
+}
+
+.gradient-overlay--top::after {
+  background: var(--gradient-fade-down);
+}
+
+/* ============================================
+   BLUR BACKGROUNDS
+   ============================================ */
+.blur-bg {
+  position: relative;
+}
+
+.blur-bg::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(
+    circle at center,
+    var(--color-accent-glow) 0%,
+    transparent 60%
+  );
+  filter: blur(var(--blur-lg));
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ============================================
+   CARD ENHANCEMENTS
+   ============================================ */
+
+/* Card med subtil hover glow */
+.card--hover-glow {
+  transition: all var(--transition-base);
+}
+
+.card--hover-glow:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+/* Card med accent border top */
+.card--accent-top {
+  border-top: 2px solid var(--color-accent);
+}
+
+/* Card med gradient border */
+.card--gradient-border {
+  position: relative;
+  background: var(--color-bg-card);
+  border: none;
+}
+
+.card--gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent),
+    var(--color-accent-glow),
+    transparent
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================
+   INPUT/FORM GLOW EFFECTS
+   ============================================ */
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light), var(--shadow-glow);
+}
+
+/* ============================================
+   BADGE GLOW
+   ============================================ */
+.badge--glow {
+  background: var(--color-accent-light);
+  color: var(--color-accent-text);
+  border: 1px solid var(--color-accent);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ============================================
+   TEXT GLOW
+   ============================================ */
+.text-glow {
+  text-shadow: 0 0 20px var(--color-accent-glow);
+}
+
+.text-glow--strong {
+  text-shadow: 0 0 30px var(--color-accent-glow-strong);
+}
+
+/* ============================================
+   DIVIDER WITH GLOW
+   ============================================ */
+.divider--glow {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-accent) 50%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px var(--color-accent-glow);
+}
+
+/* ============================================
+   GLASS PANEL (För modals/overlays)
+   ============================================ */
+.glass-panel {
+  background: var(--color-bg-glass-strong);
+  backdrop-filter: blur(var(--blur-md));
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============================================
+   STATS CARD WITH GLOW
+   ============================================ */
+.stat-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-accent) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.stat-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-glow);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+/* ============================================
+   FLOATING ELEMENTS
+   ============================================ */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ============================================
+   SHIMMER EFFECT
+   ============================================ */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-accent-glow) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* ============================================
+   ACCENT DECORATIONS
+   ============================================ */
+
+/* Accent dot/indicator */
+.accent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.accent-dot--pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Accent line */
+.accent-line {
+  height: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent-glow);
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+/* Reduce effects on mobile for performance */
+@media (max-width: 768px) {
+  .blur-bg::before {
+    filter: blur(calc(var(--blur-lg) * 0.5));
+  }
+  
+  .card--glass,
+  .card--glass-strong,
+  .glass-panel {
+    backdrop-filter: blur(var(--blur-sm));
+    -webkit-backdrop-filter: blur(var(--blur-sm));
+  }
+  
+  /* Disable animations for better performance */
+  @media (prefers-reduced-motion: reduce) {
+    .glow--pulse,
+    .float,
+    .shimmer {
+      animation: none;
+    }
+  }
+}
+
+/* Disable effects if user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glow--pulse,
+  .float,
+  .shimmer {
+    animation: none;
+  }
+  
+  .card--hover-glow:hover,
+  .stat-card:hover {
+    transform: none;
+  }
+}

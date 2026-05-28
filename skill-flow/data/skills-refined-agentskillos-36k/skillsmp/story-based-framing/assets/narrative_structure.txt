@@ -1,0 +1,197 @@
+STORY-BASED PATTERN FRAMING: FOUR-ACT STRUCTURE GUIDE
+
+═══════════════════════════════════════════════════════════════════
+
+ACT 1: THE PROMISE
+──────────────────
+
+PURPOSE: Establish what the code CLAIMS to do or APPEARS to implement correctly
+
+WHAT TO INCLUDE:
+• The initial declaration that looks correct (class definition, function signature)
+• The type annotations or contracts that promise certain behavior
+• What developers would expect based on these declarations
+• The "at first glance, this looks right" impression
+
+SEARCH IMPACT: This should be the MOST DISTINCTIVE criterion
+• Should eliminate 90%+ of false positives immediately
+• Example: "Class inherits from Generic[T]" is highly distinctive
+• Example: "Has isinstance() checks" is NOT distinctive (many patterns have this)
+
+LANGUAGE TO USE:
+✓ "A class/function promises to..."
+✓ "Declares that it will..."
+✓ "The type signature suggests..."
+✗ Avoid: "Additionally", "Also", "Furthermore" (these are for lists, not stories)
+
+EXAMPLE:
+"A generic class `Container(Generic[T])` promises to preserve type T
+throughout its operations, with T constrained to specific concrete types."
+
+═══════════════════════════════════════════════════════════════════
+
+ACT 2: THE BETRAYAL
+───────────────────
+
+PURPOSE: Show where the implementation VIOLATES the promise
+
+WHAT TO INCLUDE:
+• The specific line or construct where correctness breaks
+• What was promised vs. what was actually implemented
+• The type mismatch or contract violation
+• "Here's where it goes wrong" moment
+
+SEARCH IMPACT: This is the SECOND MOST DISTINCTIVE criterion
+• Combined with Act 1, should uniquely identify the pattern
+• Example: "Constructor accepts union type instead of T"
+• This makes the search efficient: find Act 1 + Act 2 = found the pattern
+
+LANGUAGE TO USE:
+✓ "But the implementation actually..."
+✓ "However, the constructor accepts..."
+✓ "This violates the contract because..."
+✓ Use CAUSAL transitions: "Because of this...", "This causes..."
+✗ Avoid: Adding more independent facts without connecting them causally
+
+EXAMPLE:
+"But the constructor accepts `content: UnionType` instead of `content: T`,
+storing a union type rather than the promised generic parameter. The type
+parameter T exists but is never actually used."
+
+═══════════════════════════════════════════════════════════════════
+
+ACT 3: THE CONSEQUENCES
+────────────────────────
+
+PURPOSE: Describe the observable SYMPTOMS that result from the violation
+
+WHAT TO INCLUDE:
+• Runtime type checks (isinstance, type(), hasattr)
+• Type suppression comments (# type: ignore, # noqa)
+• Workarounds (@overload, cast(), assert statements)
+• Complex conditional logic to handle different runtime types
+• Error-prone code that's hard to maintain
+
+SEARCH IMPACT: VERIFICATION criteria
+• These symptoms confirm the pattern is present
+• Help distinguish true positives from similar-looking patterns
+• Example: Having isinstance() checks PLUS type suppressions confirms the issue
+
+LANGUAGE TO USE:
+✓ "This forces developers to..."
+✓ "As a result, methods contain..."
+✓ "Which leads to..."
+✓ Connect back to Act 2: "Because the union type was stored..."
+✗ Avoid: Just listing symptoms without explaining why they exist
+
+EXAMPLE:
+"Methods contain `isinstance()` checks and `# type: ignore` comments to
+work around the type mismatch. `@overload` declarations attempt to paper
+over the union issue, adding complexity without fixing the root cause."
+
+═══════════════════════════════════════════════════════════════════
+
+ACT 4: THE SOURCE
+─────────────────
+
+PURPOSE: Explain WHY the pattern exists (architectural root cause)
+
+WHAT TO INCLUDE:
+• Where the problematic values originate (heterogeneous storage, external APIs)
+• Why type information is lost at boundaries
+• Architectural decisions that led to this
+• Systemic issues vs. isolated mistakes
+
+SEARCH IMPACT: CONTEXT for fixes
+• Helps understand if pattern is isolated or systemic
+• Informs whether fix is local (change one class) or global (refactor storage)
+• Example: "Values from dict[str, Union]" suggests storage layer needs fixing
+
+LANGUAGE TO USE:
+✓ "This pattern exists because..."
+✓ "Values originate from..."
+✓ "The root cause is..."
+✓ "Which stems from architectural decision to..."
+✗ Avoid: Blaming developers or calling code "bad"
+
+EXAMPLE:
+"Values originate from heterogeneous storage (`dict[str, TypeA | TypeB]`)
+where specific type information is lost at the storage boundary. The system
+was designed to handle multiple types in a single collection, but this comes
+at the cost of type safety."
+
+═══════════════════════════════════════════════════════════════════
+
+THE FIX (Optional Act 5)
+────────────────────────
+
+PURPOSE: Show the CORRECT solution
+
+WHAT TO INCLUDE:
+• Specific code changes needed
+• Before/after comparisons
+• Why this fix addresses the root cause
+• Any trade-offs or considerations
+
+EXAMPLE:
+"Use TypeGuard to narrow the union BEFORE instantiation, and change
+constructor to accept the type parameter directly:
+
+```python
+def is_type_a(val: TypeA | TypeB) -> TypeGuard[TypeA]:
+    return isinstance(val, TypeA)
+
+# Constructor now accepts T, not Union
+def __init__(self, content: T) -> None:
+    self._content: T = content
+```
+
+═══════════════════════════════════════════════════════════════════
+
+DESIGN PRINCIPLES SUMMARY
+
+1. FRONTLOAD DISTINCTIVE CRITERIA
+   Acts 1-2 should uniquely identify the pattern
+   Acts 3-4 verify and explain
+
+2. USE CAUSAL LANGUAGE
+   "Because of X → Y happens"
+   Not "X exists. Also Y exists."
+
+3. AVOID SYMPTOM-FIRST
+   Don't start with "Has isinstance checks"
+   Start with "Declares Generic[T]"
+
+4. VARY CODE EXAMPLES
+   Use different class names across examples
+   Prevents literal name matching
+
+5. MAKE IT MEMORABLE
+   Pattern name should evoke the problem
+   "The Fake Generic", "The Type Eraser"
+
+═══════════════════════════════════════════════════════════════════
+
+ANTI-PATTERNS TO AVOID
+
+✗ Flat lists without priority:
+  "1. Has Generic[T]
+   2. Has isinstance
+   3. Has type: ignore"
+
+✓ Hierarchical story:
+  "Promise: Generic[T] → Betrayal: stores Union instead"
+
+✗ Symptom-first:
+  "Code has many isinstance checks and type suppressions"
+
+✓ Structure-first:
+  "Generic[T] class that stores Union, forcing isinstance checks"
+
+✗ Mathematical notation:
+  "∃ T such that ∀ field f: f ≠ T"
+
+✓ Direct language:
+  "Type parameter T exists but fields don't use it"
+
+═══════════════════════════════════════════════════════════════════

@@ -1,0 +1,58 @@
+<!--
+  ============================================================
+  SVG CARD - Graphs, diagrams, and visual content
+  ============================================================
+  Use for: Coordinate plane graphs, diagrams, visual representations
+
+  Data attributes for PPTX export:
+  - data-pptx-region: "svg-container"
+  - data-pptx-x, y, w, h: Position in pixels (960x540 coordinate system)
+  - data-svg-region: "true" (marks this for SVG rendering)
+
+  Layering for animations:
+  - Use data-layer="base" for static elements (axes, grid)
+  - Use data-layer="layer-1", "layer-2" for progressive reveal
+  - Layers render as separate images for PPTX animation
+
+  POSITION VALUES: See reference/region-defaults.md for svg-container position.
+  ============================================================
+-->
+
+<!-- SVG container (standard two-column right) -->
+<div id="svg-container"
+     data-pptx-region="svg-container"
+     data-pptx-x="{{svg-container.x}}" data-pptx-y="{{svg-container.y}}"
+     data-pptx-w="{{svg-container.w}}" data-pptx-h="{{svg-container.h}}"
+     data-svg-region="true"
+     class="col center"
+     style="background: #f5f5f5; border-radius: 8px; padding: 12px;">
+  <svg viewBox="0 0 520 350" style="width: 520px; height: 350px;">
+    <!-- Base layer: Axes and grid (always visible) -->
+    <g data-layer="base">
+      <!-- Grid, axes, labels -->
+    </g>
+
+    <!-- Layer 1: First data series (appears on click) -->
+    <g data-layer="layer-1">
+      <!-- Line, points, labels -->
+    </g>
+
+    <!-- Layer 2: Second data series (appears on next click) -->
+    <g data-layer="layer-2">
+      <!-- Line, points, labels -->
+    </g>
+  </svg>
+</div>
+
+<!-- Full-width SVG (for content layout) -->
+<div id="svg-container"
+     data-pptx-region="svg-container"
+     data-pptx-x="{{content.x}}" data-pptx-y="{{content.y}}"
+     data-pptx-w="{{content.w}}" data-pptx-h="{{content.h}}"
+     data-svg-region="true"
+     class="center"
+     style="background: #f5f5f5; border-radius: 8px; padding: 16px;">
+  <svg viewBox="0 0 880 320" style="width: 880px; height: 320px;">
+    <!-- Full-width graph content -->
+  </svg>
+</div>

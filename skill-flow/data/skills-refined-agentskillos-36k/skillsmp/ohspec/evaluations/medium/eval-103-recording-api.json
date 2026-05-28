@@ -1,0 +1,43 @@
+{
+  "id": "eval-103",
+  "name": "API 设计",
+  "complexity": "medium",
+  "description": "设计开发者友好的 API",
+  "requirement": "为音频服务设计录音 API，支持多种音频格式（PCM、AAC、MP3），提供录音控制（开始、暂停、恢复、停止）、实时音量监控、录音文件管理功能",
+  "context": {
+    "project_type": "音频服务",
+    "files_involved": 6,
+    "estimated_lines": 250,
+    "dependencies": ["音频编码器", "文件管理", "权限管理"]
+  },
+  "expected_output": {
+    "rfc_sections": ["§1", "§2", "§3", "§4", "§5"],
+    "scenarios": {
+      "normal": 2,
+      "exception": 3,
+      "boundary": 2
+    },
+    "dfx_dimensions": 8
+  },
+  "acceptance_criteria": {
+    "execution_time_max": 1200,
+    "token_budget_max": 30000,
+    "user_interactions_max": 4,
+    "first_pass_rate": 0.80,
+    "quality_score_min": 85
+  },
+  "validation": {
+    "must_have": [
+      "API 接口定义（TypeScript/Java）",
+      "参数验证规则",
+      "错误码定义",
+      "权限要求说明",
+      "API 使用示例"
+    ],
+    "should_have": [
+      "API 版本管理",
+      "向后兼容性策略",
+      "开发者文档"
+    ]
+  }
+}

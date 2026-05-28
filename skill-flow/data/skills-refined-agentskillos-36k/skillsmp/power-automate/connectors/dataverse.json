@@ -1,0 +1,230 @@
+{
+  "connector": "Microsoft Dataverse",
+  "id": "shared_commondataserviceforapps",
+  "docsUrl": "https://learn.microsoft.com/en-us/connectors/commondataserviceforapps/",
+  "throttling": { "calls": 6000, "seconds": 300 },
+  "triggers": {
+    "SubscribeWebhookTrigger": {
+      "name": "When a row is added, modified or deleted",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/webhooksubscriptions",
+        "queries": {
+          "message": "required|integer|1=Create,2=Delete,3=Update,4=CreateOrUpdate,5=CreateOrDelete,6=UpdateOrDelete,7=CreateOrUpdateOrDelete",
+          "scope": "required|integer|1=User,2=BusinessUnit,3=ParentChildBusinessUnit,4=Organization"
+        }
+      },
+      "parameters": {
+        "organization": { "type": "string", "required": true, "description": "Environment unique name" },
+        "entityname": { "type": "string", "required": true, "description": "Table logical name" },
+        "filteringattributes": { "type": "string", "description": "Comma-separated column names to monitor" },
+        "filterexpression": { "type": "string", "description": "OData-style filter" }
+      }
+    },
+    "OnRecordSelected": {
+      "name": "When a row is selected",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/onrecordselected"
+      }
+    },
+    "BusinessEventsTrigger": {
+      "name": "When an action is performed",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/businesseventtriggers"
+      }
+    }
+  },
+  "actions": {
+    "CreateRecord": {
+      "name": "Add a new row",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items",
+        "body": "dynamic|Table columns as properties"
+      },
+      "parameters": {
+        "organization": { "type": "string", "required": true },
+        "entityname": { "type": "string", "required": true, "description": "Table logical name (e.g., account, contact)" }
+      }
+    },
+    "GetItem": {
+      "name": "Get a row by ID",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items/@{encodeURIComponent(recordId)}",
+        "queries": {
+          "$select": "string|Comma-separated column names",
+          "$expand": "string|OData expand for related tables"
+        }
+      },
+      "parameters": {
+        "recordId": { "type": "string", "required": true, "description": "Row GUID" }
+      }
+    },
+    "ListRecords": {
+      "name": "List rows",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items",
+        "queries": {
+          "$select": "string|Column names",
+          "$filter": "string|OData filter (e.g., statecode eq 0)",
+          "$orderby": "string|Column to sort by",
+          "$top": "integer|default:5000",
+          "$skiptoken": "string|Pagination token",
+          "fetchXml": "string|Advanced FetchXML query"
+        }
+      }
+    },
+    "UpdateOnlyRecord": {
+      "name": "Update a row",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "patch",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items/@{encodeURIComponent(recordId)}",
+        "body": "dynamic|Columns to update"
+      }
+    },
+    "UpdateRecord": {
+      "name": "Upsert a row",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "patch",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/upsertitems/@{encodeURIComponent(recordId)}",
+        "body": "dynamic|Creates if not exists, updates if exists"
+      }
+    },
+    "DeleteRecord": {
+      "name": "Delete a row",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "delete",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items/@{encodeURIComponent(recordId)}"
+      }
+    },
+    "AssociateEntities": {
+      "name": "Relate rows",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items/@{encodeURIComponent(recordId)}/associations/@{encodeURIComponent(relationshipName)}",
+        "body": { "@odata.id": "required|string|OData ID of related row" }
+      },
+      "parameters": {
+        "relationshipName": { "type": "string", "required": true, "description": "Relationship schema name" }
+      }
+    },
+    "DisassociateEntities": {
+      "name": "Unrelate rows",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "delete",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items/@{encodeURIComponent(recordId)}/associations/@{encodeURIComponent(relationshipName)}/@{encodeURIComponent(relatedRecordId)}"
+      }
+    },
+    "PerformBoundAction": {
+      "name": "Perform a bound action",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items/@{encodeURIComponent(recordId)}/actions/@{encodeURIComponent(actionName)}",
+        "body": "dynamic|Action parameters"
+      },
+      "parameters": {
+        "actionName": { "type": "string", "required": true, "description": "Action logical name" }
+      }
+    },
+    "PerformUnboundAction": {
+      "name": "Perform an unbound action",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/actions/@{encodeURIComponent(actionName)}",
+        "body": "dynamic|Action parameters"
+      }
+    },
+    "UpdateEntityFileImageFieldContent": {
+      "name": "Upload a file or image",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "patch",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items/@{encodeURIComponent(recordId)}/fields/@{encodeURIComponent(fieldName)}/$value",
+        "body": "binary|File content",
+        "headers": { "x-ms-file-name": "required|string|filename.ext" }
+      }
+    },
+    "GetEntityFileImageFieldContent": {
+      "name": "Download a file or image",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/tables/@{encodeURIComponent(entityname)}/items/@{encodeURIComponent(recordId)}/fields/@{encodeURIComponent(fieldName)}/$value",
+        "queries": { "size": "string|full or thumbnail" }
+      }
+    },
+    "GetRelevantRows": {
+      "name": "Search rows",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_commondataserviceforapps']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent(organization))}/relevantrows",
+        "queries": {
+          "search": "required|string|Search term",
+          "searchtype": "string|simple or full",
+          "top": "integer|default:50",
+          "entities": "string|Comma-separated table names"
+        }
+      }
+    }
+  },
+  "connectionReference": {
+    "shared_commondataserviceforapps": {
+      "connectionName": "",
+      "source": "Invoker",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+      "tier": "NotSpecified"
+    }
+  },
+  "commonTables": {
+    "account": "Organizations/companies",
+    "contact": "Individual people",
+    "lead": "Potential customers",
+    "opportunity": "Sales opportunities",
+    "task": "Tasks and to-dos",
+    "appointment": "Scheduled meetings",
+    "email": "Email activities",
+    "phonecall": "Phone call activities",
+    "note": "Notes and annotations"
+  },
+  "outputSchemas": {
+    "row": {
+      "recordid": "guid",
+      "createdon": "datetime",
+      "modifiedon": "datetime",
+      "ownerid": { "type": "lookup", "entity": "systemuser" },
+      "statecode": "integer",
+      "statuscode": "integer"
+    }
+  }
+}

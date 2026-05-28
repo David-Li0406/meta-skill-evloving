@@ -1,0 +1,227 @@
+# Vue Components
+
+Patterns for Vue 3 components using Composition API with `<script setup>`.
+
+## Quick Reference
+
+| Pattern               | Syntax                                                          |
+| --------------------- | --------------------------------------------------------------- |
+| Props (destructured)  | `const { name = 'default' } = defineProps<{ name?: string }>()` |
+| Props (template-only) | `defineProps<{ name: string }>()`                               |
+| Emits                 | `const emit = defineEmits<{ click: [id: number] }>()`           |
+| Two-way binding       | `const model = defineModel<string>()`                           |
+| Slots shorthand       | `<template #header>` not `<template v-slot:header>`             |
+
+## Naming
+
+**Files:** PascalCase (`UserProfile.vue`) OR kebab-case (`user-profile.vue`) - be consistent
+
+**Component names in code:** Always PascalCase
+
+**Composition:** General → Specific: `SearchButtonClear.vue` not `ClearSearchButton.vue`
+
+## Props
+
+**Destructure with defaults (Vue 3.5+)** when used in script or need defaults:
+
+```ts
+const { count = 0, message = 'Hello' } = defineProps<{
+  count?: number
+  message?: string
+  required: boolean
+}>()
+
+// Use directly - maintains reactivity
+console.log(count + 1)
+
+// ⚠️ When passing to watchers/functions, wrap in getter:
+watch(() => count, (newVal) => { ... }) // ✅ Correct
+watch(count, (newVal) => { ... })        // ❌ Won't work
+```
+
+**Non-destructured** only if props ONLY used in template:
+
+```ts
+defineProps<{ count: number }>()
+// Template: {{ count }}
+```
+
+**Same-name shorthand (Vue 3.4+):** `:count` instead of `:count="count"`
+
+```vue
+<MyComponent :count :user :items />
+<!-- Same as: :count="count" :user="user" :items="items" -->
+```
+
+[Reactive destructuring docs](https://vuejs.org/guide/components/props#reactive-props-destructure)
+
+## Emits
+
+Type-safe event definitions:
+
+```ts
+const emit = defineEmits<{
+  update: [id: number, value: string] // multiple args
+  close: [] // no args
+}>()
+
+// Usage
+emit('update', 123, 'new value')
+emit('close')
+```
+
+**Template syntax:** kebab-case (`@update-item`) vs camelCase in script (`updateItem`)
+
+## Slots
+
+**Always use shorthand:** `<template #header>` not `<template v-slot:header>`
+
+**Always explicit `<template>` tags** for all slots
+
+```vue
+<template>
+  <Card>
+    <template #header>
+      <h2>Title</h2>
+    </template>
+    <template #default>
+      Content
+    </template>
+  </Card>
+</template>
+```
+
+## defineModel() - Two-Way Binding
+
+Replaces manual `modelValue` prop + `update:modelValue` emit.
+
+### Basic
+
+```vue
+<script setup lang="ts">
+const title = defineModel<string>()
+</script>
+
+<template>
+  <input v-model="title">
+</template>
+```
+
+### With Options
+
+```vue
+<script setup lang="ts">
+const [title, modifiers] = defineModel<string>({
+  default: 'default value',
+  required: true,
+  get: (value) => value.trim(),
+  set: (value) => {
+    if (modifiers.capitalize) {
+      return value.charAt(0).toUpperCase() + value.slice(1)
+    }
+    return value
+  },
+})
+</script>
+```
+
+**⚠️ Warning:** When using `default` without parent providing a value, parent and child can de-sync (parent `undefined`, child has default). Always provide matching defaults in parent or make prop required.
+
+### Multiple Models
+
+Default assumes `modelValue` prop. For multiple bindings, use explicit names:
+
+```vue
+<script setup lang="ts">
+const firstName = defineModel<string>('firstName')
+const age = defineModel<number>('age')
+</script>
+
+<!-- Usage -->
+<UserForm v-model:first-name="user.firstName" v-model:age="user.age" />
+```
+
+[v-model modifiers docs](https://vuejs.org/guide/components/v-model#handling-v-model-modifiers)
+
+## Reusable Templates
+
+For typed, scoped template snippets within a component:
+
+```vue
+<script setup lang="ts">
+import { createReusableTemplate } from '@vueuse/core'
+
+const [DefineItem, UseItem] = createReusableTemplate<{
+  item: SearchItem
+  icon: string
+  color?: 'red' | 'green' | 'blue'
+}>()
+</script>
+
+<template>
+  <DefineItem v-slot="{ item, icon, color }">
+    <div :class="color">
+      <Icon :name="icon" />
+      {{ item.name }}
+    </div>
+  </DefineItem>
+
+  <!-- Reuse multiple times -->
+  <UseItem v-for="item in items" :key="item.id" :item :icon="getIcon(item)" />
+</template>
+```
+
+## UnoCSS Attributify
+
+Attributify mode lets you group utilities: `text="sm white center"` instead of `class="text-sm text-white text-center"`.
+
+### When Attributify is Required
+
+**Special characters** (`%`, `/`) don't work in class syntax:
+
+```vue
+<!-- ❌ Wrong - special chars break class syntax -->
+<div class="translate-50% bg-white/10" />
+
+<!-- ✅ Correct - use attributify -->
+<div translate="50%" bg="white/10" />
+```
+
+### `un-` Prefix for Conflicts
+
+Some attributes conflict with HTML properties. Use `un-` prefix:
+
+```vue
+<!-- ❌ Wrong - changes <a> inner text, not color -->
+<a text="red">Link</a>
+
+<!-- ✅ Correct - un- prefix targets UnoCSS -->
+<a un-text="red">Link</a>
+```
+
+Common conflicts requiring `un-` prefix:
+
+- `<a text="...">` → `<a un-text="...">`
+- `<svg fill="...">` → `<svg un-fill="...">` (when using variants like `un-fill="hover:blue"`)
+
+## Common Mistakes
+
+**Using `const props =` with destructured values:**
+
+```ts
+// ❌ Wrong
+const props = defineProps<{ count: number }>()
+const { count } = props // Loses reactivity
+```
+
+**Forgetting TypeScript types:**
+
+```ts
+// ❌ Wrong
+const emit = defineEmits(['update'])
+
+// ✅ Correct
+const emit = defineEmits<{ update: [id: number] }>()
+```
+
+**Components >300 lines:** Split into smaller components or extract logic to composables

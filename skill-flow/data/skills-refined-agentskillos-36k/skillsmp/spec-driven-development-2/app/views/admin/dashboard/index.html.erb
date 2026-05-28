@@ -1,0 +1,106 @@
+<div class="dashboard">
+  <h1>Admin Dashboard</h1>
+  <p class="welcome-message">Welcome to the PromiseKits admin dashboard!</p>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>Total Orders</h3>
+      <div class="stat-number"><%= @total_orders %></div>
+    </div>
+
+    <div class="stat-card">
+      <h3>Total Coupons</h3>
+      <div class="stat-number"><%= @total_coupons %></div>
+    </div>
+
+    <div class="stat-card">
+      <h3>Unused Coupons</h3>
+      <div class="stat-number"><%= @unused_coupons %></div>
+    </div>
+  </div>
+
+  <div class="quick-links">
+    <h2>Quick Links</h2>
+    <ul>
+      <li><%= link_to "Manage Coupon Codes", admin_coupon_codes_path if defined?(admin_coupon_codes_path) %></li>
+      <li><%= link_to "View Orders", admin_orders_path if defined?(admin_orders_path) %></li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  .dashboard {
+    max-width: 1200px;
+  }
+
+  .dashboard h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+
+  .welcome-message {
+    color: #7f8c8d;
+    margin-bottom: 2rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .stat-card h3 {
+    margin: 0 0 1rem 0;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+  }
+
+  .quick-links {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .quick-links h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 1.25rem;
+  }
+
+  .quick-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .quick-links li {
+    margin-bottom: 0.75rem;
+  }
+
+  .quick-links a {
+    color: #4a90e2;
+    text-decoration: none;
+    font-size: 1rem;
+  }
+
+  .quick-links a:hover {
+    text-decoration: underline;
+  }
+</style>

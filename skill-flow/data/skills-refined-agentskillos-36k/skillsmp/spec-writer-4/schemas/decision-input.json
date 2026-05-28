@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Decision Input Schema",
+  "description": "Schema for log-decision.py JSON input. Accepts complex decision data avoiding pipe-separated encoding issues.",
+  "type": "object",
+  "required": ["title", "context"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Short title for the decision",
+      "examples": ["Use JWT authentication", "Choose PostgreSQL over MySQL"]
+    },
+    "context": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Context and background for why this decision is needed",
+      "examples": ["Need secure authentication mechanism for API endpoints"]
+    },
+    "decision": {
+      "type": "string",
+      "description": "The decision that was made (optional - can be added later)",
+      "examples": ["Use JWT tokens with RS256 signing"]
+    },
+    "options_considered": {
+      "description": "Options that were considered. Can be a single string or array of strings.",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Single option as comma-separated string",
+          "examples": ["JWT, OAuth2, Session cookies"]
+        },
+        {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Array of option strings",
+          "examples": [["JWT", "OAuth2", "Session cookies"]]
+        }
+      ]
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Reasoning behind the decision",
+      "examples": ["JWT provides stateless auth, easier to scale"]
+    },
+    "implications": {
+      "type": "string",
+      "description": "Impact and consequences of the decision",
+      "examples": ["Must handle token refresh, key rotation complexity"]
+    },
+    "stories": {
+      "description": "Related story numbers. Can be single story, comma-separated string, or array.",
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Single story number",
+          "examples": [1, 3, 5]
+        },
+        {
+          "type": "string",
+          "pattern": "^\\d+(,\\s*\\d+)*$",
+          "description": "Comma-separated story numbers",
+          "examples": ["1, 3", "5, 7, 9"]
+        },
+        {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "description": "Array of story numbers",
+          "examples": [[1, 3], [5, 7, 9]]
+        }
+      ]
+    },
+    "questions": {
+      "description": "Related question IDs. Can be single ID, comma-separated string, or array.",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^Q-?\\d+$",
+          "description": "Single question ID",
+          "examples": ["Q12", "Q-15"]
+        },
+        {
+          "type": "string",
+          "pattern": "^Q-?\\d+(,\\s*Q-?\\d+)*$",
+          "description": "Comma-separated question IDs",
+          "examples": ["Q12, Q15", "Q-1, Q-5"]
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^Q-?\\d+$"
+          },
+          "description": "Array of question IDs",
+          "examples": [["Q12", "Q15"], ["Q1", "Q5"]]
+        }
+      ]
+    },
+    "tags": {
+      "type": "string",
+      "description": "Tags for categorization (comma-separated)",
+      "examples": ["security, authentication", "database, performance"]
+    }
+  },
+  "examples": [
+    {
+      "title": "Use JWT authentication",
+      "context": "Need secure authentication for API endpoints",
+      "decision": "Implement JWT with RS256 signing",
+      "options_considered": ["JWT", "OAuth2", "Session cookies"],
+      "rationale": "JWT provides stateless auth, easier to scale",
+      "implications": "Must handle token refresh and key rotation",
+      "stories": [1, 3],
+      "questions": ["Q12", "Q15"],
+      "tags": "security, authentication"
+    },
+    {
+      "title": "Choose database system",
+      "context": "Need to select primary database for application",
+      "options_considered": "PostgreSQL, MySQL, MongoDB",
+      "stories": "1, 2, 3",
+      "questions": "Q5, Q8"
+    }
+  ]
+}

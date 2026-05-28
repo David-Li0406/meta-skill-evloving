@@ -1,0 +1,96 @@
+# Human Extractor Skill
+
+GPU-accelerated pipeline for detecting, tracking, and classifying humans in dashcam footage.
+
+## Quick Start
+
+```
+Use the human-extractor skill to process Park_R videos from October 6, 2025
+```
+
+## What This Skill Does
+
+Analyzes dashcam MP4 videos to:
+1. **Detect** all humans using YOLOv8 person detection
+2. **Track** individuals across frames using ByteTrack
+3. **Classify** (optional) head covering detection with CLIP
+4. **Extract** tight crops of each person
+5. **Index** all detections in a global CSV for searchability
+
+## Key Features
+
+- **GPU-Optimized:** NVDEC hardware decoding + batched inference (80-90% GPU utilization)
+- **Unified Output:** All crops in one directory with self-describing filenames
+- **Comprehensive Index:** Global INDEX.csv with detection metadata
+- **CLIP Filtering:** Optional classification for head-covered individuals
+- **Deduplication:** Smart filtering to keep only unique, high-quality detections
+- **Resume-Safe:** Idempotent operations allow interrupted runs to resume
+
+## Performance
+
+- **Throughput:** 3-4 videos/min (RTX 4080, parking videos)
+- **GPU Utilization:** 80-90%
+- **VRAM Usage:** 6-10 GB (YOLO=64, CLIP=384)
+
+## Architecture
+
+```
+MP4 → NVDEC (GPU) → YOLOv8 Detection → ByteTrack → CLIP (optional) → Crops + INDEX.csv
+```
+
+## Requirements
+
+- **Python:** 3.10+
+- **GPU:** NVIDIA with CUDA 11.8+
+- **VRAM:** 8GB minimum, 16GB recommended
+- **Storage:** NVMe SSD recommended for I/O
+- **Project:** G:\My Drive\PROJECTS\APPS\Human_Detection\
+
+## Installation
+
+```bash
+cd "G:\My Drive\PROJECTS\APPS\Human_Detection"
+pip install -r requirements.txt
+```
+
+## Files in This Skill
+
+- **SKILL.md** - Complete skill specification for Claude
+- **README.md** - This file
+- **SKILL_MANIFEST.md** - File inventory and descriptions
+- **scripts/** - Wrapper scripts for easy invocation
+- **assets/** - Configuration templates and examples
+- **references/** - Technical documentation
+
+## Example Outputs
+
+**Crop Filename:**
+```
+20251006__20251006142644_070785B__t15234__f365__trk017__x1014y46w266h659__c85__v1.webp
+```
+
+Decoded:
+- Date: 2025-10-06
+- Video: 20251006142644_070785B.MP4
+- Timestamp: 15.234 seconds
+- Frame: 365
+- Track: 17
+- BBox: (1014, 46, 266, 659)
+- CLIP confidence: 85%
+
+## Support
+
+See `SKILL.md` for complete documentation including:
+- Detailed parameter reference
+- Troubleshooting guide
+- Performance tuning
+- Error handling
+
+## Related Skills
+
+- `gps-timeline-analyzer` - Analyze GPS data from dashcam overlays
+- `audio-transcription` - Extract and transcribe audio from videos
+
+## Version
+
+v1.0 - Initial release

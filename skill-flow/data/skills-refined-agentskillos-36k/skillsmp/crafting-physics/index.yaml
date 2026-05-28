@@ -1,0 +1,304 @@
+# Crafting Physics - RLM Routing Configuration
+# Determines which mode and fragments to load based on context
+
+name: "crafting-physics"
+version: "2.0.0"
+model: "sonnet"
+color: "purple"
+
+description: |
+  Apply design physics to any UX-affecting change. Three layers:
+  Behavioral + Animation + Material = Feel. Mode-based loading
+  reduces context from 32k to ~3-5k tokens per invocation.
+
+triggers:
+  - "/craft"
+  - "create component"
+  - "build a button"
+  - "generate UI"
+  - "craft a"
+
+examples:
+  - input: "/craft \"claim button\""
+    description: "Generate financial component with full physics"
+  - input: "/craft \"glassmorphism card with spring animation\""
+    description: "Material + animation specified"
+  - input: "/craft \"improve light mode readability\""
+    description: "Refine existing configuration"
+
+inputs:
+  - name: description
+    type: string
+    required: true
+    description: "What to craft — new, refine, or polish"
+  - name: url
+    type: string
+    required: false
+    description: "URL for visual verification after generation"
+
+outputs:
+  - path: "src/components/*.tsx"
+    description: "Generated component"
+  - path: "grimoires/sigil/taste.md"
+    description: "Updated taste signals"
+
+# Entry point
+entry: SKILL.md
+
+# Mode definitions with trigger conditions
+modes:
+  chisel:
+    path: modes/chisel.md
+    triggers:
+      - default: true
+      - keywords:
+          - "component"
+          - "button"
+          - "modal"
+          - "form"
+          - "card"
+          - "input"
+    estimated_tokens: 2500
+    description: Single-component generation/refinement
+
+  hammer:
+    path: modes/hammer.md
+    triggers:
+      - keywords:
+          - "build"
+          - "feature"
+          - "implement"
+          - "architecture"
+          - "system"
+          - "full-stack"
+      - scope_indicators:
+          - "multiple files"
+          - "several components"
+          - "across the codebase"
+      - domain_count: ">= 2"
+    estimated_tokens: 4000
+    description: Multi-file features with Loa orchestration
+    requires_loa: true
+
+  debug:
+    path: modes/debug.md
+    triggers:
+      - keywords:
+          - "fix"
+          - "broken"
+          - "error"
+          - "bug"
+          - "not working"
+          - "fails"
+          - "crash"
+          - "investigate"
+      - error_context: true
+    estimated_tokens: 3600
+    description: Systematic bug investigation
+
+  explore:
+    path: modes/explore.md
+    triggers:
+      - keywords:
+          - "how does"
+          - "what is"
+          - "why does"
+          - "explain"
+          - "understand"
+          - "explore"
+      - question_format: true
+      - no_component_target: true
+    estimated_tokens: 2000
+    description: Research and codebase discovery
+
+# Fragment definitions for conditional loading
+fragments:
+  physics-table:
+    path: fragments/physics-table.md
+    description: Effect → Physics mapping table
+    tokens: 300
+    load_with:
+      - chisel
+      - debug
+
+  protected-caps:
+    path: fragments/protected-caps.md
+    description: Non-negotiable capabilities checklist
+    tokens: 400
+    load_when:
+      - effect: ["Financial", "Destructive"]
+      - mode: ["chisel", "hammer"]
+
+  feedback-loop:
+    path: fragments/feedback-loop.md
+    description: Signal collection (ACCEPT/MODIFY/REJECT)
+    tokens: 300
+    load_with:
+      - chisel
+      - hammer
+
+  detection:
+    path: fragments/detection.md
+    description: Effect detection algorithm
+    tokens: 500
+    load_when:
+      - ambiguous_effect: true
+      - mode: ["chisel", "debug"]
+
+# Effect detection configuration
+effects:
+  financial:
+    types:
+      - Currency
+      - Money
+      - Balance
+      - Wei
+      - Token
+      - BigInt
+    keywords:
+      - claim
+      - deposit
+      - withdraw
+      - transfer
+      - swap
+      - send
+      - pay
+      - purchase
+      - mint
+      - burn
+      - stake
+      - unstake
+      - bridge
+      - approve
+      - redeem
+
+  destructive:
+    keywords:
+      - delete
+      - remove
+      - destroy
+      - revoke
+      - terminate
+      - purge
+      - wipe
+      - ban
+
+  soft_delete:
+    keywords:
+      - archive
+      - hide
+      - trash
+      - dismiss
+      - snooze
+      - mute
+    context:
+      - "with undo"
+
+  standard:
+    keywords:
+      - save
+      - update
+      - edit
+      - create
+      - add
+      - like
+      - follow
+      - bookmark
+      - comment
+
+  local:
+    keywords:
+      - toggle
+      - switch
+      - expand
+      - collapse
+      - select
+      - focus
+      - show
+      - hide
+
+  navigation:
+    keywords:
+      - navigate
+      - go
+      - back
+      - forward
+      - link
+      - route
+      - next
+      - previous
+
+# Escalation rules
+escalation:
+  chisel_to_hammer:
+    conditions:
+      - "scope_grows_to_2_domains"
+      - "requires_api_changes"
+      - "multiple_dependent_components"
+    action: "suggest_escalation"
+
+  debug_to_hammer:
+    conditions:
+      - "fix_requires_architecture_changes"
+      - "root_cause_is_systemic"
+    action: "suggest_escalation"
+
+  explore_to_hammer:
+    conditions:
+      - "exploration_reveals_missing_infrastructure"
+      - "domain_boundaries_crossed_3_plus"
+    action: "suggest_escalation"
+
+# Token budget constraints
+token_budget:
+  max_per_invocation: 5500
+  target_reduction: "85%"
+  warning_threshold: 5000
+  monolith_baseline: 32000
+
+# Context files (RLM-conditional loading replaces static list)
+context_files:
+  always:
+    - path: ".claude/rules/00-sigil-core.md"
+      required: true
+    - path: ".claude/rules/rlm-core-summary.md"
+      required: true
+  conditional:
+    - path: ".claude/rules/01-sigil-physics.md"
+      load_with: ["chisel", "hammer"]
+    - path: ".claude/rules/02-sigil-detection.md"
+      load_with: ["chisel", "debug"]
+    - path: ".claude/rules/03-sigil-patterns.md"
+      load_with: ["chisel"]
+    - path: ".claude/rules/04-sigil-protected.md"
+      load_when_effect: ["Financial", "Destructive"]
+    - path: ".claude/rules/05-sigil-animation.md"
+      load_when_keyword: ["animation", "spring", "motion"]
+    - path: ".claude/rules/06-sigil-taste.md"
+      load_with: ["chisel", "hammer"]
+    - path: ".claude/rules/07-sigil-material.md"
+      load_when_keyword: ["style", "material", "surface"]
+    - path: ".claude/rules/08-sigil-lexicon.md"
+      load_when: "ambiguous_effect"
+    - path: ".claude/rules/19-sigil-data-physics.md"
+      load_when_keyword: ["envio", "indexed", "on-chain", "web3"]
+    - path: ".claude/rules/20-sigil-web3-flows.md"
+      load_when_keyword: ["stake", "claim", "approve", "swap", "bridge", "withdraw"]
+
+# State persistence paths
+state:
+  craft_state: grimoires/sigil/craft-state.md
+  taste_log: grimoires/sigil/taste.md
+  notes: grimoires/sigil/NOTES.md
+
+zones:
+  state:
+    paths:
+      - grimoires/sigil/
+    permission: read-write
+  app:
+    paths:
+      - src/
+      - app/
+      - components/
+    permission: read-write

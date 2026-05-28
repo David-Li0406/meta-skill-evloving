@@ -1,0 +1,47 @@
+# Gate: Phase 4 (Planning) -> Phase 5 (Implementation)
+# Valida que planejamento foi concluido e time esta pronto
+
+gate:
+  name: "Planning to Implementation"
+  from_phase: 4
+  to_phase: 5
+  description: "Valida que planejamento de delivery esta completo"
+
+required_artifacts:
+  - name: "Sprint Plan"
+    path: ".agentic_sdlc/projects/*/plans/*-sprint-*.md"
+    fallback_path: ".specify/plans/*-sprint-*.md"
+    description: "Plano de sprint com stories alocadas"
+
+  - name: "Tasks"
+    path: ".agentic_sdlc/projects/*/tasks/*.md"
+    fallback_path: ".specify/tasks/*.md"
+    description: "Tasks quebradas e estimadas"
+
+  - name: "Issues Created"
+    path: ".agentic_sdlc/projects/*/issue-mapping.yml"
+    fallback_path: ".claude/memory/issue-mapping.yml"
+    description: "Issues criadas no GitHub"
+
+quality_checks:
+  - check: "Tasks estimadas"
+    validation: "grep -r 'estimate:' .agentic_sdlc/projects/*/tasks/ .specify/tasks/ 2>/dev/null | head -1"
+
+  - check: "Dependencias mapeadas"
+    validation: "grep -r 'dependencies:' .agentic_sdlc/projects/*/tasks/ .specify/tasks/ 2>/dev/null | head -1"
+
+  - check: "Owners atribuidos"
+    validation: "grep -r 'assignee:' .agentic_sdlc/projects/*/tasks/ .specify/tasks/ 2>/dev/null | head -1"
+
+  - check: "Sprint capacity validada"
+    validation: "grep -r 'capacity:' .agentic_sdlc/projects/*/plans/*-sprint-* .specify/plans/*-sprint-* 2>/dev/null | head -1"
+
+human_approval:
+  required: false
+  reason: "Planning e revisado em sprint planning meeting"
+
+blockers:
+  - "Tasks nao quebradas"
+  - "Estimativas nao realizadas"
+  - "Issues nao criadas no GitHub"
+  - "Dependencias bloqueantes nao resolvidas"

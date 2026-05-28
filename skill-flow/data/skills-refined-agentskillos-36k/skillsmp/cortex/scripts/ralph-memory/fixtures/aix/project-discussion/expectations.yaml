@@ -1,0 +1,25 @@
+# Fixture: Tyler discusses building memory/context system for iMessage
+description: "Cursor session discussing memory system architecture"
+
+entities:
+  must_have:
+    - name_contains: "Tyler"
+      entity_type: Person
+
+  optional:
+    # Girlfriend might be extracted
+    - entity_type: Person
+    # Project concepts might be extracted
+    - entity_type: Project
+
+relationships:
+  optional:
+    # Tyler building/working on something
+    - source_entity_name_contains: "Tyler"
+      relation_type: BUILDING
+    - source_entity_name_contains: "Tyler"
+      relation_type: WORKING_ON
+
+episode_entity_mentions:
+  must_have:
+    - entity_name_contains: "Tyler"

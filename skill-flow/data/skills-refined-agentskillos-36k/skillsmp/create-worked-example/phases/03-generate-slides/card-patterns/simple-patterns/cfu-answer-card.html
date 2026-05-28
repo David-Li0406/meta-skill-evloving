@@ -1,0 +1,71 @@
+<!--
+  ============================================================
+  CFU + ANSWER CARDS - SAME POSITION with PPTX ANIMATION
+  ============================================================
+  Both boxes occupy the SAME position on the same slide.
+  Animation reveals them sequentially - Answer overlays CFU.
+
+  CFU (Check for Understanding): Yellow accent, appears on FIRST click
+  Answer: Green accent, appears on SECOND click (overlays CFU)
+
+  PPTX ANIMATION BEHAVIOR:
+  ========================
+  These boxes are ANIMATED in the exported PPTX/Google Slides:
+  - Both boxes start INVISIBLE when slide first displays
+  - FIRST CLICK: CFU box appears (yellow)
+  - SECOND CLICK: Answer box appears (green, overlays yellow)
+  - Answer has higher z-index to visually layer on top
+
+  Data attributes for PPTX export:
+  - data-pptx-region: "cfu-box" | "answer-box" (triggers animation)
+  - data-pptx-x, y, w, h: Position in pixels (SAME for both boxes)
+
+  POSITION VALUES (SAME for both):
+  - Both boxes: y=40, same x/w/h dimensions
+  - Answer box has z-index: 101 to layer on top of CFU (z-index: 100)
+  ============================================================
+-->
+
+<!-- CFU Box (Check for Understanding) - Yellow accent -->
+<!-- Position: top-right corner, appears on FIRST click -->
+<div data-pptx-region="cfu-box"
+     data-pptx-x="653" data-pptx-y="40"
+     data-pptx-w="280" data-pptx-h="115"
+     style="position: absolute; top: 40px; right: 20px; width: 280px; background: #fef3c7; border-radius: 8px; padding: 16px; border-left: 4px solid #f59e0b; z-index: 100;">
+  <p style="font-weight: bold; margin: 0 0 8px 0; font-size: 13px; color: #92400e;">CHECK FOR UNDERSTANDING</p>
+  <p style="margin: 0; font-size: 14px; color: #1d1d1d;">
+    {{cfu_question}}
+  </p>
+</div>
+
+<!-- Answer Box - Green accent -->
+<!-- Position: SAME as CFU, appears on SECOND click (overlays CFU) -->
+<div data-pptx-region="answer-box"
+     data-pptx-x="653" data-pptx-y="40"
+     data-pptx-w="280" data-pptx-h="115"
+     style="position: absolute; top: 40px; right: 20px; width: 280px; background: #dcfce7; border-radius: 8px; padding: 16px; border-left: 4px solid #22c55e; z-index: 101;">
+  <p style="font-weight: bold; margin: 0 0 8px 0; font-size: 13px; color: #166534;">ANSWER</p>
+  <p style="margin: 0; font-size: 14px; color: #1d1d1d;">
+    {{answer_explanation}}
+  </p>
+</div>
+
+<!--
+  ============================================================
+  HOW TO ADD CFU+ANSWER TO A STEP SLIDE (slides 4, 5, 6):
+  ============================================================
+  1. Add BOTH boxes BEFORE the closing </body> tag
+  2. Both boxes occupy the SAME position (y=40) - Answer overlays CFU
+  3. In PPTX export, boxes are ANIMATED (appear sequentially on click)
+
+  ANIMATION SEQUENCE IN PPTX:
+  - Slide displays with content visible, both boxes hidden
+  - FIRST CLICK: CFU box appears (yellow, z-index: 100)
+  - SECOND CLICK: Answer box appears (green, z-index: 101, overlays CFU)
+  - Teacher controls reveal timing during presentation
+
+  LAYERING:
+  - Both at same position (y=40)
+  - Answer has higher z-index (101 vs 100) to cover CFU when revealed
+  ============================================================
+-->

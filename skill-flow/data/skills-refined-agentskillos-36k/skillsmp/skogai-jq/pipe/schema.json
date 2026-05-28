@@ -1,0 +1,70 @@
+{
+  "name": "pipe",
+  "description": "Chain multiple transformations in sequence (pipeline operations)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "JSON object to be transformed through the pipeline"
+  },
+  "args": {
+    "steps": {
+      "type": "array",
+      "required": true,
+      "description": "Array of transformation steps. Each step is {op: 'set'|'delete', path: 'x.y.z', value: 'val' (for set only)}"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Transformed object after applying all pipeline steps in sequence"
+  },
+  "examples": [
+    {
+      "description": "Set two fields in sequence",
+      "input": {"user": {"name": "alice"}},
+      "args": {
+        "steps": [
+          {"op": "set", "path": "user.age", "value": 30},
+          {"op": "set", "path": "user.active", "value": true}
+        ]
+      },
+      "output": {"user": {"name": "alice", "age": 30, "active": true}}
+    },
+    {
+      "description": "Set then delete (order matters)",
+      "input": {"data": {"x": 1}},
+      "args": {
+        "steps": [
+          {"op": "set", "path": "data.y", "value": 2},
+          {"op": "delete", "path": "data.x"}
+        ]
+      },
+      "output": {"data": {"y": 2}}
+    },
+    {
+      "description": "Nested modifications",
+      "input": {},
+      "args": {
+        "steps": [
+          {"op": "set", "path": "a.b.c", "value": "deep"},
+          {"op": "set", "path": "a.b.d", "value": "also deep"}
+        ]
+      },
+      "output": {"a": {"b": {"c": "deep", "d": "also deep"}}}
+    },
+    {
+      "description": "Empty pipeline returns input unchanged",
+      "input": {"test": "data"},
+      "args": {"steps": []},
+      "output": {"test": "data"}
+    },
+    {
+      "description": "Single operation",
+      "input": {"old": "value"},
+      "args": {
+        "steps": [{"op": "set", "path": "new", "value": "different"}]
+      },
+      "output": {"old": "value", "new": "different"}
+    }
+  ],
+  "tags": ["pipe", "chain", "sequence", "pipeline", "compose", "meta"]
+}

@@ -1,0 +1,98 @@
+# Nodes File Column Usage Analysis (2026-01-08)
+
+## Summary
+
+**File**: merged-kg_nodes.tsv
+**Total rows**: 1,437,117
+**Total columns**: 15
+
+## Column Usage
+
+### Always/Usually Populated
+- **id** - Every row (node identifier)
+- **category** - Every row (Biolink category)
+- **name** - Most rows (node label)
+- **iri** - 81.67% (1,173,737 rows) - Full IRI/URL for ontology terms
+- **provided_by** - Most rows (source attribution)
+
+### Sometimes Populated
+- **description** - Many rows (node descriptions)
+- **xref** - Many rows (cross-references to other databases)
+- **synonym** - Many rows (alternative names)
+- **subsets** - 14.46% (207,794 rows) - Ontology subset memberships (e.g., ChEBI 3-STAR)
+- **deprecated** - 2.35% (33,803 rows) - Marks obsolete terms
+
+### NEVER Populated (Edge-specific columns)
+- **object** - 0 rows (0.00%)
+- **predicate** - 0 rows (0.00%)
+- **relation** - 0 rows (0.00%)
+- **same_as** - 0 rows (0.00%)
+- **subject** - 0 rows (0.00%)
+
+## Sample Values
+
+### deprecated (33,803 rows)
+Values: "True" (boolean)
+Examples:
+- CHEBI:665 (ChemicalEntity) - deprecated
+- EC:1.9.3.1 (MolecularActivity) - deprecated
+- EC:4.3.1.5 (MolecularActivity) - deprecated
+
+### iri (1,173,737 rows)
+Values: Full URLs/IRIs
+Examples:
+- EC:4.1.99.1 → https://enzyme.expasy.org/EC/4.1.99.1
+- CHEBI:16828 → http://purl.obolibrary.org/obo/CHEBI_16828
+- NCBITaxon:1 → http://purl.obolibrary.org/obo/NCBITaxon_1
+
+Used for: Ontology terms (CHEBI, EC, GO, NCBITaxon, ENVO, etc.)
+NOT used for: Custom kg-microbe entities (kgmicrobe.strain, mediadive.*, etc.)
+
+### subsets (207,794 rows)
+Values: Ontology subset identifiers
+Examples:
+- http://purl.obolibrary.org/obo/chebi/3_STAR (ChEBI quality rating)
+- Primarily used for CHEBI terms
+
+## Why Edge Columns Exist in Nodes File
+
+The kg-microbe Transform base class includes edge-specific columns in the node header:
+
+```python
+# From kg_microbe/transform_utils/transform.py lines 53-75
+self.node_header = [
+    ID_COLUMN,
+    CATEGORY_COLUMN,
+    NAME_COLUMN,
+    DESCRIPTION_COLUMN,
+    XREF_COLUMN,
+    PROVIDED_BY_COLUMN,
+    SYNONYM_COLUMN,
+    IRI_COLUMN,
+    OBJECT_COLUMN,      # ← Edge column in node header
+    PREDICATE_COLUMN,   # ← Edge column in node header
+    RELATION_COLUMN,    # ← Edge column in node header (deprecated)
+    SAME_AS_COLUMN,
+    SUBJECT_COLUMN,     # ← Edge column in node header
+    SUBSETS_COLUMN,
+]
+```
+
+These columns are **never populated** in practice. This is a design quirk of the custom Transform base class, not standard KGX practice.
+
+## Recommendations
+
+1. **Remove unused columns** from node header (object, predicate, relation, subject, same_as)
+   - Reduces file size
+   - Avoids confusion
+   - Aligns with standard KGX format
+
+2. **deprecated column** should be boolean (true/false), not string "True"
+   - Current: stores string "True"
+   - Standard: should be proper boolean
+
+3. **iri column** should be renamed to **IRI** (uppercase) per Biolink conventions
+
+4. **subsets column** - verify if URLs are correct format vs compact CURIEs
+   - Current: http://purl.obolibrary.org/obo/chebi/3_STAR
+   - Alternative: chebi:3_STAR (more compact)

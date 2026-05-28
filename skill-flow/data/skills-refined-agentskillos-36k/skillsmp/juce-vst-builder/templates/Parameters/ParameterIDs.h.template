@@ -1,0 +1,160 @@
+#pragma once
+
+#include <juce_core/juce_core.h>
+
+/**
+ * ParameterIDs
+ *
+ * Central definition of all parameter IDs used in the plugin.
+ * Using inline const ensures single definition across translation units.
+ */
+namespace ParameterIDs
+{
+    //==========================================================================
+    // Master Controls
+    //==========================================================================
+    inline const juce::String masterVolume { "masterVolume" };
+    inline const juce::String masterPan { "masterPan" };
+    inline const juce::String bypass { "bypass" };
+
+    //==========================================================================
+    // Oscillator Parameters (example for synth)
+    //==========================================================================
+    inline const juce::String oscWaveform { "oscWaveform" };
+    inline const juce::String oscTune { "oscTune" };
+    inline const juce::String oscFineTune { "oscFineTune" };
+    inline const juce::String oscLevel { "oscLevel" };
+
+    // Second oscillator (if applicable)
+    inline const juce::String osc2Waveform { "osc2Waveform" };
+    inline const juce::String osc2Tune { "osc2Tune" };
+    inline const juce::String osc2Detune { "osc2Detune" };
+    inline const juce::String osc2Level { "osc2Level" };
+
+    //==========================================================================
+    // Filter Parameters
+    //==========================================================================
+    inline const juce::String filterCutoff { "filterCutoff" };
+    inline const juce::String filterResonance { "filterResonance" };
+    inline const juce::String filterType { "filterType" };
+    inline const juce::String filterDrive { "filterDrive" };
+
+    //==========================================================================
+    // Envelope Parameters (ADSR)
+    //==========================================================================
+    inline const juce::String envAttack { "envAttack" };
+    inline const juce::String envDecay { "envDecay" };
+    inline const juce::String envSustain { "envSustain" };
+    inline const juce::String envRelease { "envRelease" };
+
+    // Filter envelope
+    inline const juce::String filterEnvAmount { "filterEnvAmount" };
+    inline const juce::String filterEnvAttack { "filterEnvAttack" };
+    inline const juce::String filterEnvDecay { "filterEnvDecay" };
+    inline const juce::String filterEnvSustain { "filterEnvSustain" };
+    inline const juce::String filterEnvRelease { "filterEnvRelease" };
+
+    //==========================================================================
+    // LFO Parameters
+    //==========================================================================
+    inline const juce::String lfoRate { "lfoRate" };
+    inline const juce::String lfoDepth { "lfoDepth" };
+    inline const juce::String lfoShape { "lfoShape" };
+    inline const juce::String lfoSync { "lfoSync" };
+    inline const juce::String lfoTarget { "lfoTarget" };
+
+    //==========================================================================
+    // Effects Parameters
+    //==========================================================================
+
+    // Reverb
+    inline const juce::String reverbMix { "reverbMix" };
+    inline const juce::String reverbSize { "reverbSize" };
+    inline const juce::String reverbDecay { "reverbDecay" };
+    inline const juce::String reverbDamping { "reverbDamping" };
+    inline const juce::String reverbWidth { "reverbWidth" };
+
+    // Delay
+    inline const juce::String delayTime { "delayTime" };
+    inline const juce::String delayFeedback { "delayFeedback" };
+    inline const juce::String delayMix { "delayMix" };
+    inline const juce::String delaySync { "delaySync" };
+
+    // Distortion/Saturation
+    inline const juce::String driveAmount { "driveAmount" };
+    inline const juce::String driveType { "driveType" };
+    inline const juce::String driveMix { "driveMix" };
+
+    // Stereo Width
+    inline const juce::String stereoWidth { "stereoWidth" };
+
+} // namespace ParameterIDs
+
+//==============================================================================
+/**
+ * Enumerations for choice parameters
+ */
+namespace WaveformTypes
+{
+    enum Type
+    {
+        Sine = 0,
+        Triangle,
+        Saw,
+        Square,
+        Pulse,
+        Noise
+    };
+
+    inline const juce::StringArray names {
+        "Sine", "Triangle", "Saw", "Square", "Pulse", "Noise"
+    };
+}
+
+namespace FilterTypes
+{
+    enum Type
+    {
+        LowPass = 0,
+        HighPass,
+        BandPass,
+        Notch
+    };
+
+    inline const juce::StringArray names {
+        "Low Pass", "High Pass", "Band Pass", "Notch"
+    };
+}
+
+namespace LFOShapes
+{
+    enum Type
+    {
+        Sine = 0,
+        Triangle,
+        Square,
+        SawUp,
+        SawDown,
+        Random
+    };
+
+    inline const juce::StringArray names {
+        "Sine", "Triangle", "Square", "Saw Up", "Saw Down", "Random"
+    };
+}
+
+namespace LFOTargets
+{
+    enum Type
+    {
+        None = 0,
+        Pitch,
+        Filter,
+        Amplitude,
+        Pan
+    };
+
+    inline const juce::StringArray names {
+        "None", "Pitch", "Filter", "Amplitude", "Pan"
+    };
+}

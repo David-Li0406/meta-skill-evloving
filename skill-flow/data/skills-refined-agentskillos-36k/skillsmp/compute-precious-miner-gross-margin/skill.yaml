@@ -1,0 +1,208 @@
+# 前端展示專用（元資料從 manifest.json 讀取）
+displayName: 計算貴金屬礦業毛利率
+emoji: "⛏️"
+authorUrl: https://github.com/fatfingererr/macro-skills
+
+tools:
+  - claude-code
+
+featured: true
+installCount: 0
+
+testQuestions:
+  - question: '計算目前黃金礦業的毛利率代理值，並判斷是否處於歷史極端區間'
+    expectedResult: |
+      輸出主要黃金礦業（NEM、GOLD、AEM 等）的：
+      - 當前毛利率代理值（如 50%）
+      - 歷史分位數（如 78 百分位）
+      - 區間標記（high_margin）
+      - 驅動拆解（價格 vs 成本）
+  - question: '比較白銀礦業 CDE、HL、AG 的 AISC 成本結構'
+    expectedResult: |
+      輸出各礦業的：
+      - 最新季度 AISC（USD/oz）
+      - 對應的毛利率代理值
+      - 產量加權後的籃子毛利率
+  - question: '當毛利率處於歷史 90 百分位以上時，礦業股的前瞻報酬如何？'
+    expectedResult: |
+      輸出事件研究結果：
+      - 極端高毛利後 3/6/12 個月的平均報酬
+      - 風險提示（資本開支週期、均值回歸）
+
+qualityScore:
+  overall: 82
+  badge: 高級
+  evaluatedAt: "2026-01-23"
+
+  metrics:
+    problemFit: 85
+    correctness: 84
+    dataGovernance: 78
+    robustness: 78
+    maintainability: 82
+    usability: 85
+
+  metricDetails:
+    problemFit:
+      score: 85
+      strengths:
+        - SKILL.md 有清晰一句話目標與成功準則
+        - workflows/ 覆蓋分析、數據研究、訊號生成三路徑
+        - input-schema.md 參數定義完整含預設值
+      improvements:
+        - 可增加不適用情境說明（如串流公司）
+
+    correctness:
+      score: 84
+      strengths:
+        - methodology.md 有完整公式推導與成本口徑層次
+        - scripts/margin_calculator.py 與方法論吻合
+        - examples/sample-output.json 提供 golden case
+      improvements:
+        - 可增加多個邊界案例（極端成本、缺值情境）
+
+    dataGovernance:
+      score: 78
+      strengths:
+        - data-sources.md 列出金價/AISC/產量來源
+        - workflows/data-research.md 有爬蟲設計指引
+      improvements:
+        - 缺少 fallback 替代方案文檔
+        - 可增加 cross-validate.md 交叉驗證流程
+
+    robustness:
+      score: 78
+      strengths:
+        - pitfalls 區段詳列常見陷阱與後果
+        - 有成本滯後、口徑差異等風險提示
+      improvements:
+        - 可增加 failure-modes.md 明確降級策略
+        - scripts 可加強缺值處理說明
+
+    maintainability:
+      score: 82
+      strengths:
+        - manifest.json 有 semver 版本
+        - templates/ 輸出結構穩定
+        - 目錄結構清晰無重複文件
+      improvements:
+        - 參數可更集中管理（如 CONFIG 區）
+
+    usability:
+      score: 85
+      strengths:
+        - output-markdown.md 有 TL;DR 與後續建議
+        - FAQ 詳細解答 AISC/成本/極端毛利問題
+        - about 區段有使用場景與預設籃子
+      improvements:
+        - 可增加 historical-episodes.md 歷史對照
+
+  details: |
+    **任務適配度（85/100）**
+    - SKILL.md 有清晰一句話目標與成功準則
+    - workflows/ 覆蓋分析、數據研究、訊號生成
+    - 待改進：增加不適用情境說明
+
+    **正確性（84/100）**
+    - methodology.md 有完整公式與成本口徑層次
+    - 有 sample-output.json 作為 golden case
+    - 待改進：增加邊界案例
+
+    **資料治理（78/100）**
+    - data-sources.md 列出完整來源
+    - 待改進：增加 fallback 與交叉驗證
+
+    **穩健性（78/100）**
+    - pitfalls 區段詳列常見陷阱
+    - 待改進：增加 failure-modes.md
+
+    **可維護性（82/100）**
+    - manifest.json 有版本控制
+    - 待改進：參數集中管理
+
+    **輸出可用性（85/100）**
+    - FAQ 完整、有使用場景說明
+    - 待改進：增加歷史對照文檔
+
+  upgradeNotes:
+    targetBadge: 頂級
+    requirements:
+      - metric: dataGovernance
+        currentScore: 78
+        targetScore: 85
+        suggestion: 增加 cross-validate.md 與 fallback 來源
+      - metric: robustness
+        currentScore: 78
+        targetScore: 85
+        suggestion: 增加 failure-modes.md 與降級策略
+      - metric: usability
+        currentScore: 85
+        targetScore: 90
+        suggestion: 增加 historical-episodes.md 歷史對照
+
+bestPractices:
+  - title: 優先使用 AISC 口徑
+    description: World Gold Council 標準化定義，跨公司可比性最佳
+  - title: 使用產量加權聚合
+    description: 更準確反映產業整體毛利結構，避免小型礦業扭曲
+  - title: 季度頻率為佳
+    description: 成本數據多為季度披露，避免過度內插造成虛假精度
+  - title: 關注驅動拆解
+    description: 區分「金屬價格漲」vs「成本下降」的毛利改善來源
+
+pitfalls:
+  - title: 混淆代理值與會計毛利率
+    description: 本模型使用 (price - AISC) / price 近似，非 GAAP 毛利率
+    consequence: 與公司財報數字不一致，造成誤解
+  - title: 忽略副產品收入
+    description: 白銀礦常有黃金/基本金屬副產品，AISC 已扣除但需理解
+    consequence: 對「純銀」成本的誤判
+  - title: 成本數據滯後
+    description: 季報披露約滯後 1-2 個月，需與即時金價配對時小心
+    consequence: 短期毛利率失真
+  - title: 極端毛利≠股價必漲
+    description: 高毛利常引發增產/併購/成本通膨，導致均值回歸
+    consequence: 做為順勢訊號時需配合其他因子
+
+faq:
+  - question: AISC 和 Cash Cost 的差別是什麼？
+    answer: |
+      - **Cash Cost (C1)**：僅含現場採掘、加工、行政，反映現金流壓力
+      - **AISC**：含 C1 + 維持資本開支 + 勘探 + 一般行政，反映持續經營成本
+      - **All-In Cost**：含 AISC + 成長資本開支，反映完整經濟成本
+
+      建議優先用 AISC，因其由 WGC 標準化定義，跨公司可比。
+
+  - question: 如何取得礦業的 AISC 數據？
+    answer: |
+      1. **投資人簡報**：多數礦業在季報簡報中會有 AISC 摘要表
+      2. **新聞稿**：季報發布的新聞稿通常含 AISC 數字
+      3. **10-Q / 10-K MD&A**：美股可從 SEC EDGAR 取得
+      4. **第三方彙整**：Mining.com、Kitco 等偶有彙整報導
+
+      本 skill 的 `workflows/data-research.md` 有詳細爬蟲指引。
+
+  - question: 毛利率處於極端高檔代表什麼？
+    answer: |
+      **極端高毛利（如 > 90 百分位）** 意味著：
+      - 短期：礦業現金流極佳，股價可能已反映
+      - 中期：資本開支週期可能啟動（擴產、併購）
+      - 長期：成本通膨壓力（工資、柴油、試劑）可能回升
+
+      建議搭配 GDX/GDXJ/SIL 相對強弱、資本開支數據做交叉驗證。
+
+about:
+  repository: https://github.com/fatfingererr/macro-skills
+  branch: main
+  additionalInfo: |
+    ## 使用場景
+
+    1. **驗證貼文說法**：當看到「目前金銀礦業毛利率很高」的說法時，可用本 skill 驗證
+    2. **事件研究**：毛利率極端時，前瞻報酬如何？
+    3. **選股因子**：將毛利率作為礦業股相對強弱的因子
+    4. **資本週期研究**：高毛利 → 資本開支 → 成本回升的循環判斷
+
+    ## 預設礦業籃子
+
+    **黃金**：NEM (Newmont), GOLD (Barrick), AEM (Agnico Eagle), FNV (Franco-Nevada), WPM (Wheaton)
+    **白銀**：CDE (Coeur), HL (Hecla), AG (First Majestic), PAAS (Pan American), MAG (MAG Silver)

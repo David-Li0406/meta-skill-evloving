@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Task Manager Dev Task List",
+  "description": "Schema for mission-based task lists generated from specification documents",
+  "type": "object",
+  "required": ["mission"],
+  "properties": {
+    "mission": {
+      "type": "object",
+      "required": ["name", "metadata", "tasks"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the mission (e.g., 'Build User Authentication System')"
+        },
+        "metadata": {
+          "type": "object",
+          "required": ["source_document", "generated_at", "version", "total_tasks", "completion_percentage"],
+          "properties": {
+            "source_document": {
+              "type": "string",
+              "description": "Path or name of the source specification document"
+            },
+            "generated_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "ISO-8601 timestamp when task list was created"
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date-time",
+              "description": "ISO-8601 timestamp of last modification"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+$",
+              "description": "Semantic version of the task list"
+            },
+            "total_tasks": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Total number of tasks in the list"
+            },
+            "completion_percentage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Percentage of tasks completed"
+            }
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "description", "status", "priority", "complexity", "acceptance_criteria", "source_requirements"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^TASK-\\d{3,}$",
+                "description": "Unique task identifier (e.g., TASK-001)"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 100,
+                "description": "Brief descriptive title"
+              },
+              "description": {
+                "type": "string",
+                "description": "Detailed description of what needs to be done"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["not_started", "in_progress", "blocked", "complete"],
+                "description": "Current task status"
+              },
+              "priority": {
+                "type": "string",
+                "enum": ["critical", "high", "medium", "low"],
+                "description": "Task priority level"
+              },
+              "complexity": {
+                "type": "string",
+                "enum": ["XS", "S", "M", "L", "XL"],
+                "description": "T-shirt size complexity estimate"
+              },
+              "dependencies": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^TASK-\\d{3,}$"
+                },
+                "default": [],
+                "description": "Task IDs that must be complete before this task can start"
+              },
+              "blocked_by": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^TASK-\\d{3,}$"
+                },
+                "default": [],
+                "description": "Tasks currently blocking this task (computed from incomplete dependencies)"
+              },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^TASK-\\d{3,}$"
+                },
+                "default": [],
+                "description": "Tasks that this task is blocking"
+              },
+              "acceptance_criteria": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "description": "Conditions that must be true when task is complete"
+              },
+              "source_requirements": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "description": "References to specification sections this task addresses"
+              },
+              "notes": {
+                "type": "string",
+                "description": "Optional additional context or implementation notes"
+              }
+            }
+          }
+        },
+        "execution_phases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["phase", "name", "tasks"],
+            "properties": {
+              "phase": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Phase number for execution ordering"
+              },
+              "name": {
+                "type": "string",
+                "description": "Descriptive name for this phase"
+              },
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^TASK-\\d{3,}$"
+                },
+                "description": "Tasks that can be executed in this phase"
+              },
+              "description": {
+                "type": "string",
+                "description": "Explanation of what this phase accomplishes"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

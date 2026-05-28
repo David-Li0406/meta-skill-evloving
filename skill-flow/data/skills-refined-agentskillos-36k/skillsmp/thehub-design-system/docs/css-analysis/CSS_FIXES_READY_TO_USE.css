@@ -1,0 +1,283 @@
+/* ============================================================
+   THEHUB CSS FIXES - EDGE-TO-EDGE MOBILE
+   Ersätt befintlig kod i assets/css/components.css
+   ============================================================ */
+
+/* ============================================================
+   FIX 1: CONTAINER SYSTEM (lägg till i tokens.css)
+   UPPDATERAD 2025: Moderna breakpoints för iPhone 15, S24, Pixel 8
+   ============================================================ */
+
+/* Lägg till EFTER rad 26 i assets/css/tokens.css */
+:root {
+  /* Container padding - mobile-first för 2025 */
+  --container-padding: 16px;  /* Modern standard (Apple HIG, Material Design 3) */
+}
+
+/* Tablet får mer andrum */
+@media (min-width: 768px) {
+  :root {
+    --container-padding: 24px;
+  }
+}
+
+/* Desktop får max padding */
+@media (min-width: 1024px) {
+  :root {
+    --container-padding: 32px;
+  }
+}
+
+/* ============================================================
+   FIX 2: EDGE-TO-EDGE CARDS (Ersätt rad 56-102 i components.css)
+   ============================================================ */
+
+/* FÖRE (TAL BORT DETTA):
+@media(max-width:767px){
+  .card, .filter-row, .filters-bar, .table-responsive,
+  .table-wrapper, .result-list, .event-row, .alert {
+    margin-left:-16px;
+    margin-right:-16px;
+    border-radius:0!important;
+    border-left:none!important;
+    border-right:none!important;
+    width:calc(100% + 32px);
+  }
+}
+*/
+
+/* EFTER (ERSÄTT MED DETTA): */
+
+/* Mobile Edge-to-Edge System - Clean & Maintainable */
+@media (max-width: 767px) {
+  /* Ensure container has correct padding */
+  .container,
+  .page-content {
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+  }
+
+  /* Cards break out to edges */
+  .card,
+  .result-card,
+  .event-card,
+  .filter-row,
+  .filters-bar,
+  .alert {
+    /* Negative margin equals container padding */
+    margin-left: calc(-1 * var(--container-padding));
+    margin-right: calc(-1 * var(--container-padding));
+    
+    /* Remove borders and radius on sides */
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    
+    /* Let it expand naturally */
+    width: auto;
+    max-width: none;
+  }
+
+  /* Tables and lists also break out */
+  .table-responsive,
+  .table-wrapper,
+  .result-list {
+    margin-left: calc(-1 * var(--container-padding));
+    margin-right: calc(-1 * var(--container-padding));
+    width: auto;
+    max-width: none;
+  }
+
+  /* Restore padding inside cards */
+  .card-header,
+  .card-body {
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+  }
+
+  /* Tables inside cards need to break out of card padding too */
+  .card .table-wrapper,
+  .card .result-list,
+  .card .table-responsive,
+  .card table {
+    /* Card body has var(--container-padding), usually 16px or 8px */
+    margin-left: calc(-1 * var(--container-padding));
+    margin-right: calc(-1 * var(--container-padding));
+    width: auto;
+  }
+
+  /* Restore cell padding in tables */
+  .card table th,
+  .card table td {
+    padding-left: var(--container-padding);
+  }
+  .card table th:last-child,
+  .card table td:last-child {
+    padding-right: var(--container-padding);
+  }
+}
+
+/* ============================================================
+   FIX 3: RESULT CARDS SPECIFIC (lägg till om result-card inte fungerar)
+   ============================================================ */
+
+/* Säkerställ att result cards alltid är full-width på mobil */
+@media (max-width: 767px) {
+  .result-list > *,
+  .result-card,
+  .event-list > *,
+  .event-row {
+    margin-left: calc(-1 * var(--container-padding));
+    margin-right: calc(-1 * var(--container-padding));
+    width: auto;
+    max-width: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  /* Om result-card har explicit padding */
+  .result-card,
+  .event-row {
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+  }
+}
+
+/* ============================================================
+   FIX 4: TA BORT GAMLA !IMPORTANT (söka & ersätt)
+   ============================================================ */
+
+/* I components.css, sök efter:
+   border-radius:0!important;
+   
+   Ersätt med:
+   border-radius: 0;
+*/
+
+/* Sök efter:
+   border-left:none!important;
+   
+   Ersätt med:
+   border-left: none;
+*/
+
+/* Sök efter:
+   border-right:none!important;
+   
+   Ersätt med:
+   border-right: none;
+*/
+
+/* ============================================================
+   FIX 5: BOX-SIZING (säkerställ detta finns i reset.css)
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   DEBUG UTILITIES (använd för att testa)
+   ============================================================ */
+
+/* Lägg till temporärt i components.css för att debugga */
+/*
+@media (max-width: 767px) {
+  .DEBUG-container {
+    outline: 2px solid blue !important;
+    position: relative;
+  }
+  .DEBUG-container::before {
+    content: 'CONTAINER padding: ' var(--container-padding);
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: blue;
+    color: white;
+    padding: 4px;
+    font-size: 10px;
+    z-index: 9999;
+  }
+
+  .DEBUG-card {
+    outline: 2px solid red !important;
+    position: relative;
+  }
+  .DEBUG-card::before {
+    content: 'CARD';
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: red;
+    color: white;
+    padding: 4px;
+    font-size: 10px;
+    z-index: 9999;
+  }
+}
+*/
+
+/* ============================================================
+   ANVÄNDNING AV DEBUG
+   ============================================================ */
+
+/*
+1. Lägg till klasserna DEBUG-container och DEBUG-card i din HTML:
+   <div class="container DEBUG-container">
+     <div class="card DEBUG-card">
+       ...
+     </div>
+   </div>
+
+2. Öppna på mobil
+3. Du bör se:
+   - Blå outline runt container med text "CONTAINER padding: 16px"
+   - Röd outline runt card med text "CARD"
+   
+4. Korten ska gå utanför blå container-outline
+5. Om de inte gör det → container-padding är fel eller card-margin är fel
+
+6. Ta bort DEBUG-klasser när du är klar
+*/
+
+/* ============================================================
+   KONSOLIDERING AV BREAKPOINTS - MODERNA 2025
+   ============================================================ */
+
+/* Standardiserade breakpoints för moderna mobiler (360-430px): */
+
+/* Mobile (alla smartphones 2024-2025) */
+@media (max-width: 767px) {
+  /* 
+   Täcker: iPhone 15 Pro (393px), S24 (360px), Pixel 8 (412px)
+   Edge-to-edge layouts, staplade element, 16px padding 
+  */
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* 2-kolumns grid, 24px padding */
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  /* Full layout med sidebar, 32px padding */
+}
+
+/* Large Desktop */
+@media (min-width: 1400px) {
+  /* Max content width, extra spacing */
+}
+
+/* ============================================================
+   TA BORT DESSA BREAKPOINTS (föråldrade från 320px-eran)
+   ============================================================ */
+
+/* TA BORT max-width: 480px  - För gammal (iPhone 5) */
+/* TA BORT max-width: 599px  - Onödig komplexitet */
+/* TA BORT max-width: 640px  - Oanvänd */
+/* TA BORT max-width: 768px  - Använd 767px istället */
+/* TA BORT max-width: 900px  - Oanvänd */

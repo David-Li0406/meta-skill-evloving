@@ -1,0 +1,62 @@
+{
+  "name": "map-transform",
+  "description": "Apply field extraction or transformation to each element in an array",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing an array at the specified path"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": false,
+      "description": "Dot-separated path to the array field (defaults to 'items')"
+    },
+    "field": {
+      "type": "string",
+      "required": false,
+      "description": "Field name to extract from each array element (defaults to '.' for identity)"
+    },
+    "operation": {
+      "type": "string",
+      "required": false,
+      "description": "Optional operation to apply: multiply, add, subtract, divide, uppercase, lowercase, tostring, tonumber"
+    },
+    "operand": {
+      "type": "string",
+      "required": false,
+      "description": "Operand for arithmetic operations (required for multiply, add, subtract, divide)"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with array elements transformed according to the specified operation"
+  },
+  "examples": [
+    {
+      "description": "Extract field from each element",
+      "input": {"items": [{"name": "alice", "age": 30}, {"name": "bob", "age": 25}]},
+      "args": {"field": "name"},
+      "output": {"items": ["alice", "bob"]}
+    },
+    {
+      "description": "Apply multiplication to prices",
+      "input": {"items": [{"price": 10}, {"price": 20}]},
+      "args": {"field": "price", "operation": "multiply", "operand": "1.1"},
+      "output": {"items": [11, 22]}
+    },
+    {
+      "description": "Convert strings to uppercase",
+      "input": {"items": [{"name": "alice"}, {"name": "bob"}]},
+      "args": {"field": "name", "operation": "uppercase"},
+      "output": {"items": ["ALICE", "BOB"]}
+    },
+    {
+      "description": "Transform with nested array path",
+      "input": {"data": {"users": [{"id": 1}, {"id": 2}]}},
+      "args": {"array_path": "data.users", "field": "id"},
+      "output": {"data": {"users": [1, 2]}}
+    }
+  ],
+  "tags": ["array", "transform", "map", "meta-transformation", "operation"]
+}

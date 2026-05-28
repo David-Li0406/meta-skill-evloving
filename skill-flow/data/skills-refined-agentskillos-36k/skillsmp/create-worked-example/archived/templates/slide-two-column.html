@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}}</title>
+  <style>
+    /* PPTX-Compatible CSS Variables */
+    :root {
+      --color-primary: #1791e8;
+      --color-primary-foreground: #ffffff;
+      --color-surface: #ffffff;
+      --color-surface-foreground: #1d1d1d;
+      --color-muted: #f5f5f5;
+      --color-muted-foreground: #737373;
+      --color-cfu: #fef3c7;
+      --color-answer: #dcfce7;
+      --color-border: #e5e7eb;
+    }
+
+    /* Layout classes required by html2pptx */
+    .row { display: flex; flex-direction: row; }
+    .col { display: flex; flex-direction: column; }
+    .fit { flex: 0 0 auto; }
+    .fill-width { flex: 1 1 auto; width: 100%; }
+    .fill-height { flex: 1 1 auto; }
+    .center { display: flex; align-items: center; justify-content: center; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+
+    /* Background classes */
+    .bg-surface { background: var(--color-surface); }
+    .bg-primary { background: var(--color-primary); }
+    .bg-muted { background: var(--color-muted); }
+
+    /* Text classes */
+    .text-surface-foreground { color: var(--color-surface-foreground); }
+    .text-primary { color: var(--color-primary); }
+    .text-muted-foreground { color: var(--color-muted-foreground); }
+
+    /* Spacing classes (4px base unit) */
+    .gap-sm { gap: 8px; }
+    .gap-md { gap: 12px; }
+    .gap-lg { gap: 20px; }
+
+    /* Border radius */
+    .rounded { border-radius: 8px; }
+    .pill { border-radius: 9999px; }
+  </style>
+</head>
+<body class="col bg-surface" style="width: 960px; height: 540px; position: relative; font-family: Arial, sans-serif; margin: 0; padding: 0; overflow: hidden;">
+
+  <!-- Title Zone: 0-120px -->
+  <div style="width: 920px; margin: 0 20px; padding-top: 16px;" class="fit">
+    <!-- Step Badge (if applicable) -->
+    <div class="row items-center gap-md" style="margin-bottom: 8px;">
+      <div data-pptx-region="badge"
+           data-pptx-x="20" data-pptx-y="16" data-pptx-w="180" data-pptx-h="35"
+           style="background: #1791e8; color: #ffffff; padding: 6px 16px; border-radius: 20px; display: inline-block;">
+        <p style="margin: 0; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">{{step_badge}}</p>
+      </div>
+    </div>
+    <!-- Main Question/Action - PROMINENT -->
+    <h1 data-pptx-region="title"
+        data-pptx-x="20" data-pptx-y="55" data-pptx-w="920" data-pptx-h="40"
+        style="margin: 0; font-size: 28px; font-weight: bold; color: #1791e8; line-height: 1.2;">{{title}}</h1>
+    <!-- Instruction Text -->
+    <p data-pptx-region="subtitle"
+       data-pptx-x="20" data-pptx-y="100" data-pptx-w="920" data-pptx-h="30"
+       style="margin-top: 8px; color: #1d1d1d; font-size: 16px; line-height: 1.4;">{{subtitle}}</p>
+  </div>
+
+  <!--
+    ============================================================
+    Content Zone: Two-column layout (40% text / 60% visual)
+    ============================================================
+    LAYOUT RULE: Text/tables on LEFT, graphs/visuals on RIGHT
+
+    Why this matters:
+    - Graphs on the right provide consistent visual anchoring
+    - Left-to-right reading flow: read problem → see visual
+    - Avoids tight vertical spacing when graph is below text
+    - PPTX export works better with side-by-side layout
+    ============================================================
+  -->
+  <div class="row gap-lg fill-height" style="padding: 20px 20px;">
+
+    <!-- LEFT Column: Text/Tables (40%) - Always contains problem text, bullets, tables -->
+    <div data-pptx-region="left-column"
+         data-pptx-x="20" data-pptx-y="140" data-pptx-w="368" data-pptx-h="370"
+         class="col" style="width: 40%;">
+      <h3 style="font-size: 15px; font-weight: bold; margin: 0 0 12px 0; color: #1d1d1d;">{{section_header}}</h3>
+      <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: #1d1d1d;">
+        <li>{{bullet_1}}</li>
+        <li>{{bullet_2}}</li>
+        <li>{{bullet_3}}</li>
+      </ul>
+    </div>
+
+    <!-- RIGHT Column: Visual (60%) - ALWAYS contains graphs/diagrams/images -->
+    <!-- RULE: Graphs go HERE (right column), NEVER below the text -->
+    <div data-pptx-region="right-column"
+         data-pptx-x="408" data-pptx-y="140" data-pptx-w="532" data-pptx-h="370"
+         class="col center" style="width: 60%;">
+      <!-- For SVG: use viewBox + fixed dimensions -->
+      <!-- <svg viewBox="0 0 420 380" style="width: 520px; height: 360px;"> -->
+      <!-- For image: use max dimensions -->
+      <img src="{{image_path}}" style="max-width: 520px; max-height: 360px; object-fit: contain;" />
+    </div>
+
+  </div>
+
+  <!-- Label Zone (top right) -->
+  <p data-pptx-region="footnote"
+     data-pptx-x="700" data-pptx-y="8" data-pptx-w="240" data-pptx-h="25"
+     style="position: absolute; top: 8px; right: 20px; font-size: 10pt; color: #666; margin: 0; text-align: right;">
+    {{footnote}}
+  </p>
+
+</body>
+</html>

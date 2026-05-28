@@ -1,0 +1,283 @@
+# Incident Postmortem - Sharp Edges
+
+## Blame Culture
+
+### **Id**
+blame-culture
+### **Summary**
+Postmortems become punishment sessions
+### **Severity**
+high
+### **Situation**
+People fear postmortems, hide information
+### **Why**
+  Leadership wants accountability.
+  "Someone must be responsible."
+  Fear drives hiding.
+  
+### **Solution**
+  ## Building Blameless Culture
+  
+  ### Signs of Blame Culture
+  
+  | Sign | Impact |
+  |------|--------|
+  | People defensive | Hide information |
+  | Naming names | Fear of error |
+  | "Who did this" | Avoid responsibility |
+  | Consequences for errors | Under-reporting |
+  | Shame in meetings | Silence |
+  
+  ### Shifting the Culture
+  
+  ```
+  LEADERSHIP ACTIONS:
+  
+  1. Model blamelessness
+     - Leaders admit their mistakes first
+     - Thank people for sharing failures
+  
+  2. Reward transparency
+     - Celebrate finding problems
+     - Promote people who surface issues
+  
+  3. Change the language
+     - "What happened" not "who"
+     - "System allowed" not "person caused"
+  ```
+  
+  ### The Just Culture Model
+  
+  | Behavior | Response |
+  |----------|----------|
+  | Human error | Console, learn |
+  | At-risk behavior | Coach, fix system |
+  | Reckless behavior | Rare, address directly |
+  
+  ### Meeting Facilitation
+  
+  | If you hear... | Redirect with... |
+  |----------------|------------------|
+  | "John broke it" | "What allowed this to happen?" |
+  | "Should have known" | "What could have surfaced this?" |
+  | "Careless" | "What pressure led to this?" |
+  | "Obviously wrong" | "What made it seem right at the time?" |
+  
+### **Symptoms**
+  - Quiet postmortem meetings
+  - Defensive responses
+  - Under-reporting incidents
+  - Fear of admitting error
+### **Detection Pattern**
+who did|their fault|should have|how could they
+
+## Postmortem Fatigue
+
+### **Id**
+postmortem-fatigue
+### **Summary**
+Too many postmortems, no action
+### **Severity**
+medium
+### **Situation**
+Team burned out on incident review
+### **Why**
+  Every small thing gets postmortem.
+  Actions don't get done.
+  Feels like bureaucracy.
+  
+### **Solution**
+  ## Sustainable Postmortem Practice
+  
+  ### When to Postmortem
+  
+  | Criteria | Postmortem? |
+  |----------|-------------|
+  | Customer impact | Yes |
+  | Data loss risk | Yes |
+  | Near miss (could have been bad) | Yes |
+  | Novel failure mode | Yes |
+  | Minor, known issue | No |
+  | Quick recovery, no impact | Maybe light |
+  
+  ### Tiered Response
+  
+  | Tier | Criteria | Response |
+  |------|----------|----------|
+  | Major | Significant impact | Full postmortem, review meeting |
+  | Minor | Limited impact | Quick doc, async review |
+  | Near miss | Caught before impact | Brief analysis, shared learning |
+  
+  ### Completing the Loop
+  
+  ```
+  THE COMPLETION PROBLEM:
+  
+  - 100 postmortems written
+  - 1000 action items created
+  - 50 action items done
+  - Same incidents keep happening
+  
+  FIX:
+  - Fewer, better actions
+  - Track completion rate
+  - Review monthly
+  - Block next postmortem if actions undone
+  ```
+  
+  ### Keeping It Fresh
+  
+  | Tactic | Why |
+  |--------|-----|
+  | Rotate facilitators | Different perspectives |
+  | Vary formats | Prevent staleness |
+  | Celebrate learnings | Positive association |
+  | Share wins | Show value of process |
+  
+### **Symptoms**
+  - Not another postmortem
+  - Actions never done
+  - Copy-paste documents
+  - Going through motions
+### **Detection Pattern**
+do we have to|waste of time|nothing changes|same as last
+
+## Shallow Root Cause
+
+### **Id**
+shallow-root-cause
+### **Summary**
+Analysis stops at obvious cause
+### **Severity**
+high
+### **Situation**
+Same types of incidents keep recurring
+### **Why**
+  Time pressure.
+  Obvious answer feels sufficient.
+  Deeper analysis is hard.
+  
+### **Solution**
+  ## Getting to Real Root Causes
+  
+  ### The Layers of Cause
+  
+  ```
+  SURFACE:
+  "Someone deployed bad code"
+  
+  DEEPER:
+  "Tests didn't catch the bug"
+  
+  DEEPER:
+  "This code path isn't tested"
+  
+  DEEPER:
+  "No requirement for test coverage"
+  
+  ROOT:
+  "Culture doesn't prioritize testing"
+  ```
+  
+  ### Signs You Stopped Too Early
+  
+  | Sign | What to do |
+  |------|------------|
+  | "Human error" is the cause | Ask why error was possible |
+  | One-word cause | Expand to system level |
+  | Could recur easily | Dig deeper |
+  | No systemic change | Find the pattern |
+  
+  ### The "Why" Continuation
+  
+  ```
+  KEEP ASKING:
+  
+  "Why was that possible?"
+  "What would have caught that?"
+  "What pressure led to that?"
+  "What system allowed that?"
+  "What would prevent next time?"
+  ```
+  
+  ### Systemic Root Causes
+  
+  | Surface Cause | System Cause |
+  |---------------|--------------|
+  | Wrong config | No validation |
+  | Missed step | No checklist |
+  | Slow response | No alerting |
+  | Wrong decision | Missing context |
+  | Time pressure | Understaffed |
+  
+### **Symptoms**
+  - Recurring incident types
+  - We fixed this before
+  - Quick postmortems
+  - Actions are band-aids
+### **Detection Pattern**
+happened again|same as before|didn't we fix|again
+
+## Action Theater
+
+### **Id**
+action-theater
+### **Summary**
+Actions look good but don't prevent recurrence
+### **Severity**
+medium
+### **Situation**
+Actions completed but incidents continue
+### **Why**
+  Actions are easy not effective.
+  No verification of effectiveness.
+  Box-checking mentality.
+  
+### **Solution**
+  ## Effective Action Items
+  
+  ### Action Quality Check
+  
+  | Question | If No |
+  |----------|-------|
+  | Does this prevent exact recurrence? | Strengthen it |
+  | Is this measurable? | Make it specific |
+  | Can we verify it worked? | Add success criteria |
+  | Will it actually get done? | Simplify |
+  
+  ### Types of Weak Actions
+  
+  | Weak | Strong |
+  |------|--------|
+  | "Improve monitoring" | "Add X alert with Y threshold" |
+  | "Be more careful" | "Add validation step that catches X" |
+  | "Review process" | "Add checklist with specific items" |
+  | "Train team" | "Runbook for X scenario" |
+  
+  ### Verification Process
+  
+  ```
+  30 DAYS AFTER COMPLETION:
+  
+  1. Did the action get done?
+  2. Is it still in place?
+  3. Has the problem recurred?
+  4. Did it create new issues?
+  5. Is it actually effective?
+  ```
+  
+  ### The Recurrence Test
+  
+  | If same incident happens | Then |
+  |--------------------------|------|
+  | Actions not done | Accountability issue |
+  | Actions done but failed | Actions were wrong |
+  | New variation | Pattern to address |
+  
+### **Symptoms**
+  - Actions done, incidents continue
+  - We did everything
+  - Band-aid solutions
+  - Checkbox mentality
+### **Detection Pattern**
+but we fixed|action was done|still happening|what went wrong

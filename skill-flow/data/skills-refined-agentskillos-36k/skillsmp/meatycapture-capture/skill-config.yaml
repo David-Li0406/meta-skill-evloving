@@ -1,0 +1,36 @@
+# MeatyCapture Skill Configuration
+# ================================
+# Configure default project for this workspace
+#
+# On first use:
+# 1. If default_project is set, use it for all commands
+# 2. If auto_detect is true, attempt to detect from context
+# 3. If detection fails, prompt user or create new project
+#
+# See ./managing-projects.md for project configuration workflows
+
+# Default project for this workspace
+# Set to the project slug that should be used when no project is specified
+# Leave empty or remove to use auto-detection
+default_project: "skillmeat"
+
+# Enable auto-detection when default_project is not set
+# Detection strategies (in order):
+# 1. MEATYCAPTURE_PROJECT environment variable
+# 2. Project name from CLAUDE.md header
+# 3. Git remote origin URL
+# 4. Current directory name
+auto_detect: true
+
+# Auto-create project if detected project doesn't exist in registry
+# When true: Creates new project with default path ~/.meatycapture/<project>/
+# When false: Prompts user to create or select existing project
+auto_create_project: true
+
+# Default path pattern for new projects
+# Supports {project} placeholder which gets replaced with project slug
+# Examples:
+#   ~/.meatycapture/{project}     - Central location (default)
+#   ./docs/request-logs           - Within project repository
+#   ~/projects/{project}/logs     - Custom projects directory
+default_path_pattern: "~/data/projects/docs/{project}"

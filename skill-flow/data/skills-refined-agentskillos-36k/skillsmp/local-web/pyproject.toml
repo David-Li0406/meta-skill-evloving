@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "networks"
+version = "0.3.0"
+description = "Cross-platform networking utilities with WSL2 support, local web access, and browser automation"
+authors = [{name = "mcarls"}]
+requires-python = ">=3.8"
+dependencies = [
+    "cross-platform",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+screenshot = [
+    "playwright>=1.40.0",
+]
+
+[project.scripts]
+networks = "networks.cli:main"
+netinfo = "networks.cli:main"
+local-web = "networks.cli:main"
+
+[tool.setuptools]
+packages = ["networks"]

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "build": {
+      "permission": {
+        "bash": {
+          "rm -rf /": "ask",
+          "rm -rf /*": "ask",
+          "rm -rf .*": "ask",
+          "dd if=* of=/dev/sd*": "ask",
+          "mkfs* /dev/*": "ask",
+          "fdisk /dev/*": "ask",
+          "parted /dev/*": "ask",
+          "mount *": "ask",
+          "umount *": "ask",
+          "chown -R /": "ask",
+          "chmod -R 777 /": "ask",
+          "iptables -F": "ask",
+          "ufw disable": "ask",
+          "systemctl stop *": "ask",
+          "systemctl disable *": "ask",
+          "shutdown *": "ask",
+          "reboot": "ask",
+          "docker system prune -a": "ask",
+          "kubectl delete namespace *": "ask",
+          "git push --force": "ask",
+          "git push -f": "ask",
+          "git reset --hard": "ask",
+          "*": "allow"
+        }
+      }
+    }
+  }
+}

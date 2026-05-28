@@ -1,0 +1,239 @@
+# Invariant Validator - GitHub Actions Workflow
+# Validates spec files against system invariants on every PR
+#
+# This workflow:
+# - Triggers on PRs that modify spec files
+# - Runs validator.sh on each changed spec
+# - Fails the PR if blocking violations are found
+# - Posts violation details as PR comments
+# - Passes with warnings (but shows them)
+
+name: Validate Specs
+
+on:
+  pull_request:
+    paths:
+      - 'specs/**/*.md'
+      - 'prp/**/*.md'
+    branches:
+      - main
+      - master
+  push:
+    paths:
+      - 'specs/**/*.md'
+      - 'prp/**/*.md'
+    branches:
+      - main
+      - master
+
+# Allow one concurrent validation per PR
+concurrency:
+  group: validate-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Spec Invariants
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for diff
+
+      - name: Make validator executable
+        run: chmod +x ./enforcement/validator.sh
+
+      - name: Find spec files to validate
+        id: find-specs
+        run: |
+          # For PRs, validate changed files; for pushes, validate all specs
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Get changed spec files
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- 'specs/**/*.md' 'prp/**/*.md' | tr '\n' ' ')
+          else
+            # Validate all spec files
+            CHANGED_FILES=$(find specs prp -name "*.md" -type f 2>/dev/null | tr '\n' ' ')
+          fi
+
+          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          echo "Found files: $CHANGED_FILES"
+
+      - name: Validate specs
+        id: validate
+        run: |
+          SPEC_FILES="${{ steps.find-specs.outputs.files }}"
+
+          if [ -z "$SPEC_FILES" ]; then
+            echo "No spec files to validate"
+            echo "result=skip" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Initialize counters
+          TOTAL_VIOLATIONS=0
+          TOTAL_WARNINGS=0
+          FAILED_FILES=""
+          REPORT=""
+
+          # Validate each file
+          for spec in $SPEC_FILES; do
+            if [ ! -f "$spec" ]; then
+              echo "::warning::File not found: $spec"
+              continue
+            fi
+
+            echo "=========================================="
+            echo "Validating: $spec"
+            echo "=========================================="
+
+            # Run validator and capture output
+            set +e
+            OUTPUT=$(./enforcement/validator.sh "$spec" 2>&1)
+            EXIT_CODE=$?
+            set -e
+
+            echo "$OUTPUT"
+
+            # Parse violations and warnings from output
+            VIOLATIONS=$(echo "$OUTPUT" | grep -c "VIOLATION:" || true)
+            WARNINGS=$(echo "$OUTPUT" | grep -c "WARNING:" || true)
+
+            TOTAL_VIOLATIONS=$((TOTAL_VIOLATIONS + VIOLATIONS))
+            TOTAL_WARNINGS=$((TOTAL_WARNINGS + WARNINGS))
+
+            if [ $EXIT_CODE -ne 0 ]; then
+              FAILED_FILES="$FAILED_FILES $spec"
+            fi
+
+            # Build report for PR comment
+            if [ $VIOLATIONS -gt 0 ] || [ $WARNINGS -gt 0 ]; then
+              REPORT="$REPORT\n### $spec\n"
+              if [ $VIOLATIONS -gt 0 ]; then
+                REPORT="$REPORT- **$VIOLATIONS violation(s)**\n"
+              fi
+              if [ $WARNINGS -gt 0 ]; then
+                REPORT="$REPORT- $WARNINGS warning(s)\n"
+              fi
+            fi
+          done
+
+          # Set outputs
+          echo "violations=$TOTAL_VIOLATIONS" >> $GITHUB_OUTPUT
+          echo "warnings=$TOTAL_WARNINGS" >> $GITHUB_OUTPUT
+          echo "failed_files=$FAILED_FILES" >> $GITHUB_OUTPUT
+
+          # Write report to file for PR comment
+          echo -e "$REPORT" > validation-report.txt
+
+          # Determine result
+          if [ $TOTAL_VIOLATIONS -gt 0 ]; then
+            echo "result=failure" >> $GITHUB_OUTPUT
+          elif [ $TOTAL_WARNINGS -gt 0 ]; then
+            echo "result=warnings" >> $GITHUB_OUTPUT
+          else
+            echo "result=success" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR (violations found)
+        if: github.event_name == 'pull_request' && steps.validate.outputs.result == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('validation-report.txt', 'utf8');
+
+            const body = `## Invariant Validation Failed
+
+            This PR contains spec files with **blocking violations** that must be fixed before merging.
+
+            | Metric | Count |
+            |--------|-------|
+            | Violations | ${{ steps.validate.outputs.violations }} |
+            | Warnings | ${{ steps.validate.outputs.warnings }} |
+
+            ### Details
+            ${report}
+
+            ### How to Fix
+
+            1. Run the validator locally: \`./enforcement/validator.sh <your-spec>.md\`
+            2. Address each violation listed above
+            3. Violations require fixes; warnings are recommendations
+            4. Push your fixes and this check will re-run
+
+            See [violation-messages.md](../blob/main/enforcement/violation-messages.md) for fix guidance.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Comment on PR (warnings only)
+        if: github.event_name == 'pull_request' && steps.validate.outputs.result == 'warnings'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('validation-report.txt', 'utf8');
+
+            const body = `## Invariant Validation Passed with Warnings
+
+            This PR can be merged, but consider addressing these warnings before production use.
+
+            | Metric | Count |
+            |--------|-------|
+            | Violations | 0 |
+            | Warnings | ${{ steps.validate.outputs.warnings }} |
+
+            ### Details
+            ${report}
+
+            Run \`./enforcement/validator.sh <spec>.md\` locally for full details.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Comment on PR (all passed)
+        if: github.event_name == 'pull_request' && steps.validate.outputs.result == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## Invariant Validation Passed
+
+            All spec files validated successfully with no violations or warnings.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Set job status
+        run: |
+          if [ "${{ steps.validate.outputs.result }}" = "failure" ]; then
+            echo "::error::Spec validation failed with ${{ steps.validate.outputs.violations }} violation(s)"
+            exit 1
+          elif [ "${{ steps.validate.outputs.result }}" = "warnings" ]; then
+            echo "::warning::Spec validation passed with ${{ steps.validate.outputs.warnings }} warning(s)"
+            exit 0
+          else
+            echo "All specs validated successfully"
+            exit 0
+          fi
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-report
+          path: validation-report.txt
+          retention-days: 7

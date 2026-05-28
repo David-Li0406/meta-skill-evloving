@@ -1,0 +1,313 @@
+# Docker Image Build Pipeline
+# Demonstrates container image building and pushing with Concourse
+#
+# Patterns covered:
+# 1. oci-build-task for building images
+# 2. Multi-stage builds
+# 3. Semantic versioning with tags
+# 4. Multi-architecture builds
+#
+# Usage:
+# fly -t target set-pipeline -p docker-build -c docker-build.yml \
+#   -v git_uri=https://github.com/org/repo.git \
+#   -v registry_repo=registry.example.com/org/app
+
+################################################
+# Reusable YAML Anchors
+################################################
+
+git-source: &git-source
+  uri: ((git_uri))
+  branch: main
+  username: ((git.username))
+  password: ((git.token))
+
+registry-source: &registry-source
+  repository: ((registry_repo))
+  username: ((registry.username))
+  password: ((registry.password))
+
+# Build log retention
+log-retention: &log-retention
+  build_log_retention:
+    days: 14
+    builds: 50
+    minimum_succeeded_builds: 1
+
+################################################
+# Resources
+################################################
+
+resources:
+# Source code
+- name: source
+  type: git
+  icon: gitlab
+  check_every: 2m
+  source:
+    <<: *git-source
+    ignore_paths:
+    - "*.md"
+    - docs/**
+
+# Base image for cache warming
+- name: base-image
+  type: registry-image
+  icon: docker
+  check_every: 24h
+  source:
+    repository: node
+    tag: 20-alpine
+
+# Release candidate image
+- name: app-image-rc
+  type: registry-image
+  icon: docker
+  source:
+    <<: *registry-source
+    tag: rc
+
+# Production image
+- name: app-image
+  type: registry-image
+  icon: docker
+  source:
+    <<: *registry-source
+
+# Version tracking
+- name: version
+  type: semver
+  icon: tag
+  source:
+    driver: git
+    uri: ((git_uri))
+    branch: version
+    file: version
+    username: ((git.username))
+    password: ((git.token))
+    initial_version: 0.1.0
+
+################################################
+# Groups
+################################################
+
+groups:
+- name: all
+  jobs: ["*"]
+- name: build
+  jobs: [build-rc]
+- name: release
+  jobs: [release-patch, release-minor, release-major]
+
+################################################
+# Jobs
+################################################
+
+jobs:
+#-----------------------------------------
+# Build Release Candidate
+#-----------------------------------------
+- name: build-rc
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      trigger: true
+    - get: base-image
+      params:
+        format: oci
+
+  - task: build-image
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/oci-build-task
+      inputs:
+      - name: source
+      - name: base-image
+      outputs:
+      - name: image
+      params:
+        CONTEXT: source
+        DOCKERFILE: source/Dockerfile
+        # Build args
+        BUILD_ARGS_FILE: source/ci/build-args.txt
+        # Use base-image as cache source
+        IMAGE_ARG_base_image: base-image/image.tar
+        # BuildKit features
+        BUILDKIT_PROGRESS: plain
+        # Cache settings
+        CACHE: true
+        CACHE_TAG: cache
+      run:
+        path: build
+
+  - put: app-image-rc
+    params:
+      image: image/image.tar
+    get_params:
+      skip_download: true
+
+#-----------------------------------------
+# Release Patch Version (0.0.X)
+#-----------------------------------------
+- name: release-patch
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [build-rc]
+    - get: app-image-rc
+      passed: [build-rc]
+      params:
+        format: oci
+    - get: version
+      params:
+        bump: patch
+
+  - load_var: version-number
+    file: version/version
+    format: trim
+
+  - put: app-image
+    params:
+      image: app-image-rc/image.tar
+      version: version/version
+      bump_aliases: true
+      additional_tags: source/ci/tags/additional-tags
+
+  - put: version
+    params:
+      file: version/version
+
+  - put: source
+    params:
+      repository: source
+      only_tag: true
+      tag_prefix: v
+      tag: version/version
+
+#-----------------------------------------
+# Release Minor Version (0.X.0)
+#-----------------------------------------
+- name: release-minor
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [build-rc]
+    - get: app-image-rc
+      passed: [build-rc]
+      params:
+        format: oci
+    - get: version
+      params:
+        bump: minor
+
+  - put: app-image
+    params:
+      image: app-image-rc/image.tar
+      version: version/version
+      bump_aliases: true
+
+  - put: version
+    params:
+      file: version/version
+
+  - put: source
+    params:
+      repository: source
+      only_tag: true
+      tag_prefix: v
+      tag: version/version
+
+#-----------------------------------------
+# Release Major Version (X.0.0)
+#-----------------------------------------
+- name: release-major
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [build-rc]
+    - get: app-image-rc
+      passed: [build-rc]
+      params:
+        format: oci
+    - get: version
+      params:
+        bump: major
+
+  - put: app-image
+    params:
+      image: app-image-rc/image.tar
+      version: version/version
+      bump_aliases: true
+
+  - put: version
+    params:
+      file: version/version
+
+  - put: source
+    params:
+      repository: source
+      only_tag: true
+      tag_prefix: v
+      tag: version/version
+
+---
+# Example Dockerfile for the pipeline
+# Store as Dockerfile in your repo root
+
+# syntax=docker/dockerfile:1.4
+
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install dependencies first (cache layer)
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy source and build
+COPY . .
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine AS production
+
+# Security: run as non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy built assets
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
+
+USER nodejs
+
+EXPOSE 3000
+
+CMD ["node", "dist/server.js"]
+
+---
+# Build args file example
+# Store as ci/build-args.txt
+
+NODE_ENV=production
+BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+---
+# Additional tags file example
+# Store as ci/tags/additional-tags
+# Whitespace-separated tags to add
+
+latest
+stable

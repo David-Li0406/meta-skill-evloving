@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+# Update all projects that depend on @mdr/lib-utils to latest version
+
+set -uo pipefail  # Removed -e to not exit on errors
+
+CYAN=$'\x1b[1m\x1b[36m'
+YELLOW=$'\x1b[33m'
+GREEN=$'\x1b[32m'
+RED=$'\x1b[31m'
+DIM=$'\x1b[2m'
+BOLD=$'\x1b[1m'
+NC=$'\x1b[0m'
+
+show_help() {
+  cat <<EOF
+
+${CYAN}NAME${NC}
+    ${BOLD}_LIB-UTILS_update-dependents${NC} - Update all lib-utils dependents to latest
+
+${CYAN}USAGE${NC}
+    ${BOLD}_LIB-UTILS_update-dependents${NC} [${YELLOW}OPTIONS${NC}]
+
+${CYAN}DESCRIPTION${NC}
+    Scans ~/mnt for all package.json files containing @mdr/lib-utils,
+    removes their bun.lockb to clear pinned commits, and runs bun install
+    to fetch the latest version from GitHub. Runs in parallel (8 jobs).
+
+    ${DIM}Handles monorepo workspaces: if a package is inside a workspace,
+    updates the workspace root instead (where bun.lockb lives).${NC}
+
+${CYAN}OPTIONS${NC}
+    ${YELLOW}--clean${NC}           Also remove node_modules (including workspace subdirs)
+    ${YELLOW}--dry-run${NC}         List projects without updating
+    ${YELLOW}--serial${NC}          Run sequentially instead of parallel
+    ${YELLOW}--help${NC}, ${YELLOW}-h${NC}       Show this help message
+
+${CYAN}EXAMPLES${NC}
+    ${DIM}# Update all dependents (parallel)${NC}
+    _LIB-UTILS_update-dependents
+
+    ${DIM}# Preview what would be updated${NC}
+    _LIB-UTILS_update-dependents --dry-run
+
+${DIM}AGENTS: MUST load \$mdr:lib-utils before editing or for context${NC}
+EOF
+}
+
+CLEAN=false
+DRY_RUN=false
+PARALLEL=true
+MAX_JOBS=8
+
+for arg in "$@"; do
+  case $arg in
+    --help|-h) show_help; exit 0 ;;
+    --clean) CLEAN=true ;;
+    --dry-run) DRY_RUN=true ;;
+    --serial) PARALLEL=false ;;
+    *) echo "Unknown option: $arg"; show_help; exit 1 ;;
+  esac
+done
+
+echo "${CYAN}Scanning ~/mnt for @mdr/lib-utils dependents...${NC}"
+
+# Find workspace root (parent with "workspaces" in package.json), or return original dir
+find_workspace_root() {
+  local dir=$1
+  local current=$dir
+  while [[ "$current" != "/" && "$current" != "$HOME" ]]; do
+    local parent
+    parent=$(dirname "$current")
+    if [[ -f "$parent/package.json" ]] && grep -q '"workspaces"' "$parent/package.json" 2>/dev/null; then
+      echo "$parent"
+      return
+    fi
+    current=$parent
+  done
+  echo "$dir"  # Not in a workspace, return original
+}
+
+# Find all package.json with lib-utils, resolve to workspace roots, deduplicate
+mapfile -t DEPENDENTS < <(
+  rg -l '@mdr/lib-utils' ~/mnt --glob '**/package.json' --glob '!**/node_modules/**' --no-ignore --no-messages | \
+  xargs -I{} dirname {} | \
+  while read -r dir; do find_workspace_root "$dir"; done | \
+  sort -u
+)
+
+if [[ ${#DEPENDENTS[@]} -eq 0 ]]; then
+  echo "${YELLOW}No dependents found.${NC}"
+  exit 0
+fi
+
+echo "Found ${GREEN}${#DEPENDENTS[@]}${NC} projects:"
+echo
+
+if $DRY_RUN; then
+  for dir in "${DEPENDENTS[@]}"; do
+    echo "  ${DIM}${dir/#$HOME/\~}${NC}"
+  done
+  echo
+  echo "${YELLOW}Dry run - no changes made.${NC}"
+  exit 0
+fi
+
+# Simple failure counter using a file
+FAIL_FILE=$(mktemp)
+echo 0 > "$FAIL_FILE"
+trap 'rm -f "$FAIL_FILE"' EXIT
+
+update_project() {
+  local dir=$1
+  local short_path="${dir/#$HOME/\~}"
+
+  cd "$dir" || { printf "  \x1b[31m✗\x1b[0m %s \x1b[2mcd failed\x1b[0m\n" "$short_path"; return 1; }
+  rm -f bun.lockb
+  if [[ "$CLEAN" == "true" ]]; then
+    rm -rf node_modules
+    # Also clean workspace subdirectory node_modules (monorepo support)
+    if [[ -f package.json ]] && grep -q '"workspaces"' package.json 2>/dev/null; then
+      for ws in $(jq -r '.workspaces[]? // empty' package.json 2>/dev/null); do
+        rm -rf "$ws/node_modules" 2>/dev/null
+      done
+    fi
+  fi
+
+  local output exit_code
+  output=$(bun install 2>&1) && exit_code=0 || exit_code=$?
+
+  if [[ $exit_code -eq 0 ]]; then
+    local version
+    version=$(echo "$output" | grep -o '@mdr/lib-utils@github:wsh-auto/lib-utils#[a-f0-9]*' | head -1 | sed 's/.*#//' | cut -c1-7)
+    printf "  \x1b[32m✓\x1b[0m %s \x1b[2m%s\x1b[0m\n" "$short_path" "${version:-ok}"
+    return 0
+  else
+    local err_msg
+    err_msg=$(echo "$output" | grep -i -E 'error|fail' | head -1 | cut -c1-50)
+    printf "  \x1b[31m✗\x1b[0m %s \x1b[2m%s\x1b[0m\n" "$short_path" "${err_msg:-failed}"
+    return 1
+  fi
+}
+
+export -f update_project
+export HOME CLEAN
+
+FAIL=0
+if $PARALLEL; then
+  pids=()
+  for dir in "${DEPENDENTS[@]}"; do
+    update_project "$dir" &
+    pids+=($!)
+    if [[ ${#pids[@]} -ge $MAX_JOBS ]]; then
+      wait "${pids[0]}" || ((FAIL++)) || true
+      pids=("${pids[@]:1}")
+    fi
+  done
+  for pid in "${pids[@]}"; do
+    wait "$pid" || ((FAIL++)) || true
+  done
+else
+  for dir in "${DEPENDENTS[@]}"; do
+    update_project "$dir" || ((FAIL++)) || true
+  done
+fi
+
+SUCCESS=$((${#DEPENDENTS[@]} - FAIL))
+
+echo
+echo "${CYAN}Done:${NC} ${GREEN}${SUCCESS} updated${NC}$( [[ $FAIL -gt 0 ]] && echo ", ${RED}${FAIL} failed${NC}" )"
+exit $([[ $FAIL -gt 0 ]] && echo 1 || echo 0)

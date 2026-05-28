@@ -1,0 +1,313 @@
+<!--
+  ============================================================
+  D3.js GENERIC DIAGRAM TEMPLATE
+  ============================================================
+  Use D3.js for ANY non-graph diagram where programmatic layout
+  is beneficial: tape diagrams, double number lines, hanger
+  diagrams, area models, custom visualizations, etc.
+
+  D3 benefits:
+  - Automatic spacing and positioning
+  - Easy to change values without recalculating coordinates
+  - Handles variable numbers of elements
+  - Consistent styling
+
+  ============================================================
+  WHEN TO USE D3 vs MANUAL SVG
+  ============================================================
+
+  USE D3 when:
+  - Diagram has 5+ repeated elements
+  - Proportional spacing matters (double number lines)
+  - Balance/centering is important (hanger diagrams)
+  - You need to calculate positions based on data
+
+  USE MANUAL SVG when:
+  - Simple diagram with 2-3 elements
+  - Positions are fixed and known
+  - Quick one-off diagram
+
+  DO NOT use D3 for:
+  - Coordinate graphs (use graph-snippet.html with manual pixels)
+
+  ============================================================
+  CRITICAL REQUIREMENTS FOR PPTX EXPORT
+  ============================================================
+
+  1. Include D3 CDN in <head>:
+     <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  2. EVERY element group needs data-pptx-layer:
+     svg.append('g').attr('data-pptx-layer', 'label-title')
+
+  3. Use 6-digit hex colors only (#ffffff, not white or rgb())
+
+  4. Set font-family="Arial" on all text elements
+
+  ============================================================
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- REQUIRED: Include D3.js -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 960px;
+      height: 540px;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    .row { display: flex; flex-direction: row; }
+    .col { display: flex; flex-direction: column; }
+    .center { display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+  <!-- Slide container with standard dimensions -->
+  <div class="slide-container" style="width: 960px; height: 540px; background: #ffffff; position: relative;">
+
+    <!-- Badge (STEP N) -->
+    <div data-pptx-region="badge"
+         data-pptx-x="20" data-pptx-y="16" data-pptx-w="100" data-pptx-h="30"
+         style="position: absolute; top: 16px; left: 20px; background: #1791e8; border-radius: 4px; padding: 4px 12px;">
+      <p style="color: #ffffff; font-size: 14px; font-weight: bold; margin: 0;">STEP 1</p>
+    </div>
+
+    <!-- Title -->
+    <div data-pptx-region="title"
+         data-pptx-x="130" data-pptx-y="16" data-pptx-w="810" data-pptx-h="30"
+         style="position: absolute; top: 16px; left: 130px;">
+      <h1 style="font-size: 22px; font-weight: bold; color: #1d1d1d; margin: 0;">[STRATEGY VERB] - [Step Description]</h1>
+    </div>
+
+    <!-- Main content area -->
+    <div class="row" style="position: absolute; top: 100px; left: 20px; right: 20px; bottom: 20px;">
+
+      <!-- Left column: Text content -->
+      <div data-pptx-region="left-column"
+           data-pptx-x="20" data-pptx-y="150" data-pptx-w="368" data-pptx-h="360"
+           class="col" style="width: 40%; padding-right: 20px;">
+        <p style="font-size: 14px; color: #1d1d1d; line-height: 1.5; margin: 0;">
+          [Left column content - brief explanation]
+        </p>
+      </div>
+
+      <!-- Right column: D3 Diagram Container -->
+      <div id="svg-container"
+           data-pptx-region="svg-container"
+           data-pptx-x="408" data-pptx-y="150"
+           data-pptx-w="532" data-pptx-h="360"
+           data-svg-region="true"
+           class="col center"
+           style="width: 60%; background: #f5f5f5; border-radius: 8px; padding: 12px; max-height: 360px; overflow: hidden;">
+
+        <!-- SVG canvas - adjust viewBox as needed -->
+        <svg id="d3-diagram" viewBox="0 0 500 200" style="width: 100%; height: 200px; max-height: 200px;"></svg>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+  (function() {
+    // ============================================================
+    // PATTERN: Config-driven D3 rendering
+    // ============================================================
+    // Define your data/config at the top, then render below.
+    // This makes it easy to change values without touching D3 code.
+
+    const config = {
+      // Example config - replace with your diagram's data
+      items: [
+        { value: '?', highlight: true },
+        { value: '6' },
+        { value: '6' },
+        { value: '6' }
+      ],
+      colors: {
+        primary: '#1791e8',
+        secondary: '#22c55e',
+        highlight: '#fef3c7',
+        text: '#1d1d1d',
+        border: '#1e293b'
+      }
+    };
+
+    // ============================================================
+    // D3 RENDERING
+    // ============================================================
+    const svg = d3.select('#d3-diagram');
+    const margin = { top: 20, right: 20, bottom: 40, left: 20 };
+    const width = 500 - margin.left - margin.right;
+    const height = 200 - margin.top - margin.bottom;
+
+    // ============================================================
+    // CRITICAL: Create layers with data-pptx-layer
+    // ============================================================
+    // Each distinct element or group gets its own layer.
+    // This enables independent editing in PowerPoint.
+
+    // Example: Create a layer for each item
+    config.items.forEach((item, i) => {
+      const layer = svg.append('g')
+        .attr('data-pptx-layer', `item-${i + 1}`)  // REQUIRED for PPTX export
+        .attr('transform', `translate(${margin.left + i * 110},${margin.top})`);
+
+      // Draw shape
+      layer.append('rect')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', 100)
+        .attr('height', 60)
+        .attr('fill', item.highlight ? config.colors.highlight : '#e0f2fe')
+        .attr('stroke', config.colors.border)
+        .attr('stroke-width', 2)
+        .attr('rx', 4);
+
+      // Add text label
+      layer.append('text')
+        .attr('x', 50)
+        .attr('y', 38)
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Arial')  // REQUIRED: Use Arial
+        .attr('font-size', '18px')
+        .attr('font-weight', item.highlight ? 'bold' : 'normal')
+        .attr('fill', config.colors.text)
+        .text(item.value);
+    });
+
+    // Example: Add a separate label layer
+    const labelLayer = svg.append('g')
+      .attr('data-pptx-layer', 'label-total')  // REQUIRED for PPTX export
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    labelLayer.append('text')
+      .attr('x', width / 2)
+      .attr('y', height + 20)
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Arial')
+      .attr('font-size', '14px')
+      .attr('fill', config.colors.text)
+      .text('Total: 24');
+
+  })();
+  </script>
+
+</body>
+</html>
+
+<!--
+  ============================================================
+  HOW TO CUSTOMIZE FOR YOUR DIAGRAM
+  ============================================================
+
+  1. Define your data in the config object
+  2. Adjust the viewBox dimensions for your content
+  3. Write D3 code to render your specific diagram
+  4. ALWAYS create layers with data-pptx-layer for each element group
+
+  ============================================================
+  LAYER NAMING CONVENTIONS
+  ============================================================
+
+  | Element Type | Pattern | Examples |
+  |--------------|---------|----------|
+  | Individual items | item-N | item-1, item-2, item-3 |
+  | Shapes | shape-N | shape-1, shape-2 |
+  | Labels | label-X | label-title, label-total, label-result |
+  | Lines/axes | line-X | line-top, line-bottom |
+  | Arrows | arrow-X | arrow-counting |
+  | Base structure | base | Background, frames |
+  | Highlights | highlight | Emphasis elements |
+
+  ============================================================
+  D3 PATTERNS FOR COMMON DIAGRAMS
+  ============================================================
+
+  TAPE DIAGRAM:
+  - config.boxes array with values
+  - forEach loop to create rect + text per box
+  - Separate layer for total bracket
+
+  DOUBLE NUMBER LINE:
+  - config.lineA and config.lineB arrays
+  - Scale function for proportional positioning
+  - Two line layers + optional highlight layer
+
+  HANGER DIAGRAM:
+  - config.leftSide and config.rightSide
+  - Hanger structure layer (static)
+  - Left shapes layer, right value layer
+  - Equals sign layer
+
+  AREA MODEL:
+  - config.rows and config.cols arrays
+  - Nested loops for grid of rectangles
+  - Labels on edges
+
+  ============================================================
+  COMMON D3 FUNCTIONS
+  ============================================================
+
+  // Create group with layer
+  svg.append('g').attr('data-pptx-layer', 'name')
+
+  // Draw rectangle
+  .append('rect')
+    .attr('x', 0).attr('y', 0)
+    .attr('width', 100).attr('height', 50)
+    .attr('fill', '#ffffff')
+    .attr('stroke', '#000000')
+    .attr('rx', 4)  // rounded corners
+
+  // Draw text
+  .append('text')
+    .attr('x', 50).attr('y', 25)
+    .attr('text-anchor', 'middle')
+    .attr('font-family', 'Arial')
+    .attr('font-size', '14px')
+    .text('Label')
+
+  // Draw line
+  .append('line')
+    .attr('x1', 0).attr('y1', 0)
+    .attr('x2', 100).attr('y2', 0)
+    .attr('stroke', '#000000')
+    .attr('stroke-width', 2)
+
+  // Draw circle
+  .append('circle')
+    .attr('cx', 50).attr('cy', 50)
+    .attr('r', 10)
+    .attr('fill', '#1791e8')
+
+  // Draw polygon (triangle)
+  .append('polygon')
+    .attr('points', '50,10 10,90 90,90')
+    .attr('fill', '#22c55e')
+
+  // Scale for proportional positioning
+  const scale = d3.scaleLinear()
+    .domain([0, maxValue])
+    .range([0, width]);
+
+  ============================================================
+  COLORS (from styling guide)
+  ============================================================
+
+  Primary: #1791e8 (blue)
+  Success: #22c55e (green)
+  Warning: #f59e0b (amber)
+  Error: #ef4444 (red)
+  Text: #1d1d1d (dark gray)
+  Border: #1e293b (darker gray)
+  Light background: #f5f5f5
+  Highlight: #fef3c7 (light amber)
+
+  ============================================================
+-->

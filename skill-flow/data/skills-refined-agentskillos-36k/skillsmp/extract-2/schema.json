@@ -1,0 +1,80 @@
+{
+  "name": "extract",
+  "version": "1.0.0",
+  "description": "Extract structured information from unstructured text",
+  "input": {
+    "type": "object",
+    "required": ["text", "target"],
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "The unstructured text to extract from",
+        "minLength": 1
+      },
+      "target": {
+        "type": "string",
+        "description": "What to extract from the text",
+        "enum": ["email", "url", "date", "entity", "name"]
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Structured extraction result",
+    "properties": {
+      "email": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "array", "items": { "type": "string" } }
+        ],
+        "description": "Extracted email address(es)"
+      },
+      "url": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "array", "items": { "type": "string" } }
+        ],
+        "description": "Extracted URL(s)"
+      },
+      "date": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "array", "items": { "type": "string" } }
+        ],
+        "description": "Extracted date(s) in ISO format"
+      },
+      "entity": {
+        "type": "object",
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "organizations": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "locations": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "description": "Extracted named entities"
+      },
+      "name": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "array", "items": { "type": "string" } }
+        ],
+        "description": "Extracted person name(s)"
+      }
+    }
+  },
+  "errors": {
+    "InvalidTarget": "The specified target is not supported",
+    "EmptyInput": "The input text is empty",
+    "MalformedOutput": "The skill output is not valid JSON",
+    "SchemaViolation": "The output does not match the expected schema",
+    "HallucinationDetected": "Extracted value not found in source text"
+  }
+}

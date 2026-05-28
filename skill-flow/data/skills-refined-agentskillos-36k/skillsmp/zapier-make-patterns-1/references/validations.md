@@ -1,0 +1,1 @@
+# Zapier Make Patterns - Validations

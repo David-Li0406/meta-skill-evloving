@@ -1,0 +1,217 @@
+# gmail draft
+
+Usage: jean-claude gmail draft [OPTIONS] COMMAND [ARGS]...
+
+  Manage email drafts.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  create     Create a new email draft with body from stdin.
+  delete     Permanently delete a draft.
+  forward    Create a forward draft with body from stdin.
+  get        Get a draft, written to separate metadata and body files.
+  list       List drafts.
+  reply      Create a reply draft with body from stdin.
+  reply-all  Create a reply-all draft with body from stdin.
+  send       Send an existing draft.
+  update     Update an existing draft.
+
+
+## gmail draft create
+
+Usage: jean-claude gmail draft create [OPTIONS]
+
+  Create a new email draft with body from stdin.
+
+  Examples:
+      echo "Hello!" | jean-claude gmail draft create --to "x@y.com" --subject "Hi!"
+      echo "See attached" | jean-claude gmail draft create --to "x@y.com" --subject "Report" \
+          --attach report.pdf --attach data.csv
+
+Options:
+  --to TEXT       Recipient(s) (comma-separated)  [required]
+  --subject TEXT  Email subject line  [required]
+  --cc TEXT       CC recipients (comma-separated)
+  --bcc TEXT      BCC recipients (comma-separated)
+  --attach FILE   File to attach (can be repeated)
+  --help          Show this message and exit.
+
+
+## gmail draft delete
+
+Usage: jean-claude gmail draft delete [OPTIONS] DRAFT_ID
+
+  Permanently delete a draft.
+
+  Example:
+      jean-claude gmail draft delete r-123456789
+
+Options:
+  --help  Show this message and exit.
+
+
+## gmail draft forward
+
+Usage: jean-claude gmail draft forward [OPTIONS] MESSAGE_ID TO
+
+  Create a forward draft with body from stdin.
+
+  MESSAGE_ID: The message to forward. TO: Recipient email address.
+
+  Body is read from stdin (can be empty for forwarding without adding text).
+  Original attachments are included automatically (can be removed via draft
+  update).
+
+  Examples:
+      echo "FYI" | jean-claude gmail draft forward MSG_ID someone@example.com
+      echo "FYI" | jean-claude gmail draft forward MSG_ID x@y.com --attach extra.pdf
+      # Forward without adding text
+      jean-claude gmail draft forward MSG_ID someone@example.com < /dev/null
+
+Options:
+  --attach FILE  File to attach (can be repeated)
+  --help         Show this message and exit.
+
+
+## gmail draft get
+
+Usage: jean-claude gmail draft get [OPTIONS] DRAFT_ID
+
+  Get a draft, written to separate metadata and body files.
+
+  Creates two files in ~/.cache/jean-claude/drafts/: - draft-{id}.json:
+  Metadata (to, cc, subject, attachments, etc.) - draft-{id}.txt: Body text
+  (editable with any text editor)
+
+  Workflow:
+      jean-claude gmail draft get DRAFT_ID
+      # Edit the body file
+      vim ~/.cache/jean-claude/drafts/draft-DRAFT_ID.txt
+      # Update from edited body
+      cat ~/.cache/jean-claude/drafts/draft-DRAFT_ID.txt | jean-claude gmail draft update DRAFT_ID
+
+  Example:
+      jean-claude gmail draft get r-123456789
+
+Options:
+  --help  Show this message and exit.
+
+
+## gmail draft list
+
+Usage: jean-claude gmail draft list [OPTIONS]
+
+  List drafts.
+
+  Example:
+      jean-claude gmail draft list
+
+Options:
+  -n, --max-results INTEGER  Maximum results
+  --page-token TEXT          Token for next page of results
+  --help                     Show this message and exit.
+
+
+## gmail draft reply
+
+Usage: jean-claude gmail draft reply [OPTIONS] MESSAGE_ID
+
+  Create a reply draft with body from stdin.
+
+  Preserves threading with the original message. Includes quoted original
+  message in Gmail format.
+
+  MESSAGE_ID: The message to reply to.
+
+  Body is read from stdin.
+
+  Examples:
+      echo "Thanks!" | jean-claude gmail draft reply MSG_ID
+      echo "See attached" | jean-claude gmail draft reply MSG_ID --attach response.pdf
+
+Options:
+  --cc TEXT      Additional CC recipients (comma-separated)
+  --attach FILE  File to attach (can be repeated)
+  --help         Show this message and exit.
+
+
+## gmail draft reply-all
+
+Usage: jean-claude gmail draft reply-all [OPTIONS] MESSAGE_ID
+
+  Create a reply-all draft with body from stdin.
+
+  Preserves threading and includes all original recipients. Includes quoted
+  original message in Gmail format.
+
+  MESSAGE_ID: The message to reply to.
+
+  Body is read from stdin.
+
+  Examples:
+      echo "Thanks everyone!" | jean-claude gmail draft reply-all MSG_ID
+      echo "See attached" | jean-claude gmail draft reply-all MSG_ID --attach notes.pdf
+
+Options:
+  --cc TEXT      Override CC recipients (comma-separated)
+  --attach FILE  File to attach (can be repeated)
+  --help         Show this message and exit.
+
+
+## gmail draft send
+
+Usage: jean-claude gmail draft send [OPTIONS] DRAFT_ID
+
+  Send an existing draft.
+
+  Example:
+      jean-claude gmail draft send r-123456789
+
+Options:
+  --help  Show this message and exit.
+
+
+## gmail draft update
+
+Usage: jean-claude gmail draft update [OPTIONS] DRAFT_ID
+
+  Update an existing draft.
+
+  Body is read from stdin (plain text). Metadata is updated via flags. Only
+  provided fields are updated; others remain unchanged.
+
+  Preserves threading headers (In-Reply-To, References) from the original
+  draft. When --attach is used, new attachments replace any existing
+  attachments. Use --clear-attachments to remove all attachments.
+
+  Workflow for editing drafts:
+      jean-claude gmail draft get DRAFT_ID
+      # Edit the body file
+      vim ~/.cache/jean-claude/drafts/draft-DRAFT_ID.txt
+      # Update from edited body
+      cat ~/.cache/jean-claude/drafts/draft-DRAFT_ID.txt | jean-claude gmail draft update DRAFT_ID
+
+  Examples:
+      # Update body only
+      cat body.txt | jean-claude gmail draft update DRAFT_ID
+
+      # Update metadata only (no stdin)     jean-claude gmail draft update
+      DRAFT_ID --subject "New subject"
+
+      # Add attachments to draft     jean-claude gmail draft update DRAFT_ID
+      --attach report.pdf < /dev/null
+
+      # Remove all attachments     jean-claude gmail draft update DRAFT_ID
+      --clear-attachments < /dev/null
+
+Options:
+  --to TEXT            Update To recipients (comma-separated)
+  --cc TEXT            Update CC recipients (comma-separated)
+  --bcc TEXT           Update BCC recipients (comma-separated)
+  --subject TEXT       Update subject line
+  --attach FILE        File to attach (can be repeated, replaces existing
+                       attachments)
+  --clear-attachments  Remove all attachments from the draft
+  --help               Show this message and exit.

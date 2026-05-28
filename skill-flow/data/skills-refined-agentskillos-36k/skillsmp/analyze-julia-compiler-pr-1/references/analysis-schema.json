@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Julia Compiler PR Analysis",
+  "type": "object",
+  "required": ["schema_version", "pr", "scope", "analysis"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "pr": {
+      "type": "object",
+      "required": ["number", "title", "url", "merged_at"],
+      "properties": {
+        "number": { "type": "integer" },
+        "title": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "author": { "type": "string" },
+        "labels": { "type": "array", "items": { "type": "string" } },
+        "created_at": { "type": "string", "format": "date-time" },
+        "merged_at": { "type": "string", "format": "date-time" },
+        "merge_commit_sha": { "type": "string" },
+        "base_branch": { "type": "string" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["files_touched", "components", "pipeline_stages"],
+      "properties": {
+        "files_touched": { "type": "array", "items": { "type": "string" } },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "JuliaSyntax",
+              "JuliaLowering",
+              "Compiler.AbstractInterpretation",
+              "Compiler.Inference",
+              "Compiler.Inlining",
+              "Compiler.Optimization",
+              "Compiler.EscapeAnalysis",
+              "Compiler.Codegen",
+              "Interpreter",
+              "Other"
+            ]
+          }
+        },
+        "pipeline_stages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Parsing",
+              "MacroExpansion",
+              "Lowering",
+              "ScopeAnalysis",
+              "LinearIR",
+              "SSA",
+              "AbstractInterpretation",
+              "TypeInference",
+              "EffectsInference",
+              "EscapeAnalysis",
+              "Inlining",
+              "OptimizationPasses",
+              "Codegen",
+              "Interpreter"
+            ]
+          }
+        }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "required": ["intent", "direct_changes", "secondary_effects", "tests", "risk"],
+      "properties": {
+        "intent": {
+          "type": "object",
+          "required": ["summary"],
+          "properties": {
+            "summary": { "type": "string" },
+            "issue_links": { "type": "array", "items": { "type": "string" } },
+            "quoted_from_pr": { "type": "string" }
+          }
+        },
+        "direct_changes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/change_item" }
+        },
+        "pipeline_impact": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/pipeline_item" }
+        },
+        "secondary_effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/effect_item" }
+        },
+        "compatibility": {
+          "type": "object",
+          "properties": {
+            "public_api": { "type": "array", "items": { "$ref": "#/$defs/impact_item" } },
+            "internal_api": { "type": "array", "items": { "$ref": "#/$defs/impact_item" } },
+            "ir_format": { "type": "array", "items": { "$ref": "#/$defs/impact_item" } },
+            "behavioral": { "type": "array", "items": { "$ref": "#/$defs/impact_item" } }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "properties": {
+            "compile_time": { "type": "array", "items": { "$ref": "#/$defs/impact_item" } },
+            "runtime": { "type": "array", "items": { "$ref": "#/$defs/impact_item" } },
+            "memory": { "type": "array", "items": { "$ref": "#/$defs/impact_item" } },
+            "code_size": { "type": "array", "items": { "$ref": "#/$defs/impact_item" } }
+          }
+        },
+        "tests": {
+          "type": "object",
+          "required": ["changed_files", "coverage_gaps"],
+          "properties": {
+            "changed_files": { "type": "array", "items": { "type": "string" } },
+            "new_behavior_assertions": { "type": "array", "items": { "type": "string" } },
+            "coverage_gaps": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "risk": {
+          "type": "object",
+          "required": ["level", "rationale"],
+          "properties": {
+            "level": { "type": "string", "enum": ["low", "medium", "high"] },
+            "rationale": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "open_questions": { "type": "array", "items": { "type": "string" } },
+        "recommendations": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["source", "path"],
+      "properties": {
+        "source": { "type": "string", "enum": ["diff", "test", "discussion", "issue"] },
+        "path": { "type": "string" },
+        "loc": { "type": "string" },
+        "snippet": { "type": "string" },
+        "url": { "type": "string", "format": "uri" }
+      }
+    },
+    "change_item": {
+      "type": "object",
+      "required": ["summary", "evidence"],
+      "properties": {
+        "summary": { "type": "string" },
+        "component": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      }
+    },
+    "pipeline_item": {
+      "type": "object",
+      "required": ["stage", "effect", "evidence"],
+      "properties": {
+        "stage": { "type": "string" },
+        "effect": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      }
+    },
+    "effect_item": {
+      "type": "object",
+      "required": ["effect", "mechanism", "likelihood", "impact", "evidence"],
+      "properties": {
+        "effect": { "type": "string" },
+        "mechanism": { "type": "string" },
+        "downstream_surfaces": { "type": "array", "items": { "type": "string" } },
+        "likelihood": { "type": "string", "enum": ["low", "medium", "high"] },
+        "impact": { "type": "string", "enum": ["low", "medium", "high"] },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      }
+    },
+    "impact_item": {
+      "type": "object",
+      "required": ["summary", "evidence"],
+      "properties": {
+        "summary": { "type": "string" },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
+      }
+    }
+  }
+}

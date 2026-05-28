@@ -1,0 +1,65 @@
+[[workflows]]
+name = "review-pipeline"
+description = "Code with mandatory review before finalization"
+coordination = "review-gate"
+
+[[workflows.agents]]
+profile = "implementer"
+role = "author"
+description = "Implements the feature or fix"
+
+[[workflows.agents]]
+profile = "reviewer"
+role = "reviewer"
+count = 2
+description = "Reviews code for quality, correctness, and style"
+
+[workflows.flow]
+initial = "implement"
+require_approval = true
+approval_mode = "any"
+
+[[workflows.flow.transitions]]
+from = "implement"
+to = "review"
+[workflows.flow.transitions.trigger]
+type = "manual"
+label = "Submit for review"
+
+[[workflows.flow.transitions]]
+from = "review"
+to = "revise"
+[workflows.flow.transitions.trigger]
+type = "agent_says"
+pattern = "changes requested|needs work|please fix"
+role = "reviewer"
+
+[[workflows.flow.transitions]]
+from = "review"
+to = "complete"
+[workflows.flow.transitions.trigger]
+type = "agent_says"
+pattern = "approved|lgtm|looks good"
+role = "reviewer"
+
+[[workflows.flow.transitions]]
+from = "revise"
+to = "review"
+[workflows.flow.transitions.trigger]
+type = "manual"
+label = "Resubmit for review"
+
+[[workflows.prompts]]
+key = "feature"
+question = "What are you implementing?"
+required = true
+
+[[workflows.prompts]]
+key = "review_focus"
+question = "What should reviewers focus on?"
+default = "Correctness, performance, style"
+
+[workflows.error_handling]
+on_agent_error = "pause"
+stage_timeout_minutes = 30
+on_timeout = "notify"

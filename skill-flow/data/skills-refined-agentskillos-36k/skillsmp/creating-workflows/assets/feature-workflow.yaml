@@ -1,0 +1,78 @@
+# Feature Implementation Workflow Template
+# Use as step-level workflow for feature development
+#
+# Usage: Reference in sprint workflow's for-each phase
+#   phases:
+#     - id: development
+#       for-each: step
+#       workflow: feature-workflow
+
+name: Feature Implementation
+description: Step-level workflow for implementing features with planning, implementation, testing, and documentation phases.
+
+phases:
+  - id: plan
+    prompt: |
+      ## Task
+      {{step.prompt}}
+
+      ## Instructions
+      1. Analyze the requirements and existing codebase
+      2. Identify all files that need modification
+      3. Consider edge cases and error handling
+      4. Document the implementation approach
+
+      ## Output
+      Write the implementation plan to: context/{{step.id}}-plan.md
+
+      Include:
+      - Files to modify/create
+      - Key implementation decisions
+      - Potential risks or blockers
+
+  - id: implement
+    prompt: |
+      ## Task
+      {{step.prompt}}
+
+      ## Instructions
+      1. Read the plan from context/{{step.id}}-plan.md
+      2. Implement changes following the plan
+      3. Follow existing code conventions
+      4. Make atomic commits for logical units
+
+      ## Guidelines
+      - Keep changes focused on the task
+      - No unnecessary refactoring
+      - Handle errors appropriately
+      - Set status to needs-human if blocked
+
+  - id: test
+    prompt: |
+      ## Context
+      {{step.prompt}}
+
+      ## Instructions
+      1. Identify testable functionality
+      2. Write unit tests for new code
+      3. Run the existing test suite
+      4. Fix any failing tests
+
+      ## Output
+      - All tests must pass
+      - New functionality has test coverage
+
+  - id: document
+    prompt: |
+      ## Context
+      {{step.prompt}}
+
+      ## Instructions
+      1. Update API documentation if interfaces changed
+      2. Update README if user-facing functionality changed
+      3. Add code comments only for complex logic
+
+      ## Guidelines
+      - Only document what's necessary
+      - Keep documentation concise
+      - No redundant comments

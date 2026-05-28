@@ -1,0 +1,18 @@
+# Prevent PHP execution in uploads directory
+<FilesMatch "\.php[0-9]?$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Disable script execution
+Options -ExecCGI
+AddHandler cgi-script .php .php5 .phtml .pl .py .jsp .asp .htm .shtml .sh .cgi
+
+# Force download of all files (prevent inline execution)
+<FilesMatch ".*">
+    ForceType application/octet-stream
+    Header set Content-Disposition attachment
+</FilesMatch>
+
+# Prevent directory listing
+Options -Indexes

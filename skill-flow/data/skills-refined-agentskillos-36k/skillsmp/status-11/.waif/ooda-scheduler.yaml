@@ -1,0 +1,12 @@
+jobs:
+  - id: waif-in-progress-30s
+    name: Run `waif in-progress` every 30s (operator view)
+    command: "waif in-progress"
+    schedule: "*/30 * * * * *"
+    capture:
+      - stdout
+    timeout_seconds: 10
+    retention:
+      keep_last: 10
+    catchup_on_start: true
+    clear_terminal: true

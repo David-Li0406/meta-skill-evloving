@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[git-safety-guard] state recovery..."
+
+# Intentionally does not run `bd import` by default because some repos track
+# `.beads/.local_version`, and auto-import can dirty the working tree.
+# Opt in per machine via: DX_BEADS_AUTO_IMPORT=1
+if [[ "${DX_BEADS_AUTO_IMPORT:-}" == "1" ]] && [[ -f .beads/issues.jsonl ]] && command -v bd >/dev/null 2>&1; then
+  bd import 2>/dev/null || true
+fi
+
+if [[ -f pnpm-lock.yaml ]] && command -v pnpm >/dev/null 2>&1; then
+  if git diff --name-only HEAD@{1} HEAD 2>/dev/null | grep -q "pnpm-lock.yaml"; then
+    echo "[git-safety-guard] pnpm-lock changed; running pnpm install --frozen-lockfile"
+    pnpm install --frozen-lockfile >/dev/null 2>&1 || echo "[git-safety-guard] WARN: pnpm install failed"
+  fi
+fi
+
+if [[ -f .gitmodules ]]; then
+  if git diff --name-only HEAD@{1} HEAD 2>/dev/null | grep -q "packages/llm-common"; then
+    echo "[git-safety-guard] submodules changed; updating"
+    git submodule update --init --recursive >/dev/null 2>&1 || true
+  fi
+fi

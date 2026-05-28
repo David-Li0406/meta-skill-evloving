@@ -1,0 +1,237 @@
+{
+  "basic_visitor_count": {
+    "description": "Get total visitors for last 7 days",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors"],
+      "date_range": "7d"
+    }
+  },
+  "multiple_metrics": {
+    "description": "Get multiple metrics for overview",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews", "bounce_rate", "visit_duration"],
+      "date_range": "30d"
+    }
+  },
+  "top_traffic_sources": {
+    "description": "Top 10 traffic sources by visitors",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews"],
+      "dimensions": ["visit:source"],
+      "date_range": "30d",
+      "order_by": [["visitors", "desc"]],
+      "limit": 10
+    }
+  },
+  "top_pages": {
+    "description": "Most visited pages",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["pageviews", "visitors"],
+      "dimensions": ["event:page"],
+      "date_range": "30d",
+      "order_by": [["pageviews", "desc"]],
+      "limit": 20
+    }
+  },
+  "blog_performance": {
+    "description": "Blog post performance analysis",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["pageviews", "bounce_rate", "visit_duration"],
+      "dimensions": ["event:page"],
+      "date_range": "30d",
+      "filters": [
+        ["contains", "event:page", ["/blog"]]
+      ],
+      "order_by": [["pageviews", "desc"]]
+    }
+  },
+  "country_breakdown": {
+    "description": "Visitor distribution by country",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors"],
+      "dimensions": ["visit:country"],
+      "date_range": "month",
+      "filters": [
+        ["is_not", "visit:country", [""]]
+      ],
+      "order_by": [["visitors", "desc"]],
+      "limit": 20
+    }
+  },
+  "device_breakdown": {
+    "description": "Traffic by device type",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews", "bounce_rate"],
+      "dimensions": ["visit:device"],
+      "date_range": "30d"
+    }
+  },
+  "daily_trends": {
+    "description": "Daily visitor trends for last 30 days",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews"],
+      "dimensions": ["time:day"],
+      "date_range": "30d"
+    }
+  },
+  "hourly_patterns": {
+    "description": "Hourly traffic patterns for today",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors"],
+      "dimensions": ["time:hour"],
+      "date_range": "day"
+    }
+  },
+  "utm_campaign_performance": {
+    "description": "UTM campaign effectiveness",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews", "bounce_rate"],
+      "dimensions": ["visit:utm_campaign"],
+      "date_range": "30d",
+      "filters": [
+        ["is_not", "visit:utm_campaign", [""]]
+      ],
+      "order_by": [["visitors", "desc"]]
+    }
+  },
+  "social_media_traffic": {
+    "description": "Social media platform performance",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "bounce_rate", "visit_duration"],
+      "dimensions": ["visit:source"],
+      "date_range": "30d",
+      "filters": [
+        ["or", [
+          ["is", "visit:source", ["Twitter"]],
+          ["is", "visit:source", ["Facebook"]],
+          ["is", "visit:source", ["LinkedIn"]],
+          ["is", "visit:source", ["Reddit"]]
+        ]]
+      ],
+      "order_by": [["visitors", "desc"]]
+    }
+  },
+  "high_engagement_pages": {
+    "description": "Pages with longest visit duration",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["pageviews", "visit_duration", "views_per_visit"],
+      "dimensions": ["event:page"],
+      "date_range": "30d",
+      "filters": [
+        ["is_not", "event:page", ["/"]]
+      ],
+      "order_by": [["visit_duration", "desc"]],
+      "limit": 20
+    }
+  },
+  "mobile_browser_analysis": {
+    "description": "Mobile browser usage",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "visit_duration", "bounce_rate"],
+      "dimensions": ["visit:browser"],
+      "date_range": "30d",
+      "filters": [
+        ["is", "visit:device", ["mobile"]]
+      ],
+      "order_by": [["visitors", "desc"]]
+    }
+  },
+  "geographic_city_analysis": {
+    "description": "Top cities in US",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews"],
+      "dimensions": ["visit:city"],
+      "date_range": "30d",
+      "filters": [
+        ["is", "visit:country", ["US"]]
+      ],
+      "order_by": [["visitors", "desc"]],
+      "limit": 25
+    }
+  },
+  "source_device_combination": {
+    "description": "Traffic sources by device type",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews"],
+      "dimensions": ["visit:source", "visit:device"],
+      "date_range": "30d",
+      "order_by": [["visitors", "desc"]],
+      "limit": 30
+    }
+  },
+  "exclude_internal_traffic": {
+    "description": "External traffic only, excluding admin/test pages",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews"],
+      "dimensions": ["visit:source"],
+      "date_range": "30d",
+      "filters": [
+        ["is_not", "event:page", ["/admin", "/test", "/staging"]]
+      ]
+    }
+  },
+  "weekly_trends": {
+    "description": "Week-over-week trends for last year",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews"],
+      "dimensions": ["time:week"],
+      "date_range": "12mo"
+    }
+  },
+  "monthly_comparison": {
+    "description": "Monthly trends for last year",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews"],
+      "dimensions": ["time:month"],
+      "date_range": "12mo"
+    }
+  },
+  "search_engine_comparison": {
+    "description": "Compare search engine traffic",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["visitors", "pageviews", "bounce_rate"],
+      "dimensions": ["visit:source"],
+      "date_range": "month",
+      "filters": [
+        ["or", [
+          ["is", "visit:source", ["Google"]],
+          ["is", "visit:source", ["Bing"]],
+          ["is", "visit:source", ["DuckDuckGo"]]
+        ]]
+      ]
+    }
+  },
+  "low_bounce_pages": {
+    "description": "Pages with lowest bounce rates (high engagement)",
+    "query": {
+      "site_id": "example.com",
+      "metrics": ["pageviews", "bounce_rate"],
+      "dimensions": ["event:page"],
+      "date_range": "30d",
+      "filters": [
+        ["is_not", "event:page", ["/"]]
+      ],
+      "order_by": [["bounce_rate", "asc"]],
+      "limit": 20
+    }
+  }
+}

@@ -1,0 +1,53 @@
+#cloud-config
+# =============================================================================
+# Nginx Reverse Proxy (HTTP)
+# =============================================================================
+#
+# Purpose: Public-facing web server that forwards requests to backend application
+#
+# Features:
+# - Simple HTTP reverse proxy
+# - Proper header forwarding for client IP tracking
+#
+# How it works:
+# 1. Installs nginx
+# 2. Creates site configuration for reverse proxy
+# 3. Enables site and removes default nginx page
+# 4. Reloads nginx
+#
+# Configuration:
+# - Replace 'APP_SERVER:5001' with your backend server address
+# - Use private IP (e.g., 10.0.3.4:5001) or hostname (e.g., vm-app:5001)
+# - For same-server deployment, use 127.0.0.1:5001
+#
+# Note: This is the DEFAULT pattern.
+# Use proxy-https.yaml only when HTTPS is explicitly required.
+#
+# =============================================================================
+package_update: true
+package_upgrade: true
+
+packages:
+  - nginx
+
+write_files:
+  - path: /etc/nginx/sites-available/app
+    content: |
+      server {
+          listen 80;
+          server_name _;
+
+          location / {
+              # Replace APP_SERVER with backend IP or hostname
+              proxy_pass http://APP_SERVER:5001;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          }
+      }
+
+runcmd:
+  - ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app
+  - rm -f /etc/nginx/sites-enabled/default
+  - systemctl reload nginx

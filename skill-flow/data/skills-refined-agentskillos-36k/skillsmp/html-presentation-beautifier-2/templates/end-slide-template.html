@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>结束页模板 - McKinsey 风格</title>
+    <style>
+        /* ===== McKinsey Design System - 精确颜色系统 ===== */
+        :root {
+            --primary-background: #FFFFFF;
+            --header-background: #000000;
+            --primary-accent: #F85d42;
+            --secondary-accent: #74788d;
+            --deep-blue: #556EE6;
+            --green: #34c38f;
+            --blue: #50a5f1;
+            --yellow: #f1b44c;
+            --text-dark: #333333;
+            --text-black: #000000;
+            --text-light: #FFFFFF;
+        }
+
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--primary-background);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ===== 导航栏 ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: var(--header-background);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn {
+            background-color: var(--primary-accent);
+            color: var(--text-light);
+            border: none;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background-color: #e04a31;
+            transform: translateY(-1px);
+        }
+
+        .nav-btn:disabled {
+            background-color: var(--secondary-accent);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .slide-counter {
+            color: var(--text-light);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* ===== 演示文稿容器 ===== */
+        .presentation-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        /* ===== 幻灯片样式 ===== */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 60px;
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* ===== 结束页样式 ===== */
+        .slide.end-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-accent) 0%, var(--deep-blue) 100%);
+        }
+
+        .end-slide .thank-you {
+            font-size: 72px;
+            font-weight: bold;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            line-height: 1.2;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .end-slide .main-message {
+            font-size: 36px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 60px;
+            line-height: 1.4;
+            max-width: 900px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .end-slide .contact-info {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 40px 60px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            margin: 40px 0;
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        .end-slide .contact-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        .end-slide .contact-details {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.8;
+        }
+
+        .end-slide .contact-details a {
+            color: var(--text-light);
+            text-decoration: none;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .end-slide .contact-details a:hover {
+            border-bottom-color: var(--text-light);
+            padding-bottom: 2px;
+        }
+
+        .end-slide .decorative-icon {
+            font-size: 64px;
+            margin-bottom: 30px;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .end-slide .company-info {
+            display: flex;
+            gap: 40px;
+            margin-top: 40px;
+            animation: fadeInUp 1s ease-out 0.9s both;
+        }
+
+        .end-slide .company-logo {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--text-light);
+        }
+
+        .end-slide .company-name {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+        }
+
+        /* ===== 动画 ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== 响应式设计 ===== */
+        @media (max-width: 1200px) {
+            .end-slide .thank-you {
+                font-size: 56px;
+            }
+
+            .end-slide .main-message {
+                font-size: 28px;
+            }
+
+            .end-slide .contact-info {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 30px;
+            }
+
+            .end-slide .thank-you {
+                font-size: 42px;
+            }
+
+            .end-slide .main-message {
+                font-size: 22px;
+            }
+
+            .end-slide .contact-info {
+                padding: 25px 30px;
+            }
+
+            .end-slide .contact-title {
+                font-size: 20px;
+            }
+
+            .end-slide .contact-details {
+                font-size: 16px;
+            }
+
+            .end-slide .company-info {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .end-slide .decorative-icon {
+                font-size: 48px;
+            }
+        }
+
+        /* ===== 全屏按钮 ===== */
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--header-background);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .fullscreen-btn:hover {
+            background-color: var(--secondary-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">◀ 上一张</button>
+        <span class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">1</span>
+        </span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">下一张 ▶</button>
+    </nav>
+
+    <!-- 演示文稿容器 -->
+    <div class="presentation-container">
+
+        <!-- 结束页幻灯片 -->
+        <div class="slide end-slide active" data-slide="1">
+            <div class="decorative-icon">🎉</div>
+            <h1 class="thank-you">感谢聆听！</h1>
+            <p class="main-message">
+                感谢您的时间和关注<br>
+                期待与您的进一步交流与合作
+            </p>
+
+            <div class="contact-info">
+                <div class="contact-title">联系方式</div>
+                <div class="contact-details">
+                    📧 Email: your.email@example.com<br>
+                    📱 电话: +86 138-xxxx-xxxx<br>
+                    🌐 网站: www.yourcompany.com<br>
+                    <a href="mailto:your.email@example.com">发送邮件</a>
+                </div>
+            </div>
+
+            <div class="company-info">
+                <div class="company-logo">LOGO</div>
+                <div class="company-name">公司名称</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 全屏按钮 -->
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">全屏 ⛶</button>
+
+    <!-- 导航JavaScript -->
+    <script>
+        let currentSlide = 1;
+        let totalSlides = 1;
+
+        function init() {
+            const slides = document.querySelectorAll('.slide');
+            totalSlides = slides.length;
+            document.getElementById('totalSlides').textContent = totalSlides;
+            document.addEventListener('keydown', handleKeyPress);
+            updateNavButtons();
+        }
+
+        function navigate(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = newSlide;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigate(-1);
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                jumpToSlide(1);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                jumpToSlide(totalSlides);
+            }
+        }
+
+        function jumpToSlide(slideNumber) {
+            if (slideNumber >= 1 && slideNumber <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = slideNumber;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+# Example: Bash Command Triggers
+#
+# Requirements that trigger on specific Bash commands using regex patterns.
+# Useful for enforcing workflows around git, deployment, and database operations.
+
+requirements:
+  # Git commit trigger
+  pre_commit_review:
+    enabled: true
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "git\\s+commit"
+    message: |
+      📝 **Pre-commit review required**
+
+      Review your changes before committing.
+
+  # Git push trigger
+  pre_push_check:
+    enabled: true
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "git\\s+push"
+    message: |
+      🚀 **Pre-push check required**
+
+      Ensure all tests pass before pushing.
+
+  # PR creation trigger
+  pr_quality_review:
+    enabled: true
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "gh\\s+pr\\s+create"
+    message: |
+      🔍 **PR quality review required**
+
+      Run comprehensive review before creating PR.
+
+  # NPM publish trigger
+  pre_publish_check:
+    enabled: true
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "npm\\s+publish|yarn\\s+publish"
+    message: |
+      📦 **Pre-publish check required**
+
+      Verify:
+      - Version bumped correctly
+      - CHANGELOG updated
+      - All tests passing
+
+  # Database migration trigger
+  pre_migrate_backup:
+    enabled: true
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "prisma\\s+migrate|npm\\s+run\\s+migrate|knex\\s+migrate"
+    message: |
+      💾 **Database backup required**
+
+      Ensure database backup exists before migration.
+
+  # Docker deployment trigger
+  pre_deploy_review:
+    enabled: true
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "docker\\s+push|kubectl\\s+apply|helm\\s+upgrade"
+    message: |
+      🐳 **Deployment review required**
+
+      Verify deployment configuration and staging tests.
+
+# Regex Pattern Reference:
+#
+# \\s+          - One or more whitespace characters
+# |             - OR operator
+# \\s+          - Escape backslash for YAML
+# .*            - Any characters
+# ^             - Start of command
+# $             - End of command
+#
+# Common Patterns:
+# "git\\s+commit"              → git commit, git commit -m "msg"
+# "git\\s+(commit|push)"       → git commit OR git push
+# "npm\\s+(publish|deploy)"    → npm publish OR npm deploy
+# "gh\\s+pr\\s+create"         → gh pr create
+# "kubectl\\s+(apply|delete)"  → kubectl apply OR kubectl delete

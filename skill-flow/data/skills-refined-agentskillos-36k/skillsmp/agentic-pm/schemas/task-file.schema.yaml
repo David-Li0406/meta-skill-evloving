@@ -1,0 +1,162 @@
+# Task File Schema
+# Used for machine-readable task file outputs
+
+task_file:
+  type: object
+  required:
+    - id
+    - title
+    - goal
+    - non_goals
+    - deliverables
+    - acceptance_criteria
+    - testing_expectations
+  properties:
+    id:
+      type: string
+      pattern: "^TASK-\\d+$"
+      description: Task identifier (e.g., TASK-101)
+
+    title:
+      type: string
+      description: Task title
+
+    goal:
+      type: string
+      description: Clear, concise goal statement
+
+    non_goals:
+      type: array
+      items:
+        type: string
+      description: Explicit scope boundaries
+
+    deliverables:
+      type: array
+      items:
+        type: object
+        properties:
+          type:
+            type: string
+            enum: [new, update, delete]
+          path:
+            type: string
+      description: Files to create or modify
+
+    acceptance_criteria:
+      type: array
+      items:
+        type: string
+      description: Checkboxes that must all be true
+
+    implementation_notes:
+      type: object
+      properties:
+        patterns:
+          type: array
+          items:
+            type: string
+        details:
+          type: array
+          items:
+            type: string
+        code_examples:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              code:
+                type: string
+
+    integration_notes:
+      type: object
+      properties:
+        imports_from:
+          type: array
+          items:
+            type: string
+        exports_to:
+          type: array
+          items:
+            type: string
+        used_by:
+          type: array
+          items:
+            type: string
+        depends_on:
+          type: array
+          items:
+            type: string
+
+    do_dont:
+      type: object
+      properties:
+        do:
+          type: array
+          items:
+            type: string
+        dont:
+          type: array
+          items:
+            type: string
+
+    stop_and_ask:
+      type: array
+      items:
+        type: string
+      description: Conditions for engineer escalation
+
+    testing_expectations:
+      type: object
+      required:
+        - unit_tests_required
+        - ci_requirements
+      properties:
+        unit_tests_required:
+          type: boolean
+        new_tests:
+          type: array
+          items:
+            type: string
+        existing_tests_to_update:
+          type: array
+          items:
+            type: string
+        coverage_impact:
+          type: string
+        integration_tests_required:
+          type: boolean
+        integration_scenarios:
+          type: array
+          items:
+            type: string
+        ci_requirements:
+          type: array
+          items:
+            type: string
+
+    pr_preparation:
+      type: object
+      properties:
+        title_format:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        depends_on:
+          type: array
+          items:
+            type: string
+
+    phase:
+      type: integer
+      description: Which phase this task belongs to
+
+    conflicts_with:
+      type: array
+      items:
+        type: string
+      description: Tasks that cannot run in parallel

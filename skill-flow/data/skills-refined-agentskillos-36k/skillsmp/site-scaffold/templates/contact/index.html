@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <!-- Primary Meta -->
+  <title>Contact - {{SITE_NAME}}</title>
+  <meta name="description" content="Get in touch with {{SITE_NAME}}. We'd love to hear from you."/>
+  <meta name="author" content="{{SITE_AUTHOR}}"/>
+  <meta name="referrer" content="strict-origin-when-cross-origin"/>
+  <meta name="robots" content="index, follow"/>
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{{SITE_URL}}/contact/"/>
+
+  <!-- Favicon Set -->
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml"/>
+  <link rel="icon" href="/assets/images/favicon.ico" sizes="32x32"/>
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png"/>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="{{THEME_COLOR}}"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="{{SITE_URL}}/contact/"/>
+  <meta property="og:site_name" content="{{SITE_NAME}}"/>
+  <meta property="og:title" content="Contact - {{SITE_NAME}}"/>
+  <meta property="og:description" content="Get in touch with {{SITE_NAME}}."/>
+  <meta property="og:image" content="{{SITE_URL}}/assets/images/og-image.png"/>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Contact - {{SITE_NAME}}"/>
+  <meta name="twitter:description" content="Get in touch with {{SITE_NAME}}."/>
+  <meta name="twitter:image" content="{{SITE_URL}}/assets/images/og-image.png"/>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/assets/css/main.css"/>
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <header class="site-header">
+    <a href="/" class="site-logo" aria-label="{{SITE_NAME}} - Home">
+      <span>{{SITE_NAME}}</span>
+    </a>
+
+    <button class="menu-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle navigation menu">
+      <icon-wc name="menu"></icon-wc>
+    </button>
+
+    <nav id="main-nav" class="site-nav" aria-label="Main navigation">
+      <a href="/">Home</a>
+      <a href="/about/">About</a>
+      <a href="/contact/" aria-current="page">Contact</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="contact-hero">
+      <h1>Contact Us</h1>
+      <p class="lead">Have a question or want to work together? We'd love to hear from you.</p>
+    </section>
+
+    <section class="contact-content">
+      <article class="stacked">
+        <h2>Send a Message</h2>
+        <form action="#" method="post" data-validate="">
+          <form-field>
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required="" autocomplete="name" autofocus="" aria-describedby="name-msg"/>
+            <output id="name-msg" for="name" aria-live="polite">Please enter your full name</output>
+          </form-field>
+
+          <form-field>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required="" autocomplete="email" aria-describedby="email-msg"/>
+            <output id="email-msg" for="email" aria-live="polite">We'll use this to respond to you</output>
+          </form-field>
+
+          <form-field>
+            <label for="subject">Subject</label>
+            <select id="subject" name="subject" required="" aria-describedby="subject-msg">
+              <option value="">Select a topic</option>
+              <option value="general">General Inquiry</option>
+              <option value="feedback">Feedback</option>
+              <option value="collaboration">Collaboration</option>
+              <option value="technical">Technical Question</option>
+              <option value="other">Other</option>
+            </select>
+            <output id="subject-msg" for="subject" aria-live="polite">Choose what your message is about</output>
+          </form-field>
+
+          <form-field>
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="5" required="" minlength="10" aria-describedby="message-msg"></textarea>
+            <output id="message-msg" for="message" aria-live="polite">Minimum 10 characters</output>
+          </form-field>
+
+          <button type="submit" class="btn btn--primary btn--full">Send Message</button>
+        </form>
+      </article>
+
+      <aside class="contact-info">
+        <h2>Other Ways to Reach Us</h2>
+
+        <ul class="contact-methods">
+          <li class="contact-method">
+            <icon-wc name="mail" aria-hidden="true"></icon-wc>
+            <article>
+              <h3>Email</h3>
+              <p><a href="mailto:{{SITE_EMAIL}}">{{SITE_EMAIL}}</a></p>
+            </article>
+          </li>
+
+          <li class="contact-method">
+            <icon-wc name="map-pin" aria-hidden="true"></icon-wc>
+            <article>
+              <h3>Location</h3>
+              <p>{{SITE_LOCATION}}</p>
+            </article>
+          </li>
+
+          <li class="contact-method">
+            <icon-wc name="clock" aria-hidden="true"></icon-wc>
+            <article>
+              <h3>Response Time</h3>
+              <p>We typically respond within 24-48 hours during business days.</p>
+            </article>
+          </li>
+        </ul>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <section class="footer-about">
+      <a href="/" class="site-logo">
+        <span>{{SITE_NAME}}</span>
+      </a>
+      <p>{{SITE_DESCRIPTION}}</p>
+    </section>
+
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/about/">About</a></li>
+        <li><a href="/contact/">Contact</a></li>
+      </ul>
+    </nav>
+
+    <section class="footer-social">
+      <h3>Connect</h3>
+      <ul class="social-links">
+        <li><a href="#" aria-label="Follow us on Twitter"><icon-wc name="twitter"></icon-wc></a></li>
+        <li><a href="#" aria-label="Follow us on GitHub"><icon-wc name="github"></icon-wc></a></li>
+        <li><a href="#" aria-label="Follow us on LinkedIn"><icon-wc name="linkedin"></icon-wc></a></li>
+      </ul>
+    </section>
+
+    <small class="footer-legal">
+      <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
+      <nav aria-label="Legal navigation">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </nav>
+    </small>
+  </footer>
+
+  <script type="module" src="/assets/js/components/icon-wc/icon-wc.js"></script>
+  <script src="/assets/js/main.js" defer=""></script>
+</body>
+</html>

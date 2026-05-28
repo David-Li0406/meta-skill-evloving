@@ -1,0 +1,138 @@
+#!/bin/bash
+# pre-push hook - Validates all spec changes before pushing
+#
+# This hook validates all spec files that differ from the remote branch.
+# More comprehensive than pre-commit; catches specs modified across commits.
+#
+# Installation:
+#   cp this-file .git/hooks/pre-push
+#   chmod +x .git/hooks/pre-push
+#
+# Or run: ./enforcement/docs/git-hooks/install.sh
+#
+# Skip (emergency): git push --no-verify
+
+set -e
+
+# Find repo root and validator
+REPO_ROOT=$(git rev-parse --show-toplevel)
+VALIDATOR="$REPO_ROOT/enforcement/validator.sh"
+
+# Check if validator exists
+if [ ! -f "$VALIDATOR" ]; then
+    echo "Warning: Validator not found at $VALIDATOR"
+    echo "Skipping spec validation"
+    exit 0
+fi
+
+# Make sure validator is executable
+chmod +x "$VALIDATOR" 2>/dev/null || true
+
+# Colors
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Read push info from stdin
+# Format: <local ref> <local sha> <remote ref> <remote sha>
+while read local_ref local_sha remote_ref remote_sha; do
+    # Skip delete pushes
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+        continue
+    fi
+
+    # Determine range to check
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        # New branch - compare against default branch
+        DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
+        RANGE="origin/$DEFAULT_BRANCH...$local_sha"
+    else
+        # Existing branch - compare against remote
+        RANGE="$remote_sha...$local_sha"
+    fi
+
+    # Get changed spec files
+    CHANGED_SPECS=$(git diff --name-only "$RANGE" 2>/dev/null | grep -E '\.(md)$' | grep -E '^(specs|prp)/' || true)
+
+    if [ -z "$CHANGED_SPECS" ]; then
+        # No spec files changed, allow push
+        exit 0
+    fi
+
+    echo ""
+    echo -e "${BLUE}=========================================="
+    echo -e "  Pre-push Spec Validation"
+    echo -e "==========================================${NC}"
+    echo ""
+    echo "Checking specs changed in: $RANGE"
+    echo ""
+
+    TOTAL_VIOLATIONS=0
+    TOTAL_WARNINGS=0
+    FAILED_FILES=""
+
+    for spec in $CHANGED_SPECS; do
+        # Skip if file doesn't exist (was deleted)
+        if [ ! -f "$REPO_ROOT/$spec" ]; then
+            continue
+        fi
+
+        echo "Validating: $spec"
+
+        # Run validator on current file
+        set +e
+        OUTPUT=$("$VALIDATOR" "$REPO_ROOT/$spec" 2>&1)
+        EXIT_CODE=$?
+        set -e
+
+        # Count issues
+        VIOLATIONS=$(echo "$OUTPUT" | grep -c "VIOLATION:" || true)
+        WARNINGS=$(echo "$OUTPUT" | grep -c "WARNING:" || true)
+
+        TOTAL_VIOLATIONS=$((TOTAL_VIOLATIONS + VIOLATIONS))
+        TOTAL_WARNINGS=$((TOTAL_WARNINGS + WARNINGS))
+
+        if [ $EXIT_CODE -ne 0 ]; then
+            FAILED_FILES="$FAILED_FILES\n  - $spec ($VIOLATIONS violations)"
+            # Show first violation for each file
+            echo -e "  ${RED}$VIOLATIONS violation(s)${NC}"
+            echo "$OUTPUT" | grep -m1 "VIOLATION:" | sed 's/^/    /' || true
+        elif [ $WARNINGS -gt 0 ]; then
+            echo -e "  ${YELLOW}$WARNINGS warning(s)${NC}"
+        else
+            echo -e "  ${GREEN}OK${NC}"
+        fi
+    done
+
+    echo ""
+    echo "=========================================="
+
+    if [ $TOTAL_VIOLATIONS -gt 0 ]; then
+        echo -e "${RED}PUSH BLOCKED${NC}"
+        echo ""
+        echo -e "Found ${RED}$TOTAL_VIOLATIONS violation(s)${NC} in:"
+        echo -e "$FAILED_FILES"
+        echo ""
+        echo "These violations will fail CI/CD. Fix them now."
+        echo ""
+        echo "To see full details:"
+        echo "  ./enforcement/validator.sh <spec>.md"
+        echo ""
+        echo "To bypass (will likely fail CI):"
+        echo "  git push --no-verify"
+        echo ""
+        exit 1
+    elif [ $TOTAL_WARNINGS -gt 0 ]; then
+        echo -e "${YELLOW}PUSH ALLOWED${NC} (with $TOTAL_WARNINGS warning(s))"
+        echo ""
+        echo "Warnings won't block CI, but consider addressing them."
+        exit 0
+    else
+        echo -e "${GREEN}PUSH ALLOWED${NC} - All specs valid"
+        exit 0
+    fi
+done
+
+exit 0

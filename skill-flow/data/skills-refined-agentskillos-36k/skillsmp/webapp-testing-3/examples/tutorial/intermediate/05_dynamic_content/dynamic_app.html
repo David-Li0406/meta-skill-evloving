@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Content Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            color: #6a11cb;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .control-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            margin-bottom: 30px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 25px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .content-area {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            min-height: 300px;
+        }
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6a11cb;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: #666;
+            font-size: 1.2em;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .data-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .data-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        .data-card p {
+            font-size: 0.95em;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+        .timestamp {
+            background: #e8f4f8;
+            border-left: 4px solid #2575fc;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .timestamp strong {
+            color: #2575fc;
+        }
+        .error-message {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Dynamic Content</h1>
+            <p>Testing JavaScript-Rendered Content with Playwright</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="button-group">
+                <button class="btn-primary" id="loadData">Load Data (2s delay)</button>
+                <button class="btn-secondary" id="loadFast">Load Fast (instant)</button>
+                <button class="btn-success" id="loadMore">Load More Items</button>
+                <button id="clearData">Clear All Data</button>
+            </div>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="empty-state">
+                <div class="empty-state-icon">📦</div>
+                <h2>No Data Loaded</h2>
+                <p>Click one of the buttons above to load dynamic content</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let loadCount = 0;
+
+        // Sample data generator
+        function generateData(count = 6) {
+            const items = [];
+            const topics = ['Web Testing', 'Automation', 'Performance', 'Security', 'API Testing', 'CI/CD', 'DevOps', 'Cloud'];
+            const adjectives = ['Advanced', 'Essential', 'Modern', 'Effective', 'Powerful', 'Comprehensive'];
+
+            for (let i = 0; i < count; i++) {
+                const topic = topics[Math.floor(Math.random() * topics.length)];
+                const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+
+                items.push({
+                    id: Date.now() + i,
+                    title: `${adjective} ${topic}`,
+                    description: `Learn about ${topic.toLowerCase()} strategies and best practices for modern web development.`,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            return items;
+        }
+
+        // Render data to the DOM
+        function renderData(data) {
+            const contentArea = document.getElementById('contentArea');
+
+            if (data.length === 0) {
+                contentArea.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h2>No Data Loaded</h2>
+                        <p>Click one of the buttons above to load dynamic content</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const timestamp = new Date().toLocaleString();
+            let html = `
+                <div class="timestamp">
+                    <strong>Last Updated:</strong> ${timestamp}
+                </div>
+                <h2>Loaded Items (${data.length})</h2>
+                <div class="data-grid">
+            `;
+
+            data.forEach(item => {
+                html += `
+                    <div class="data-card">
+                        <h3>${item.title}</h3>
+                        <p>${item.description}</p>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            contentArea.innerHTML = html;
+        }
+
+        // Show loading state
+        function showLoading() {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading data...</div>
+                </div>
+            `;
+        }
+
+        // Load data with delay
+        document.getElementById('loadData').addEventListener('click', function() {
+            console.log('Loading data with 2-second delay...');
+            showLoading();
+
+            setTimeout(() => {
+                currentData = generateData(6);
+                renderData(currentData);
+                loadCount++;
+                console.log(`Data loaded successfully! (Load count: ${loadCount})`);
+            }, 2000);
+        });
+
+        // Load data instantly
+        document.getElementById('loadFast').addEventListener('click', function() {
+            console.log('Loading data instantly...');
+            showLoading();
+
+            // Use setTimeout with 0 to still trigger async behavior
+            setTimeout(() => {
+                currentData = generateData(4);
+                renderData(currentData);
+                loadCount++;
+                console.log(`Data loaded successfully! (Load count: ${loadCount})`);
+            }, 0);
+        });
+
+        // Load more items
+        document.getElementById('loadMore').addEventListener('click', function() {
+            console.log('Loading more items...');
+
+            const newItems = generateData(3);
+            currentData = [...currentData, ...newItems];
+            renderData(currentData);
+
+            console.log(`Added 3 more items. Total: ${currentData.length}`);
+        });
+
+        // Clear all data
+        document.getElementById('clearData').addEventListener('click', function() {
+            console.log('Clearing all data...');
+            currentData = [];
+            renderData(currentData);
+            loadCount = 0;
+            console.log('Data cleared.');
+        });
+
+        // Log initial page load
+        console.log('Dynamic content app initialized.');
+        console.log('Available actions: Load Data, Load Fast, Load More, Clear Data');
+    </script>
+</body>
+</html>

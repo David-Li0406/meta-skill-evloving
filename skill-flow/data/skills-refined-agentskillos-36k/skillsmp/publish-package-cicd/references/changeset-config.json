@@ -1,0 +1,40 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
+  
+  "_comment_changelog": "Generate changelog from GitHub PRs/commits. Requires repo to be public or PAT with repo access.",
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "org/repo"
+    }
+  ],
+  
+  "_comment_commit": "Auto-commit after 'changeset version'. Set false for manual review before committing version bumps.",
+  "commit": false,
+  
+  "_comment_access": "Publish packages as public (not scoped/private). For private: 'restricted'.",
+  "access": "public",
+  
+  "_comment_baseBranch": "Branch to target for release PRs. Must match workflow trigger.",
+  "baseBranch": "main",
+  
+  "_comment_updateInternalDependencies": "When package A depends on package B and both get changesets, bump A's dependency on B. Options: 'patch' (conservative), 'minor' (semver-aware).",
+  "updateInternalDependencies": "patch",
+  
+  "_comment_ignore": "Packages excluded from versioning/publishing (e.g., docs sites, examples). Must match package.json 'name' field.",
+  "ignore": [
+    "@org/docs",
+    "@org/web",
+    "@org/examples"
+  ],
+  
+  "_comment_fixed": "Groups of packages that always version together (uncomment if needed). Useful for tightly coupled packages.",
+  "___fixed": [
+    ["@org/core", "@org/plugin"]
+  ],
+  
+  "_comment_linked": "Groups that follow each other's major/minor bumps but not patches (uncomment if needed). Useful for loosely coupled packages.",
+  "___linked": [
+    ["@org/client", "@org/server"]
+  ]
+}

@@ -1,0 +1,239 @@
+# TheHUB Security Configuration
+
+# Deny access to .env files
+<FilesMatch "^\.env">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deny access to git files
+<FilesMatch "^\.git">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deny access to composer files
+<FilesMatch "composer\.(json|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deny access to package manager files
+<FilesMatch "(package\.json|package-lock\.json|yarn\.lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Enable rewrite engine
+RewriteEngine On
+RewriteBase /
+
+# Redirect to HTTPS (enabled for production)
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Prevent directory listing
+Options -Indexes
+
+# ============================================================================
+# V3 SPA ROUTING - All requests go through index.php
+# ============================================================================
+
+# Skip rewriting for actual files (CSS, JS, images, etc.)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# ============================================================================
+# Force SPA routing for V3 sections (override physical directories)
+# These URLs should go to the SPA router even if matching directories exist
+# ============================================================================
+
+# Auth pages
+RewriteRule ^login/?$ index.php?page=login [QSA,L]
+RewriteRule ^logout/?$ index.php?page=logout [QSA,L]
+RewriteRule ^dashboard/?$ index.php?page=dashboard [QSA,L]
+RewriteRule ^welcome/?$ index.php?page=welcome [QSA,L]
+RewriteRule ^checkout/?$ index.php?page=checkout [QSA,L]
+
+# Main sections
+RewriteRule ^database(/.*)?$ index.php?page=database$1 [QSA,L]
+RewriteRule ^ranking(/.*)?$ index.php?page=ranking$1 [QSA,L]
+RewriteRule ^calendar(/.*)?$ index.php?page=calendar$1 [QSA,L]
+RewriteRule ^results(/.*)?$ index.php?page=results$1 [QSA,L]
+RewriteRule ^series(/.*)?$ index.php?page=series$1 [QSA,L]
+RewriteRule ^profile(/.*)?$ index.php?page=profile$1 [QSA,L]
+RewriteRule ^rider(/.*)?$ index.php?page=rider$1 [QSA,L]
+RewriteRule ^club(/.*)?$ index.php?page=club$1 [QSA,L]
+RewriteRule ^event(/.*)?$ index.php?page=event$1 [QSA,L]
+RewriteRule ^riders/?$ index.php?page=riders [QSA,L]
+RewriteRule ^clubs/?$ index.php?page=clubs [QSA,L]
+
+# ============================================================================
+# ADMIN ROUTING - Clean URLs for admin panel
+# ============================================================================
+RewriteRule ^admin/?$ admin/index.php [QSA,L]
+RewriteRule ^admin/dashboard/?$ admin/dashboard.php [QSA,L]
+RewriteRule ^admin/events/?$ admin/events.php [QSA,L]
+RewriteRule ^admin/events/create/?$ admin/event-create.php [QSA,L]
+RewriteRule ^admin/events/edit/([0-9]+)/?$ admin/event-edit.php?id=$1 [QSA,L]
+RewriteRule ^admin/events/results/?$ admin/results.php [QSA,L]
+RewriteRule ^admin/events/results/([0-9]+)/?$ admin/edit-results.php?id=$1 [QSA,L]
+RewriteRule ^admin/series/?$ admin/series.php [QSA,L]
+RewriteRule ^admin/series/brands/?$ admin/series-brands.php [QSA,L]
+RewriteRule ^admin/series/manage/([0-9]+)/?$ admin/series-manage.php?id=$1 [QSA,L]
+RewriteRule ^admin/series/edit/([0-9]+)/?$ admin/series-edit.php?id=$1 [QSA,L]
+RewriteRule ^admin/series/edit/?$ admin/series-edit.php [QSA,L]
+RewriteRule ^admin/series/manage/([0-9]+)/?$ admin/series-edit.php?id=$1&tab=events [QSA,L]
+RewriteRule ^admin/series/events/([0-9]+)/?$ admin/series-edit.php?id=$1&tab=events [QSA,L]
+RewriteRule ^admin/series/rules/([0-9]+)/?$ admin/series-edit.php?id=$1&tab=rules [QSA,L]
+RewriteRule ^admin/series/events/?$ admin/series-events.php [QSA,L]
+RewriteRule ^admin/series/pricing/?$ admin/series-pricing.php [QSA,L]
+RewriteRule ^admin/series/points/?$ admin/point-scales.php [QSA,L]
+RewriteRule ^admin/payment-recipients/?$ admin/payment-recipients.php [QSA,L]
+RewriteRule ^admin/riders/?$ admin/riders.php [QSA,L]
+RewriteRule ^admin/riders/edit/([0-9]+)/?$ admin/rider-edit.php?id=$1 [QSA,L]
+RewriteRule ^admin/rider-edit/([0-9]+)/?$ admin/rider-edit.php?id=$1 [QSA,L]
+RewriteRule ^admin/riders/duplicates/?$ admin/find-duplicates.php [QSA,L]
+RewriteRule ^admin/riders/cleanup/?$ admin/cleanup-duplicates.php [QSA,L]
+RewriteRule ^admin/clubs/?$ admin/clubs.php [QSA,L]
+RewriteRule ^admin/clubs/edit/([0-9]+)/?$ admin/club-edit.php?id=$1 [QSA,L]
+RewriteRule ^admin/clubs/cleanup/?$ admin/cleanup-clubs.php [QSA,L]
+RewriteRule ^admin/classes/?$ admin/classes.php [QSA,L]
+RewriteRule ^admin/import/?$ admin/import.php [QSA,L]
+RewriteRule ^admin/import/uci/?$ admin/import-uci.php [QSA,L]
+RewriteRule ^admin/import/results/?$ admin/import-results.php [QSA,L]
+RewriteRule ^admin/import/events/?$ admin/import-events.php [QSA,L]
+RewriteRule ^admin/import/clubs/?$ admin/import-clubs.php [QSA,L]
+RewriteRule ^admin/import/classes/?$ admin/import-classes.php [QSA,L]
+RewriteRule ^admin/import/history/?$ admin/import-history.php [QSA,L]
+RewriteRule ^admin/import/riders/?$ admin/import-riders.php [QSA,L]
+RewriteRule ^admin/import/riders/preview/?$ admin/import-riders-preview.php [QSA,L]
+RewriteRule ^admin/ranking/?$ admin/ranking.php [QSA,L]
+RewriteRule ^admin/venues/?$ admin/venues.php [QSA,L]
+RewriteRule ^admin/users/?$ admin/users.php [QSA,L]
+RewriteRule ^admin/user-edit/?$ admin/user-edit.php [QSA,L]
+RewriteRule ^admin/users/edit/?$ admin/user-edit.php [QSA,L]
+RewriteRule ^admin/users/edit/([0-9]+)/?$ admin/user-edit.php?id=$1 [QSA,L]
+RewriteRule ^admin/users/events/([0-9]+)/?$ admin/user-events.php?id=$1 [QSA,L]
+RewriteRule ^admin/users/rider/([0-9]+)/?$ admin/user-rider.php?id=$1 [QSA,L]
+RewriteRule ^admin/user-events/?$ admin/user-events.php [QSA,L]
+RewriteRule ^admin/user-rider/?$ admin/user-rider.php [QSA,L]
+RewriteRule ^admin/users/permissions/?$ admin/role-permissions.php [QSA,L]
+RewriteRule ^admin/settings/?$ admin/settings.php [QSA,L]
+RewriteRule ^admin/settings/system/?$ admin/system-settings.php [QSA,L]
+RewriteRule ^admin/settings/debug/?$ admin/debug.php [QSA,L]
+RewriteRule ^admin/import-riders/?$ admin/import-riders.php [QSA,L]
+RewriteRule ^admin/import-results/?$ admin/import-results.php [QSA,L]
+RewriteRule ^admin/import-results/preview/?$ admin/import-results-preview.php [QSA,L]
+RewriteRule ^admin/import-results-preview/?$ admin/import-results-preview.php [QSA,L]
+RewriteRule ^admin/import-events/?$ admin/import-events.php [QSA,L]
+RewriteRule ^admin/import-uci/?$ admin/import-uci.php [QSA,L]
+RewriteRule ^admin/import-uci/preview/?$ admin/import-uci-preview.php [QSA,L]
+RewriteRule ^admin/import-uci-preview/?$ admin/import-uci-preview.php [QSA,L]
+RewriteRule ^admin/media/?$ admin/media.php [QSA,L]
+RewriteRule ^admin/sponsors/?$ admin/sponsors.php [QSA,L]
+RewriteRule ^admin/recalculate-all-points/?$ admin/recalculate-all-points.php [QSA,L]
+RewriteRule ^admin/force-zero-motion-kids/?$ admin/force-zero-motion-kids.php [QSA,L]
+
+# Admin tools (from tools.php)
+RewriteRule ^admin/find-duplicates/?$ admin/find-duplicates.php [QSA,L]
+RewriteRule ^admin/cleanup-duplicates/?$ admin/cleanup-duplicates.php [QSA,L]
+RewriteRule ^admin/auto-merge-duplicates/?$ admin/auto-merge-duplicates.php [QSA,L]
+RewriteRule ^admin/fix-corrupted-uci/?$ admin/fix-corrupted-uci.php [QSA,L]
+RewriteRule ^admin/find-name-duplicates/?$ admin/find-name-duplicates.php [QSA,L]
+RewriteRule ^admin/assign-missing-swe-id/?$ admin/assign-missing-swe-id.php [QSA,L]
+RewriteRule ^admin/cleanup-clubs/?$ admin/cleanup-clubs.php [QSA,L]
+RewriteRule ^admin/search-uci-id/?$ admin/search-uci-id.php [QSA,L]
+RewriteRule ^admin/import-gravity-id/?$ admin/import-gravity-id.php [QSA,L]
+RewriteRule ^admin/clear-event-results/?$ admin/clear-event-results.php [QSA,L]
+RewriteRule ^admin/clear-cache/?$ admin/clear-cache.php [QSA,L]
+RewriteRule ^admin/point-scales/?$ admin/point-scales.php [QSA,L]
+RewriteRule ^admin/tools/?$ admin/tools.php [QSA,L]
+RewriteRule ^admin/format-uci-id/?$ admin/format-uci-id.php [QSA,L]
+RewriteRule ^admin/fix-uci-format/?$ admin/fix-uci-format.php [QSA,L]
+RewriteRule ^admin/fix-swe-format/?$ admin/fix-swe-format.php [QSA,L]
+RewriteRule ^admin/fix-swe-prefix/?$ admin/fix-swe-prefix.php [QSA,L]
+RewriteRule ^admin/sync-club-membership/?$ admin/sync-club-membership.php [QSA,L]
+RewriteRule ^admin/fix-birth-years/?$ admin/fix-birth-years.php [QSA,L]
+RewriteRule ^admin/normalize-names/?$ admin/normalize-names.php [QSA,L]
+RewriteRule ^admin/tools/diagnose-series/?$ admin/diagnose-series.php [QSA,L]
+RewriteRule ^admin/migrations/?$ admin/migrations/migration-browser.php [QSA,L]
+RewriteRule ^admin/fix-series-points/?$ admin/fix-series-points.php [QSA,L]
+RewriteRule ^admin/rebuild-stats/?$ admin/rebuild-stats.php [QSA,L]
+RewriteRule ^admin/ranking-backfill/?$ admin/ranking-backfill.php [QSA,L]
+RewriteRule ^admin/enrich-riders/?$ admin/enrich-riders.php [QSA,L]
+RewriteRule ^admin/merge-specific-riders/?$ admin/merge-specific-riders.php [QSA,L]
+RewriteRule ^admin/check-license-numbers/?$ admin/check-license-numbers.php [QSA,L]
+RewriteRule ^admin/verify-swe-licenses/?$ admin/verify-swe-licenses.php [QSA,L]
+RewriteRule ^admin/fix-rider-clubs/?$ admin/fix-rider-clubs.php [QSA,L]
+RewriteRule ^admin/rider-claims/?$ admin/rider-claims.php [QSA,L]
+RewriteRule ^admin/club-points/?$ admin/club-points.php [QSA,L]
+RewriteRule ^admin/data-explorer/?$ admin/data-explorer.php [QSA,L]
+RewriteRule ^admin/download-templates/?$ admin/download-templates.php [QSA,L]
+
+# Ekonomi section routes
+RewriteRule ^admin/ekonomi/?$ admin/ekonomi.php [QSA,L]
+RewriteRule ^admin/orders/?$ admin/orders.php [QSA,L]
+RewriteRule ^admin/swish-accounts/?$ admin/swish-accounts.php [QSA,L]
+RewriteRule ^admin/gateway-settings/?$ admin/gateway-settings.php [QSA,L]
+RewriteRule ^admin/pricing-templates/?$ admin/pricing-templates.php [QSA,L]
+RewriteRule ^admin/pricing-template-edit/?$ admin/pricing-template-edit.php [QSA,L]
+RewriteRule ^admin/certificates/?$ admin/certificates.php [QSA,L]
+RewriteRule ^admin/payment-settings/?$ admin/payment-settings.php [QSA,L]
+RewriteRule ^admin/refund-requests/?$ admin/refund-requests.php [QSA,L]
+RewriteRule ^admin/registration-rules/?$ admin/registration-rules.php [QSA,L]
+RewriteRule ^admin/license-class-matrix/?$ admin/license-class-matrix.php [QSA,L]
+RewriteRule ^admin/promotor-payments/?$ admin/promotor-payments.php [QSA,L]
+RewriteRule ^admin/public-settings/?$ admin/public-settings.php [QSA,L]
+RewriteRule ^admin/results/?$ admin/results.php [QSA,L]
+RewriteRule ^admin/edit-results/?$ admin/edit-results.php [QSA,L]
+RewriteRule ^admin/elimination/?$ admin/elimination.php [QSA,L]
+RewriteRule ^admin/global-texts/?$ admin/global-texts.php [QSA,L]
+
+# Skip remaining admin files (direct PHP access)
+RewriteRule ^admin/.*\.php$ - [L]
+
+# Skip API endpoints (direct PHP files)
+RewriteRule ^api/.*\.php$ - [L]
+
+# Skip v2 backup folder
+RewriteRule ^v2(/.*)?$ - [L]
+
+# Skip legacy .php files for backwards compatibility
+RewriteCond %{REQUEST_URI} \.(php)$
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# ============================================================================
+# Route everything else to V3 SPA index.php
+# ============================================================================
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?page=$1 [QSA,L]
+
+# ============================================================================
+# Cache static assets
+# ============================================================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+</IfModule>
+
+# Gzip compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# Custom error pages
+ErrorDocument 404 /index.php?page=404

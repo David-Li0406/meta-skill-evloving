@@ -1,0 +1,34 @@
+# Crossformer Model Configuration - Full Version
+# Maximum capacity for best performance
+
+# Temporal configuration
+input_len: 7          # Number of input frames
+output_len: 1         # Number of output frames
+in_channels: 2        # Number of channels (u, v velocity components)
+
+# Spatial configuration
+img_size: [240, 240]  # Input image size (H, W)
+patch_size: [6, 6]    # Smaller patches for finer details (240/6 = 40x40 grid)
+
+# Temporal segmentation
+seg_len: 1            # Temporal segment length (each frame is a segment)
+win_size: 2           # Window size for segment merging in encoder
+
+# Model architecture parameters - FULL
+d_model: 512          # Large model dimension
+d_ff: 1024            # Feed-forward dimension (2x d_model)
+n_heads: 8            # Number of attention heads
+e_layers: 4           # Number of encoder/decoder scales (4 scales for deep hierarchy)
+factor: 12            # Larger router factor for better cross-patch communication
+
+# Regularization
+dropout: 0.1          # Dropout rate
+baseline: false       # Use baseline prediction (mean of inputs)
+
+# Expected metrics:
+# - Parameters: ~30-40M (large model)
+# - Num patches: 40x40 = 1600
+# - Memory usage: ~8-12 GB for batch_size=2
+# - Training speed: Slower (~2-3x slower than balanced)
+# - Best for: Maximum accuracy, sufficient GPU memory
+

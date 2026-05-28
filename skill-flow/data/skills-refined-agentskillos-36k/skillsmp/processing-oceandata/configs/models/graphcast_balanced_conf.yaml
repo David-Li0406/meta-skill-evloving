@@ -1,0 +1,37 @@
+# GraphCast Model Configuration - Standard Version
+# Graph neural network adapted for ocean velocity prediction
+# Uses icosahedral mesh for spherical Earth representation
+
+# Temporal configuration
+input_len: 7        # Number of input frames
+output_len: 1       # Number of output frames
+in_channels: 2      # Ocean velocity components (u, v)
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration
+mesh_level: 4       # Level of mesh refinement (4 for 240x240, 5 for higher res)
+multimesh: true     # Use multi-resolution mesh hierarchy for better feature extraction
+
+# Model architecture parameters
+hidden_dim: 128     # Hidden dimension for all MLPs
+processor_layers: 8 # Number of processor layers (graph message passing)
+mlp_layers: 1      # Number of MLP layers in each component
+aggregation: "sum"  # Aggregation method for edges ("sum" or "mean")
+
+# Processing options
+add_3d_dim: true         # Process 2D data as pseudo-3D (simulates depth)
+temporal_encoding: "concat"  # How to encode temporal frames: "concat" or "rnn"
+
+# Training recommendations
+# - Batch size: 1-4 depending on GPU memory
+# - Learning rate: 1e-4 to 5e-4
+# - Scheduler: CosineAnnealingLR or ReduceLROnPlateau
+# - Loss: MSE with ocean masking
+# - This model requires DGL library and sklearn
+
+# Memory usage estimates (approximate)
+# mesh_level=3, hidden_dim=64: ~2-3 GB VRAM
+# mesh_level=4, hidden_dim=128: ~4-6 GB VRAM
+# mesh_level=5, hidden_dim=256: ~8-12 GB VRAM

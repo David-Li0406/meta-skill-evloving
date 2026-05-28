@@ -1,0 +1,33 @@
+#!/bin/bash
+#
+# Pre-push hook: Optional Claude-powered security audit
+#
+# Installation:
+#   cp pre-push.template .git/hooks/pre-push
+#   chmod +x .git/hooks/pre-push
+#
+# Note: Requires Claude Code CLI. Skips gracefully if not installed.
+#
+
+# Get changed files compared to remote
+CHANGED=$(git diff --name-only @{u}..HEAD 2>/dev/null || git diff --name-only HEAD~10..HEAD 2>/dev/null)
+
+if [ -z "$CHANGED" ]; then
+  exit 0
+fi
+
+FILE_COUNT=$(echo "$CHANGED" | wc -l | tr -d ' ')
+echo "Pre-push: Checking $FILE_COUNT files..."
+
+# Check if Claude is available
+if ! command -v claude &> /dev/null; then
+  echo "  (Claude CLI not installed - skipping AI analysis)"
+  exit 0
+fi
+
+# Run Claude security check
+echo "  Running security analysis..."
+claude -p "Quick security scan of these files. Report ONLY critical issues (secrets, injection, auth bypass). Be brief:
+$CHANGED" 2>/dev/null || echo "  (Analysis skipped)"
+
+echo "  ✓ Pre-push complete"

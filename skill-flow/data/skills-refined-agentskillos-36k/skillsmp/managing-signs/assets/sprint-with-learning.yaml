@@ -1,0 +1,100 @@
+# Sprint Workflow with Learning Extraction
+# Complete sprint workflow that includes learning extraction as final phase
+#
+# This demonstrates how to integrate learning extraction into any sprint.
+# The learning-extraction phase runs after all development work completes,
+# processing the session transcripts to capture patterns and insights.
+#
+# Usage: Copy to .claude/workflows/ or reference in SPRINT.yaml
+#   workflow: sprint-with-learning
+
+name: Sprint with Learning
+description: Standard sprint workflow with automated learning extraction from session transcripts.
+
+phases:
+  # Phase 1: Preparation
+  - id: prepare
+    prompt: |
+      ## Sprint Preparation
+
+      Set up the sprint environment and validate prerequisites.
+
+      ### Instructions
+      1. Read SPRINT.yaml and understand the sprint goals
+      2. Verify all dependencies are available
+      3. Create any required directories or initial files
+      4. Report any blockers that would prevent sprint execution
+
+      ### Output
+      - Sprint is ready to begin OR
+      - List of blockers requiring human intervention
+
+  # Phase 2: Development (iterates over steps)
+  - id: development
+    for-each: step
+    workflow: feature-standard
+
+  # Phase 3: Quality Assurance
+  - id: qa
+    prompt: |
+      ## Quality Assurance
+
+      Validate the sprint deliverables.
+
+      ### Instructions
+      1. Review all changes made during development
+      2. Run tests and validation scripts
+      3. Check for any incomplete or broken functionality
+      4. Verify documentation is up to date
+
+      ### Output
+      - All tests pass OR
+      - List of issues requiring fixes
+
+  # Phase 4: Learning Extraction
+  - id: learning-extraction
+    prompt: |
+      ## Learning Extraction
+
+      Extract learnings from this sprint's development sessions.
+
+      ### Instructions
+      1. Find all transcript files in:
+         `.claude/sprints/{{sprint.id}}/transcripts/*.jsonl`
+
+      2. For each transcript, run extraction:
+         ```
+         /m42-signs:extract <transcript-path> --confidence-min medium
+         ```
+
+      3. After all transcripts processed, show backlog status:
+         ```
+         /m42-signs:status
+         ```
+
+      ### Output
+      - Number of learnings extracted
+      - Summary by confidence level
+      - Recommendation for next steps (review, apply)
+
+      ### Note
+      Learnings remain in the backlog for human review.
+      Use `/m42-signs:review` to approve and `/m42-signs:apply` to apply.
+
+  # Phase 5: Summary
+  - id: summary
+    prompt: |
+      ## Sprint Summary
+
+      Provide final summary of sprint execution.
+
+      ### Instructions
+      1. Summarize what was accomplished in each step
+      2. Note any deviations from the original plan
+      3. List any follow-up tasks identified
+      4. Report final learning backlog status
+
+      ### Output
+      - Sprint completion report
+      - Follow-up tasks (if any)
+      - Learnings ready for review (if any)

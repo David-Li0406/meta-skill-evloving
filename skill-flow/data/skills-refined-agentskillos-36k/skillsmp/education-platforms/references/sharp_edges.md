@@ -1,0 +1,206 @@
+# Education Platforms - Sharp Edges
+
+## Platform Lock In
+
+### **Id**
+platform-lock-in
+### **Summary**
+Trapped in platform that no longer fits
+### **Severity**
+high
+### **Situation**
+Can't migrate without losing data and students
+### **Why**
+  No data export capability.
+  Proprietary features used heavily.
+  Student progress not portable.
+  URLs can't redirect.
+  
+### **Solution**
+  ## Avoiding Platform Lock-in
+  
+  ### Prevention
+  - Evaluate export capabilities FIRST
+  - Own your email list (outside platform)
+  - Keep content in external format
+  - Use platform-agnostic tools where possible
+  
+  ### Lock-in Warning Signs
+  | Sign | Risk Level |
+  |------|------------|
+  | No export option | Critical |
+  | Proprietary formats | High |
+  | No API | High |
+  | Community can't migrate | Medium |
+  | Custom domain issues | Medium |
+  
+  ### If Already Locked In
+  1. Export what you can now
+  2. Build email list externally
+  3. Document all content outside platform
+  4. Plan migration for low-activity period
+  5. Accept some data loss
+  
+  ### Portable Elements (Own These)
+  - Email list (in ConvertKit, Mailchimp)
+  - Content source files
+  - Student testimonials
+  - Brand assets
+  - Your own domain
+  
+### **Symptoms**
+  - We can't leave because...
+  - Platform raising prices
+  - Missing critical features
+  - Competitors using better tools
+### **Detection Pattern**
+can't migrate|stuck with|no export|trapped
+
+## Transaction Fee Surprise
+
+### **Id**
+transaction-fee-surprise
+### **Summary**
+Platform fees eating into revenue at scale
+### **Severity**
+high
+### **Situation**
+Transaction fees become significant cost
+### **Why**
+  Didn't read fine print.
+  Fees compound at scale.
+  Cheaper tier had higher fees.
+  
+### **Solution**
+  ## Transaction Fee Analysis
+  
+  ### Common Fee Structures
+  | Platform | Monthly | Transaction |
+  |----------|---------|-------------|
+  | Teachable Basic | $59 | 5% |
+  | Teachable Pro | $159 | 0% |
+  | Thinkific Basic | $49 | 0% |
+  | Kajabi | $149+ | 0% |
+  | Podia | $39 | 5% (Mover) |
+  
+  ### Break-Even Analysis
+  When to upgrade from Basic (5% fee) to Pro (0% fee):
+  
+  | Revenue/mo | 5% Fee | Pro Cost | Winner |
+  |------------|--------|----------|--------|
+  | $1,000 | $50 | $159 | Basic |
+  | $2,000 | $100 | $159 | Basic |
+  | $3,200 | $160 | $159 | Pro |
+  | $5,000 | $250 | $159 | Pro |
+  
+  ### Hidden Fees to Check
+  - Payment processor fees (Stripe/PayPal)
+  - Currency conversion
+  - Payout fees
+  - Affiliate commission processing
+  
+### **Symptoms**
+  - Fees growing each month
+  - Profit margins shrinking
+  - Paying more in fees than subscription
+### **Detection Pattern**
+fees|taking too much|percentage|transaction
+
+## Migration Disaster
+
+### **Id**
+migration-disaster
+### **Summary**
+Platform migration causes chaos
+### **Severity**
+high
+### **Situation**
+Migration causes data loss and student confusion
+### **Why**
+  Rushed migration.
+  Insufficient testing.
+  Poor communication.
+  Progress data lost.
+  
+### **Solution**
+  ## Safe Migration Process
+  
+  ### Pre-Migration
+  - [ ] Full backup of everything
+  - [ ] Document current structure completely
+  - [ ] Test import on new platform
+  - [ ] Prepare student communication
+  - [ ] Plan redirect strategy
+  
+  ### Migration Day
+  - [ ] Choose low-traffic period
+  - [ ] Have support on standby
+  - [ ] Don't delete old platform yet
+  - [ ] Monitor for issues
+  - [ ] Be responsive to questions
+  
+  ### Post-Migration
+  - [ ] Verify all content accessible
+  - [ ] Test student journeys
+  - [ ] Check payment integration
+  - [ ] Monitor support tickets
+  - [ ] Keep old platform live 2-4 weeks
+  
+  ### Communicate Early and Often
+  - 2 weeks before: Announce change
+  - 1 week before: What to expect
+  - Day of: Here's what changed
+  - Day after: Check-in email
+  
+### **Symptoms**
+  - Students can't log in
+  - Content missing
+  - Progress lost without warning
+  - Support overwhelmed
+### **Detection Pattern**
+can't access|where's my|lost my progress|what happened
+
+## Shiny Platform Syndrome
+
+### **Id**
+shiny-platform-syndrome
+### **Summary**
+Switching platforms for new features, not needs
+### **Severity**
+medium
+### **Situation**
+Frequent platform switching or evaluation
+### **Why**
+  FOMO on new features.
+  Competitor platform envy.
+  Marketing to educators.
+  Avoiding real work.
+  
+### **Solution**
+  ## Staying Focused
+  
+  ### Switch Criteria (2 of 4 needed)
+  1. Missing feature that's costing real money
+  2. Platform limiting growth significantly
+  3. Support quality unacceptable
+  4. Pricing no longer competitive
+  
+  ### "Good Enough" Principle
+  - Perfect platform doesn't exist
+  - Switching costs time and money
+  - Students don't care about your platform
+  - Focus on content, not tools
+  
+  ### Quarterly Review (Not More)
+  - Is current platform blocking anything?
+  - What would switching actually gain?
+  - What's the true switching cost?
+  - Decision: Stay or start migration
+  
+### **Symptoms**
+  - Constantly researching platforms
+  - Switching more than once/year
+  - Grass-is-greener thinking
+  - Procrastinating on course work
+### **Detection Pattern**
+have you tried|should we switch|new platform|better

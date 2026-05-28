@@ -1,0 +1,63 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: 'class',
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: 'hsl(var(--color-primary) / <alpha-value>)',
+        'primary-foreground': 'hsl(var(--color-primary-foreground) / <alpha-value>)',
+        success: 'hsl(var(--color-success) / <alpha-value>)',
+        'success-foreground': 'hsl(var(--color-success-foreground) / <alpha-value>)',
+        warning: 'hsl(var(--color-warning) / <alpha-value>)',
+        'warning-foreground': 'hsl(var(--color-warning-foreground) / <alpha-value>)',
+        error: 'hsl(var(--color-error) / <alpha-value>)',
+        'error-foreground': 'hsl(var(--color-error-foreground) / <alpha-value>)',
+        info: 'hsl(var(--color-info) / <alpha-value>)',
+        'info-foreground': 'hsl(var(--color-info-foreground) / <alpha-value>)',
+        background: 'hsl(var(--color-background) / <alpha-value>)',
+        foreground: 'hsl(var(--color-foreground) / <alpha-value>)',
+        card: 'hsl(var(--color-card) / <alpha-value>)',
+        'card-foreground': 'hsl(var(--color-card-foreground) / <alpha-value>)',
+        popover: 'hsl(var(--color-popover) / <alpha-value>)',
+        'popover-foreground': 'hsl(var(--color-popover-foreground) / <alpha-value>)',
+        secondary: 'hsl(var(--color-secondary) / <alpha-value>)',
+        'secondary-foreground': 'hsl(var(--color-secondary-foreground) / <alpha-value>)',
+        muted: 'hsl(var(--color-muted) / <alpha-value>)',
+        'muted-foreground': 'hsl(var(--color-muted-foreground) / <alpha-value>)',
+        accent: 'hsl(var(--color-accent) / <alpha-value>)',
+        'accent-foreground': 'hsl(var(--color-accent-foreground) / <alpha-value>)',
+        destructive: 'hsl(var(--color-destructive) / <alpha-value>)',
+        'destructive-foreground': 'hsl(var(--color-destructive-foreground) / <alpha-value>)',
+        border: 'hsl(var(--color-border) / <alpha-value>)',
+        input: 'hsl(var(--color-input) / <alpha-value>)',
+        ring: 'hsl(var(--color-ring) / <alpha-value>)',
+        'glass-border': 'hsl(var(--glass-border) / <alpha-value>)',
+      },
+      fontFamily: {
+        sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+      borderRadius: {
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+      },
+      boxShadow: {
+        xs: 'var(--shadow-xs)',
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
+        xl: 'var(--shadow-xl)',
+      },
+      animationDuration: {
+        DEFAULT: 'var(--animation-duration)',
+      },
+      transitionTimingFunction: {
+        DEFAULT: 'var(--animation-easing)',
+      },
+    },
+  },
+  plugins: [],
+};

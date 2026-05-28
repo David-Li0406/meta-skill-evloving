@@ -1,0 +1,32 @@
+# Fuxi Model Configuration - Autoregressive Version
+# For long-term forecasting through iterative predictions
+
+# Temporal configuration
+input_len: 7        # Number of input frames for context
+output_len: 1       # Always 1 for autoregressive mode
+in_channels: 2      # Ocean velocity components (u, v)
+
+# Spatial configuration
+img_size: [240, 240]     # H, W
+patch_size: [4, 4]       # Patch for token generation
+
+# Model architecture
+embed_dim: 512           # Token embedding dimension
+num_groups: 32           # Number of groups for group norm
+num_heads: 8             # Number of attention heads
+window_size: 7           # Window size for local attention
+depth: 48                # Number of Swin-Transformer blocks
+
+# 3D processing options
+use_3d_path: true        # Enable pseudo-3D processing
+pseudo_depth: 4          # Pseudo depth levels for 2D->3D
+
+# Autoregressive specific settings
+rollout_steps: 10        # Number of autoregressive prediction steps
+                         # Can be overridden at inference time
+
+# Training recommendations
+# - Train with teacher forcing initially
+# - Then fine-tune with scheduled sampling
+# - Use curriculum learning: start with 1-2 rollout steps, gradually increase
+# - Monitor error accumulation across rollout steps

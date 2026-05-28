@@ -1,0 +1,66 @@
+line-length = 88
+indent-width = 4
+
+[format]
+quote-style = "double"
+indent-style = "space"
+
+[lint]
+select = [
+    "E",    # pycodestyle (Error): PEP8 のエラー系
+    "W",    # pycodestyle (Warning): PEP8 の警告系
+    "F",    # Pyflakes: 未使用変数など
+    "I",    # isort: import 並びの整理
+    "N",    # pep8-naming: 命名規則
+    "B",    # flake8-bugbear: バグになりやすい書き方
+    "C4",   # flake8-comprehensions: 内包表記の改善
+    "RET",  # flake8-return: return の一貫性
+    "RSE",  # flake8-raise: raise の書き方の改善
+    "A",    # flake8-builtins: 組み込み名の上書き
+    "PIE",  # flake8-pie: ちょっとした改善提案
+    "UP",   # pyupgrade: 新しい構文への置き換え
+    "COM",  # flake8-commas: 末尾カンマ
+    "D",    # pydocstyle: docstring系
+    "S105", # hardcoded-password-string: 文字列のハードコードパスワード
+    "S106", # hardcoded-password-func-arg: 引数のハードコードパスワード
+    "S107", # hardcoded-password-default: デフォルト値のハードコードパスワード
+    "FAST", # FastAPI: FastAPI 向け
+    "DTZ",  # flake8-datetimez: naive/aware datetime
+    "T20",  # flake8-print: print/pprint (スクリプトなどでprintを使う場合は、この行をコメントアウトする)
+]
+
+ignore = [
+    # selectにあるルールのうち、formatter と衝突する/したときにノイズになるルールは無視する
+    # ref: https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "E501",   # line-too-long: 行が長すぎる
+    "E111",   # indentation-with-invalid-multiple: インデント幅が不正
+    "E114",   # indentation-with-invalid-multiple-comment: コメント行のインデント幅が不正
+    "E117",   # over-indented: インデントが深すぎる
+    "W191",   # tab-indentation: インデントにタブが含まれる
+    "COM812", # missing-trailing-comma: 末尾カンマが不足
+    "COM819", # prohibited-trailing-comma: 末尾カンマが不要
+    "D206",   # docstring-tab-indentation: docstringのインデントにタブ
+    "D300",   # triple-single-quotes: docstringの三連シングルクォート
+    # その他で無視したいルール
+    "RET504", # unnecessary-assign: return 直前の代入
+    "D1",     # pydocstyle(D100-D107): docstringの必須化
+    "D401",   # non-imperative-mood: 命令形を要求 (英語用のルールのため)
+    "D415",   # missing-terminal-punctuation: 末尾の . ? ! を要求 (英語用のルールのため)
+]
+
+unfixable = [
+    "F401", # unused-import: 未使用import (作業中のコードが消されないようにするため)
+    "F841", # unused-variable: 未使用変数 (作業中のコードが消されないようにするため)
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.per-file-ignores]
+"tests/**" = [
+    "D",
+    "S105",
+    "S106",
+    "S107",
+    "T20",
+]

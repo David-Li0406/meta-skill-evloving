@@ -1,0 +1,112 @@
+# ==============================================================================
+# Template Name: Deploy Files (iis-deploy-files-robocopy.yml)
+# Description: 
+#   Copy files from source path to destination path.
+#   Supports "Clean Mode": Empty destination folder before copying.
+#   Uses PowerShell Copy-Item instead of Robocopy to simplify logic and ensure clean deployment.
+# ==============================================================================
+
+parameters:
+  # Source Path (e.g. Artifact download path)
+  - name: sourcePath
+    type: string
+  
+  # Destination Path (e.g. Website physical path)
+  - name: destinationPath
+    type: string
+  
+  # Whether to empty destination folder first
+  - name: cleanDestination
+    type: boolean
+    default: true
+  
+  # Execution Condition
+  - name: runCondition
+    type: string
+    default: 'succeeded()'
+
+steps:
+  # ----------------------------------------------------------------------------
+  # Execute PowerShell script for file deployment
+  # ----------------------------------------------------------------------------
+  - powershell: |
+      $sourceRaw = "${{ parameters.sourcePath }}"
+      $destRaw = "${{ parameters.destinationPath }}"
+      $clean = "${{ parameters.cleanDestination }}"
+      
+      # Expand Environment Variables (e.g. convert %SystemDrive% to C:)
+      $source = [System.Environment]::ExpandEnvironmentVariables($sourceRaw)
+      $dest = [System.Environment]::ExpandEnvironmentVariables($destRaw)
+
+      # 1. Path Normalization (Remove trailing slash)
+      if ($source.EndsWith("\") -or $source.EndsWith("/")) { $source = $source.Substring(0, $source.Length - 1) }
+      if ($dest.EndsWith("\") -or $dest.EndsWith("/")) { $dest = $dest.Substring(0, $dest.Length - 1) }
+
+      Write-Host "Preparing to deploy files"
+      Write-Host "Source Path (Raw): $sourceRaw"
+      Write-Host "Source Path (Expanded): $source"
+      Write-Host "Destination Path (Raw): $destRaw"
+      Write-Host "Destination Path (Expanded): $dest"
+      
+      if (-not (Test-Path $source)) {
+          Write-Error "Source path does not exist: $source"
+          exit 1
+      }
+
+      # 2. Handle Destination Directory (Create or Clean)
+      if (Test-Path $dest) {
+          if ($clean -eq 'true') {
+              Write-Host "Mode: Clean Destination"
+              Write-Host "Removing entire destination directory: $dest"
+              try {
+                  # Force remove entire directory
+                  Remove-Item -Path $dest -Recurse -Force -ErrorAction Stop
+                  Write-Host "Directory removed."
+              } catch {
+                  Write-Warning "Error removing directory (files might be locked): $_ "
+                  # If remove fails, try clearing contents only as fallback
+                  Get-ChildItem -Path $dest -Recurse | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+              }
+          } else {
+              Write-Host "Mode: Overwrite/Merge (Keep existing files)"
+          }
+      }
+
+      # Ensure destination directory exists (Create if deleted or not exists)
+      if (-not (Test-Path $dest)) {
+          Write-Host "Destination directory does not exist, creating: $dest"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+      }
+
+      # 3. Execute Copy
+      Write-Host "Copying files..."
+      
+      try {
+          # Debug Info: Check Source
+          # Use Recurse to list all levels, check for nested directory issues
+          $items = Get-ChildItem -Path $source -Recurse
+          Write-Host "Source directory ($source) contains $($items.Count) items (subdirs/files)."
+          if ($items.Count -gt 0) {
+              Write-Host "File list preview (first 10):"
+              $items | Select-Object -First 10 | ForEach-Object { Write-Host "  - $($_.FullName)" }
+          }
+          
+          # Debug Info: Check Destination
+          Write-Host "Destination Path: $dest"
+          Write-Host "Destination Exists: $(Test-Path $dest)"
+
+          if ($items.Count -gt 0) {
+              # Use basic Copy-Item syntax, add verbose log
+              # Note: If source contains subdirectories, -Recurse must be added
+              # Ensure Destination points to a folder path
+              Copy-Item -Path "$source\*" -Destination $dest -Recurse -Force -ErrorAction Stop -Verbose
+              Write-Host "File deployment successful."
+          } else {
+              Write-Warning "Source directory is empty, no files copied."
+          }
+      } catch {
+          Write-Error "File copy failed: $_ "
+          exit 1
+      }
+    displayName: 'Deploy Application Files (Copy-Item)'
+    condition: ${{ parameters.runCondition }}

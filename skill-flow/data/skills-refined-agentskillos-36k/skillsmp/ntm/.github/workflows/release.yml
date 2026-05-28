@@ -1,0 +1,304 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write       # For cosign signing and attestations
+  attestations: write   # For artifact attestations
+
+env:
+  GO_VERSION: "1.25"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================================================
+  # RELEASE - Build and publish release artifacts
+  # ============================================================================
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Install Syft (for SBOM)
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Run GoReleaser
+        id: goreleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          SCOOP_GITHUB_TOKEN: ${{ secrets.SCOOP_GITHUB_TOKEN }}
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist/
+          retention-days: 30
+
+      # Generate attestations for release artifacts
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        continue-on-error: true  # Don't fail if attestation fails
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/checksums.txt
+
+  # ============================================================================
+  # DOCKER - Build and push multi-arch container images
+  # ============================================================================
+  docker:
+    name: Docker Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      - name: Check for Dockerfile
+        id: dockerfile
+        run: |
+          if [ -f Dockerfile ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "No Dockerfile found, skipping Docker build"
+          fi
+
+      - name: Build and push
+        if: steps.dockerfile.outputs.exists == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+  # ============================================================================
+  # VERIFY - Verify release artifacts
+  # ============================================================================
+  verify:
+    name: Verify Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: release
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist/
+
+      - name: List artifacts
+        run: |
+          echo "Release artifacts:"
+          ls -la dist/
+          echo ""
+          echo "Checksums:"
+          cat dist/checksums.txt || true
+
+      - name: Verify checksums
+        run: |
+          cd dist
+          if [ -f checksums.txt ]; then
+            echo "Verifying SHA256 checksums..."
+            sha256sum -c checksums.txt --ignore-missing
+            echo "All checksums verified successfully"
+          else
+            echo "No checksums.txt found"
+            exit 1
+          fi
+
+      - name: Verify archive contents
+        run: |
+          cd dist
+          echo "Verifying archive contents..."
+          for archive in *.tar.gz; do
+            if [ -f "$archive" ]; then
+              echo "Contents of $archive:"
+              tar -tzf "$archive" | head -20
+              echo ""
+            fi
+          done
+          for archive in *.zip; do
+            if [ -f "$archive" ]; then
+              echo "Contents of $archive:"
+              unzip -l "$archive" | head -20
+              echo ""
+            fi
+          done
+
+  # ============================================================================
+  # UPGRADE-VERIFY - Verify upgrade command works on all platforms
+  # This catches asset naming mismatches between upgrade.go and GoReleaser
+  # ============================================================================
+  upgrade-verify:
+    name: Verify Upgrade (${{ matrix.os }})
+    needs: release
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build ntm
+        run: go build -o ntm ./cmd/ntm
+
+      - name: Verify upgrade --check finds assets
+        shell: bash
+        run: |
+          echo "Testing upgrade --check on ${{ matrix.goos }}/${{ matrix.goarch }}"
+          # Run upgrade --check and capture output
+          if ./ntm upgrade --check 2>&1 | tee upgrade_output.txt; then
+            echo "Upgrade check passed"
+          else
+            echo "Upgrade check failed"
+            cat upgrade_output.txt
+            exit 1
+          fi
+
+          # Verify it found the correct asset (not "no suitable release asset")
+          if grep -q "no suitable release asset" upgrade_output.txt; then
+            echo "ERROR: upgrade --check could not find release asset for ${{ matrix.goos }}/${{ matrix.goarch }}"
+            echo "This indicates a mismatch between upgrade.go and .goreleaser.yaml"
+            exit 1
+          fi
+
+          echo "Asset naming contract verified for ${{ matrix.goos }}/${{ matrix.goarch }}"
+
+  # ============================================================================
+  # ANNOUNCE - Post-release notifications
+  # ============================================================================
+  announce:
+    name: Announce Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [release, verify, upgrade-verify]
+    steps:
+      - name: Get release info
+        id: release
+        run: |
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "Released ${GITHUB_REF#refs/tags/}"
+
+      - name: Create release summary
+        run: |
+          echo "# Release ${{ steps.release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Installation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "# Quick install" >> $GITHUB_STEP_SUMMARY
+          echo "curl -fsSL https://raw.githubusercontent.com/Dicklesworthstone/ntm/main/install.sh | bash" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Homebrew" >> $GITHUB_STEP_SUMMARY
+          echo "brew install dicklesworthstone/tap/ntm" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Go install" >> $GITHUB_STEP_SUMMARY
+          echo "go install github.com/Dicklesworthstone/ntm/cmd/ntm@${{ steps.release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All release artifacts have been verified:" >> $GITHUB_STEP_SUMMARY
+          echo "- SHA256 checksums validated" >> $GITHUB_STEP_SUMMARY
+          echo "- Upgrade command tested on Linux, macOS, and Windows" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker images built with SBOM and provenance" >> $GITHUB_STEP_SUMMARY

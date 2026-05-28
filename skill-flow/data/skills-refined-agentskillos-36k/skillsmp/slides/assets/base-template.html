@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Brand colors - customize these */
+            --primary-color: #00d4aa;
+            --secondary-color: #00a8cc;
+            --accent-color: #667eea;
+            --text-color: #ffffff;
+            --text-muted: #888;
+            --bg-color: #0a0a0a;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --danger-color: #ff5252;
+            --warning-color: #ffc107;
+            --success-color: #73bf69;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transition: width 0.3s;
+            z-index: 1000;
+        }
+
+        /* ===== SLIDES ===== */
+        .slide {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            padding: 50px 70px;
+            position: relative;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide-header {
+            margin-bottom: 30px;
+            flex-shrink: 0;
+        }
+
+        .slide-category {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .slide-title {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .slide-subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .slide-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            margin-right: 130px;
+            border-top: 1px solid var(--border-color);
+            font-size: 13px;
+            color: #555;
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        .slide-footer .logo {
+            height: 20px;
+            width: auto;
+            opacity: 0.7;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ===== TITLE SLIDE ===== */
+        .title-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .title-slide .logo-large {
+            height: 80px;
+            width: auto;
+            margin-bottom: 40px;
+        }
+
+        .title-slide .main-title {
+            font-size: 64px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .title-slide .subtitle {
+            font-size: 28px;
+            color: var(--text-muted);
+            margin-bottom: 60px;
+        }
+
+        .title-slide .author {
+            font-size: 22px;
+            color: var(--primary-color);
+        }
+
+        .title-slide .date {
+            font-size: 16px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* ===== SECTION SLIDE ===== */
+        .section-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .section-slide .section-number {
+            font-size: 100px;
+            font-weight: 800;
+            color: rgba(0, 212, 170, 0.2);
+            line-height: 1;
+        }
+
+        .section-slide .section-title {
+            font-size: 52px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: -20px;
+        }
+
+        .section-slide .section-subtitle {
+            font-size: 22px;
+            color: #666;
+            margin-top: 15px;
+        }
+
+        /* ===== LAYOUTS ===== */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+            height: 100%;
+        }
+
+        .three-column {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--primary-color);
+        }
+
+        .card-content {
+            color: #aaa;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        /* ===== LISTS ===== */
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        ul li {
+            padding: 12px 0;
+            padding-left: 25px;
+            position: relative;
+            font-size: 18px;
+            color: #ccc;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        ul li:last-child {
+            border-bottom: none;
+        }
+
+        ul li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+        }
+
+        /* ===== CODE BLOCKS ===== */
+        .code-block {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow: auto;
+            color: #e6edf3;
+        }
+
+        .code-keyword { color: #ff7b72; }
+        .code-string { color: #a5d6ff; }
+        .code-comment { color: #8b949e; }
+        .code-number { color: #79c0ff; }
+        .code-property { color: #d2a8ff; }
+        .code-command { color: #00d4aa; }
+        .code-url { color: #00a8cc; }
+
+        /* ===== HIGHLIGHT BOX ===== */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0, 212, 170, 0.1), rgba(0, 168, 204, 0.1));
+            border-left: 4px solid var(--primary-color);
+            padding: 25px;
+            border-radius: 0 16px 16px 0;
+            margin: 20px 0;
+        }
+
+        .highlight-box strong {
+            color: var(--primary-color);
+        }
+
+        /* ===== METRICS ===== */
+        .metric-row {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 56px;
+            font-weight: 800;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+
+        .metric-label {
+            font-size: 16px;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        /* Animated counter */
+        .metric-value[data-target] {
+            /* Counter animation handled by JS */
+        }
+
+        /* ===== COMPARISON (BEFORE/AFTER) ===== */
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .before-box {
+            background: rgba(255, 82, 82, 0.1);
+            border: 2px solid rgba(255, 82, 82, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .after-box {
+            background: rgba(0, 212, 170, 0.1);
+            border: 2px solid rgba(0, 212, 170, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .arrow-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+        }
+
+        /* ===== DIAGRAMS ===== */
+        .diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            border: 1px solid #333;
+        }
+
+        .diagram-box {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .diagram-box.primary {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.2);
+        }
+
+        .diagram-box.secondary {
+            border-color: var(--accent-color);
+        }
+
+        .diagram-box.danger {
+            border-color: var(--danger-color);
+        }
+
+        .diagram-box-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .diagram-box-content {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .diagram-arrow {
+            width: 2px;
+            height: 30px;
+            background: linear-gradient(to bottom, var(--primary-color), transparent);
+            position: relative;
+        }
+
+        .diagram-arrow::after {
+            content: "▼";
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--primary-color);
+            font-size: 12px;
+        }
+
+        .diagram-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== TABLES ===== */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 16px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .comparison-table th {
+            background: rgba(0, 212, 170, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* ===== TAGS ===== */
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .tag-fix {
+            background: rgba(255, 82, 82, 0.2);
+            color: var(--danger-color);
+        }
+
+        .tag-improve {
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--warning-color);
+        }
+
+        .tag-new {
+            background: rgba(0, 212, 170, 0.2);
+            color: var(--primary-color);
+        }
+
+        /* ===== UTILITY CLASSES ===== */
+        .text-center { text-align: center; }
+        .text-red { color: var(--danger-color); }
+        .text-green { color: var(--primary-color); }
+        .text-yellow { color: var(--warning-color); }
+        .text-muted { color: var(--text-muted); }
+
+        .mt-10 { margin-top: 10px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+
+        .small-text { font-size: 14px; }
+
+        h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        strong { color: var(--primary-color); }
+
+        /* ===== NAVIGATION ===== */
+        .nav-controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 212, 170, 0.2);
+            color: var(--primary-color);
+            font-size: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0, 212, 170, 0.4);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 32px;
+            left: 70px;
+            font-size: 12px;
+            color: #444;
+            z-index: 1000;
+            font-family: 'SF Mono', monospace;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Animation classes - only when slide is active */
+        .slide.active .animate-fade { animation: fadeIn 0.6s ease-out both; }
+        .slide.active .animate-left { animation: slideInLeft 0.6s ease-out both; }
+        .slide.active .animate-right { animation: slideInRight 0.6s ease-out both; }
+        .slide.active .animate-scale { animation: scaleIn 0.6s ease-out both; }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        .delay-5 { animation-delay: 0.5s; }
+        .delay-6 { animation-delay: 0.6s; }
+
+        /* ===== PRINT MODE ===== */
+        @media print {
+            body {
+                background: white;
+                overflow: visible;
+            }
+            .slide {
+                display: flex !important;
+                opacity: 1 !important;
+                box-shadow: none;
+                page-break-after: always;
+                margin: 0 auto 2rem;
+            }
+            .nav-controls,
+            .slide-counter,
+            .progress-bar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Title Slide -->
+    <div class="slide title-slide active">
+        <img src="logo.png" alt="Logo" class="logo-large animate-fade">
+        <div class="main-title animate-fade delay-1">{{TITLE}}</div>
+        <div class="subtitle animate-fade delay-2">{{SUBTITLE}}</div>
+        <div class="author animate-fade delay-3">{{AUTHOR}}</div>
+        <div class="date animate-fade delay-4">{{DATE}}</div>
+    </div>
+
+    <!-- Content Slide Example -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-category animate-fade">CATEGORY</div>
+            <div class="slide-title animate-fade">Slide Title Here</div>
+            <div class="slide-subtitle animate-fade delay-1">Optional subtitle</div>
+        </div>
+        <div class="slide-content">
+            <ul>
+                <li class="animate-left delay-1">First bullet point with detail</li>
+                <li class="animate-left delay-2">Second bullet point</li>
+                <li class="animate-left delay-3">Third bullet point</li>
+            </ul>
+        </div>
+        <div class="slide-footer">
+            <div class="footer-left">
+                <img src="logo.png" alt="Logo" class="logo">
+                <span>{{PRESENTATION_NAME}}</span>
+            </div>
+            <span>2</span>
+        </div>
+    </div>
+
+    <!-- Three Column Cards Example -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-category animate-fade">CATEGORY</div>
+            <div class="slide-title animate-fade">Three Column Layout</div>
+        </div>
+        <div class="slide-content">
+            <div class="three-column">
+                <div class="card animate-scale delay-1">
+                    <div class="card-icon">🚀</div>
+                    <div class="card-title">Feature 1</div>
+                    <div class="card-content">Description of the first feature goes here with details.</div>
+                </div>
+                <div class="card animate-scale delay-2">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-title">Feature 2</div>
+                    <div class="card-content">Description of the second feature goes here.</div>
+                </div>
+                <div class="card animate-scale delay-3">
+                    <div class="card-icon">🔒</div>
+                    <div class="card-title">Feature 3</div>
+                    <div class="card-content">Description of the third feature goes here.</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <div class="footer-left">
+                <img src="logo.png" alt="Logo" class="logo">
+                <span>{{PRESENTATION_NAME}}</span>
+            </div>
+            <span>3</span>
+        </div>
+    </div>
+
+    <!-- Metrics Slide Example -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-category animate-fade">CATEGORY</div>
+            <div class="slide-title animate-fade">Key Metrics</div>
+        </div>
+        <div class="slide-content">
+            <div class="metric-row">
+                <div class="metric animate-fade delay-1">
+                    <div class="metric-value" data-target="99.9">0</div>
+                    <div class="metric-label">% Uptime</div>
+                </div>
+                <div class="metric animate-fade delay-2">
+                    <div class="metric-value" data-target="50">0</div>
+                    <div class="metric-label">ms Latency</div>
+                </div>
+                <div class="metric animate-fade delay-3">
+                    <div class="metric-value" data-target="10000">0</div>
+                    <div class="metric-label">Users</div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <div class="footer-left">
+                <img src="logo.png" alt="Logo" class="logo">
+                <span>{{PRESENTATION_NAME}}</span>
+            </div>
+            <span>4</span>
+        </div>
+    </div>
+
+    <!-- Code Slide Example -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-category animate-fade">CATEGORY</div>
+            <div class="slide-title animate-fade">Code Example</div>
+        </div>
+        <div class="slide-content">
+            <div class="code-block animate-scale delay-1">
+                <code><span class="code-keyword">function</span> <span class="code-command">greet</span>(name) {
+    <span class="code-keyword">return</span> <span class="code-string">`Hello, ${name}!`</span>;
+}
+
+<span class="code-comment">// Call the function</span>
+greet(<span class="code-string">"World"</span>);</code>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <div class="footer-left">
+                <img src="logo.png" alt="Logo" class="logo">
+                <span>{{PRESENTATION_NAME}}</span>
+            </div>
+            <span>5</span>
+        </div>
+    </div>
+
+    <!-- Two Column Example -->
+    <div class="slide">
+        <div class="slide-header">
+            <div class="slide-category animate-fade">CATEGORY</div>
+            <div class="slide-title animate-fade">Two Column Layout</div>
+        </div>
+        <div class="slide-content">
+            <div class="two-column">
+                <div class="animate-left delay-1">
+                    <h3>Left Side</h3>
+                    <ul>
+                        <li>Point one here</li>
+                        <li>Point two here</li>
+                        <li>Point three here</li>
+                    </ul>
+                </div>
+                <div class="animate-right delay-2">
+                    <div class="diagram">
+                        <div class="diagram-box primary">
+                            <div class="diagram-box-title">Component</div>
+                            <div class="diagram-box-content">Details here</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slide-footer">
+            <div class="footer-left">
+                <img src="logo.png" alt="Logo" class="logo">
+                <span>{{PRESENTATION_NAME}}</span>
+            </div>
+            <span>6</span>
+        </div>
+    </div>
+
+    <!-- Section Divider Example -->
+    <div class="slide section-slide">
+        <div class="section-number animate-fade">01</div>
+        <div class="section-title animate-fade delay-1">Section Title</div>
+        <div class="section-subtitle animate-fade delay-2">Section subtitle</div>
+    </div>
+
+    <!-- Navigation controls -->
+    <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn" onclick="prevSlide()" title="Previous (←)">←</button>
+        <button class="nav-btn" id="nextBtn" onclick="nextSlide()" title="Next (→)">→</button>
+    </div>
+
+    <div class="slide-counter">
+        <span id="currentSlide">1</span> / <span id="totalSlides">7</span>
+    </div>
+
+    <script>
+        // Slide navigation
+        let currentSlideIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        // Initialize
+        document.getElementById('totalSlides').textContent = totalSlides;
+        updateSlide();
+
+        function updateSlide() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+            });
+            slides[currentSlideIndex].classList.add('active');
+
+            document.getElementById('currentSlide').textContent = currentSlideIndex + 1;
+
+            const progress = ((currentSlideIndex + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 0;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlides - 1;
+
+            // Animate counters on this slide
+            animateCounters();
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                updateSlide();
+            }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < totalSlides) {
+                currentSlideIndex = index;
+                updateSlide();
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Animate number counters
+        function animateCounters() {
+            const counters = slides[currentSlideIndex].querySelectorAll('[data-target]');
+            counters.forEach(counter => {
+                const target = parseFloat(counter.dataset.target);
+                const duration = 1500;
+                const start = 0;
+                const startTime = performance.now();
+
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    const current = start + (target - start) * easeOut;
+
+                    if (target % 1 === 0) {
+                        counter.textContent = Math.floor(current).toLocaleString();
+                    } else {
+                        counter.textContent = current.toFixed(1);
+                    }
+
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    }
+                }
+
+                requestAnimationFrame(update);
+            });
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowRight':
+                case ' ':
+                case 'Enter':
+                    e.preventDefault();
+                    nextSlide();
+                    break;
+                case 'ArrowLeft':
+                case 'Backspace':
+                    e.preventDefault();
+                    prevSlide();
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    goToSlide(0);
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    goToSlide(totalSlides - 1);
+                    break;
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+            }
+        });
+
+        // Touch/swipe support
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) nextSlide();
+                else prevSlide();
+            }
+        });
+    </script>
+</body>
+</html>

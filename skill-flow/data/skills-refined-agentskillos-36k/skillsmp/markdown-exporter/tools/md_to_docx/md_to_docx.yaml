@@ -1,0 +1,46 @@
+identity:
+  name: md_to_docx
+  author: bowenliang123
+  label:
+    en_US: Markdown ⮕ DOCX
+    zh_Hans: Markdown ⮕ DOCX
+description:
+  human:
+    en_US: Generate DOCX file from Markdown text
+    zh_Hans: 将 Markdown 转换为 DOCX 文件的工具
+  llm: Generate DOCX file from Markdown text
+parameters:
+  - name: md_text
+    type: string
+    required: true
+    label:
+      en_US: Markdown text
+      zh_Hans: Markdown格式文本
+    human_description:
+      en_US: Markdown text
+      zh_Hans: Markdown格式文本
+    form: llm
+  - name: docx_template_file
+    type: file
+    required: false
+    label:
+      en_US: DOCX Template File
+      zh_Hans: DOCX 模板文件
+    human_description:
+      en_US: Optional docx template file for styling。Use "Home"-"Styles Pane" in Microsoft Word to edit styles of the docx file.
+      zh_Hans: 可选的docx模板文件，用于样式控制。使用Microsoft Word中“开始”-“样式窗格”对docx文件的样式进行编辑。
+    llm_description: An optional .pptx file that serves as a template for the generated presentation
+    form: llm
+  - name: output_filename
+    type: string
+    required: false
+    label:
+      en_US: Output Filename
+      zh_Hans: 输出文件名
+    human_description:
+      en_US: Optional custom output file name, and the filename suffix is not required.
+      zh_Hans: 可选的自定义输出文件名，后缀名无需指定
+    form: llm
+extra:
+  python:
+    source: tools/md_to_docx/md_to_docx.py

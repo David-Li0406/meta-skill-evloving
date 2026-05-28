@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Examples - McKinsey Style</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            padding: 40px;
+            overflow-y: auto;
+        }
+        .chart-section {
+            margin-bottom: 60px;
+        }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        .chart-wrapper {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+        .chart-description {
+            color: #74788d;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>McKinsey Style Chart Examples</h1>
+    <p class="chart-description">Interactive chart examples using the McKinsey/BCG color palette</p>
+
+    <div class="chart-section">
+        <h2>Bar Chart - Category Comparison</h2>
+        <div class="chart-wrapper" style="max-width: 800px;">
+            <canvas id="barChart"></canvas>
+        </div>
+        <p class="chart-description">Use for comparing values across different categories</p>
+    </div>
+
+    <div class="chart-section">
+        <h2>Line Chart - Trends Over Time</h2>
+        <div class="chart-wrapper" style="max-width: 800px;">
+            <canvas id="lineChart"></canvas>
+        </div>
+        <p class="chart-description">Use for showing trends and patterns over time periods</p>
+    </div>
+
+    <div class="chart-section">
+        <h2>Pie Chart - Proportions</h2>
+        <div class="chart-grid">
+            <div class="chart-wrapper">
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div class="chart-wrapper" style="display: flex; align-items: center; justify-content: center;">
+                <p class="chart-description">Use for showing percentage breakdowns of a whole</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-section">
+        <h2>Multi-Metric Comparison</h2>
+        <div class="chart-wrapper" style="max-width: 800px;">
+            <canvas id="multiBarChart"></canvas>
+        </div>
+        <p class="chart-description">Use for comparing multiple metrics across categories</p>
+    </div>
+
+    <script>
+        const colors = {
+            primary: '#F85d42',
+            secondary: '#74788d',
+            deepBlue: '#556EE6',
+            green: '#34c38f',
+            blue: '#50a5f1',
+            yellow: '#f1b44c'
+        };
+
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        Chart.defaults.color = '#333333';
+
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Category A', 'Category B', 'Category C', 'Category D', 'Category E'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [120, 190, 80, 250, 170],
+                    backgroundColor: colors.deepBlue,
+                    borderColor: colors.deepBlue,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#e0e0e0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024', 'Q1 2025', 'Q2 2025'],
+                datasets: [{
+                    label: 'Growth Rate',
+                    data: [12, 15, 18, 22, 25, 28],
+                    borderColor: colors.primary,
+                    backgroundColor: colors.primary,
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 6,
+                    pointBackgroundColor: colors.primary,
+                    pointBorderColor: '#FFFFFF',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#e0e0e0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('pieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Product A', 'Product B', 'Product C', 'Product D', 'Others'],
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: [
+                        colors.deepBlue,
+                        colors.primary,
+                        colors.green,
+                        colors.blue,
+                        colors.secondary
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('multiBarChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [100, 120, 140, 160],
+                    backgroundColor: colors.deepBlue,
+                    borderWidth: 0
+                }, {
+                    label: 'Profit',
+                    data: [30, 35, 40, 45],
+                    backgroundColor: colors.primary,
+                    borderWidth: 0
+                }, {
+                    label: 'Cost',
+                    data: [70, 85, 100, 115],
+                    backgroundColor: colors.secondary,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#e0e0e0'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

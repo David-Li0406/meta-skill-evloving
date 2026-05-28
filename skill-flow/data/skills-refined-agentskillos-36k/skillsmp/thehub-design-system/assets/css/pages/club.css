@@ -1,0 +1,1668 @@
+/**
+ * Club Page Styles
+ * V4 - 2-column layout matching rider profile page
+ */
+
+/* ============================================
+   2-COLUMN LAYOUT (Same as rider page)
+   ============================================ */
+.club-profile-layout {
+    display: grid;
+    grid-template-columns: 70% 30%;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.club-profile-layout .left-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.club-profile-layout .right-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    align-content: start;
+}
+
+/* ============================================
+   CLUB PROFILE CARD V4 - Portrait Style
+   (Same as rider profile-card-v4)
+   ============================================ */
+.club-profile-card-v4 {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+}
+
+.club-logo-hero {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--color-bg-sunken);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.club-logo-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: var(--space-lg);
+}
+
+.club-logo-hero.initials-bg {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+}
+
+.club-initials {
+    font-size: 4rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.club-info-centered {
+    text-align: center;
+    padding: var(--space-sm) var(--space-md);
+}
+
+.club-name-hero {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 2px;
+    color: var(--color-primary);
+}
+
+.club-subtitle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+}
+
+.club-subtitle i {
+    width: 14px;
+    height: 14px;
+}
+
+/* Stats Row */
+.club-stats-row {
+    display: flex;
+    justify-content: space-around;
+    padding: var(--space-md);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.club-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.club-stat-item .stat-value {
+    font-size: var(--text-xl);
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1;
+}
+
+.club-stat-item .stat-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+/* Contact Links */
+.club-contact-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+}
+
+.club-contact-links .contact-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.club-contact-links .contact-link:hover {
+    background: var(--color-accent);
+    color: white;
+}
+
+.club-contact-links .contact-link i {
+    width: 16px;
+    height: 16px;
+}
+
+/* Social Media Links */
+.club-social-links {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md) var(--space-md);
+}
+
+.club-social-links .social-icon-simple {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: transform 0.15s ease;
+}
+
+.club-social-links .social-icon-simple svg {
+    width: 24px;
+    height: 24px;
+    fill: #ccc;
+}
+
+.club-social-links .social-icon-simple:hover {
+    transform: scale(1.15);
+}
+
+/* Active social icons with brand colors */
+.club-social-links .social-instagram svg { fill: #E4405F; }
+.club-social-links .social-facebook svg { fill: #1877F2; }
+.club-social-links .social-youtube svg { fill: #FF0000; }
+.club-social-links .social-tiktok svg { fill: #000000; }
+
+/* Mobile: Stack columns */
+@media (max-width: 991px) {
+    .club-profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .club-profile-layout .right-column {
+        order: -1; /* Profile card first on mobile */
+    }
+}
+
+@media (max-width: 767px) {
+    .club-profile-card-v4 {
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        border-radius: 0;
+    }
+
+    .club-initials {
+        font-size: 3rem;
+    }
+
+    .club-name-hero {
+        font-size: 1.1rem;
+    }
+}
+
+/* ============================================
+   LEGACY: Club Hero (kept for compatibility)
+   ============================================ */
+/* Club Hero */
+.club-hero {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-bottom: var(--space-lg);
+}
+
+.club-hero .hero-accent-bar {
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-accent), #004a98);
+}
+
+.club-hero .hero-content {
+  padding: var(--space-lg);
+}
+
+.club-hero .hero-top {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+}
+
+.club-logo-container {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ranking-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: var(--color-primary, #171717);
+  min-width: 44px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--color-bg-surface);
+}
+
+.ranking-badge .rank-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  opacity: 0.9;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.ranking-badge .rank-number {
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.club-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--color-bg-surface);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.club-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.club-logo svg {
+  width: 45%;
+  height: 45%;
+  stroke: #9ca3af;
+}
+
+.hero-info {
+  flex: 1;
+}
+
+.club-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0 0 var(--space-xs) 0;
+}
+
+.club-location {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  display: block;
+  margin-bottom: var(--space-sm);
+}
+
+.club-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.club-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--color-bg-sunken);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+}
+
+.club-badge--accent {
+  background: var(--color-accent);
+  color: white;
+}
+
+.hero-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.contact-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.contact-link:hover {
+  color: var(--color-accent);
+}
+
+.contact-link svg {
+  flex-shrink: 0;
+}
+
+/* Utilities */
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }
+.text-muted { color: var(--color-text-muted); }
+
+/* Legacy support */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+.stat-card {
+  text-align: center;
+  padding: var(--space-md);
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-md);
+}
+.stat-card--accent {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+.stat-card--accent .stat-label {
+  color: rgba(255,255,255,0.8);
+}
+.stat-value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+}
+.stat-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-2xs);
+}
+
+.rider-link {
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+}
+.rider-link:hover {
+  color: var(--color-accent-text);
+}
+.rider-year {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-left: var(--space-xs);
+}
+.podium-badge {
+  font-size: var(--text-sm);
+}
+.position-badge {
+  font-weight: var(--weight-semibold);
+}
+.medal-icon {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  display: inline-block;
+}
+.points-value {
+  font-weight: var(--weight-semibold);
+  color: var(--color-accent-text);
+}
+
+.result-place.top-3 {
+  background: var(--color-accent-light);
+}
+.result-points {
+  text-align: right;
+}
+.points-big {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-accent-text);
+}
+.points-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--color-text-muted);
+}
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+}
+
+@media (max-width: 599px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }  .club-contact {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+}
+
+/* ============================================
+   V3.5 CLUB PROFILE CARD - Large centered logo
+   ============================================ */
+.club-profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-2xl) var(--space-lg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-xl);
+}
+
+.club-logo-large {
+    width: 160px;
+    height: 160px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-secondary);
+    border: 2px solid var(--color-border);
+    margin-bottom: var(--space-lg);
+}
+
+.club-logo-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: var(--space-md);
+}
+
+.club-logo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: var(--color-text-muted);
+}
+
+.club-logo-placeholder i {
+    width: 64px;
+    height: 64px;
+}
+
+.club-profile-card .club-name {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0 0 var(--space-sm);
+    letter-spacing: -0.02em;
+}
+
+.club-profile-card .club-location {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    color: var(--color-text-secondary);
+    font-size: var(--text-base);
+    margin: 0 0 var(--space-md);
+}
+
+.club-profile-card .club-location i {
+    width: 16px;
+    height: 16px;
+}
+
+/* Ranking Badge - Profile Card */
+.club-profile-card .club-ranking {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-lg);
+    background: linear-gradient(135deg, var(--color-accent) 0%, #4CAF50 100%);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-lg);
+}
+
+.club-profile-card .ranking-label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: rgba(255,255,255,0.9);
+}
+
+.club-profile-card .ranking-position {
+    font-size: var(--text-lg);
+    font-weight: 800;
+    color: white;
+}
+
+/* Stats Grid - Profile Card */
+.club-profile-card .club-stats {
+    display: flex;
+    gap: var(--space-xl);
+    padding: var(--space-lg) 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-lg);
+    width: 100%;
+    justify-content: center;
+}
+
+.club-profile-card .club-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.club-profile-card .club-stat .stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1;
+}
+
+.club-profile-card .club-stat .stat-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-top: var(--space-2xs);
+}
+
+/* Contact Links - Profile Card */
+.club-profile-card .club-contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    justify-content: center;
+}
+
+.club-profile-card .contact-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.club-profile-card .contact-link:hover {
+    background: var(--color-accent);
+    color: white;
+}
+
+.club-profile-card .contact-link i {
+    width: 16px;
+    height: 16px;
+}
+
+/* ============================================
+   MEMBERS SECTION
+   ============================================ */
+.club-members-section {
+    margin-bottom: var(--space-xl);
+}
+
+.section-header {
+    margin-bottom: var(--space-lg);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 var(--space-xs);
+}
+
+.section-title i {
+    width: 24px;
+    height: 24px;
+    color: var(--color-accent);
+}
+
+.section-subtitle {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* Members List */
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+/* Member Row */
+.member-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    transition: all 0.15s ease;
+}
+
+.member-row:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+    transform: translateX(2px);
+}
+
+.member-row.member-current {
+    border-left: 4px solid var(--color-accent);
+}
+
+/* Member Avatar */
+.member-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border);
+}
+
+/* Small Avatar for table view */
+.member-avatar-small {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    flex-shrink: 0;
+    border: 1px solid var(--color-border);
+}
+
+/* Member Info */
+.member-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+}
+
+.member-name {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.member-birth {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+}
+
+/* Member Years */
+.member-years {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    flex-shrink: 0;
+}
+
+.year-badge {
+    padding: 2px 8px;
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.year-badge.year-current {
+    background: rgba(97, 206, 112, 0.15);
+    color: var(--color-success);
+}
+
+.year-more {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+/* Arrow */
+.member-arrow {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+}
+
+.member-arrow i {
+    width: 20px;
+    height: 20px;
+}
+
+.member-row:hover .member-arrow {
+    color: var(--color-accent);
+    transform: translateX(4px);
+}
+
+/* Achievements Section */
+.club-achievements-section {
+    margin-top: var(--space-xl);
+}
+
+/* ============================================
+   MOBILE STYLES - Profile Card
+   ============================================ */
+@media (max-width: 767px) {
+    .club-profile-card {
+        padding: var(--space-xl) var(--space-md);
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .club-logo-large {
+        width: 120px;
+        height: 120px;
+    }
+
+    .club-logo-placeholder i {
+        width: 48px;
+        height: 48px;
+    }
+
+    .club-profile-card .club-name {
+        font-size: 1.5rem;
+    }
+
+    .club-profile-card .club-stats {
+        gap: var(--space-lg);
+    }
+
+    .club-profile-card .club-stat .stat-value {
+        font-size: 1.5rem;
+    }
+
+    /* Edge-to-edge member rows */
+    .member-row {
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        padding: var(--space-md) var(--container-padding, 16px);
+    }
+
+    .member-row.member-current {
+        border-left: none;
+        padding-left: calc(var(--container-padding, 16px) - 4px);
+        box-shadow: inset 4px 0 0 var(--color-accent);
+    }
+
+    .member-row:first-child {
+        border-top: none;
+    }
+
+    .member-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: var(--text-xs);
+    }
+
+    .member-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0;
+    }
+
+    .member-name {
+        font-size: var(--text-sm);
+    }
+
+    .member-birth {
+        font-size: var(--text-xs);
+    }
+
+    .member-years {
+        display: none;
+    }
+
+    .member-arrow {
+        position: absolute;
+        right: var(--container-padding, 16px);
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .member-row:hover .member-arrow {
+        transform: translateY(-50%) translateX(2px);
+    }
+}
+
+/* Desktop - Larger elements */
+@media (min-width: 1024px) {
+    .club-logo-large {
+        width: 200px;
+        height: 200px;
+    }
+
+    .club-profile-card .club-name {
+        font-size: 2.5rem;
+    }
+
+    .member-row {
+        gap: var(--space-lg);
+    }
+
+    .member-avatar {
+        width: 56px;
+        height: 56px;
+        font-size: var(--text-base);
+    }
+
+    .member-name {
+        font-size: var(--text-lg);
+    }
+}
+
+/* ============================================
+   MEMBERS TABLE VIEW - Desktop
+   ============================================ */
+.members-table-desktop {
+    display: block;
+}
+
+.members-list-mobile {
+    display: none;
+}
+
+.member-name-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.member-name-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.member-name-info .member-name {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.member-name-info .member-birth {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.member-years-cell {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    max-width: 200px;
+}
+
+.member-current-row {
+    background: rgba(97, 206, 112, 0.05);
+}
+
+.member-current-row td:first-child {
+    box-shadow: inset 4px 0 0 var(--color-accent);
+}
+
+/* Mobile styles */
+.member-info-mobile {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.member-info-mobile .member-name {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.member-stats-row {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.stat-mini {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.member-years-small {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+/* Mobile: Show cards, hide table */
+@media (max-width: 767px) {
+    .members-table-desktop {
+        display: none;
+    }
+
+    .members-list-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .members-list-mobile .member-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        color: inherit;
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .members-list-mobile .member-row.member-current {
+        box-shadow: inset 4px 0 0 var(--color-accent);
+    }
+
+    .members-list-mobile .member-arrow {
+        flex-shrink: 0;
+        color: var(--color-text-muted);
+    }
+
+    .members-list-mobile .member-arrow i {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* ============================================
+   CLUB RANKING SECTION
+   Matches rider page stats-tabbed-card design
+   ============================================ */
+.club-ranking-section {
+    margin-bottom: var(--space-xl);
+}
+
+.club-ranking-card {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+}
+
+/* Dashboard Chart Header - Same as rider page */
+.club-ranking-card .dashboard-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--space-md);
+}
+
+.club-ranking-card .dashboard-chart-stats {
+    display: flex;
+    gap: var(--space-lg);
+    width: 100%;
+    justify-content: space-around;
+}
+
+.club-ranking-card .dashboard-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.club-ranking-card .dashboard-stat-value {
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1;
+}
+
+.club-ranking-card .dashboard-stat-value--red {
+    color: var(--color-error);
+}
+
+.club-ranking-card .dashboard-stat-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Dashboard Chart Body - Same as rider page */
+.club-ranking-card .dashboard-chart-body {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    padding: 0 var(--space-md);
+}
+
+.club-ranking-card .dashboard-chart-body canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Dashboard Chart Footer - Same as rider page */
+.club-ranking-card .dashboard-chart-footer {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md) var(--space-md);
+}
+
+/* Button style matching rider page */
+.btn-calc-ranking-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.btn-calc-ranking-inline:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+}
+
+.btn-calc-ranking-inline i {
+    width: 14px;
+    height: 14px;
+}
+
+/* History Modal Styles - Same as rider page */
+.ranking-modal-summary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-md);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-lg);
+}
+
+.ranking-modal-summary .summary-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.ranking-modal-summary .summary-value {
+    font-size: var(--text-3xl);
+    font-weight: 800;
+    color: var(--color-error);
+}
+
+.history-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.history-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-sm);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.history-stat-value {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.history-stat-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.text-success {
+    color: var(--color-success) !important;
+}
+
+.text-danger {
+    color: var(--color-error) !important;
+}
+
+.history-chart-container {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.modal-close-footer {
+    display: flex;
+    justify-content: center;
+    padding-top: var(--space-md);
+}
+
+.modal-close-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-lg);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.modal-close-btn:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-text-muted);
+}
+
+.modal-close-btn i {
+    width: 16px;
+    height: 16px;
+}
+
+/* Mobile styles for ranking card */
+@media (max-width: 767px) {
+    .club-ranking-card {
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .club-ranking-card .dashboard-chart-stats {
+        gap: var(--space-md);
+    }
+
+    .club-ranking-card .dashboard-stat-value {
+        font-size: var(--text-xl);
+    }
+
+    .history-stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ============================================
+   INLINE HISTORY SECTION
+   ============================================ */
+.club-history-section {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.club-history-section .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.club-history-section .card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin: 0;
+    font-size: var(--text-lg);
+}
+
+.club-history-section .card-title i {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-close-history {
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-sm);
+    transition: all 0.15s ease;
+}
+
+.btn-close-history:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text);
+}
+
+.btn-close-history i {
+    width: 20px;
+    height: 20px;
+}
+
+/* ============================================
+   MEMBERS CARD STYLING
+   ============================================ */
+.club-members-card {
+    overflow: hidden;
+}
+
+.club-members-card .section-header {
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.club-members-card .table-responsive {
+    margin: 0;
+    border-radius: 0;
+}
+
+.club-members-card .members-list-mobile {
+    margin: 0;
+}
+
+/* Member Ranking Points */
+.member-ranking-pts {
+    font-weight: 700;
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+}
+
+.member-ranking-pts-mobile {
+    font-weight: 600;
+    color: var(--color-accent);
+    font-size: var(--text-xs);
+    background: rgba(97, 206, 112, 0.1);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.member-name-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+/* Mobile styles for members card */
+@media (max-width: 767px) {
+    .club-members-card {
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .club-members-card .section-header {
+        padding: var(--space-md);
+    }
+
+    .club-history-section {
+        margin-left: calc(-1 * var(--container-padding, 16px));
+        margin-right: calc(-1 * var(--container-padding, 16px));
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+}
+
+/* ============================================
+   CLUB ACHIEVEMENTS - Right Column Compact
+   ============================================ */
+.club-achievements-section .achievements-card {
+    padding: var(--space-md);
+}
+
+.club-achievements-section .achievements-card-header {
+    margin-bottom: var(--space-sm);
+}
+
+.club-achievements-section .achievements-card-title {
+    font-size: 12px;
+}
+
+/* Compact experience slider */
+.club-achievements-section .exp-section {
+    margin-bottom: var(--space-md);
+}
+
+.club-achievements-section .exp-title {
+    font-size: 13px;
+}
+
+.club-achievements-section .exp-since {
+    font-size: 11px;
+}
+
+.club-achievements-section .exp-labels span {
+    font-size: 9px;
+}
+
+/* Badge grid - 2 columns for narrow column */
+.club-achievements-section .badge-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-xs);
+}
+
+/* Smaller badges */
+.club-achievements-section .badge-item {
+    padding: var(--space-sm) var(--space-xs);
+}
+
+.club-achievements-section .badge-item .badge-svg,
+.club-achievements-section .badge-item svg {
+    width: 36px;
+    height: 36px;
+}
+
+.club-achievements-section .badge-value {
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+.club-achievements-section .badge-label {
+    font-size: 8px;
+}
+
+/* Clickable badges */
+.club-achievements-section .badge-item.clickable {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.club-achievements-section .badge-item.clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 3 columns on slightly wider screens */
+@media (min-width: 1200px) {
+    .club-achievements-section .badge-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    .club-achievements-section .badge-item .badge-svg,
+    .club-achievements-section .badge-item svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .club-achievements-section .badge-value {
+        font-size: 10px;
+    }
+
+    .club-achievements-section .badge-label {
+        font-size: 7px;
+    }
+}
+
+/* Mobile: Full width badges */
+@media (max-width: 991px) {
+    .club-achievements-section .badge-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: var(--space-sm);
+    }
+
+    .club-achievements-section .badge-item .badge-svg,
+    .club-achievements-section .badge-item svg {
+        width: 44px;
+        height: 44px;
+    }
+
+    .club-achievements-section .badge-value {
+        font-size: 12px;
+    }
+
+    .club-achievements-section .badge-label {
+        font-size: 9px;
+    }
+}
+
+/* ============================================
+   CLUB MODAL - Achievement details popup
+   ============================================ */
+.club-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+}
+
+.club-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.club-modal {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    max-width: 480px;
+    width: 100%;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
+    transform: translateY(20px);
+    transition: transform 0.2s;
+}
+
+.club-modal-overlay.active .club-modal {
+    transform: translateY(0);
+}
+
+.club-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.club-modal-header h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin: 0;
+    font-size: 1.125rem;
+}
+
+.club-modal-header h3 i {
+    width: 20px;
+    height: 20px;
+    color: var(--color-accent);
+}
+
+.club-modal-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    transition: background 0.2s, color 0.2s;
+}
+
+.club-modal-close:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text-primary);
+}
+
+.club-modal-close i {
+    width: 20px;
+    height: 20px;
+}
+
+.club-modal-body {
+    padding: var(--space-md) var(--space-lg);
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* ============================================
+   SORTABLE TABLE HEADERS
+   ============================================ */
+.members-table-desktop th.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.members-table-desktop th.sortable:hover {
+    background: var(--color-bg-hover, #f5f5f5);
+}
+
+.members-table-desktop th.sortable::after {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 6px;
+    vertical-align: middle;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid var(--color-text-muted);
+    opacity: 0.3;
+}
+
+.members-table-desktop th.sortable.asc::after {
+    border-top: none;
+    border-bottom: 4px solid var(--color-accent);
+    opacity: 1;
+}
+
+.members-table-desktop th.sortable.desc::after {
+    border-top: 4px solid var(--color-accent);
+    opacity: 1;
+}
+
+/* ============================================
+   RF REGISTRATION BADGE
+   ============================================ */
+.rf-badge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+}
+
+.rf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    padding: var(--space-2xs) var(--space-sm);
+    background: linear-gradient(135deg, #1e7e34 0%, #28a745 100%);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.rf-badge svg {
+    flex-shrink: 0;
+}
+
+.scf-district-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    padding: 2px var(--space-xs);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+}
+
+.scf-district-badge i {
+    width: 12px;
+    height: 12px;
+}
+
+/* Dark mode adjustments */
+html[data-theme="dark"] .rf-badge {
+    background: linear-gradient(135deg, #155724 0%, #1e7e34 100%);
+    box-shadow: 0 2px 4px rgba(30, 126, 52, 0.4);
+}

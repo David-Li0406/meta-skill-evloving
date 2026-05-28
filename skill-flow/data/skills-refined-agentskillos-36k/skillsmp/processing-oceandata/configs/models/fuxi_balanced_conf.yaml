@@ -1,0 +1,31 @@
+# OceanFuxi Model Configuration - Balanced Version
+# Good balance between performance and computational efficiency
+
+# Temporal configuration
+input_len: 7          # Number of input frames
+output_len: 1         # Number of output frames
+in_channels: 2        # Number of channels (u, v velocity components)
+
+# Spatial configuration
+img_size: [240, 240]  # Input image size (H, W)
+patch_size: [6, 6]    # Medium patch size (240/6 = 40)
+
+# Model architecture parameters - BALANCED
+embed_dim: 384        # Moderate dimension (between 256 and 512)
+num_groups: 24        # Moderate groups
+num_heads: 6          # Moderate attention heads
+window_size: 8        # Moderate window size
+                      # After patching: 40x40, after downsample: 20x20
+                      # window_size=10 divides 20 evenly
+
+depth: 24             # Moderate depth (between 12 and 48)
+
+# Dual path configuration
+use_3d_path: true     # Enable 3D path for better feature extraction
+pseudo_depth: 3       # Moderate pseudo depth
+
+# Expected metrics:
+# - Parameters: ~70M
+# - Memory usage: ~5-7 GB for batch_size=2
+# - Training speed: Good balance
+# - Performance: Better than lightweight, close to full model

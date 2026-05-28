@@ -1,0 +1,46 @@
+{
+  "name": "crud-set",
+  "description": "Set value at a nested path in a JSON object, creating intermediate objects as needed",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path where to set the value (e.g., 'user.profile.name')"
+    },
+    "value": {
+      "type": "string",
+      "required": true,
+      "description": "Value to set at the path"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Modified object with value set at the specified path"
+  },
+  "examples": [
+    {
+      "description": "Set existing nested value",
+      "input": {"user": {"name": "old"}},
+      "args": {"path": "user.name", "value": "new"},
+      "output": {"user": {"name": "new"}}
+    },
+    {
+      "description": "Create nested path and set value",
+      "input": {},
+      "args": {"path": "user.profile.age", "value": "30"},
+      "output": {"user": {"profile": {"age": "30"}}}
+    },
+    {
+      "description": "Update deeply nested value",
+      "input": {"data": {"items": [1, 2, 3]}},
+      "args": {"path": "data.count", "value": "3"},
+      "output": {"data": {"items": [1, 2, 3], "count": "3"}}
+    }
+  ],
+  "tags": ["crud", "write", "object", "mutation"]
+}

@@ -1,0 +1,14 @@
+/* Style queries with typed data attributes */
+
+.weather {
+  container: weather / inline-size;
+  --rain: attr(data-rain type(<percentage>));
+}
+
+@container weather style(--rain > 80%) {
+  .card {
+    background: var(--color-storm);
+  }
+}
+
+/* HTML: <div class="weather" data-rain="60%"> */

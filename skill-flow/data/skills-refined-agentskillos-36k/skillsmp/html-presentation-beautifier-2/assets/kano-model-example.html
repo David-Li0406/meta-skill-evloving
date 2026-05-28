@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kano模型示例 - McKinsey Style</title>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 30px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 50px;
+            line-height: 1.6;
+        }
+
+        /* Kano 模型主容器 - 使用真实的二维坐标系统 */
+        .kano-wrapper {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 60px 60px 80px;
+        }
+
+        .kano-matrix {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            background:
+                radial-gradient(circle at 50% 50%, rgba(85, 110, 230, 0.03) 0%, transparent 50%),
+                linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
+            border-radius: 16px;
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.08),
+                inset 0 1px 3px rgba(255,255,255,0.8);
+     }
+
+        /* 坐标轴 */
+        .axis-x, .axis-y {
+            position: absolute;
+            background: linear-gradient(90deg,
+                rgba(85, 110, 230, 0.4) 0%,
+                rgba(52, 195, 143, 0.4) 50%,
+                rgba(248, 93, 66, 0.4) 100%
+            );
+            box-shadow: 0 0 8px rgba(85, 110, 230, 0.2);
+        }
+
+        .axis-x {
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 4px;
+            transform: translateY(-50%);
+        }
+
+        .axis-y {
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            transform: translateX(-50%);
+            background: linear-gradient(180deg,
+          rgba(248, 93, 66, 0.4) 0%,
+                rgba(52, 195, 143, 0.4) 50%,
+                rgba(85, 110, 230, 0.4) 100%
+            );
+            box-shadow: 0 0 8px rgba(85, 110, 230, 0.2);
+        }
+
+        /* 坐标轴箭头 */
+        .axis-x::after, .axis-y::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+        }
+
+        .axis-x::after {
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-left: 14px solid rgba(248, 93, 66, 0.7);
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+
+        .axis-y::after {
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom: 14px solid rgba(248, 93, 66, 0.7);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+        }
+
+        /* 坐标轴标签 */
+        .axis-label-container {
+            position: absolute;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-light);
+            white-space: nowrap;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            letter-spacing: 0.3px;
+        }
+
+        .axis-label-top {
+            top: -55px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--accent-primary);
+            font-size: 17px;
+        }
+
+        .axis-label-bottom {
+            bottom: -55px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--accent-blue);
+            font-size: 17px;
+        }
+
+        .axis-label-left {
+            left: -75px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            color: var(--accent-blue);
+        }
+
+        .axis-label-right {
+            right: -75px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+            color: var(--accent-primary);
+        }
+
+        /* 四个象限 */
+        .kano-quadrant {
+            position: absolute;
+            width: 48%;
+            height: 48%;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 16px;
+            cursor: pointer;
+        }
+
+        .kano-quadrant::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            background: inherit;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .kano-quadrant:hover {
+            transform: scale(1.08) translateY(-5px);
+            z-index: 10;
+        }
+
+        .kano-quadrant:hover::before {
+            opacity: 0.25;
+        }
+
+        /* 象限位置 */
+        .quadrant-attractive {
+            top: 2%;
+            left: 2%;
+            background: linear-gradient(135deg, rgba(85, 110, 230, 0.12), rgba(85, 110, 230, 0.03));
+            border: 3px solid rgba(85, 110, 230, 0.35);
+        }
+
+        .quadrant-performance {
+            top: 2%;
+            right: 2%;
+            background: linear-gradient(135deg, rgba(52, 195, 143, 0.12), rgba(52, 195, 143, 0.03));
+            border: 3px solid rgba(52, 195, 143, 0.35);
+        }
+
+        .quadrant-indifferent {
+            bottom: 2%;
+            left: 2%;
+            background: linear-gradient(135deg, rgba(80, 165, 241, 0.12), rgba(80, 165, 241, 0.03));
+            border: 3px solid rgba(80, 165, 241, 0.35);
+        }
+
+        .quadrant-mustbe {
+            bottom: 2%;
+            right: 2%;
+            background: linear-gradient(135deg, rgba(248, 93, 66, 0.12), rgba(248, 93, 66, 0.03));
+            border: 3px solid rgba(248, 93, 66, 0.35);
+        }
+
+        .kano-quadrant:hover {
+            box-shadow:
+                0 12px 32px rgba(0,0,0,0.15),
+                0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .quadrant-attractive:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .quadrant-performance:hover {
+            border-color: var(--accent-green);
+        }
+
+        .quadrant-indifferent:hover {
+            border-color: var(--accent-blue-light);
+        }
+
+        .quadrant-mustbe:hover {
+            border-color: var(--accent-primary);
+        }
+
+        /* 象限内容样式 */
+        .category-badge {
+            display: inline-block;
+            padding: 7px 16px;
+            border-radius: 22px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+            opacity: 0.95;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+
+        .kano-quadrant:hover .category-badge {
+            transform: scale(1.1);
+            opacity: 1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+
+        .quadrant-attractive .category-badge {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .quadrant-performance .category-badge {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .quadrant-indifferent .category-badge {
+            background: var(--accent-blue-light);
+            color: white;
+        }
+
+        .quadrant-mustbe .category-badge {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .quadrant-icon {
+            font-size: 52px;
+            margin: 10px 0;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .kano-quadrant:hover .quadrant-icon {
+            transform: scale(1.3) rotateY(20deg) rotateZ(-5deg);
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25));
+        }
+
+        .quadrant-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 14px 0 10px 0;
+            letter-spacing: -0.4px;
+            transition: color 0.3s ease;
+        }
+
+        .kano-quadrant:hover .quadrant-title {
+            color: var(--header-bg);
+        }
+
+        .quadrant-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-light);
+            margin-bottom: 18px;
+            max-width: 85%;
+        }
+
+        .quadrant-examples {
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .example-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 11px 15px;
+            border-radius: 10px;
+            margin-bottom: 9px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1.5px solid rgba(0,0,0,0.06);
+            backdrop-filter: blur(12px);
+        }
+
+        .example-item:hover {
+            transform: translateX(8px) scale(1.02);
+            background: white;
+            box-shadow:
+    0 4px 12px rgba(0,0,0,0.12),
+                0 2px 6px rgba(0,0,0,0.06);
+            border-color: rgba(0,0,0,0.12);
+        }
+
+        .example-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .example-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .example-item:hover .example-icon {
+            transform: scale(1.2) rotate(-5deg);
+        }
+
+        /* 象限标注 */
+        .quadrant-label {
+            position: absolute;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .label-tl {
+            top: 8%;
+            left: 8%;
+        }
+
+        .label-tr {
+            top: 8%;
+            right: 8%;
+        }
+
+        .label-bl {
+            bottom: 8%;
+            left: 8%;
+        }
+
+        .label-br {
+            bottom: 8%;
+            right: 8%;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border-left: 5px solid var(--accent-blue);
+            padding: 28px;
+            margin: 40px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .info-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 16px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .info-box ul {
+            line-height: 2;
+            padding-left: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 8px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            padding: 24px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent-primary);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .use-case-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .use-case-card p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+            font-size: 14px;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .kano-matrix {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .kano-quadrant {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .quadrant-attractive {
+            animation-delay: 0.1s;
+        }
+
+        .quadrant-performance {
+            animation-delay: 0.2s;
+        }
+
+        .quadrant-indifferent {
+            animation-delay: 0.3s;
+        }
+
+        .quadrant-mustbe {
+            animation-delay: 0.4s;
+        }
+
+        .axis-x, .axis-y {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @media (max-width: 1024px) {
+            .kano-wrapper {
+                padding: 60px 40px 40px 60px;
+            }
+
+            .kano-quadrant {
+                padding: 20px;
+            }
+
+            .quadrant-icon {
+                font-size: 40px;
+            }
+
+            .quadrant-title {
+                font-size: 18px;
+            }
+
+            .example-item {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+
+            .kano-wrapper {
+                padding: 50px 30px 30px 50px;
+            }
+
+            .kano-matrix {
+                aspect-ratio: 1;
+            }
+
+            .kano-quadrant {
+                padding: 16px;
+            }
+
+            .quadrant-icon {
+                font-size: 32px;
+            }
+
+            .quadrant-title {
+                font-size: 16px;
+            }
+
+            .quadrant-desc {
+                font-size: 12px;
+            }
+
+            .example-item {
+                font-size: 11px;
+                padding: 6px 10px;
+            }
+
+            .axis-label-container {
+                font-size: 12px;
+            }
+
+            .axis-label-left, .axis-label-right {
+                display: none;
+            }
+
+            .use-cases {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Kano模型示例</h1>
+        <p class="description">
+            McKinsey 风格产品功能分析工具 | 客户满意度二维矩阵<br>
+            适用于产品功能规划、需求优先级、客户满意度分析等场景
+        </p>
+
+        <h2>示例：产品功能满意度分析</h2>
+        
+        <div class="kano-wrapper">
+            <!-- 坐标轴标签 -->
+            <div class="axis-label-container axis-label-top">高满意度 ↑</div>
+            <div class="axis-label-container axis-label-bottom">低满意度 ↓</div>
+            <div class="axis-label-container axis-label-left">← 低完备度</div>
+            <div class="axis-label-container axis-label-right">高完备度 →</div>
+
+            <div class="kano-matrix">
+                <!-- 坐标轴 -->
+                <div class="axis-x"></div>
+                <div class="axis-y"></div>
+
+                <!-- 第一象限：魅力因素 (左上) -->
+                <div class="kano-quadrant quadrant-attractive">
+                    <span class="category-badge">Attractive</span>
+                    <span class="quadrant-icon">⚡</span>
+                    <div class="quadrant-title">魅力因素</div>
+                    <div class="quadrant-desc">
+                        客户未预期，但能带来惊喜<br>
+                        有则加分，无则不减分
+                    </div>
+                    <div class="quadrant-examples">
+                        <div class="example-item">
+                            <span class="example-icon">🚀</span>
+                            <span>AI智能推荐</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-icon">✨</span>
+                            <span>一键数据可视化</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-icon">🎨</span>
+                            <span>自动报表生成</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第二象限：期望因素 (右上) -->
+                <div class="kano-quadrant quadrant-performance">
+                    <span class="category-badge">Performance</span>
+                    <span class="quadrant-icon">✅</span>
+                <div class="quadrant-title">期望因素</div>
+                    <div class="quadrant-desc">
+                        功能越完善，满意度越高<br>
+                        呈线性正相关关系
+                    </div>
+                    <div class="quadrant-examples">
+                        <div class="example-item">
+                            <span class="example-icon">📝</span>
+                            <span>实时数据编辑</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-icon">📤</span>
+                            <span>数据导入导出</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-icon">🔐</span>
+                            <span>权限管理</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第三象限：无差异因素 (左下) -->
+                <div class="kano-quadrant quadrant-indifferent">
+                    <span class="category-badge">Indifferent</span>
+                    <span class="quadrant-icon">📌</span>
+                <div class="quadrant-title">无差异因素</div>
+                    <div class="quadrant-desc">
+                        有无均可，不影响满意度<br>
+                        客户不关心的功能
+                    </div>
+                    <div class="quadrant-examples">
+                        <div class="example-item">
+                            <span class="example-icon">🎯</span>
+                            <span>高级定制选项</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-icon">📊</span>
+                            <span>历史数据归档</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-icon">🔗</span>
+                          <span>第三方集成</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第四象限：必备因素 (右下) -->
+                <div class="kano-quadrant quadrant-mustbe">
+                    <span class="category-badge">Must-be</span>
+                    <span class="quadrant-icon">⚠️</span>
+                    <div class="quadrant-title">必备因素</div>
+                    <div class="quadrant-desc">
+                        理所当然，缺失则不满<br>
+                        有则正常，无则投诉
+                    </div>
+                    <div class="quadrant-examples">
+                        <div class="example-item">
+                            <span class="example-icon">💾</span>
+                            <span>数据保存</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-icon">🔍</span>
+                            <span>搜索功能</span>
+                        </div>
+                        <div class="example-item">
+                            <span class="example-icon">⚙️</span>
+                            <span>基本配置</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>💡 Kano模型应用策略</h4>
+            <ul>
+                <li><strong>魅力因素 (Attractive)</strong>：差异化卖点，营销重点，持续创新，打造惊喜体验</li>
+                <li><strong>期望因素 (Performance)</strong>：核心竞争力，持续优化，对标竞品，保持领先</li>
+                <li><strong>无差异因素 (Indifferent)</strong>：评估必要性，控制成本，可选实现，避免过度投入</li>
+                <li><strong>必备因素 (Must-be)</strong>：基础门槛，确保完善，避免缺失，防止负面评价</li>
+            </ul>
+        </div>
+
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>产品规划</h4>
+                <p>功能优先级排序、需求分类管理、版本规划决策、资源分配优化</p>
+            </div>
+            <div class="use-case-card">
+                <h4>客户研究</h4>
+                <p>满意度深度分析、需求挖掘调研、期望值管理、用户体验优化</p>
+            </div>
+            <div class="use-case-card">
+                <h4>功能决策</h4>
+                <p>功能取舍判断、投入产出分析、ROI评估、开发优先级</p>
+            </div>
+            <div class="use-case-card">
+                <h4>竞争分析</h4>
+                <p>差异化策略制定、竞争优势识别、市场定位、蓝海机会</p>
+         </div>
+            <div class="use-case-card">
+                <h4>产品迭代</h4>
+                <p>版本功能规划、创新方向选择、改进重点确定、路线图制定</p>
+            </div>
+            <div class="use-case-card">
+                <h4>定价策略</h4>
+                <p>价值定价依据、套餐功能设计、溢价理由、分层定价</p>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>HTML Presentation Beautifier</strong> - McKinsey Style Kano Model Example</p>
+            <p>客户满意度二维矩阵 | 产品功能分析工具 | 需求优先级管理框架</p>
+        </footer>
+    </div>
+</body>
+</html>

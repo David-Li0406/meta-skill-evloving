@@ -1,0 +1,30 @@
+{
+    "examples": [
+        {
+            "description": "Set Multiple Field Values",
+            "operation": "set_values",
+            "endpoint": "PUT /repositories/{REPO_ID}/issues/{NUMBER}/issue-field-values",
+            "payload": {
+                "issue_field_values": [
+                    {
+                        "field_id": 123,
+                        "value": "Critical"
+                    },
+                    {
+                        "field_id": 456,
+                        "value": "2025-12-31"
+                    }
+                ]
+            }
+        },
+        {
+            "description": "Update Field Definition (Rename)",
+            "operation": "update_field_definition",
+            "endpoint": "PATCH /orgs/{ORG}/issue-fields/{FIELD_ID}",
+            "payload": {
+                "name": "Severity",
+                "description": "Impact level of the bug"
+            }
+        }
+    ]
+}

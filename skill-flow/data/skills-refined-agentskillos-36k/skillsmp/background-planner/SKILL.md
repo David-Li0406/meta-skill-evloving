@@ -1,0 +1,829 @@
+---
+name: background-planner
+description: 백그라운드에서 여러 에이전트(Claude, Codex, Gemini 등)가 병렬로 기획을 수행하고 결과를 자동 저장합니다. 세션이 컨텍스트 제한에 도달해도 에이전트들은 계속 실행됩니다. "백그라운드 기획", "bg plan", "병렬 기획", "멀티 AI 기획" 요청 시 활성화됩니다.
+allowed-tools: Read, Bash, Grep, Glob, Task, Write, Edit, TodoWrite, AskUserQuestion
+priority: high
+tags: [planning, background, parallel-execution, autonomous, multi-llm, codex, gemini]
+---
+
+# Background Planner Skill
+
+## Purpose
+
+컨텍스트 제한에 안전한 멀티 LLM 백그라운드 기획 스킬입니다. **Claude, Codex, Gemini** 등 여러 AI 에이전트가 병렬로 기획을 수행하고, 각 에이전트가 직접 결과를 파일에 저장하므로 메인 세션이 종료되어도 결과가 보존됩니다.
+
+**핵심 특징:**
+- **멀티 LLM 지원**: Claude(Task), Codex CLI, Gemini API, Ollama 등 다양한 프로바이더 활용
+- **컨텍스트 안전**: 에이전트가 `run_in_background: true`로 실행되어 메인 세션과 독립
+- **자동 저장**: 각 에이전트가 완료 시 `.context/plans/` 폴더에 결과 저장
+- **진행 추적**: 파일 기반으로 진행 상황 확인 가능
+- **다각도 분석**: 서로 다른 AI의 관점에서 기획안 비교 가능
+- **자동 머지**: 모든 에이전트 완료 후 통합 기획안 생성
+
+## When to Invoke
+
+다음 키워드가 포함된 요청에서 활성화:
+- "백그라운드 기획", "bg plan", "background plan"
+- "병렬 기획", "parallel plan"
+- "여러 관점에서 기획"
+- "N명이 기획해줘" + "백그라운드로"
+- "멀티 AI 기획", "codex로 기획", "gemini로 기획"
+- "다른 AI 의견", "여러 LLM"
+
+**예시:**
+- "이슈 템플릿 기능을 백그라운드로 기획해줘"
+- "3가지 관점에서 병렬로 기획해주세요"
+- "bg plan: 커스텀 워크플로우 기능"
+- "codex, gemini로 다각도 기획해줘"
+- "여러 AI로 병렬 기획 (claude, codex, gemini)"
+
+## Supported LLM Providers
+
+### 지원 프로바이더 개요
+
+| 프로바이더 | 실행 방법 | 특징 | 권장 용도 |
+|-----------|----------|------|----------|
+| **Claude** | Task 도구 (subagent) | 안정적, 컨텍스트 유지 | 기본, 복잡한 분석 |
+| **Codex** | Bash (codex CLI) | 코드 중심, 빠름 | 기술 기획, 코드 설계 |
+| **Gemini** | Bash (gemini CLI/API) | 긴 컨텍스트, 창의적 | 문서 분석, 아이디어 |
+| **Ollama** | Bash (ollama CLI) | 로컬, 무료, 프라이버시 | 민감한 데이터 |
+
+### 환경 변수 설정
+
+```bash
+# Codex CLI (OpenAI)
+export OPENAI_API_KEY="sk-..."
+
+# Gemini
+export GOOGLE_API_KEY="..."
+
+# Ollama (로컬, API 키 불필요)
+# 기본 URL: http://localhost:11434
+```
+
+### 프로바이더별 CLI 설치
+
+```bash
+# Codex CLI 설치 (npm)
+npm install -g @openai/codex
+
+# Gemini CLI 설치 (pip)
+pip install google-generativeai
+
+# Ollama 설치 (macOS)
+brew install ollama
+ollama serve
+ollama pull llama3.2
+```
+
+## Instructions
+
+### Overall Workflow
+
+```
+User Request
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  1. 기획 주제 및 관점 파싱               │
+│     - 주제 추출                          │
+│     - 에이전트 수/관점 결정              │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  2. 출력 디렉토리 준비                   │
+│     - .context/plans/{timestamp}/ 생성  │
+│     - status.json 초기화                │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  3. 백그라운드 에이전트 실행 (병렬)      │
+│     - run_in_background: true           │
+│     - 각 에이전트가 직접 파일 저장       │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  4. 진행 상황 모니터링                   │
+│     - status.json 확인                  │
+│     - 완료된 에이전트 수 표시            │
+└─────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────┐
+│  5. 결과 머지 (모든 에이전트 완료 시)    │
+│     - 개별 결과 통합                     │
+│     - merged-plan.md 생성               │
+└─────────────────────────────────────────┘
+```
+
+### Step 1: 기획 설정
+
+사용자 요청에서 다음을 파싱:
+
+```yaml
+topic: "기획 주제"
+perspectives:
+  - name: "백엔드 개발자"
+    focus: "API 설계, 데이터 모델, 성능"
+  - name: "프론트엔드 개발자"
+    focus: "UI/UX, 컴포넌트 구조, 사용자 경험"
+  - name: "PM"
+    focus: "기능 정의, 우선순위, 성공 지표"
+output_dir: ".context/plans/{timestamp}_{topic_slug}"
+```
+
+### Step 2: 출력 디렉토리 준비
+
+```bash
+# 디렉토리 생성
+mkdir -p .context/plans/20260114_custom-workflow
+
+# status.json 초기화 (멀티 LLM 포함)
+{
+  "topic": "커스텀 워크플로우",
+  "started_at": "2026-01-14T15:00:00Z",
+  "agents": [
+    {"id": 1, "perspective": "백엔드", "provider": "claude", "status": "running", "output_file": "01-backend-claude.md"},
+    {"id": 2, "perspective": "프론트엔드", "provider": "codex", "status": "running", "output_file": "02-frontend-codex.md"},
+    {"id": 3, "perspective": "PM", "provider": "gemini", "status": "running", "output_file": "03-pm-gemini.md"},
+    {"id": 4, "perspective": "보안", "provider": "ollama", "status": "running", "output_file": "04-security-ollama.md"}
+  ],
+  "completed": 0,
+  "total": 4
+}
+```
+
+### Step 3: 백그라운드 에이전트 실행
+
+각 프로바이더별로 적합한 실행 방법을 사용합니다.
+
+---
+
+#### Provider 1: Claude (Task 도구)
+
+**가장 안정적인 기본 방식**
+
+```typescript
+// Claude 에이전트 (Task 도구 사용)
+Task({
+  subagent_type: "general-purpose",
+  prompt: `당신은 ${perspective} 관점에서 "${topic}" 기능을 기획하는 전문가입니다.
+
+## 작업 지시사항
+1. 철저한 분석 후 상세한 기획안을 작성하세요
+2. 완료되면 반드시 Write 도구로 ${output_file}에 저장하세요
+3. status.json의 해당 에이전트 status를 "completed"로 업데이트
+
+## 기획안 형식
+# ${topic} - ${perspective} 관점 기획안
+## 1. 개요
+## 2. 핵심 기능
+## 3. 상세 설계
+## 4. 구현 고려사항
+## 5. 리스크 및 대응
+## 6. 성공 지표`,
+  description: `${perspective} 관점 기획 (Claude)`,
+  run_in_background: true
+})
+```
+
+---
+
+#### Provider 2: Codex CLI
+
+**코드 중심 기획에 강점**
+
+```bash
+# Codex CLI 백그라운드 실행
+codex --approval-mode full-auto \
+  --quiet \
+  "당신은 ${PERSPECTIVE} 관점에서 '${TOPIC}' 기능을 기획하는 전문가입니다.
+
+분석 후 상세한 기획안을 작성하고, 결과를 ${OUTPUT_FILE}에 저장하세요.
+
+기획안 형식:
+# ${TOPIC} - ${PERSPECTIVE} 관점 기획안
+## 1. 개요
+## 2. 핵심 기능
+## 3. 상세 설계
+## 4. 구현 고려사항
+## 5. 리스크 및 대응
+
+완료되면 파일에 저장하세요." \
+  > /dev/null 2>&1 &
+```
+
+**Bash 도구로 실행:**
+```typescript
+Bash({
+  command: `codex --approval-mode full-auto --quiet "${prompt}" > "${output_file}" 2>&1`,
+  run_in_background: true,
+  description: `${perspective} 관점 기획 (Codex)`
+})
+```
+
+---
+
+#### Provider 3: Gemini API
+
+**긴 컨텍스트, 창의적 기획에 강점**
+
+```bash
+# Gemini CLI 백그라운드 실행 (gemini-cli 또는 직접 API 호출)
+# 방법 1: gemini-cli 사용
+gemini -m gemini-2.0-flash \
+  "당신은 ${PERSPECTIVE} 관점에서 '${TOPIC}' 기능을 기획하는 전문가입니다.
+  상세한 기획안을 작성하세요." \
+  > "${OUTPUT_FILE}" 2>&1 &
+
+# 방법 2: curl로 직접 API 호출
+curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}" \
+  -H 'Content-Type: application/json' \
+  -d "{
+    \"contents\": [{
+      \"parts\": [{\"text\": \"${PROMPT}\"}]
+    }]
+  }" | jq -r '.candidates[0].content.parts[0].text' > "${OUTPUT_FILE}" &
+```
+
+**Bash 도구로 실행:**
+```typescript
+Bash({
+  command: `gemini -m gemini-2.0-flash "${prompt}" > "${output_file}" 2>&1`,
+  run_in_background: true,
+  description: `${perspective} 관점 기획 (Gemini)`
+})
+```
+
+---
+
+#### Provider 4: Ollama (로컬 LLM)
+
+**무료, 프라이버시 보장**
+
+```bash
+# Ollama 백그라운드 실행
+ollama run llama3.2 \
+  "당신은 ${PERSPECTIVE} 관점에서 '${TOPIC}' 기능을 기획하는 전문가입니다.
+  상세한 기획안을 작성하세요." \
+  > "${OUTPUT_FILE}" 2>&1 &
+```
+
+**Bash 도구로 실행:**
+```typescript
+Bash({
+  command: `ollama run llama3.2 "${prompt}" > "${output_file}" 2>&1`,
+  run_in_background: true,
+  description: `${perspective} 관점 기획 (Ollama)`
+})
+```
+
+---
+
+#### 멀티 프로바이더 병렬 실행 예시
+
+**하나의 주제에 대해 여러 AI가 각자 기획:**
+
+```typescript
+// 단일 메시지에서 모든 프로바이더 병렬 실행
+
+// 1. Claude - 백엔드 관점
+Task({
+  subagent_type: "general-purpose",
+  prompt: backendPrompt,
+  description: "백엔드 관점 기획 (Claude)",
+  run_in_background: true
+})
+
+// 2. Codex - 프론트엔드 관점
+Bash({
+  command: `codex --approval-mode full-auto "${frontendPrompt}" > "${outputDir}/02-frontend-codex.md" 2>&1`,
+  run_in_background: true,
+  description: "프론트엔드 관점 기획 (Codex)"
+})
+
+// 3. Gemini - PM 관점
+Bash({
+  command: `gemini -m gemini-2.0-flash "${pmPrompt}" > "${outputDir}/03-pm-gemini.md" 2>&1`,
+  run_in_background: true,
+  description: "PM 관점 기획 (Gemini)"
+})
+
+// 4. Ollama - 보안 관점
+Bash({
+  command: `ollama run llama3.2 "${securityPrompt}" > "${outputDir}/04-security-ollama.md" 2>&1`,
+  run_in_background: true,
+  description: "보안 관점 기획 (Ollama)"
+})
+```
+
+### Step 4: 진행 상황 모니터링
+
+사용자에게 모니터링 방법 안내:
+
+```markdown
+## 에이전트 실행 중
+
+3개의 에이전트가 백그라운드에서 기획을 진행 중입니다.
+
+**진행 상황 확인:**
+\`\`\`bash
+# 상태 확인
+cat .context/plans/20260114_custom-workflow/status.json | jq
+
+# 완료된 파일 확인
+ls -la .context/plans/20260114_custom-workflow/*.md
+
+# 실시간 모니터링
+watch -n 5 'cat .context/plans/20260114_custom-workflow/status.json | jq .completed'
+\`\`\`
+
+**완료되면 알려드릴게요!**
+또는 "진행 상황 확인해줘"라고 말씀해주세요.
+```
+
+### Step 5: 결과 머지
+
+모든 에이전트 완료 시 통합 기획안 생성:
+
+```markdown
+# {topic} - 통합 기획안
+
+## 개요
+- 생성일: {timestamp}
+- 참여 관점: 백엔드, 프론트엔드, PM
+
+---
+
+## 관점별 기획 요약
+
+### 백엔드 관점
+[01-backend.md 요약]
+
+### 프론트엔드 관점
+[02-frontend.md 요약]
+
+### PM 관점
+[03-pm.md 요약]
+
+---
+
+## 통합 기획안
+
+### 공통 합의사항
+- 모든 관점에서 동의한 핵심 요소
+
+### 관점별 고유 제안
+- 백엔드만 제안: ...
+- 프론트엔드만 제안: ...
+- PM만 제안: ...
+
+### 최종 권장 구현안
+[종합된 최종 기획안]
+
+### 의사결정 필요 항목
+- [ ] 선택 1: A vs B
+- [ ] 선택 2: C vs D
+
+---
+
+## 다음 단계
+1. 의사결정 항목 확정
+2. 구현 우선순위 결정
+3. 개발 착수
+```
+
+## Agent Prompt Templates
+
+### 백엔드 개발자 관점
+
+```markdown
+당신은 시니어 백엔드 개발자입니다. "{topic}" 기능에 대해 다음 관점에서 기획하세요:
+
+**분석 포인트:**
+- API 엔드포인트 설계
+- 데이터 모델 및 스키마
+- 비즈니스 로직 흐름
+- 성능 및 확장성
+- 에러 처리 및 검증
+- 보안 고려사항
+
+**현재 코드베이스를 분석하여:**
+1. 기존 패턴과 일관성 유지
+2. 실제 파일 경로 참조
+3. 구체적인 코드 예시 포함
+
+**완료 후 반드시:**
+1. Write 도구로 결과를 {output_file}에 저장
+2. status.json 업데이트
+```
+
+### 프론트엔드 개발자 관점
+
+```markdown
+당신은 시니어 프론트엔드 개발자입니다. "{topic}" 기능에 대해 다음 관점에서 기획하세요:
+
+**분석 포인트:**
+- UI/UX 설계 및 사용자 플로우
+- 컴포넌트 구조 및 재사용성
+- 상태 관리 전략
+- API 연동 및 에러 처리
+- 접근성 및 반응형 디자인
+- 성능 최적화 (렌더링, 번들 크기)
+
+**현재 코드베이스를 분석하여:**
+1. 기존 UI 패턴과 일관성 유지
+2. 실제 컴포넌트 경로 참조
+3. 와이어프레임/목업 설명 포함
+
+**완료 후 반드시:**
+1. Write 도구로 결과를 {output_file}에 저장
+2. status.json 업데이트
+```
+
+### PM 관점
+
+```markdown
+당신은 시니어 프로덕트 매니저입니다. "{topic}" 기능에 대해 다음 관점에서 기획하세요:
+
+**분석 포인트:**
+- 사용자 스토리 및 페르소나
+- 기능 요구사항 (필수/선택)
+- 성공 지표 (KPI)
+- 경쟁사 벤치마킹
+- MVP 범위 정의
+- 로드맵 및 마일스톤
+- 리스크 및 의존성
+
+**현재 프로젝트를 분석하여:**
+1. 기존 기능과의 연계성
+2. 사용자 가치 극대화 방안
+3. 구체적인 수치 목표
+
+**완료 후 반드시:**
+1. Write 도구로 결과를 {output_file}에 저장
+2. status.json 업데이트
+```
+
+## Examples
+
+### Example 1: 기본 사용 (Claude Only)
+
+**User**: "커스텀 워크플로우 기능을 백그라운드로 기획해줘"
+
+**Actions:**
+
+1. 출력 디렉토리 생성: `.context/plans/20260114_custom-workflow/`
+
+2. status.json 초기화
+
+3. 3개 Claude 에이전트 백그라운드 실행:
+   - 백엔드 관점
+   - 프론트엔드 관점
+   - PM 관점
+
+4. 사용자에게 모니터링 방법 안내
+
+5. 완료 시 merged-plan.md 생성
+
+### Example 2: 멀티 LLM 기획
+
+**User**: "API 토큰 기능을 Claude, Codex, Gemini로 다각도 기획해줘"
+
+**Actions:**
+
+1. 출력 디렉토리 생성
+
+2. status.json 초기화 (provider 포함):
+   ```json
+   {
+     "agents": [
+       {"id": 1, "perspective": "아키텍처", "provider": "claude", "output_file": "01-architecture-claude.md"},
+       {"id": 2, "perspective": "구현", "provider": "codex", "output_file": "02-implementation-codex.md"},
+       {"id": 3, "perspective": "UX", "provider": "gemini", "output_file": "03-ux-gemini.md"}
+     ]
+   }
+   ```
+
+3. 멀티 프로바이더 병렬 실행:
+   ```
+   Task (Claude) ──┐
+   Bash (Codex) ───┼── 병렬 실행
+   Bash (Gemini) ──┘
+   ```
+
+4. 각 AI의 관점 비교 분석
+
+5. 통합 기획안 생성
+
+### Example 3: 프로바이더 지정 기획
+
+**User**: "macOS 앱을 Codex로 기술 기획, Gemini로 UX 기획해줘"
+
+**Actions:**
+
+1. 프로바이더별 역할 매핑:
+   - Codex: 기술 아키텍처 (코드에 강점)
+   - Gemini: UX/사용성 (창의성에 강점)
+
+2. 병렬 실행:
+   ```bash
+   # Codex - 기술 기획
+   codex --approval-mode full-auto "macOS 앱 기술 아키텍처 기획..." > 01-tech-codex.md &
+
+   # Gemini - UX 기획
+   gemini -m gemini-2.0-flash "macOS 앱 UX 기획..." > 02-ux-gemini.md &
+   ```
+
+3. 결과 통합
+
+### Example 4: 로컬 LLM 활용 (민감한 프로젝트)
+
+**User**: "내부 보안 정책을 Ollama로 기획해줘 (외부 API 사용 금지)"
+
+**Actions:**
+
+1. Ollama 사용 확인:
+   ```bash
+   ollama list  # 사용 가능한 모델 확인
+   ```
+
+2. 로컬 전용 실행:
+   ```bash
+   ollama run llama3.2 "${prompt}" > output.md &
+   ```
+
+3. 외부 API 미사용으로 데이터 보안 유지
+
+### Example 5: 진행 상황 확인
+
+**User**: "기획 진행 상황 확인해줘"
+
+**Actions:**
+
+1. status.json 읽기
+
+2. 완료된 에이전트 수 확인
+
+3. 각 에이전트 상태 표시:
+   ```
+   ┌──────────────┬────────────┬────────────┬────────────────────┐
+   │   에이전트   │  프로바이더 │    상태    │       파일         │
+   ├──────────────┼────────────┼────────────┼────────────────────┤
+   │ 아키텍처     │ Claude     │ ✅ 완료    │ 01-arch-claude.md  │
+   │ 구현         │ Codex      │ 🔄 진행중  │ 02-impl-codex.md   │
+   │ UX           │ Gemini     │ ✅ 완료    │ 03-ux-gemini.md    │
+   │ 보안         │ Ollama     │ ⏳ 대기    │ 04-sec-ollama.md   │
+   └──────────────┴────────────┴────────────┴────────────────────┘
+   진행률: 2/4 (50%)
+   ```
+
+4. 모두 완료 시 머지 실행
+
+## Configuration
+
+### 프로바이더별 권장 설정
+
+| 프로바이더 | 권장 관점 | 강점 | 모델 |
+|-----------|----------|------|------|
+| Claude | 아키텍처, PM | 복잡한 분석, 상세한 문서 | claude-sonnet-4, opus |
+| Codex | 백엔드, 프론트엔드 | 코드 설계, 기술 구현 | codex |
+| Gemini | UX, 마케팅 | 창의성, 긴 문서 | gemini-2.0-flash |
+| Ollama | 보안, 내부 정책 | 프라이버시, 무료 | llama3.2 |
+
+### 기본 관점 설정
+
+기본적으로 다음 3가지 관점을 사용:
+
+| 관점 | 파일명 | 주요 초점 |
+|------|--------|----------|
+| 백엔드 | 01-backend.md | API, DB, 성능 |
+| 프론트엔드 | 02-frontend.md | UI/UX, 컴포넌트 |
+| PM | 03-pm.md | 요구사항, KPI |
+
+### 확장 관점 + 권장 프로바이더
+
+| 관점 | 주요 초점 | 권장 프로바이더 |
+|------|----------|----------------|
+| 보안 전문가 | 인증, 권한, 취약점 | Claude, Ollama |
+| DevOps | 배포, 모니터링, 확장성 | Codex |
+| QA | 테스트 전략, 엣지 케이스 | Claude |
+| 데이터 엔지니어 | 데이터 파이프라인, 분석 | Claude, Gemini |
+| UX 리서처 | 사용자 연구, A/B 테스트 | Gemini |
+| 기술 아키텍트 | 시스템 설계, 기술 스택 | Codex, Claude |
+
+### 프로바이더 조합 프리셋
+
+```yaml
+# 기술 중심 기획
+tech_focused:
+  - { perspective: "아키텍처", provider: "claude" }
+  - { perspective: "백엔드", provider: "codex" }
+  - { perspective: "프론트엔드", provider: "codex" }
+
+# 제품 중심 기획
+product_focused:
+  - { perspective: "PM", provider: "claude" }
+  - { perspective: "UX", provider: "gemini" }
+  - { perspective: "마케팅", provider: "gemini" }
+
+# 보안 중심 기획
+security_focused:
+  - { perspective: "보안", provider: "ollama" }
+  - { perspective: "인프라", provider: "claude" }
+  - { perspective: "컴플라이언스", provider: "ollama" }
+
+# 균형 잡힌 기획 (다양한 AI 관점)
+balanced:
+  - { perspective: "아키텍처", provider: "claude" }
+  - { perspective: "구현", provider: "codex" }
+  - { perspective: "UX", provider: "gemini" }
+  - { perspective: "보안", provider: "ollama" }
+```
+
+## Token Efficiency
+
+백그라운드 에이전트 실행 시 토큰 사용을 최적화하는 방법입니다.
+
+### 입력: Markdown 파일로 컨텍스트 전달
+
+긴 프롬프트를 직접 전달하는 대신, **markdown 파일로 작성하여 파일 경로만 전달**합니다.
+
+**WHY**: 프롬프트를 문자열로 직접 전달하면 escape 처리, 줄바꿈 등으로 토큰이 낭비됩니다.
+
+```bash
+# 1. 기획 지시서를 markdown 파일로 생성
+mkdir -p .context/plans/20260114_custom-workflow/tasks
+
+# 기획 지시서 파일 생성
+cat > .context/plans/20260114_custom-workflow/tasks/01-backend-task.md << 'EOF'
+# 백엔드 관점 기획 지시서
+
+## 기획 주제
+커스텀 워크플로우 기능
+
+## 당신의 역할
+시니어 백엔드 개발자
+
+## 분석 포인트
+- API 엔드포인트 설계
+- 데이터 모델 및 스키마
+- 비즈니스 로직 흐름
+- 성능 및 확장성
+
+## 참고할 기존 코드
+- src/handlers/workflows.rs (기존 워크플로우 패턴)
+- src/models/workflow.rs (기존 모델)
+
+## 출력 형식
+기획안을 작성하고 .context/plans/20260114_custom-workflow/01-backend.md에 저장하세요.
+EOF
+```
+
+```typescript
+// 2. 에이전트 실행 시 파일 경로만 전달
+Task({
+  subagent_type: "general-purpose",
+  prompt: `기획 지시서를 읽고 수행하세요: .context/plans/20260114_custom-workflow/tasks/01-backend-task.md`,
+  description: "백엔드 관점 기획 (Claude)",
+  run_in_background: true
+})
+
+// Codex/Gemini도 마찬가지
+Bash({
+  command: `codex --approval-mode full-auto "기획 지시서를 읽고 수행하세요: .context/plans/20260114_custom-workflow/tasks/02-frontend-task.md"`,
+  run_in_background: true
+})
+```
+
+### 출력: Markdown 요약 보고
+
+각 에이전트는 기획 완료 후 **구조화된 markdown 요약**을 저장합니다.
+
+**WHY**: 메인 세션이 결과를 확인할 때 전체 기획안 대신 요약만 먼저 읽으면 됩니다.
+
+```markdown
+# 기획 결과: 백엔드 관점
+
+## 상태
+✅ 완료
+
+## 핵심 요약 (5줄 이내)
+- REST API 6개 엔드포인트 설계 (CRUD + 실행 + 복제)
+- workflow_definitions, workflow_instances 2개 테이블
+- 비동기 실행 + 상태 머신 패턴 권장
+- 예상 구현 복잡도: 중간
+
+## 주요 제안사항
+| 항목 | 제안 | 우선순위 |
+|------|------|----------|
+| 데이터 모델 | workflow_definitions 테이블 | 높음 |
+| 실행 엔진 | Tokio 기반 비동기 | 높음 |
+| 버전 관리 | 워크플로우 버전 히스토리 | 중간 |
+
+## 의사결정 필요 항목
+- [ ] 실행 방식: 동기 vs 비동기
+- [ ] 저장소: PostgreSQL vs Redis
+
+## 상세 기획안 위치
+→ .context/plans/20260114_custom-workflow/01-backend.md (전체 기획안)
+
+## 다음 단계
+1. 프론트엔드/PM 기획 결과와 비교
+2. 의사결정 항목 확정
+3. 통합 기획안 작성
+```
+
+### 워크플로우 요약
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. 기획 지시서 생성 (Markdown)                              │
+│     └─ .context/plans/{session}/tasks/01-task.md            │
+├─────────────────────────────────────────────────────────────┤
+│  2. 에이전트 실행 (파일 경로만 전달)                         │
+│     └─ "기획 지시서를 읽고 수행: {task_file_path}"          │
+├─────────────────────────────────────────────────────────────┤
+│  3. 결과 저장 (상세 기획안 + 요약)                           │
+│     ├─ .context/plans/{session}/01-backend.md (상세)        │
+│     └─ .context/plans/{session}/01-backend-summary.md (요약)│
+├─────────────────────────────────────────────────────────────┤
+│  4. 메인 세션에서 요약만 먼저 확인                           │
+│     └─ 토큰 절약: 상세 기획안은 필요시에만 읽음              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 토큰 절약 효과
+
+| 방식 | 입력 토큰 | 결과 확인 토큰 | 총 절약 |
+|------|----------|---------------|---------|
+| 기존 (직접 전달) | ~2000 | ~10000 | - |
+| 최적화 (파일 기반) | ~100 | ~500 (요약) | **~90%** |
+
+## Best Practices
+
+### DO:
+- 구체적인 기획 주제 제시
+- 필요한 관점 명시
+- 기존 코드베이스 컨텍스트 제공
+- 진행 상황 주기적 확인
+- **기획 지시서를 markdown 파일로 생성하여 전달**
+- **결과를 상세 기획안 + 요약으로 분리 저장**
+
+### DON'T:
+- 너무 광범위한 주제 ("앱 전체 기획")
+- 5개 이상의 관점 동시 실행 (비용/시간)
+- 결과 검토 없이 바로 구현
+- **긴 프롬프트를 문자열로 직접 전달**
+- **전체 기획안을 그대로 메인 세션에 반환**
+
+## Troubleshooting
+
+### "에이전트가 파일을 저장하지 않았어요"
+
+1. 에이전트 output 파일 확인:
+   ```bash
+   cat /tmp/claude/.../tasks/{agent_id}.output
+   ```
+
+2. 에이전트가 아직 실행 중일 수 있음 - 더 기다리기
+
+3. 수동으로 결과 추출하여 저장
+
+### "status.json이 업데이트되지 않았어요"
+
+에이전트가 status.json 업데이트를 잊을 수 있음. 수동으로 확인:
+
+```bash
+# 파일 존재 여부로 완료 판단
+ls .context/plans/{dir}/*.md
+```
+
+### "머지가 제대로 안 됐어요"
+
+1. 개별 기획안 직접 검토
+2. 수동으로 통합 기획안 작성 요청
+
+## Files
+
+이 스킬이 생성하는 파일들:
+
+```
+.context/plans/{timestamp}_{topic}/
+├── status.json          # 진행 상황 추적
+├── 01-backend.md        # 백엔드 관점 기획
+├── 02-frontend.md       # 프론트엔드 관점 기획
+├── 03-pm.md             # PM 관점 기획
+└── merged-plan.md       # 통합 기획안
+```
+
+---
+
+**Version**: 2.0.0
+**Last Updated**: January 2026
+**Changelog**:
+- v2.0.0: 멀티 LLM 프로바이더 지원 (Claude, Codex, Gemini, Ollama)
+- v1.0.0: 초기 버전 (Claude only)

@@ -1,0 +1,13 @@
+/* CSS if() for inline conditionals */
+
+.status {
+  --level: 50%;
+
+  background: if(style(--level > 75%): var(--color-success); else: var(--color-muted));
+
+  color: if(
+    style(--level > 75%): var(--color-success);
+    style(--level > 25%): var(--color-warning);
+    else: var(--color-error)
+  );
+}

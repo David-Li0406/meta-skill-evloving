@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="BOM Cycle Check"
+        require-authentication="false">
+
+    <transition name="runBomCycleCheck" begin-transaction="false">
+        <actions>
+            <service-call name="BomServices.run#BomCycleCheck"
+                    in-map="[
+                        bomFile:bomFile,
+                        bomLocation:bomLocation,
+                        hasHeader:hasHeader,
+                        delimiter:delimiter,
+                        parentFieldName:parentFieldName,
+                        componentFieldName:componentFieldName,
+                        assocTypeFilter:assocTypeFilter
+                    ]"
+                    out-map="context"/>
+            <if condition="importableFileName || problemFileName"><then>
+                <message>BOM analyzed. Importable rows: ${importableRowCount ?: 0}, Problem rows: ${problemRowCount ?: 0}, Cycles: ${cycleCount ?: 0}</message>
+            </then></if>
+        </actions>
+        <default-response url=".">
+            <parameter name="latestImportable" from="importableFileName"/>
+            <parameter name="latestProblem" from="problemFileName"/>
+            <parameter name="lastImportableCount" from="importableRowCount"/>
+            <parameter name="lastProblemCount" from="problemRowCount"/>
+            <parameter name="lastCycleCount" from="cycleCount"/>
+        </default-response>
+    </transition>
+
+    <transition name="downloadOutput" read-only="true" begin-transaction="false">
+        <parameter name="filename"/>
+        <actions>
+            <set field="filename" from="filename?.trim()"/>
+            <if condition="!filename"><return/></if>
+            <if condition="filename.contains('..') || filename.contains('/') || filename.contains('\\\\')">
+                <return error="true" message="Invalid filename"/>
+            </if>
+            <set field="outputDirRef" from="ec.resource.getLocationReference('runtime://tmp/bom/cycle-check/output')"/>
+            <set field="fileRef" from="outputDirRef != null ? outputDirRef.getChild(filename) : null"/>
+            <if condition="fileRef == null || !fileRef.getExists()">
+                <return error="true" message="File not found"/>
+            </if>
+            <set field="sendResponse" from="ec.web.sendResourceResponse(fileRef.getLocation())"/>
+            <return/>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <pre-actions>
+        <script><![CDATA[
+            def outputDirRef = ec.resource.getLocationReference('runtime://tmp/bom/cycle-check/output')
+            outputFiles = []
+            if (outputDirRef != null && outputDirRef.getExists()) {
+                def entries = outputDirRef.getDirectoryEntries() ?: []
+                entries.findAll { it.isFile() && it.getFileName() && it.getFileName().toLowerCase().endsWith('.csv') && it.getSize() > 0 }
+                       .sort { a, b -> b.getLastModified() <=> a.getLastModified() }
+                       .each { outputFiles.add([fileName: it.getFileName(), fileLastModified: it.getLastModified(), fileSize: it.getSize()]) }
+            }
+        ]]></script>
+    </pre-actions>
+
+    <widgets>
+        <container style="container">
+            <container style="page-header">
+                <label text="BOM Cycle Check" type="h2"/>
+                <label text="Upload a BOM CSV to split importable rows from rows that introduce reciprocal (cyclic) product relationships." type="p" style="text-muted"/>
+            </container>
+
+            <form-single name="BomCycleForm" transition="runBomCycleCheck">
+                <field name="hasHeader"><default-field><hidden default-value="true"/></default-field></field>
+                <field name="delimiter"><default-field><hidden default-value=","/></default-field></field>
+                <field name="parentFieldName"><default-field><hidden default-value="product-sku"/></default-field></field>
+                <field name="componentFieldName"><default-field><hidden default-value="product-sku-to"/></default-field></field>
+
+                <field name="bomFile">
+                    <default-field title="BOM File"><file size="40" accept=".csv,text/csv"/></default-field>
+                </field>
+                <field name="bomLocation" from="bomLocation">
+                    <default-field title="Or file location (component:// or runtime://)" tooltip="Used when you want to analyze a file already on disk">
+                        <text-line size="60"/>
+                    </default-field>
+                </field>
+                <field name="assocTypeFilter" from="assocTypeFilter">
+                    <default-field title="Assoc Type Filter" tooltip="Optional: only include rows matching this association type (e.g., PRODUCT_COMPONENT)">
+                        <text-line size="30"/>
+                    </default-field>
+                </field>
+
+                <field name="submitButton"><default-field title="Analyze"><submit/></default-field></field>
+
+                <field-layout>
+                    <field-row><field-ref name="bomFile"/><field-ref name="bomLocation"/></field-row>
+                    <field-row><field-ref name="assocTypeFilter"/></field-row>
+                    <field-row-big><field-ref name="submitButton"/></field-row-big>
+                </field-layout>
+            </form-single>
+
+            <section name="LatestRunSummary" condition="lastImportableCount != null || lastProblemCount != null">
+                <widgets>
+                    <container style="alert alert-info">
+                        <label text="Last run: Importable ${lastImportableCount ?: 0}, Problem ${lastProblemCount ?: 0}, Cycles ${lastCycleCount ?: 0}" type="strong"/>
+                    </container>
+                </widgets>
+            </section>
+
+            <container type="hr"/>
+
+            <label text="Generated Files" type="h4"/>
+            <link url="downloadOutput" text="Download Latest Importable (${latestImportable})"
+                    condition="latestImportable" link-type="anchor-button" target-window="_blank" btn-type="success">
+                <parameter name="filename" from="latestImportable"/>
+            </link>
+            <link url="downloadOutput" text="Download Latest Problem Rows (${latestProblem})"
+                    condition="latestProblem" link-type="anchor-button" target-window="_blank" btn-type="danger">
+                <parameter name="filename" from="latestProblem"/>
+            </link>
+
+            <section name="OutputFilesTable" condition="outputFiles">
+                <widgets>
+                    <form-list name="OutputFiles" list="outputFiles" skip-form="true" paginate="false"
+                            style="table table-striped table-condensed">
+                        <field name="fileName">
+                            <header-field title="File"/>
+                            <default-field><display/></default-field>
+                        </field>
+                        <field name="fileLastModifiedDisplay"
+                                from="fileLastModified ? ec.l10n.format(new java.sql.Timestamp(fileLastModified), null) : ''">
+                            <header-field title="Last Modified"/>
+                            <default-field><display/></default-field>
+                        </field>
+                        <field name="fileSizeKb"
+                                from="(fileSize ?: 0) >= 1048576 ? (ec.l10n.format((fileSize ?: 0) / 1048576, '#,##0.##') + ' Mb') : (ec.l10n.format((fileSize ?: 0) / 1024, '#,##0.##') + ' Kb')">
+                            <header-field title="Size"/>
+                            <default-field><display/></default-field>
+                        </field>
+                        <field name="downloadLink">
+                            <header-field title=""/>
+                            <default-field>
+                                <link url="downloadOutput" text="Download" link-type="anchor-button" target-window="_blank"
+                                        btn-type="default" style="btn-xs" condition="fileName">
+                                    <parameter name="filename" from="fileName"/>
+                                </link>
+                            </default-field>
+                        </field>
+                    </form-list>
+                </widgets>
+            </section>
+
+            <section name="NoOutputFiles" condition="!outputFiles">
+                <widgets>
+                    <label text="No outputs generated yet." type="p" style="text-muted"/>
+                </widgets>
+            </section>
+        </container>
+    </widgets>
+</screen>

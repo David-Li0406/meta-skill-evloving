@@ -1,0 +1,61 @@
+---
+name: verify
+description: 'Manifest verification runner. Spawns parallel verifiers for Global Invariants and Acceptance Criteria. Called by /do, not directly by users.'
+user-invocable: false
+---
+
+# /verify - Manifest Verification Runner
+
+Orchestrate verification of all criteria from a Manifest by spawning parallel verifiers. Report results grouped by type.
+
+**Input**: `$ARGUMENTS` = "<manifest-file-path> <execution-log-path> [--scope=files]"
+
+## Principles
+
+| Principle | Rule |
+|-----------|------|
+| **Orchestrate, don't verify** | Spawn agents to verify. You coordinate results, never run checks yourself. |
+| **Single parallel launch** | All criteria in one call. Order: slow (tests, builds, reviewers) before fast (lint, typecheck). |
+| **Globals are critical** | Global Invariant failures mean task failure. Highlight prominently. |
+| **Actionable feedback** | Pass through file:line, expected vs actual, fix hints. |
+
+## Verification Methods
+
+| Type | What |
+|------|------|
+| `bash` | Shell commands (tests, lint, typecheck) |
+| `subagent` | Reviewer agents |
+| `codebase` | Code pattern checks |
+| `manual` | Set aside for human verification |
+
+## Criterion Types
+
+| Type | Pattern | Failure Impact |
+|------|---------|----------------|
+| Global Invariant | INV-G{N} | Task fails |
+| Acceptance Criteria | AC-{D}.{N} | Deliverable incomplete |
+| Process Guidance | PG-{N} | Not verified (guidance only) |
+
+Note: PG-* items guide HOW to work. Followed during /do, not checked by /verify.
+
+## Outcome Handling
+
+| Condition | Action |
+|-----------|--------|
+| Any Global Invariant failed | Return all failures, globals highlighted |
+| Any AC failed | Return failures grouped by deliverable |
+| All automated pass, manual exists | Return manual criteria, hint to call /escalate |
+| All pass | Call /done |
+
+## Output Format
+
+Report verification results grouped by Global Invariants first, then by Deliverable.
+
+**On failure** - Show for each failed criterion:
+- Criterion ID and description
+- Verification method
+- Failure details: location, expected vs actual, fix hint
+
+**On success with manual** - List manual criteria with how-to-verify from manifest, suggest /escalate.
+
+**On full success** - Call /done.

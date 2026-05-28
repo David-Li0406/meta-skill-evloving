@@ -1,0 +1,19 @@
+# Allow direct image access
+<FilesMatch "\.(jpg|jpeg|png|gif|svg|webp|ico)$">
+    Require all granted
+</FilesMatch>
+
+# Block PHP execution
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+
+# Enable browser caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+</IfModule>

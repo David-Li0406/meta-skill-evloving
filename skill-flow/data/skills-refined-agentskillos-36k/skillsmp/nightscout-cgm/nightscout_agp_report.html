@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulatory Glucose Profile (AGP) Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .container { max-width: 100% !important; padding: 10px !important; }
+            .agp-section { page-break-inside: avoid; }
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        
+        .agp-header {
+            text-align: center;
+            border-bottom: 3px solid #2c5aa0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .agp-header h1 {
+            font-size: 28px;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+        }
+        
+        .agp-header .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .date-range {
+            text-align: center;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .agp-section {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafafa;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #2c5aa0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .stat-unit {
+            font-size: 14px;
+            color: #666;
+            margin-left: 4px;
+        }
+        
+        .tir-bar {
+            display: flex;
+            height: 40px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .tir-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tir-segment:hover {
+            opacity: 0.8;
+        }
+        
+        .tir-very-low { background: #1d4ed8; }
+        .tir-low { background: #3b82f6; }
+        .tir-in-range { background: #10b981; }
+        .tir-high { background: #f59e0b; }
+        .tir-very-high { background: #ef4444; }
+        
+        .tir-legend {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            font-size: 11px;
+        }
+        
+        .tir-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tir-legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .daily-profiles {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .daily-profile-chart {
+            height: 150px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        .daily-profile-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        
+        .agp-targets {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .agp-targets strong {
+            color: #333;
+        }
+        
+        .print-btn {
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 20px auto;
+            display: block;
+        }
+        
+        .print-btn:hover {
+            background: #1e3d6f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="agp-header">
+            <h1>Ambulatory Glucose Profile (AGP)</h1>
+            <div class="subtitle">Report Generated: January 22, 2026</div>
+        </div>
+        
+        <div class="date-range">
+            Report Period: 2026-01-17 to 2026-01-23 (7 days with data)
+        </div>
+        
+        <button class="print-btn no-print" onclick="window.print()">Print Report</button>
+        
+        <!-- Glucose Statistics -->
+        <div class="agp-section">
+            <div class="section-title">Glucose Statistics</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Average Glucose</div>
+                    <div class="stat-value">133.5<span class="stat-unit">mg/dL</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">GMI (estimated A1C)</div>
+                    <div class="stat-value">6.5<span class="stat-unit">%</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Glucose Variability (CV)</div>
+                    <div class="stat-value">23.3<span class="stat-unit">%</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Readings</div>
+                    <div class="stat-value">2016</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Time in Ranges -->
+        <div class="agp-section">
+            <div class="section-title">Time in Ranges</div>
+            <div class="tir-bar">
+                <div class="tir-segment tir-very-low" style="width: 0.0%">
+                    
+                </div>
+                <div class="tir-segment tir-low" style="width: 0.0%">
+                    
+                </div>
+                <div class="tir-segment tir-in-range" style="width: 91.1%">
+                    91.1%
+                </div>
+                <div class="tir-segment tir-high" style="width: 8.9%">
+                    8.9%
+                </div>
+                <div class="tir-segment tir-very-high" style="width: 0.0%">
+                    
+                </div>
+            </div>
+            <div class="tir-legend">
+                <div class="tir-legend-item">
+                    <div class="tir-legend-color tir-very-low"></div>
+                    <span>Very Low (&lt;55): 0.0%</span>
+                </div>
+                <div class="tir-legend-item">
+                    <div class="tir-legend-color tir-low"></div>
+                    <span>Low (55-70): 0.0%</span>
+                </div>
+                <div class="tir-legend-item">
+                    <div class="tir-legend-color tir-in-range"></div>
+                    <span>In Range (70-180): 91.1%</span>
+                </div>
+                <div class="tir-legend-item">
+                    <div class="tir-legend-color tir-high"></div>
+                    <span>High (180-250): 8.9%</span>
+                </div>
+                <div class="tir-legend-item">
+                    <div class="tir-legend-color tir-very-high"></div>
+                    <span>Very High (&gt;250): 0.0%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AGP Modal Day -->
+        <div class="agp-section">
+            <div class="section-title">Ambulatory Glucose Profile</div>
+            <div class="agp-targets">
+                <strong>Target Range:</strong> 70-180 mg/dL | 
+                <strong>AGP Goal:</strong> Time in Range &gt;70%, Time Below &lt;4%, CV &lt;36%
+            </div>
+            <div class="chart-container">
+                <canvas id="agpChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Daily Glucose Profiles -->
+        <div class="agp-section">
+            <div class="section-title">Daily Glucose Profiles (Last 7 Days)</div>
+            <div class="daily-profiles" id="dailyProfiles"></div>
+        </div>
+    </div>
+    
+    <script>
+        const unit = "mg/dL";
+        const targetLow = 70;
+        const targetHigh = 180;
+        const urgentLow = 55;
+        const urgentHigh = 250;
+        
+        // AGP Modal Day Data
+        const agpData = [{"hour": 0, "p5": 103, "p25": 111, "p50": 120, "p75": 131, "p95": 140}, {"hour": 1, "p5": 105, "p25": 111, "p50": 123, "p75": 131, "p95": 138}, {"hour": 2, "p5": 76, "p25": 82, "p50": 94, "p75": 106, "p95": 113}, {"hour": 3, "p5": 77, "p25": 86, "p50": 98, "p75": 107, "p95": 114}, {"hour": 4, "p5": 75, "p25": 85, "p50": 93, "p75": 103, "p95": 114}, {"hour": 5, "p5": 78, "p25": 84, "p50": 99, "p75": 108, "p95": 114}, {"hour": 6, "p5": 103, "p25": 111, "p50": 123, "p75": 131, "p95": 138}, {"hour": 7, "p5": 132, "p25": 138, "p50": 146, "p75": 158, "p95": 169}, {"hour": 8, "p5": 151, "p25": 157, "p50": 165, "p75": 178, "p95": 188}, {"hour": 9, "p5": 172, "p25": 180, "p50": 194, "p75": 203, "p95": 210}, {"hour": 10, "p5": 104, "p25": 110, "p50": 124, "p75": 131, "p95": 139}, {"hour": 11, "p5": 103, "p25": 112, "p50": 122, "p75": 131, "p95": 138}, {"hour": 12, "p5": 142, "p25": 150, "p50": 161, "p75": 169, "p95": 179}, {"hour": 13, "p5": 156, "p25": 166, "p50": 175, "p75": 183, "p95": 193}, {"hour": 14, "p5": 173, "p25": 182, "p50": 191, "p75": 199, "p95": 208}, {"hour": 15, "p5": 101, "p25": 109, "p50": 120, "p75": 131, "p95": 138}, {"hour": 16, "p5": 101, "p25": 109, "p50": 120, "p75": 131, "p95": 139}, {"hour": 17, "p5": 102, "p25": 107, "p50": 121, "p75": 132, "p95": 140}, {"hour": 18, "p5": 127, "p25": 134, "p50": 146, "p75": 159, "p95": 163}, {"hour": 19, "p5": 138, "p25": 145, "p50": 157, "p75": 166, "p95": 172}, {"hour": 20, "p5": 147, "p25": 153, "p50": 163, "p75": 176, "p95": 183}, {"hour": 21, "p5": 101, "p25": 108, "p50": 118, "p75": 130, "p95": 138}, {"hour": 22, "p5": 101, "p25": 110, "p50": 120, "p75": 130, "p95": 137}, {"hour": 23, "p5": 101, "p25": 107, "p50": 116, "p75": 128, "p95": 138}];
+        
+        // Daily profiles data
+        const dailyProfiles = [{"date": "2026-01-17", "data": [{"hour": 0, "mean": 123.2, "count": 12}, {"hour": 1, "mean": 120.4, "count": 12}, {"hour": 2, "mean": 97.1, "count": 12}, {"hour": 3, "mean": 98.0, "count": 12}, {"hour": 4, "mean": 86.7, "count": 12}, {"hour": 5, "mean": 94.8, "count": 12}, {"hour": 6, "mean": 119.1, "count": 12}, {"hour": 7, "mean": 144.9, "count": 12}, {"hour": 8, "mean": 161.8, "count": 12}, {"hour": 9, "mean": 191.5, "count": 12}, {"hour": 10, "mean": 127.1, "count": 12}, {"hour": 11, "mean": 120.8, "count": 12}, {"hour": 12, "mean": 163.3, "count": 12}, {"hour": 13, "mean": 176.8, "count": 12}, {"hour": 14, "mean": 188.5, "count": 12}, {"hour": 15, "mean": 113.9, "count": 12}, {"hour": 16, "mean": 120.8, "count": 12}, {"hour": 17, "mean": 122.8, "count": 12}, {"hour": 18, "mean": 149.8, "count": 12}, {"hour": 19, "mean": 148.8, "count": 12}, {"hour": 20, "mean": 164.4, "count": 12}, {"hour": 21, "mean": 118.7, "count": 12}, {"hour": 22, "mean": 119.2, "count": 12}, {"hour": 23, "mean": 116.5, "count": 12}]}, {"date": "2026-01-18", "data": [{"hour": 0, "mean": 114.7, "count": 12}, {"hour": 1, "mean": 124.5, "count": 12}, {"hour": 2, "mean": 95.2, "count": 12}, {"hour": 3, "mean": 90.8, "count": 12}, {"hour": 4, "mean": 97.2, "count": 12}, {"hour": 5, "mean": 93.2, "count": 12}, {"hour": 6, "mean": 120.6, "count": 12}, {"hour": 7, "mean": 148.4, "count": 12}, {"hour": 8, "mean": 168.3, "count": 12}, {"hour": 9, "mean": 188.7, "count": 12}, {"hour": 10, "mean": 118.1, "count": 12}, {"hour": 11, "mean": 124.0, "count": 12}, {"hour": 12, "mean": 153.1, "count": 12}, {"hour": 13, "mean": 175.2, "count": 12}, {"hour": 14, "mean": 189.2, "count": 12}, {"hour": 15, "mean": 117.1, "count": 12}, {"hour": 16, "mean": 122.2, "count": 12}, {"hour": 17, "mean": 118.8, "count": 12}, {"hour": 18, "mean": 144.9, "count": 12}, {"hour": 19, "mean": 155.2, "count": 12}, {"hour": 20, "mean": 164.9, "count": 12}, {"hour": 21, "mean": 118.5, "count": 12}, {"hour": 22, "mean": 118.2, "count": 12}, {"hour": 23, "mean": 116.2, "count": 12}]}, {"date": "2026-01-19", "data": [{"hour": 0, "mean": 125.4, "count": 12}, {"hour": 1, "mean": 120.8, "count": 12}, {"hour": 2, "mean": 94.1, "count": 12}, {"hour": 3, "mean": 99.5, "count": 12}, {"hour": 4, "mean": 96.8, "count": 12}, {"hour": 5, "mean": 97.2, "count": 12}, {"hour": 6, "mean": 121.9, "count": 12}, {"hour": 7, "mean": 150.9, "count": 12}, {"hour": 8, "mean": 168.9, "count": 12}, {"hour": 9, "mean": 192.3, "count": 12}, {"hour": 10, "mean": 118.6, "count": 12}, {"hour": 11, "mean": 121.1, "count": 12}, {"hour": 12, "mean": 160.2, "count": 12}, {"hour": 13, "mean": 170.8, "count": 12}, {"hour": 14, "mean": 191.8, "count": 12}, {"hour": 15, "mean": 117.8, "count": 12}, {"hour": 16, "mean": 123.2, "count": 12}, {"hour": 17, "mean": 123.7, "count": 12}, {"hour": 18, "mean": 144.4, "count": 12}, {"hour": 19, "mean": 150.7, "count": 12}, {"hour": 20, "mean": 167.2, "count": 12}, {"hour": 21, "mean": 123.2, "count": 12}, {"hour": 22, "mean": 120.3, "count": 12}, {"hour": 23, "mean": 120.2, "count": 12}]}, {"date": "2026-01-20", "data": [{"hour": 0, "mean": 122.5, "count": 12}, {"hour": 1, "mean": 122.1, "count": 12}, {"hour": 2, "mean": 93.4, "count": 12}, {"hour": 3, "mean": 94.3, "count": 12}, {"hour": 4, "mean": 94.8, "count": 12}, {"hour": 5, "mean": 100.8, "count": 12}, {"hour": 6, "mean": 121.5, "count": 12}, {"hour": 7, "mean": 146.6, "count": 12}, {"hour": 8, "mean": 171.2, "count": 12}, {"hour": 9, "mean": 190.7, "count": 12}, {"hour": 10, "mean": 120.4, "count": 12}, {"hour": 11, "mean": 121.4, "count": 12}, {"hour": 12, "mean": 157.2, "count": 12}, {"hour": 13, "mean": 172.6, "count": 12}, {"hour": 14, "mean": 187.2, "count": 12}, {"hour": 15, "mean": 120.7, "count": 12}, {"hour": 16, "mean": 115.8, "count": 12}, {"hour": 17, "mean": 122.6, "count": 12}, {"hour": 18, "mean": 145.1, "count": 12}, {"hour": 19, "mean": 160.1, "count": 12}, {"hour": 20, "mean": 165.8, "count": 12}, {"hour": 21, "mean": 118.0, "count": 12}, {"hour": 22, "mean": 119.9, "count": 12}, {"hour": 23, "mean": 121.6, "count": 12}]}, {"date": "2026-01-21", "data": [{"hour": 0, "mean": 114.1, "count": 12}, {"hour": 1, "mean": 122.3, "count": 12}, {"hour": 2, "mean": 94.9, "count": 12}, {"hour": 3, "mean": 101.9, "count": 12}, {"hour": 4, "mean": 96.6, "count": 12}, {"hour": 5, "mean": 96.1, "count": 12}, {"hour": 6, "mean": 118.2, "count": 12}, {"hour": 7, "mean": 149.8, "count": 12}, {"hour": 8, "mean": 165.1, "count": 12}, {"hour": 9, "mean": 187.9, "count": 12}, {"hour": 10, "mean": 125.2, "count": 12}, {"hour": 11, "mean": 119.9, "count": 12}, {"hour": 12, "mean": 166.2, "count": 12}, {"hour": 13, "mean": 176.0, "count": 12}, {"hour": 14, "mean": 197.1, "count": 12}, {"hour": 15, "mean": 128.1, "count": 12}, {"hour": 16, "mean": 122.8, "count": 12}, {"hour": 17, "mean": 120.0, "count": 12}, {"hour": 18, "mean": 147.3, "count": 12}, {"hour": 19, "mean": 157.5, "count": 12}, {"hour": 20, "mean": 161.9, "count": 12}, {"hour": 21, "mean": 116.7, "count": 12}, {"hour": 22, "mean": 120.9, "count": 12}, {"hour": 23, "mean": 118.9, "count": 12}]}, {"date": "2026-01-22", "data": [{"hour": 0, "mean": 125.8, "count": 12}, {"hour": 1, "mean": 120.6, "count": 12}, {"hour": 2, "mean": 92.6, "count": 12}, {"hour": 3, "mean": 94.6, "count": 12}, {"hour": 4, "mean": 93.0, "count": 12}, {"hour": 5, "mean": 97.7, "count": 12}, {"hour": 6, "mean": 124.8, "count": 12}, {"hour": 7, "mean": 149.1, "count": 12}, {"hour": 8, "mean": 167.3, "count": 12}, {"hour": 9, "mean": 194.1, "count": 12}, {"hour": 10, "mean": 125.4, "count": 12}, {"hour": 11, "mean": 125.2, "count": 12}, {"hour": 12, "mean": 160.1, "count": 12}, {"hour": 13, "mean": 175.5, "count": 12}, {"hour": 14, "mean": 191.8, "count": 12}, {"hour": 15, "mean": 119.0, "count": 12}, {"hour": 16, "mean": 122.1, "count": 12}, {"hour": 17, "mean": 113.4, "count": 12}, {"hour": 18, "mean": 148.5, "count": 12}, {"hour": 19, "mean": 160.6, "count": 12}, {"hour": 20, "mean": 165.7, "count": 12}, {"hour": 21, "mean": 118.8, "count": 12}, {"hour": 22, "mean": 115.8, "count": 12}, {"hour": 23, "mean": 115.5, "count": 12}]}, {"date": "2026-01-23", "data": [{"hour": 0, "mean": 119.8, "count": 12}, {"hour": 1, "mean": 118.3, "count": 12}, {"hour": 2, "mean": 93.8, "count": 12}, {"hour": 3, "mean": 93.5, "count": 12}, {"hour": 4, "mean": 93.2, "count": 12}, {"hour": 5, "mean": 101.2, "count": 12}, {"hour": 6, "mean": 121.1, "count": 12}, {"hour": 7, "mean": 146.8, "count": 12}, {"hour": 8, "mean": 168.2, "count": 12}, {"hour": 9, "mean": 199.2, "count": 12}, {"hour": 10, "mean": 116.6, "count": 12}, {"hour": 11, "mean": 115.9, "count": 12}, {"hour": 12, "mean": 161.8, "count": 12}, {"hour": 13, "mean": 175.0, "count": 12}, {"hour": 14, "mean": 190.2, "count": 12}, {"hour": 15, "mean": 120.1, "count": 12}, {"hour": 16, "mean": 117.2, "count": 12}, {"hour": 17, "mean": 122.2, "count": 12}, {"hour": 18, "mean": 143.0, "count": 12}, {"hour": 19, "mean": 154.3, "count": 12}, {"hour": 20, "mean": 162.1, "count": 12}, {"hour": 21, "mean": 119.6, "count": 12}, {"hour": 22, "mean": 120.8, "count": 12}, {"hour": 23, "mean": 116.0, "count": 12}]}];
+        
+        // AGP Chart
+        const ctx = document.getElementById('agpChart').getContext('2d');
+        const agpChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({length: 24}, (_, i) => i + ':00'),
+                datasets: [
+                    {
+                        label: '95th Percentile',
+                        data: agpData.map(d => d.p95),
+                        borderColor: 'rgba(44, 90, 160, 0.5)',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        fill: '+1'
+                    },
+                    {
+                        label: '75th Percentile',
+                        data: agpData.map(d => d.p75),
+                        borderColor: 'rgba(44, 90, 160, 0.7)',
+                        backgroundColor: 'rgba(44, 90, 160, 0.15)',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        fill: '+1'
+                    },
+                    {
+                        label: 'Median (50th)',
+                        data: agpData.map(d => d.p50),
+                        borderColor: 'rgba(44, 90, 160, 1)',
+                        backgroundColor: 'transparent',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: '25th Percentile',
+                        data: agpData.map(d => d.p25),
+                        borderColor: 'rgba(44, 90, 160, 0.7)',
+                        backgroundColor: 'rgba(44, 90, 160, 0.15)',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        fill: '+1'
+                    },
+                    {
+                        label: '5th Percentile',
+                        data: agpData.map(d => d.p5),
+                        borderColor: 'rgba(44, 90, 160, 0.5)',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: { size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time of Day',
+                            font: { size: 13, weight: 'bold' }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Glucose (' + unit + ')',
+                            font: { size: 13, weight: 'bold' }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.1)' }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+        
+        // Daily Profiles
+        const dailyProfilesContainer = document.getElementById('dailyProfiles');
+        dailyProfiles.forEach((day, index) => {
+            const div = document.createElement('div');
+            div.className = 'daily-profile-chart';
+            
+            const title = document.createElement('div');
+            title.className = 'daily-profile-title';
+            const date = new Date(day.date + 'T00:00:00');
+            title.textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
+            div.appendChild(title);
+            
+            const canvas = document.createElement('canvas');
+            canvas.id = 'daily-' + index;
+            div.appendChild(canvas);
+            
+            dailyProfilesContainer.appendChild(div);
+            
+            // Create mini chart
+            const miniCtx = canvas.getContext('2d');
+            new Chart(miniCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => i),
+                    datasets: [{
+                        data: day.data.map(d => d.mean),
+                        borderColor: 'rgba(44, 90, 160, 1)',
+                        backgroundColor: 'transparent',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                        spanGaps: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            display: false,
+                            min: urgentLow,
+                            max: urgentHigh
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1483 @@
+name: cmm-ai-automation
+description: 'Schema for Critical Mineral Metabolism (CMM) data curation.
+
+
+  Models microbial strains, growth media, ingredients, and their relationships
+
+  for knowledge graph generation.'
+title: CMM AI Automation Schema
+see_also:
+- https://turbomam.github.io/cmm-ai-automation
+id: https://w3id.org/turbomam/cmm-ai-automation
+imports:
+- linkml:types
+license: MIT
+prefixes:
+  cmm:
+    prefix_prefix: cmm
+    prefix_reference: https://w3id.org/turbomam/cmm-ai-automation/
+  linkml:
+    prefix_prefix: linkml
+    prefix_reference: https://w3id.org/linkml/
+  biolink:
+    prefix_prefix: biolink
+    prefix_reference: https://w3id.org/biolink/vocab/
+  schema:
+    prefix_prefix: schema
+    prefix_reference: http://schema.org/
+  CHEBI:
+    prefix_prefix: CHEBI
+    prefix_reference: http://purl.obolibrary.org/obo/CHEBI_
+  PUBCHEM.COMPOUND:
+    prefix_prefix: PUBCHEM.COMPOUND
+    prefix_reference: http://identifiers.org/pubchem.compound/
+  CAS:
+    prefix_prefix: CAS
+    prefix_reference: http://identifiers.org/cas/
+  KEGG.COMPOUND:
+    prefix_prefix: KEGG.COMPOUND
+    prefix_reference: http://identifiers.org/kegg.compound/
+  MESH:
+    prefix_prefix: MESH
+    prefix_reference: http://identifiers.org/mesh/
+  DRUGBANK:
+    prefix_prefix: DRUGBANK
+    prefix_reference: http://identifiers.org/drugbank/
+  OBI:
+    prefix_prefix: OBI
+    prefix_reference: http://purl.obolibrary.org/obo/OBI_
+  UO:
+    prefix_prefix: UO
+    prefix_reference: http://purl.obolibrary.org/obo/UO_
+  RO:
+    prefix_prefix: RO
+    prefix_reference: http://purl.obolibrary.org/obo/RO_
+  NCBITaxon:
+    prefix_prefix: NCBITaxon
+    prefix_reference: http://purl.obolibrary.org/obo/NCBITaxon_
+  ENVO:
+    prefix_prefix: ENVO
+    prefix_reference: http://purl.obolibrary.org/obo/ENVO_
+  DSMZ:
+    prefix_prefix: DSMZ
+    prefix_reference: https://www.dsmz.de/collection/catalogue/details/culture/DSM-
+  ATCC:
+    prefix_prefix: ATCC
+    prefix_reference: https://www.atcc.org/products/
+default_prefix: cmm
+default_range: string
+types:
+  string:
+    name: string
+    definition_uri: https://w3id.org/linkml/String
+    description: A character string
+    notes:
+    - In RDF serializations, a slot with range of string is treated as a literal or
+      type xsd:string.   If you are authoring schemas in LinkML YAML, the type is
+      referenced with the lower case "string".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    exact_mappings:
+    - schema:Text
+    base: str
+    uri: xsd:string
+  integer:
+    name: integer
+    definition_uri: https://w3id.org/linkml/Integer
+    description: An integer
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "integer".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    exact_mappings:
+    - schema:Integer
+    base: int
+    uri: xsd:integer
+  boolean:
+    name: boolean
+    definition_uri: https://w3id.org/linkml/Boolean
+    description: A binary (true or false) value
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "boolean".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    exact_mappings:
+    - schema:Boolean
+    base: Bool
+    uri: xsd:boolean
+    repr: bool
+  float:
+    name: float
+    definition_uri: https://w3id.org/linkml/Float
+    description: A real number that conforms to the xsd:float specification
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "float".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    exact_mappings:
+    - schema:Float
+    base: float
+    uri: xsd:float
+  double:
+    name: double
+    definition_uri: https://w3id.org/linkml/Double
+    description: A real number that conforms to the xsd:double specification
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "double".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    close_mappings:
+    - schema:Float
+    base: float
+    uri: xsd:double
+  decimal:
+    name: decimal
+    definition_uri: https://w3id.org/linkml/Decimal
+    description: A real number with arbitrary precision that conforms to the xsd:decimal
+      specification
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "decimal".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    broad_mappings:
+    - schema:Number
+    base: Decimal
+    uri: xsd:decimal
+  time:
+    name: time
+    definition_uri: https://w3id.org/linkml/Time
+    description: A time object represents a (local) time of day, independent of any
+      particular day
+    notes:
+    - URI is dateTime because OWL reasoners do not work with straight date or time
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "time".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    exact_mappings:
+    - schema:Time
+    base: XSDTime
+    uri: xsd:time
+    repr: str
+  date:
+    name: date
+    definition_uri: https://w3id.org/linkml/Date
+    description: a date (year, month and day) in an idealized calendar
+    notes:
+    - URI is dateTime because OWL reasoners don't work with straight date or time
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "date".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    exact_mappings:
+    - schema:Date
+    base: XSDDate
+    uri: xsd:date
+    repr: str
+  datetime:
+    name: datetime
+    definition_uri: https://w3id.org/linkml/Datetime
+    description: The combination of a date and time
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "datetime".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    exact_mappings:
+    - schema:DateTime
+    base: XSDDateTime
+    uri: xsd:dateTime
+    repr: str
+  date_or_datetime:
+    name: date_or_datetime
+    definition_uri: https://w3id.org/linkml/DateOrDatetime
+    description: Either a date or a datetime
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "date_or_datetime".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: str
+    uri: linkml:DateOrDatetime
+    repr: str
+  uriorcurie:
+    name: uriorcurie
+    definition_uri: https://w3id.org/linkml/Uriorcurie
+    description: a URI or a CURIE
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "uriorcurie".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: URIorCURIE
+    uri: xsd:anyURI
+    repr: str
+  curie:
+    name: curie
+    definition_uri: https://w3id.org/linkml/Curie
+    conforms_to: https://www.w3.org/TR/curie/
+    description: a compact URI
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "curie".
+    comments:
+    - in RDF serializations this MUST be expanded to a URI
+    - in non-RDF serializations MAY be serialized as the compact representation
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: Curie
+    uri: xsd:string
+    repr: str
+  uri:
+    name: uri
+    definition_uri: https://w3id.org/linkml/Uri
+    conforms_to: https://www.ietf.org/rfc/rfc3987.txt
+    description: a complete URI
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "uri".
+    comments:
+    - in RDF serializations a slot with range of uri is treated as a literal or type
+      xsd:anyURI unless it is an identifier or a reference to an identifier, in which
+      case it is translated directly to a node
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    close_mappings:
+    - schema:URL
+    base: URI
+    uri: xsd:anyURI
+    repr: str
+  ncname:
+    name: ncname
+    definition_uri: https://w3id.org/linkml/Ncname
+    description: Prefix part of CURIE
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "ncname".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: NCName
+    uri: xsd:string
+    repr: str
+  objectidentifier:
+    name: objectidentifier
+    definition_uri: https://w3id.org/linkml/Objectidentifier
+    description: A URI or CURIE that represents an object in the model.
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "objectidentifier".
+    comments:
+    - Used for inheritance and type checking
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: ElementIdentifier
+    uri: shex:iri
+    repr: str
+  nodeidentifier:
+    name: nodeidentifier
+    definition_uri: https://w3id.org/linkml/Nodeidentifier
+    description: A URI, CURIE or BNODE that represents a node in a model.
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "nodeidentifier".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: NodeIdentifier
+    uri: shex:nonLiteral
+    repr: str
+  jsonpointer:
+    name: jsonpointer
+    definition_uri: https://w3id.org/linkml/Jsonpointer
+    conforms_to: https://datatracker.ietf.org/doc/html/rfc6901
+    description: A string encoding a JSON Pointer. The value of the string MUST conform
+      to JSON Point syntax and SHOULD dereference to a valid object within the current
+      instance document when encoded in tree form.
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "jsonpointer".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: str
+    uri: xsd:string
+    repr: str
+  jsonpath:
+    name: jsonpath
+    definition_uri: https://w3id.org/linkml/Jsonpath
+    conforms_to: https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html
+    description: A string encoding a JSON Path. The value of the string MUST conform
+      to JSON Point syntax and SHOULD dereference to zero or more valid objects within
+      the current instance document when encoded in tree form.
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "jsonpath".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: str
+    uri: xsd:string
+    repr: str
+  sparqlpath:
+    name: sparqlpath
+    definition_uri: https://w3id.org/linkml/Sparqlpath
+    conforms_to: https://www.w3.org/TR/sparql11-query/#propertypaths
+    description: A string encoding a SPARQL Property Path. The value of the string
+      MUST conform to SPARQL syntax and SHOULD dereference to zero or more valid objects
+      within the current instance document when encoded as RDF.
+    notes:
+    - If you are authoring schemas in LinkML YAML, the type is referenced with the
+      lower case "sparqlpath".
+    from_schema: https://w3id.org/linkml/types
+    imported_from: linkml:types
+    base: str
+    uri: xsd:string
+    repr: str
+enums:
+  MediumType:
+    name: MediumType
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/MediumType
+    description: 'Classification of growth media by composition. Note: Functional
+      properties like selective/differential are orthogonal and should be captured
+      separately if needed.'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    permissible_values:
+      minimal:
+        text: minimal
+        description: Defined medium with minimal components
+      complex:
+        text: complex
+        description: Contains undefined components like yeast extract
+      defined:
+        text: defined
+        description: All components are chemically defined
+      semi_defined:
+        text: semi_defined
+        description: Mostly defined but contains some complex components
+  SolutionType:
+    name: SolutionType
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/SolutionType
+    description: Classification of stock solutions
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    permissible_values:
+      trace_elements:
+        text: trace_elements
+        description: Concentrated trace element mixture
+      vitamin:
+        text: vitamin
+        description: Vitamin mixture
+      buffer:
+        text: buffer
+        description: pH buffer stock
+      carbon_source:
+        text: carbon_source
+        description: Concentrated carbon source
+      other:
+        text: other
+        description: Other type of stock solution
+  IngredientRole:
+    name: IngredientRole
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/IngredientRole
+    description: 'Functional role of an ingredient in a growth medium. TODO: Map to
+      grounded ontology terms (METPO, OBI, or custom). See issue #11.'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    permissible_values:
+      carbon_source:
+        text: carbon_source
+        description: Provides carbon for biosynthesis and/or energy
+        todos:
+        - Map to appropriate ontology term
+      nitrogen_source:
+        text: nitrogen_source
+        description: Provides nitrogen for biosynthesis
+      phosphorus_source:
+        text: phosphorus_source
+        description: Provides phosphorus
+      sulfur_source:
+        text: sulfur_source
+        description: Provides sulfur
+      trace_element:
+        text: trace_element
+        description: Micronutrient required in small amounts
+      mineral:
+        text: mineral
+        description: Macro-mineral component
+      buffer:
+        text: buffer
+        description: pH buffering agent
+        meaning: CHEBI:35225
+      vitamin:
+        text: vitamin
+        description: Essential vitamin or growth factor
+        meaning: CHEBI:33229
+      solidifying_agent:
+        text: solidifying_agent
+        description: Agent for solid media (e.g., agar)
+      selective_agent:
+        text: selective_agent
+        description: Antibiotic or other selective compound
+      osmotic_stabilizer:
+        text: osmotic_stabilizer
+        description: Maintains osmotic balance
+  ConcentrationUnit:
+    name: ConcentrationUnit
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/ConcentrationUnit
+    description: Units for concentration
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    permissible_values:
+      g_per_L:
+        text: g_per_L
+        description: Grams per liter
+        meaning: UO:0000175
+      mg_per_L:
+        text: mg_per_L
+        description: Milligrams per liter
+        meaning: UO:0000176
+      ug_per_L:
+        text: ug_per_L
+        description: Micrograms per liter
+        meaning: UO:0000301
+      M:
+        text: M
+        description: Molar
+        meaning: UO:0000062
+      mM:
+        text: mM
+        description: Millimolar
+        meaning: UO:0000063
+      uM:
+        text: uM
+        description: Micromolar
+        meaning: UO:0000064
+      percent_w_v:
+        text: percent_w_v
+        description: 'Weight/volume percentage: % (w/v)'
+      percent_v_v:
+        text: percent_v_v
+        description: 'Volume/volume percentage: % (v/v)'
+  VolumeUnit:
+    name: VolumeUnit
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/VolumeUnit
+    description: Units for volume
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    permissible_values:
+      mL:
+        text: mL
+        description: Milliliters
+        meaning: UO:0000098
+      L:
+        text: L
+        description: Liters
+        meaning: UO:0000099
+      uL:
+        text: uL
+        description: Microliters
+        meaning: UO:0000101
+  ConflictResolution:
+    name: ConflictResolution
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/ConflictResolution
+    description: How a data conflict between sources was resolved. Primary APIs are
+      considered authoritative for their own ID types.
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    permissible_values:
+      primary_source_wins:
+        text: primary_source_wins
+        description: Primary/authoritative source value was used
+      manual_review:
+        text: manual_review
+        description: Conflict flagged for manual review
+      merged:
+        text: merged
+        description: Values were merged (e.g., for lists)
+      unresolved:
+        text: unresolved
+        description: Conflict not yet resolved
+  DataSource:
+    name: DataSource
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/DataSource
+    description: Names of data sources used for enrichment. Each source is authoritative
+      for its own ID type.
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    permissible_values:
+      pubchem:
+        text: pubchem
+        description: PubChem (authoritative for pubchem_cid)
+      chebi:
+        text: chebi
+        description: ChEBI 2.0 (authoritative for chebi_id, biological/chemical roles)
+      cas:
+        text: cas
+        description: CAS Common Chemistry (authoritative for cas_rn)
+      mediadive:
+        text: mediadive
+        description: MediaDive (authoritative for mediadive_id)
+      node_normalization:
+        text: node_normalization
+        description: NCATS Translator NodeNormalization API (identifier bridging)
+      kg_microbe:
+        text: kg_microbe
+        description: KG-Microbe knowledge graph
+slots:
+  id:
+    name: id
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/id
+    description: A unique identifier for a thing
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    mappings:
+    - schema:identifier
+    slot_uri: schema:identifier
+    identifier: true
+    owner: EnrichedIngredient
+    domain_of:
+    - NamedThing
+    - EnrichedIngredient
+    range: uriorcurie
+    required: true
+  name:
+    name: name
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/name
+    description: A human-readable name for a thing
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    mappings:
+    - schema:name
+    slot_uri: schema:name
+    owner: EnrichedIngredient
+    domain_of:
+    - NamedThing
+    - EnrichedIngredient
+    range: string
+  description:
+    name: description
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/description
+    description: A human-readable description for a thing
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    mappings:
+    - schema:description
+    slot_uri: schema:description
+    owner: EnrichedIngredient
+    domain_of:
+    - NamedThing
+    - EnrichedIngredient
+    range: string
+  synonyms:
+    name: synonyms
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/synonyms
+    description: Alternative names for this entity
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:synonyms
+    owner: EnrichedIngredient
+    domain_of:
+    - NamedThing
+    - EnrichedIngredient
+    range: string
+    multivalued: true
+  chemical_formula:
+    name: chemical_formula
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/chemical_formula
+    description: "Chemical formula (e.g., NaCl, MgSO4\xB77H2O)"
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:chemical_formula
+    owner: EnrichedIngredient
+    domain_of:
+    - Ingredient
+    - EnrichedIngredient
+    range: string
+  chebi_id:
+    name: chebi_id
+    id_prefixes:
+    - CHEBI
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/chebi_id
+    description: ChEBI identifier
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:chebi_id
+    owner: EnrichedIngredient
+    domain_of:
+    - Ingredient
+    - EnrichedIngredient
+    range: uriorcurie
+  cas_rn:
+    name: cas_rn
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/cas_rn
+    description: CAS Registry Number
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:cas_rn
+    owner: EnrichedIngredient
+    domain_of:
+    - Ingredient
+    - EnrichedIngredient
+    range: string
+    pattern: ^\d{2,7}-\d{2}-\d$
+  inchikey:
+    name: inchikey
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/inchikey
+    description: InChIKey for structural identification
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:inchikey
+    owner: EnrichedIngredient
+    domain_of:
+    - Ingredient
+    - EnrichedIngredient
+    range: string
+    pattern: ^[A-Z]{14}-[A-Z]{10}-[A-Z]$
+  pubchem_cid:
+    name: pubchem_cid
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/pubchem_cid
+    description: PubChem Compound ID
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:pubchem_cid
+    owner: EnrichedIngredient
+    domain_of:
+    - Ingredient
+    - EnrichedIngredient
+    range: integer
+  xrefs:
+    name: xrefs
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/xrefs
+    description: Cross-references to external databases
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:xrefs
+    owner: EnrichedIngredient
+    domain_of:
+    - Ingredient
+    - EnrichedIngredient
+    range: CrossReference
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  xref_type:
+    name: xref_type
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/xref_type
+    description: Type of cross-reference (e.g., CHEBI, CAS-RN, kg-microbe-ingredient)
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:xref_type
+    owner: CrossReference
+    domain_of:
+    - CrossReference
+    range: string
+  xref_id:
+    name: xref_id
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/xref_id
+    description: The identifier value
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:xref_id
+    owner: CrossReference
+    domain_of:
+    - CrossReference
+    range: string
+  xref_label:
+    name: xref_label
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/xref_label
+    description: Human-readable label from the external source
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:xref_label
+    owner: CrossReference
+    domain_of:
+    - CrossReference
+    range: string
+  has_ingredient_component:
+    name: has_ingredient_component
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/has_ingredient_component
+    description: Ingredients contained in this mixture with their concentrations
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:has_ingredient_component
+    owner: Mixture
+    domain_of:
+    - Mixture
+    range: IngredientComponent
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  has_solution_component:
+    name: has_solution_component
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/has_solution_component
+    description: Solutions contained in this medium
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:has_solution_component
+    owner: GrowthMedium
+    domain_of:
+    - GrowthMedium
+    range: SolutionComponent
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  ingredient:
+    name: ingredient
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/ingredient
+    description: Reference to the ingredient entity
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:ingredient
+    owner: IngredientComponent
+    domain_of:
+    - IngredientComponent
+    range: Ingredient
+  solution:
+    name: solution
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/solution
+    description: Reference to the solution entity
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:solution
+    owner: SolutionComponent
+    domain_of:
+    - SolutionComponent
+    range: Solution
+  concentration_value:
+    name: concentration_value
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/concentration_value
+    description: Numeric concentration value
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:concentration_value
+    owner: IngredientComponent
+    domain_of:
+    - IngredientComponent
+    range: float
+  concentration_unit:
+    name: concentration_unit
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/concentration_unit
+    description: Unit of concentration
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:concentration_unit
+    owner: IngredientComponent
+    domain_of:
+    - IngredientComponent
+    range: ConcentrationUnit
+  volume_per_liter:
+    name: volume_per_liter
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/volume_per_liter
+    description: Volume of solution added per liter of medium
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:volume_per_liter
+    owner: SolutionComponent
+    domain_of:
+    - SolutionComponent
+    range: float
+  volume_unit:
+    name: volume_unit
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/volume_unit
+    description: Unit of volume (typically mL)
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:volume_unit
+    owner: SolutionComponent
+    domain_of:
+    - SolutionComponent
+    range: VolumeUnit
+  roles:
+    name: roles
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/roles
+    description: Functional roles of this ingredient in this specific mixture. An
+      ingredient can have multiple roles, and roles are context-dependent.
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:roles
+    owner: IngredientComponent
+    domain_of:
+    - IngredientComponent
+    range: IngredientRole
+    multivalued: true
+  medium_type:
+    name: medium_type
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/medium_type
+    description: Classification of the medium
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:medium_type
+    owner: GrowthMedium
+    domain_of:
+    - GrowthMedium
+    range: MediumType
+  solution_type:
+    name: solution_type
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/solution_type
+    description: Classification of the solution
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:solution_type
+    owner: Solution
+    domain_of:
+    - Solution
+    range: SolutionType
+  ph:
+    name: ph
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/ph
+    description: Target pH of the medium
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:ph
+    owner: GrowthMedium
+    domain_of:
+    - GrowthMedium
+    range: float
+    minimum_value: 0
+    maximum_value: 14
+  sterilization_method:
+    name: sterilization_method
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/sterilization_method
+    description: How the medium is sterilized (e.g., autoclave, filter)
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:sterilization_method
+    owner: GrowthMedium
+    domain_of:
+    - GrowthMedium
+    range: string
+  target_organisms:
+    name: target_organisms
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/target_organisms
+    description: Taxa or organism types this medium is designed for
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:target_organisms
+    owner: GrowthMedium
+    domain_of:
+    - GrowthMedium
+    range: string
+    multivalued: true
+  references:
+    name: references
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/references
+    description: Literature references for this medium formulation
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:references
+    owner: GrowthMedium
+    domain_of:
+    - GrowthMedium
+    range: string
+    multivalued: true
+  notes:
+    name: notes
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/notes
+    description: Free-text notes about this component
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:notes
+    owner: SolutionComponent
+    domain_of:
+    - IngredientComponent
+    - SolutionComponent
+    range: string
+  mediadive_id:
+    name: mediadive_id
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/mediadive_id
+    description: MediaDive ingredient ID (MediaDive is authoritative)
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:mediadive_id
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: integer
+  kegg_id:
+    name: kegg_id
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/kegg_id
+    description: KEGG Compound ID (e.g., C00031)
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:kegg_id
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: string
+  mesh_id:
+    name: mesh_id
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/mesh_id
+    description: MeSH identifier
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:mesh_id
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: string
+  drugbank_id:
+    name: drugbank_id
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/drugbank_id
+    description: DrugBank identifier
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:drugbank_id
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: string
+  inchi:
+    name: inchi
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/inchi
+    description: InChI string for structural identification
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:inchi
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: string
+  smiles:
+    name: smiles
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/smiles
+    description: SMILES string for structural representation
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:smiles
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: string
+  molecular_mass:
+    name: molecular_mass
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/molecular_mass
+    description: Average molecular mass in Daltons
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:molecular_mass
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: float
+  monoisotopic_mass:
+    name: monoisotopic_mass
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/monoisotopic_mass
+    description: Monoisotopic mass in Daltons
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:monoisotopic_mass
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: float
+  charge:
+    name: charge
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/charge
+    description: Formal charge of the molecule
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:charge
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: integer
+  biological_roles:
+    name: biological_roles
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/biological_roles
+    description: 'Biological roles from ChEBI (ChEBI is authoritative). Examples:
+      nutrient, metabolite, cofactor.'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:biological_roles
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: string
+    multivalued: true
+  chemical_roles:
+    name: chemical_roles
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/chemical_roles
+    description: 'Chemical roles from ChEBI (ChEBI is authoritative). Examples: acid,
+      base, reducing agent.'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:chemical_roles
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: string
+    multivalued: true
+  application_roles:
+    name: application_roles
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/application_roles
+    description: 'Application roles from ChEBI. Examples: drug, pesticide, food additive.'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:application_roles
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: string
+    multivalued: true
+  source_records:
+    name: source_records
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/source_records
+    description: Records tracking which source provided which data
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:source_records
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: SourceRecord
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  conflicts:
+    name: conflicts
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/conflicts
+    description: Recorded conflicts between data sources
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:conflicts
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: DataConflict
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  last_enriched:
+    name: last_enriched
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/last_enriched
+    description: Timestamp of last enrichment run
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:last_enriched
+    owner: EnrichedIngredient
+    domain_of:
+    - EnrichedIngredient
+    range: datetime
+  source_name:
+    name: source_name
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/source_name
+    description: Name of the data source (e.g., pubchem, chebi, cas, mediadive, node_normalization)
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:source_name
+    owner: SourceRecord
+    domain_of:
+    - SourceRecord
+    range: string
+  source_id:
+    name: source_id
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/source_id
+    description: Identifier returned by this source
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:source_id
+    owner: SourceRecord
+    domain_of:
+    - SourceRecord
+    range: string
+  source_timestamp:
+    name: source_timestamp
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/source_timestamp
+    description: When this data was retrieved from the source
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:source_timestamp
+    owner: SourceRecord
+    domain_of:
+    - SourceRecord
+    range: datetime
+  source_query:
+    name: source_query
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/source_query
+    description: The query used to retrieve data from this source
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:source_query
+    owner: SourceRecord
+    domain_of:
+    - SourceRecord
+    range: string
+  source_fields:
+    name: source_fields
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/source_fields
+    description: List of field names populated by this source
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:source_fields
+    owner: SourceRecord
+    domain_of:
+    - SourceRecord
+    range: string
+    multivalued: true
+  field_name:
+    name: field_name
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/field_name
+    description: Name of the field with conflicting values
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:field_name
+    owner: DataConflict
+    domain_of:
+    - DataConflict
+    range: string
+  primary_source:
+    name: primary_source
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/primary_source
+    description: The authoritative source for this field
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:primary_source
+    owner: DataConflict
+    domain_of:
+    - DataConflict
+    range: string
+  primary_value:
+    name: primary_value
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/primary_value
+    description: Value from the authoritative source
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:primary_value
+    owner: DataConflict
+    domain_of:
+    - DataConflict
+    range: string
+  conflicting_source:
+    name: conflicting_source
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/conflicting_source
+    description: The source with a different value
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:conflicting_source
+    owner: DataConflict
+    domain_of:
+    - DataConflict
+    range: string
+  conflicting_value:
+    name: conflicting_value
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/conflicting_value
+    description: Value that conflicts with the authoritative source
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:conflicting_value
+    owner: DataConflict
+    domain_of:
+    - DataConflict
+    range: string
+  resolution:
+    name: resolution
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/resolution
+    description: How the conflict was resolved
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:resolution
+    owner: DataConflict
+    domain_of:
+    - DataConflict
+    range: ConflictResolution
+  resolution_notes:
+    name: resolution_notes
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/resolution_notes
+    description: Notes about the conflict resolution
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:resolution_notes
+    owner: DataConflict
+    domain_of:
+    - DataConflict
+    range: string
+  cMMDatabase__ingredients:
+    name: cMMDatabase__ingredients
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:ingredients
+    alias: ingredients
+    owner: CMMDatabase
+    domain_of:
+    - CMMDatabase
+    range: Ingredient
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  cMMDatabase__solutions:
+    name: cMMDatabase__solutions
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:solutions
+    alias: solutions
+    owner: CMMDatabase
+    domain_of:
+    - CMMDatabase
+    range: Solution
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  cMMDatabase__media:
+    name: cMMDatabase__media
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slot_uri: cmm:media
+    alias: media
+    owner: CMMDatabase
+    domain_of:
+    - CMMDatabase
+    range: GrowthMedium
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  IngredientComponent_ingredient:
+    name: IngredientComponent_ingredient
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/ingredient
+    description: Reference to the ingredient entity
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    is_a: ingredient
+    domain: IngredientComponent
+    slot_uri: cmm:ingredient
+    alias: ingredient
+    owner: IngredientComponent
+    domain_of:
+    - IngredientComponent
+    is_usage_slot: true
+    usage_slot_name: ingredient
+    range: Ingredient
+    required: true
+  SolutionComponent_solution:
+    name: SolutionComponent_solution
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/solution
+    description: Reference to the solution entity
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    is_a: solution
+    domain: SolutionComponent
+    slot_uri: cmm:solution
+    alias: solution
+    owner: SolutionComponent
+    domain_of:
+    - SolutionComponent
+    is_usage_slot: true
+    usage_slot_name: solution
+    range: Solution
+    required: true
+  CrossReference_xref_type:
+    name: CrossReference_xref_type
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/xref_type
+    description: Type of cross-reference (e.g., CHEBI, CAS-RN, kg-microbe-ingredient)
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    is_a: xref_type
+    domain: CrossReference
+    slot_uri: cmm:xref_type
+    alias: xref_type
+    owner: CrossReference
+    domain_of:
+    - CrossReference
+    is_usage_slot: true
+    usage_slot_name: xref_type
+    range: string
+    required: true
+  CrossReference_xref_id:
+    name: CrossReference_xref_id
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/xref_id
+    description: The identifier value
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    is_a: xref_id
+    domain: CrossReference
+    slot_uri: cmm:xref_id
+    alias: xref_id
+    owner: CrossReference
+    domain_of:
+    - CrossReference
+    is_usage_slot: true
+    usage_slot_name: xref_id
+    range: string
+    required: true
+classes:
+  NamedThing:
+    name: NamedThing
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/NamedThing
+    description: A generic grouping for any identifiable entity
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    mappings:
+    - schema:Thing
+    abstract: true
+    slots:
+    - id
+    - name
+    - description
+    - synonyms
+    class_uri: schema:Thing
+  Ingredient:
+    name: Ingredient
+    id_prefixes:
+    - cmm
+    - CHEBI
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/Ingredient
+    description: A chemical entity that can be a component of solutions or media.
+      Represents the abstract ingredient, not a specific instance with concentration.
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    is_a: NamedThing
+    slots:
+    - id
+    - name
+    - description
+    - synonyms
+    - chemical_formula
+    - chebi_id
+    - cas_rn
+    - inchikey
+    - pubchem_cid
+    - xrefs
+    class_uri: cmm:Ingredient
+  Mixture:
+    name: Mixture
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/Mixture
+    description: Abstract base class for things composed of ingredients. Both Solution
+      and GrowthMedium are mixtures.
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    is_a: NamedThing
+    abstract: true
+    slots:
+    - id
+    - name
+    - description
+    - synonyms
+    - has_ingredient_component
+    class_uri: cmm:Mixture
+  Solution:
+    name: Solution
+    id_prefixes:
+    - cmm
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/Solution
+    description: 'A pre-made concentrated mixture of ingredients, typically diluted
+      into media. Examples: Trace element solution SL-6, Vitamin solution, Phosphate
+      buffer stock.'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    is_a: Mixture
+    slots:
+    - id
+    - name
+    - description
+    - synonyms
+    - has_ingredient_component
+    - solution_type
+    class_uri: cmm:Solution
+  GrowthMedium:
+    name: GrowthMedium
+    id_prefixes:
+    - cmm
+    - DSMZ
+    - ATCC
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/GrowthMedium
+    description: A complete formulation for cultivating microorganisms. Contains ingredients
+      directly and/or pre-made solutions.
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    is_a: Mixture
+    slots:
+    - id
+    - name
+    - description
+    - synonyms
+    - has_ingredient_component
+    - medium_type
+    - ph
+    - sterilization_method
+    - has_solution_component
+    - target_organisms
+    - references
+    class_uri: cmm:GrowthMedium
+  IngredientComponent:
+    name: IngredientComponent
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/IngredientComponent
+    description: 'Reified relationship: an ingredient as used in a mixture, with concentration
+      and role. This captures the context-dependent properties of ingredient usage.'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slots:
+    - IngredientComponent_ingredient
+    - concentration_value
+    - concentration_unit
+    - roles
+    - notes
+    slot_usage:
+      ingredient:
+        name: ingredient
+        required: true
+    class_uri: cmm:IngredientComponent
+  SolutionComponent:
+    name: SolutionComponent
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/SolutionComponent
+    description: 'Reified relationship: a solution as used in a medium, with volume/dilution.'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slots:
+    - SolutionComponent_solution
+    - volume_per_liter
+    - volume_unit
+    - notes
+    slot_usage:
+      solution:
+        name: solution
+        required: true
+    class_uri: cmm:SolutionComponent
+  EnrichedIngredient:
+    name: EnrichedIngredient
+    id_prefixes:
+    - cmm
+    - CHEBI
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/EnrichedIngredient
+    description: 'A chemical entity enriched with data from multiple sources. Uses
+      (inchikey, cas_rn) tuple as the primary key for entity resolution. Each primary
+      API is authoritative for its own ID type: - PubChem is authoritative for pubchem_cid
+      - ChEBI is authoritative for chebi_id and biological/chemical roles - CAS is
+      authoritative for cas_rn - MediaDive is authoritative for mediadive_id'
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    mappings:
+    - biolink:SmallMolecule
+    slots:
+    - id
+    - inchikey
+    - cas_rn
+    - name
+    - synonyms
+    - description
+    - chemical_formula
+    - chebi_id
+    - pubchem_cid
+    - mediadive_id
+    - kegg_id
+    - mesh_id
+    - drugbank_id
+    - inchi
+    - smiles
+    - molecular_mass
+    - monoisotopic_mass
+    - charge
+    - biological_roles
+    - chemical_roles
+    - application_roles
+    - xrefs
+    - source_records
+    - conflicts
+    - last_enriched
+    class_uri: biolink:SmallMolecule
+    unique_keys:
+      inchikey_cas_key:
+        unique_key_name: inchikey_cas_key
+        unique_key_slots:
+        - inchikey
+        - cas_rn
+  SourceRecord:
+    name: SourceRecord
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/SourceRecord
+    description: Tracks the provenance of data from a specific source. Each field
+      value can be traced back to its authoritative source.
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slots:
+    - source_name
+    - source_id
+    - source_timestamp
+    - source_query
+    - source_fields
+    class_uri: cmm:SourceRecord
+  DataConflict:
+    name: DataConflict
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/DataConflict
+    description: Records conflicts between data sources for reconciliation review.
+      Primary APIs are considered authoritative for their own ID types.
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slots:
+    - field_name
+    - primary_source
+    - primary_value
+    - conflicting_source
+    - conflicting_value
+    - resolution
+    - resolution_notes
+    class_uri: cmm:DataConflict
+  CrossReference:
+    name: CrossReference
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/CrossReference
+    description: A cross-reference to an external database or identifier
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slots:
+    - CrossReference_xref_type
+    - CrossReference_xref_id
+    - xref_label
+    slot_usage:
+      xref_type:
+        name: xref_type
+        required: true
+      xref_id:
+        name: xref_id
+        required: true
+    class_uri: cmm:CrossReference
+  CMMDatabase:
+    name: CMMDatabase
+    definition_uri: https://w3id.org/turbomam/cmm-ai-automation/CMMDatabase
+    description: Container for all CMM entities
+    from_schema: https://w3id.org/turbomam/cmm-ai-automation
+    slots:
+    - cMMDatabase__ingredients
+    - cMMDatabase__solutions
+    - cMMDatabase__media
+    attributes:
+      ingredients:
+        name: ingredients
+        range: Ingredient
+        multivalued: true
+        inlined_as_list: true
+      solutions:
+        name: solutions
+        range: Solution
+        multivalued: true
+        inlined_as_list: true
+      media:
+        name: media
+        range: GrowthMedium
+        multivalued: true
+        inlined_as_list: true
+    class_uri: cmm:CMMDatabase
+    tree_root: true
+metamodel_version: 1.7.0
+source_file: cmm_ai_automation.yaml
+source_file_date: '2025-12-11T09:56:56'
+source_file_size: 18051
+generation_date: '2025-12-11T11:02:41'

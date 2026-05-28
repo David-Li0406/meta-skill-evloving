@@ -1,0 +1,46 @@
+{
+  "name": "rename-field",
+  "description": "Rename a field from one path to another (copy value to new location and delete old)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "old_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the field to rename (e.g., 'user.name')"
+    },
+    "new_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path for the new field location (e.g., 'user.fullName')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Modified object with field renamed"
+  },
+  "examples": [
+    {
+      "description": "Rename a top-level field",
+      "input": {"name": "alice", "age": 30},
+      "args": {"old_path": "name", "new_path": "fullName"},
+      "output": {"fullName": "alice", "age": 30}
+    },
+    {
+      "description": "Rename a nested field",
+      "input": {"user": {"name": "bob", "age": 25}},
+      "args": {"old_path": "user.name", "new_path": "user.fullName"},
+      "output": {"user": {"fullName": "bob", "age": 25}}
+    },
+    {
+      "description": "Move field to different nested location",
+      "input": {"user": {"name": "charlie"}},
+      "args": {"old_path": "user.name", "new_path": "profile.displayName"},
+      "output": {"user": {}, "profile": {"displayName": "charlie"}}
+    }
+  ],
+  "tags": ["crud", "rename", "move", "field"]
+}

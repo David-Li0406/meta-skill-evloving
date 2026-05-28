@@ -1,0 +1,24 @@
+{
+    "name": "wordpress-gutenberg-expert-skill",
+    "version": "1.3.0",
+    "description": "Quality tools for WordPress Gutenberg Expert skill",
+    "private": true,
+    "scripts": {
+        "lint": "npm run lint:md && npm run lint:links",
+        "lint:md": "markdownlint '**/*.md' --ignore node_modules",
+        "lint:md:fix": "markdownlint '**/*.md' --ignore node_modules --fix",
+        "lint:links": "markdown-link-check SKILL.md docs/*.md --quiet -c .markdown-link-check.json",
+        "lint:yaml": "find . -name '*.md' -exec grep -l '^---' {} \\; | xargs -I {} sh -c 'head -50 \"{}\" | grep -q \"^---\" && echo \"Checking YAML in: {}\"'",
+        "fix": "npm run lint:md:fix",
+        "check": "npm run lint && npm run validate",
+        "validate": "node scripts/validate-skill.js",
+        "postinstall": "echo '✅ Quality tools installed. Run: npm run check'"
+    },
+    "devDependencies": {
+        "markdownlint-cli": "^0.39.0",
+        "markdown-link-check": "^3.12.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

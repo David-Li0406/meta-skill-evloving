@@ -1,0 +1,405 @@
+# US Supply and Demand Balance Sheet Schema
+# This template defines the standard schema for US commodity balance sheets
+
+schema_version: "1.0"
+scope: "us"
+
+# ============================================================
+# Common Fields (All Commodities)
+# ============================================================
+common_fields:
+  # Metadata
+  release_date:
+    type: date
+    format: "YYYY-MM-DD"
+    description: "WASDE report release date"
+    required: true
+    primary_key: true
+
+  marketing_year:
+    type: string
+    format: "YYYY/YY"
+    example: "2024/25"
+    description: "Marketing year (varies by commodity)"
+    required: true
+    primary_key: true
+
+  commodity:
+    type: string
+    description: "Commodity name"
+    required: true
+    primary_key: true
+
+  unit:
+    type: string
+    description: "Unit of measurement"
+    required: true
+    primary_key: true
+
+  # Supply Side
+  beginning_stocks:
+    type: float
+    description: "Stocks at beginning of marketing year"
+    required: true
+
+  production:
+    type: float
+    description: "Total production"
+    required: true
+
+  imports:
+    type: float
+    description: "Total imports"
+    required: true
+
+  supply_total:
+    type: float
+    description: "Total supply = beginning_stocks + production + imports"
+    computed: true
+
+  # Demand Side
+  exports:
+    type: float
+    description: "Total exports"
+    required: true
+
+  ending_stocks:
+    type: float
+    description: "Stocks at end of marketing year"
+    required: true
+
+  # Derived
+  stocks_to_use:
+    type: float
+    description: "Ending stocks / Total use ratio"
+    computed: true
+
+  # Tracking
+  content_hash:
+    type: string
+    format: "SHA256[:32]"
+    description: "Hash of data content for version tracking"
+    required: true
+
+  source_table:
+    type: string
+    description: "Original table name in WASDE report"
+    optional: true
+
+  source_page:
+    type: integer
+    description: "Page number in PDF"
+    optional: true
+
+# ============================================================
+# Grains Schema
+# ============================================================
+grains:
+  base: common_fields
+  unit: "million_bushels"  # except rice: million_cwt
+
+  additional_fields:
+    area_planted:
+      type: float
+      unit: "million_acres"
+      optional: true
+
+    area_harvested:
+      type: float
+      unit: "million_acres"
+      optional: true
+
+    yield:
+      type: float
+      unit: "bushels_per_acre"
+      optional: true
+
+    food:
+      type: float
+      description: "Food use"
+      optional: true
+
+    seed:
+      type: float
+      description: "Seed use"
+      optional: true
+
+    feed_and_residual:
+      type: float
+      description: "Feed and residual use"
+      optional: true
+
+    domestic_total:
+      type: float
+      description: "Total domestic use"
+      required: true
+
+    use_total:
+      type: float
+      description: "Total use = domestic_total + exports"
+      required: true
+
+    avg_farm_price:
+      type: float
+      unit: "dollars_per_bushel"
+      optional: true
+
+  # Corn-specific
+  corn_specific:
+    ethanol:
+      type: float
+      description: "Ethanol and by-products use"
+      optional: true
+
+    food_seed_industrial:
+      type: float
+      description: "Food, seed, and industrial use"
+      optional: true
+
+  # Wheat by-class specific
+  wheat_by_class:
+    hard_red_winter: { type: float, optional: true }
+    hard_red_spring: { type: float, optional: true }
+    soft_red_winter: { type: float, optional: true }
+    white: { type: float, optional: true }
+    durum: { type: float, optional: true }
+
+# ============================================================
+# Oilseeds Schema
+# ============================================================
+oilseeds:
+  base: common_fields
+
+  soybeans:
+    unit: "million_bushels"
+    additional_fields:
+      crushings:
+        type: float
+        description: "Crush/processing volume"
+        required: true
+
+      seed:
+        type: float
+        description: "Seed use"
+        optional: true
+
+      residual:
+        type: float
+        description: "Residual"
+        optional: true
+
+      use_total:
+        type: float
+        description: "Total use"
+        required: true
+
+  soybean_oil:
+    unit: "million_pounds"
+    additional_fields:
+      domestic_disappearance:
+        type: float
+        required: true
+
+      biofuel:
+        type: float
+        description: "Biofuel use (formerly biodiesel)"
+        optional: true
+
+      food_feed_other:
+        type: float
+        description: "Food, feed, and other industrial"
+        optional: true
+
+      price:
+        type: float
+        unit: "cents_per_pound"
+        optional: true
+
+  soybean_meal:
+    unit: "thousand_short_tons"
+    additional_fields:
+      domestic_disappearance:
+        type: float
+        required: true
+
+      price:
+        type: float
+        unit: "dollars_per_short_ton"
+        optional: true
+
+# ============================================================
+# Cotton Schema
+# ============================================================
+cotton:
+  base: common_fields
+  unit: "million_480lb_bales"
+
+  additional_fields:
+    area_planted:
+      type: float
+      unit: "million_acres"
+      optional: true
+
+    area_harvested:
+      type: float
+      unit: "million_acres"
+      optional: true
+
+    yield:
+      type: float
+      unit: "pounds_per_acre"
+      optional: true
+
+    mill_use:
+      type: float
+      description: "Domestic mill use"
+      required: true
+
+    unaccounted:
+      type: float
+      description: "Unaccounted / Statistical discrepancy"
+      optional: true
+
+    use_total:
+      type: float
+      required: true
+
+    avg_farm_price:
+      type: float
+      unit: "cents_per_pound"
+      optional: true
+
+# ============================================================
+# Livestock Schema
+# ============================================================
+livestock:
+  base: common_fields
+
+  meat:  # Beef, Pork
+    unit: "million_pounds_carcass_weight"
+    additional_fields:
+      commercial_production:
+        type: float
+        required: true
+
+      farm_production:
+        type: float
+        optional: true
+
+      production_total:
+        type: float
+        computed: true
+
+      domestic_use:
+        type: float
+        required: true
+
+      per_capita:
+        type: float
+        unit: "pounds_per_person"
+        optional: true
+
+  poultry:  # Broiler, Turkey
+    unit: "million_pounds_ready_to_cook"
+    additional_fields:
+      production:
+        type: float
+        required: true
+
+      domestic_use:
+        type: float
+        required: true
+
+      per_capita:
+        type: float
+        unit: "pounds_per_person"
+        optional: true
+
+  eggs:
+    unit: "million_dozen"
+    additional_fields:
+      production:
+        type: float
+        required: true
+
+      hatching_use:
+        type: float
+        optional: true
+
+      domestic_food:
+        type: float
+        required: true
+
+      per_capita:
+        type: float
+        unit: "eggs_per_person"
+        optional: true
+
+  dairy:
+    unit: "billion_pounds"
+    additional_fields:
+      milk_cows:
+        type: float
+        unit: "million_head"
+        optional: true
+
+      milk_per_cow:
+        type: float
+        unit: "pounds_per_year"
+        optional: true
+
+      milk_production:
+        type: float
+        required: true
+
+      all_milk_price:
+        type: float
+        unit: "dollars_per_cwt"
+        optional: true
+
+# ============================================================
+# Sugar Schema
+# ============================================================
+sugar:
+  base: common_fields
+  unit: "thousand_short_tons_raw_value"
+
+  additional_fields:
+    beet_sugar:
+      type: float
+      optional: true
+
+    cane_sugar:
+      type: float
+      optional: true
+
+    production_total:
+      type: float
+      required: true
+
+    imports_trq:
+      type: float
+      description: "Tariff-rate quota imports"
+      optional: true
+
+    imports_other:
+      type: float
+      optional: true
+
+    imports_total:
+      type: float
+      required: true
+
+    deliveries_domestic:
+      type: float
+      description: "Domestic food and beverage deliveries"
+      required: true
+
+    use_total:
+      type: float
+      required: true
+
+    raw_sugar_price:
+      type: float
+      unit: "cents_per_pound"
+      optional: true

@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Readiness Report - {REPO_NAME}</title>
+    <style>
+        /* ============================================
+           AI-READINESS REPORT - STANDALONE STYLES
+           All styles embedded for offline viewing
+           ============================================ */
+
+        :root {
+            --color-bg: #0f172a;
+            --color-card: #1e293b;
+            --color-border: #334155;
+            --color-text: #f8fafc;
+            --color-text-muted: #94a3b8;
+            --color-excellent: #22c55e;
+            --color-good: #84cc16;
+            --color-warning: #eab308;
+            --color-critical: #ef4444;
+            --color-info: #3b82f6;
+            --color-accent: #8b5cf6;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .meta {
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+        }
+
+        .header .meta code {
+            background: var(--color-card);
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        }
+
+        .timestamp {
+            text-align: right;
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--color-card);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .card-label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .card-delta {
+            display: block;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .delta-up { color: var(--color-excellent); }
+        .delta-down { color: var(--color-critical); }
+        .delta-same { color: var(--color-text-muted); }
+
+        .grade-A { color: var(--color-excellent); }
+        .grade-B { color: var(--color-good); }
+        .grade-C { color: var(--color-warning); }
+        .grade-D, .grade-F { color: var(--color-critical); }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--color-card);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-card h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-text-muted);
+        }
+
+        /* Radar Chart SVG */
+        .radar-chart {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .radar-chart svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .radar-grid { stroke: var(--color-border); stroke-width: 1; fill: none; }
+        .radar-axis { stroke: var(--color-border); stroke-width: 1; }
+        .radar-area { fill: var(--color-accent); fill-opacity: 0.3; stroke: var(--color-accent); stroke-width: 2; }
+        .radar-point { fill: var(--color-accent); }
+        .radar-label { fill: var(--color-text-muted); font-size: 11px; text-anchor: middle; }
+
+        /* History Chart SVG */
+        .history-chart svg {
+            width: 100%;
+            height: 200px;
+        }
+
+        .history-line { stroke: var(--color-accent); stroke-width: 2; fill: none; }
+        .history-area { fill: var(--color-accent); fill-opacity: 0.1; }
+        .history-point { fill: var(--color-accent); }
+        .history-grid { stroke: var(--color-border); stroke-width: 1; }
+        .history-label { fill: var(--color-text-muted); font-size: 10px; }
+
+        /* Aspect Details */
+        .aspects-section {
+            margin-bottom: 2rem;
+        }
+
+        .aspects-section h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .aspect-item {
+            background: var(--color-card);
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+
+        .aspect-header {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .aspect-header:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .aspect-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .aspect-score {
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+
+        .aspect-bar {
+            width: 120px;
+            height: 8px;
+            background: var(--color-border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 1rem;
+        }
+
+        .aspect-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .aspect-delta {
+            width: 50px;
+            text-align: right;
+            font-size: 0.875rem;
+        }
+
+        .aspect-status {
+            width: 24px;
+            text-align: center;
+        }
+
+        .aspect-details {
+            display: none;
+            padding: 0 1.25rem 1rem;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .aspect-item.open .aspect-details {
+            display: block;
+        }
+
+        .criteria-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .criteria-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            padding: 0.375rem 0;
+        }
+
+        .criteria-status {
+            width: 20px;
+            margin-right: 0.5rem;
+        }
+
+        /* Issues Table */
+        .issues-section {
+            margin-bottom: 2rem;
+        }
+
+        .issues-section h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .issues-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--color-card);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+        }
+
+        .issues-table {
+            width: 100%;
+            background: var(--color-card);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .issues-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .issues-table th,
+        .issues-table td {
+            padding: 0.875rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .issues-table th {
+            background: rgba(0,0,0,0.2);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+        }
+
+        .issues-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .severity-critical { background: rgba(239, 68, 68, 0.2); color: var(--color-critical); }
+        .severity-warning { background: rgba(234, 179, 8, 0.2); color: var(--color-warning); }
+        .severity-info { background: rgba(59, 130, 246, 0.2); color: var(--color-info); }
+
+        .effort-badge {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        /* Roadmap */
+        .roadmap-section {
+            margin-bottom: 2rem;
+        }
+
+        .roadmap-section h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .roadmap {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .roadmap-phase {
+            flex: 1;
+            min-width: 280px;
+            background: var(--color-card);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .phase-number {
+            width: 32px;
+            height: 32px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 0.75rem;
+        }
+
+        .phase-title {
+            font-weight: 600;
+        }
+
+        .phase-items {
+            list-style: none;
+        }
+
+        .phase-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+        }
+
+        .phase-item::before {
+            content: "○";
+            margin-right: 0.5rem;
+            color: var(--color-border);
+        }
+
+        /* User Context */
+        .context-section {
+            background: var(--color-card);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .context-section h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--color-text-muted);
+        }
+
+        .context-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .context-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .context-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .context-value {
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--color-border);
+            color: var(--color-text-muted);
+            font-size: 0.875rem;
+        }
+
+        .footer a {
+            color: var(--color-accent);
+            text-decoration: none;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .card, .chart-card, .aspect-item, .issues-table, .roadmap-phase, .context-section {
+                background: #f5f5f5;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div>
+                <h1>AI-Readiness Report</h1>
+                <p class="meta">
+                    Repository: <strong>{REPO_NAME}</strong> |
+                    Branch: <code>{BRANCH}</code> |
+                    Commit: <code>{COMMIT_HASH}</code>
+                </p>
+            </div>
+            <div class="timestamp">
+                <div>Generated: {DATE}</div>
+                <div>Report ID: {REPORT_ID}</div>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <section class="summary-cards">
+            <div class="card">
+                <span class="card-label">Grade</span>
+                <span class="card-value grade-{GRADE}">{GRADE}</span>
+                <span class="card-delta delta-{DELTA_DIR}">{DELTA}</span>
+            </div>
+            <div class="card">
+                <span class="card-label">Score</span>
+                <span class="card-value">{SCORE}/100</span>
+                <span class="card-delta delta-{DELTA_DIR}">{SCORE_DELTA}</span>
+            </div>
+            <div class="card">
+                <span class="card-label">Critical</span>
+                <span class="card-value" style="color: var(--color-critical)">{CRITICAL_COUNT}</span>
+                <span class="card-delta">{CRITICAL_DELTA}</span>
+            </div>
+            <div class="card">
+                <span class="card-label">Warning</span>
+                <span class="card-value" style="color: var(--color-warning)">{WARNING_COUNT}</span>
+                <span class="card-delta">{WARNING_DELTA}</span>
+            </div>
+            <div class="card">
+                <span class="card-label">Info</span>
+                <span class="card-value" style="color: var(--color-info)">{INFO_COUNT}</span>
+                <span class="card-delta">{INFO_DELTA}</span>
+            </div>
+        </section>
+
+        <!-- Charts -->
+        <section class="charts-grid">
+            <!-- Radar Chart -->
+            <div class="chart-card">
+                <h2>Aspect Scores</h2>
+                <div class="radar-chart">
+                    <!-- SVG Radar Chart - 8 axes for aspects -->
+                    <svg viewBox="0 0 400 400">
+                        <!-- Grid circles -->
+                        <circle cx="200" cy="200" r="150" class="radar-grid"/>
+                        <circle cx="200" cy="200" r="112" class="radar-grid"/>
+                        <circle cx="200" cy="200" r="75" class="radar-grid"/>
+                        <circle cx="200" cy="200" r="37" class="radar-grid"/>
+
+                        <!-- Axis lines (8 axes) -->
+                        <line x1="200" y1="200" x2="200" y2="50" class="radar-axis"/>
+                        <line x1="200" y1="200" x2="306" y2="94" class="radar-axis"/>
+                        <line x1="200" y1="200" x2="350" y2="200" class="radar-axis"/>
+                        <line x1="200" y1="200" x2="306" y2="306" class="radar-axis"/>
+                        <line x1="200" y1="200" x2="200" y2="350" class="radar-axis"/>
+                        <line x1="200" y1="200" x2="94" y2="306" class="radar-axis"/>
+                        <line x1="200" y1="200" x2="50" y2="200" class="radar-axis"/>
+                        <line x1="200" y1="200" x2="94" y2="94" class="radar-axis"/>
+
+                        <!-- Data polygon - points calculated from scores -->
+                        <!-- Example: score of 82% on axis 1 = 200 + (82/100 * 150 * cos(angle)) -->
+                        <polygon class="radar-area" points="{RADAR_POINTS}"/>
+
+                        <!-- Data points -->
+                        <!-- {RADAR_POINT_CIRCLES} -->
+
+                        <!-- Labels -->
+                        <text x="200" y="35" class="radar-label">Documentation</text>
+                        <text x="320" y="85" class="radar-label">Architecture</text>
+                        <text x="370" y="205" class="radar-label">Testing</text>
+                        <text x="320" y="330" class="radar-label">Type Safety</text>
+                        <text x="200" y="380" class="radar-label">Agent Instr.</text>
+                        <text x="80" y="330" class="radar-label">File Struct.</text>
+                        <text x="30" y="205" class="radar-label">Context Opt.</text>
+                        <text x="80" y="85" class="radar-label">Security</text>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- History Chart -->
+            <div class="chart-card">
+                <h2>Score History</h2>
+                <div class="history-chart">
+                    <svg viewBox="0 0 400 200">
+                        <!-- Grid lines -->
+                        <line x1="50" y1="20" x2="380" y2="20" class="history-grid"/>
+                        <line x1="50" y1="60" x2="380" y2="60" class="history-grid"/>
+                        <line x1="50" y1="100" x2="380" y2="100" class="history-grid"/>
+                        <line x1="50" y1="140" x2="380" y2="140" class="history-grid"/>
+                        <line x1="50" y1="180" x2="380" y2="180" class="history-grid"/>
+
+                        <!-- Y-axis labels -->
+                        <text x="40" y="25" class="history-label" text-anchor="end">100</text>
+                        <text x="40" y="65" class="history-label" text-anchor="end">80</text>
+                        <text x="40" y="105" class="history-label" text-anchor="end">60</text>
+                        <text x="40" y="145" class="history-label" text-anchor="end">40</text>
+                        <text x="40" y="185" class="history-label" text-anchor="end">20</text>
+
+                        <!-- Area fill -->
+                        <polygon class="history-area" points="{HISTORY_AREA_POINTS}"/>
+
+                        <!-- Line -->
+                        <polyline class="history-line" points="{HISTORY_LINE_POINTS}"/>
+
+                        <!-- Points -->
+                        <!-- {HISTORY_POINT_CIRCLES} -->
+
+                        <!-- X-axis labels -->
+                        <!-- {HISTORY_X_LABELS} -->
+                    </svg>
+                </div>
+                <div style="text-align: center; margin-top: 1rem; color: var(--color-text-muted); font-size: 0.875rem;">
+                    Trend: <span style="color: var(--color-{TREND_COLOR})">{TREND_TEXT}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- User Context -->
+        <section class="context-section">
+            <h2>Analysis Context</h2>
+            <div class="context-grid">
+                <div class="context-item">
+                    <span class="context-label">Rework Depth</span>
+                    <span class="context-value">{REWORK_DEPTH}</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Timeline</span>
+                    <span class="context-value">{TIMELINE}</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Team Size</span>
+                    <span class="context-value">{TEAM_SIZE}</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">AI Tools</span>
+                    <span class="context-value">{AI_TOOLS}</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Focus Areas</span>
+                    <span class="context-value">{FOCUS_AREAS}</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Success Metrics</span>
+                    <span class="context-value">{SUCCESS_METRICS}</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Aspect Details -->
+        <section class="aspects-section">
+            <h2>Aspect Breakdown</h2>
+
+            <!-- Repeat for each aspect -->
+            <!-- {ASPECT_ITEMS} -->
+
+            <!-- Example aspect item structure: -->
+            <!--
+            <div class="aspect-item" onclick="this.classList.toggle('open')">
+                <div class="aspect-header">
+                    <span class="aspect-name">Documentation</span>
+                    <span class="aspect-score">82/100</span>
+                    <div class="aspect-bar">
+                        <div class="aspect-bar-fill" style="width: 82%; background: var(--color-good)"></div>
+                    </div>
+                    <span class="aspect-delta delta-up">+5</span>
+                    <span class="aspect-status">OK</span>
+                </div>
+                <div class="aspect-details">
+                    <ul class="criteria-list">
+                        <li class="criteria-item">
+                            <span class="criteria-status">OK</span>
+                            <span>README exists - Comprehensive</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            -->
+        </section>
+
+        <!-- Issues Table -->
+        <section class="issues-section">
+            <h2>Identified Issues</h2>
+
+            <div class="issues-filters">
+                <button class="filter-btn active" onclick="filterIssues('all')">All ({TOTAL_ISSUES})</button>
+                <button class="filter-btn" onclick="filterIssues('critical')">Critical ({CRITICAL_COUNT})</button>
+                <button class="filter-btn" onclick="filterIssues('warning')">Warning ({WARNING_COUNT})</button>
+                <button class="filter-btn" onclick="filterIssues('info')">Info ({INFO_COUNT})</button>
+            </div>
+
+            <div class="issues-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Severity</th>
+                            <th>Aspect</th>
+                            <th>Issue</th>
+                            <th>Effort</th>
+                            <th>Selected</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- {ISSUE_ROWS} -->
+                        <!-- Example row:
+                        <tr data-severity="critical">
+                            <td>C1</td>
+                            <td><span class="severity-badge severity-critical">Critical</span></td>
+                            <td>Agent Instructions</td>
+                            <td>CLAUDE.md is missing</td>
+                            <td><span class="effort-badge">Low</span></td>
+                            <td>YES</td>
+                        </tr>
+                        -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Roadmap -->
+        <section class="roadmap-section">
+            <h2>Implementation Roadmap</h2>
+            <div class="roadmap">
+                <div class="roadmap-phase">
+                    <div class="phase-header">
+                        <span class="phase-number">1</span>
+                        <span class="phase-title">Quick Wins</span>
+                    </div>
+                    <ul class="phase-items">
+                        <!-- {PHASE_1_ITEMS} -->
+                    </ul>
+                </div>
+                <div class="roadmap-phase">
+                    <div class="phase-header">
+                        <span class="phase-number">2</span>
+                        <span class="phase-title">Foundation</span>
+                    </div>
+                    <ul class="phase-items">
+                        <!-- {PHASE_2_ITEMS} -->
+                    </ul>
+                </div>
+                <div class="roadmap-phase">
+                    <div class="phase-header">
+                        <span class="phase-number">3</span>
+                        <span class="phase-title">Advanced</span>
+                    </div>
+                    <ul class="phase-items">
+                        <!-- {PHASE_3_ITEMS} -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Generated by <strong>ai-ready</strong> skill v{VERSION}</p>
+            <p>View markdown report: <a href="./{REPORT_ID}.md">{REPORT_ID}.md</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // ============================================
+        // AI-READINESS REPORT - INTERACTIVE FEATURES
+        // All JavaScript embedded for offline viewing
+        // ============================================
+
+        // Filter issues by severity
+        function filterIssues(severity) {
+            const rows = document.querySelectorAll('.issues-table tbody tr');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            rows.forEach(row => {
+                if (severity === 'all' || row.dataset.severity === severity) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Toggle aspect details
+        document.querySelectorAll('.aspect-item').forEach(item => {
+            item.querySelector('.aspect-header').addEventListener('click', () => {
+                item.classList.toggle('open');
+            });
+        });
+
+        // Sort table by column
+        function sortTable(columnIndex) {
+            const table = document.querySelector('.issues-table table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                const aVal = a.children[columnIndex].textContent;
+                const bVal = b.children[columnIndex].textContent;
+                return aVal.localeCompare(bVal);
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Print report
+        function printReport() {
+            window.print();
+        }
+
+        // Copy summary to clipboard
+        function copySummary() {
+            const summary = `AI-Readiness Report
+Repository: {REPO_NAME}
+Grade: {GRADE} | Score: {SCORE}/100
+Critical: {CRITICAL_COUNT} | Warning: {WARNING_COUNT} | Info: {INFO_COUNT}
+Generated: {DATE}`;
+
+            navigator.clipboard.writeText(summary);
+            alert('Summary copied to clipboard!');
+        }
+    </script>
+</body>
+</html>

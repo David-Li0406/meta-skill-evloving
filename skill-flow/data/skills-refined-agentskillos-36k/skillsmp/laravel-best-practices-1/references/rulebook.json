@@ -1,0 +1,393 @@
+[
+  {
+    "id": "SRP-001",
+    "title": "Single Responsibility Principle",
+    "severity_default": "high",
+    "signals": [
+      "Class handles validation + persistence + external API calls",
+      "Controller methods exceed 80 lines or contain multiple distinct concerns"
+    ],
+    "recommended_pattern": [
+      "Extract FormRequest for validation",
+      "Extract Service/Action for business logic",
+      "Extract repository/client for external integrations"
+    ],
+    "examples": {
+      "bad": "Controller validates, writes to DB, calls external API, transforms response",
+      "good": "Controller delegates to service; request handles validation; service returns result DTO"
+    },
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Single responsibility principle"
+    }
+  },
+  {
+    "id": "FUNC-001",
+    "title": "Methods should do one thing",
+    "severity_default": "medium",
+    "signals": [
+      "Deep nesting, multiple loops/branches, and multiple unrelated side effects in one method",
+      "Method exceeds 40 lines without clear decomposition"
+    ],
+    "recommended_pattern": [
+      "Extract private methods with meaningful names",
+      "Extract small domain services/actions",
+      "Use early returns to reduce nesting"
+    ],
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Methods should do just one thing"
+    }
+  },
+  {
+    "id": "MVC-001",
+    "title": "Skinny controllers; move logic out",
+    "severity_default": "high",
+    "signals": [
+      "Controller builds complex queries and performs business decisions",
+      "Controller transforms models into arrays manually (instead of resources/DTOs)"
+    ],
+    "recommended_pattern": [
+      "Move query composition into Eloquent scopes or dedicated query objects",
+      "Move business decisions into service/action classes",
+      "Use API resources for response transformation"
+    ],
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Fat models, skinny controllers"
+    }
+  },
+  {
+    "id": "VAL-001",
+    "title": "Validation belongs in FormRequest classes",
+    "severity_default": "high",
+    "signals": [
+      "Controller uses $request->validate(...)",
+      "Validation arrays are defined inline in controllers"
+    ],
+    "recommended_pattern": [
+      "Create a FormRequest with rules() and authorize()",
+      "Typehint the FormRequest in the controller action",
+      "Use validated() data and/or DTO mapping"
+    ],
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Validation"
+    }
+  },
+  {
+    "id": "SVC-001",
+    "title": "Business logic should live in service/action classes",
+    "severity_default": "high",
+    "signals": [
+      "Business rules live inside controllers/models in hard-to-test ways",
+      "Multiple steps (pricing, eligibility, side effects) in one layer"
+    ],
+    "recommended_pattern": [
+      "Create a service/action class with a single public method (handle/execute)",
+      "Inject dependencies via constructor",
+      "Return a result object/DTO (or domain model) rather than arrays"
+    ],
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Business logic should be in service class"
+    }
+  },
+  {
+    "id": "DRY-001",
+    "title": "Don't repeat yourself (DRY)",
+    "severity_default": "medium",
+    "signals": [
+      "Duplicate query fragments across multiple controllers/services",
+      "Same validation or mapping logic repeated across endpoints"
+    ],
+    "recommended_pattern": [
+      "Use Eloquent scopes for reusable query logic",
+      "Extract mapping into resources/DTOs",
+      "Create reusable services or helpers for repeated workflows"
+    ],
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Don't repeat yourself"
+    }
+  },
+  {
+    "id": "ELO-001",
+    "title": "Prefer Eloquent + Collections when appropriate",
+    "severity_default": "low",
+    "signals": [
+      "Raw SQL/Query Builder used for routine CRUD without a strong reason",
+      "Array manipulation where collection pipelines are clearer"
+    ],
+    "recommended_pattern": [
+      "Model relationships + scopes",
+      "Collection pipelines (map/filter/reduce) for readable transforms",
+      "Query Builder/raw SQL only when necessary for performance/edge cases"
+    ],
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Prefer to use Eloquent over Query Builder and raw SQL queries"
+    }
+  },
+  {
+    "id": "BLADE-001",
+    "title": "No queries in Blade; eager load to avoid N+1",
+    "severity_default": "high",
+    "signals": [
+      "Model::/DB:: queries inside Blade templates",
+      "Loops rendering relationships without eager loading"
+    ],
+    "recommended_pattern": [
+      "Move queries to controller/service layer",
+      "Eager load relationships with with()/load()",
+      "Use view models/resources to supply already-prepared data"
+    ],
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Do not execute queries in Blade templates and use eager loading"
+    }
+  },
+  {
+    "id": "PERF-001",
+    "title": "Chunk/stream large dataset operations",
+    "severity_default": "medium",
+    "signals": [
+      "Processing large tables with get() into memory",
+      "Long-running loops over many records without chunk/cursor"
+    ],
+    "recommended_pattern": [
+      "Use chunk(), chunkById(), cursor(), lazy()",
+      "Move heavy tasks to queued jobs",
+      "Add indexes and reduce selected columns"
+    ],
+    "reference": {
+      "repo": "alexeymezenin/laravel-best-practices",
+      "topic": "Chunk data for processing"
+    }
+  },
+  {
+    "id": "INRT-001",
+    "title": "Inertia app: follow the resources/js directory conventions",
+    "severity_default": "medium",
+    "signals": [
+      "Mixing generic design-system components with app-specific feature code in the same folders",
+      "Unclear boundaries between cross-app components and feature modules"
+    ],
+    "recommended_pattern": [
+      "Keep shared UI primitives and low-level helpers under resources/js/common",
+      "Put domain/feature code under resources/js/modules",
+      "Place Inertia-rendered pages in resources/js/pages and keep the structure close to URL paths",
+      "Keep shadcn generated components in resources/js/shadcn and wrap/abstract them into common when needed"
+    ],
+    "examples": {
+      "bad": "A project-wide Button component and a posts feature component both living in the same folder",
+      "good": "resources/js/common/button/Button.tsx for the design primitive; resources/js/modules/posts/components/PostCard.tsx for feature-specific UI"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "JavaScript application structure for Inertia + React"
+    }
+  },
+  {
+    "id": "INRT-002",
+    "title": "Page components: suffix with 'Page' and default-export the component",
+    "severity_default": "high",
+    "signals": [
+      "Page components named generically (Index.tsx) or exported as named exports",
+      "Routing and Inertia lookup failing due to inconsistent default exports"
+    ],
+    "recommended_pattern": [
+      "Suffix Inertia-rendered components with 'Page' (e.g. PostsIndexPage.tsx)",
+      "Use a default export for page components so Inertia can reliably resolve them",
+      "Keep only page-level code in page files — helpers/components should live in subdirectories"
+    ],
+    "examples": {
+      "bad": "export function PostsIndex() { ... } // named export and missing Page suffix",
+      "good": "export default function PostsIndexPage() { ... } // default export and Page suffix"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "Page component naming and exports"
+    }
+  },
+  {
+    "id": "INRT-003",
+    "title": "Component files: one component per file, PascalCase for components, prefer function declarations",
+    "severity_default": "medium",
+    "signals": [
+      "Multiple components declared and exported from a single file",
+      "Component file named in camelCase or kebab-case",
+      "Components declared as const anonymous arrow functions making stack traces less obvious"
+    ],
+    "recommended_pattern": [
+      "One component per file, named and exported (named export) using PascalCase",
+      "Prefer function declarations (export function Button() { ... }) over const arrow assignments for components",
+      "Keep non-component utilities in camelCase filenames, directories in kebab-case"
+    ],
+    "examples": {
+      "bad": "const Button = () => { ... }; const Card = () => { ... }; export { Button, Card };",
+      "good": "export function Button() { ... } // Button.tsx (single, named export)"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "Component file organization and naming"
+    }
+  },
+  {
+    "id": "INRT-004",
+    "title": "Treat shadcn-generated components as low-level primitives and wrap them",
+    "severity_default": "low",
+    "signals": [
+      "Direct, widespread imports of shadcn components across the app",
+      "Repeated ad-hoc styling or API adaptations in multiple places instead of a single wrapper"
+    ],
+    "recommended_pattern": [
+      "Keep shadcn components under resources/js/shadcn",
+      "Create thin, well-named wrappers in resources/js/common when you need a project-friendly API or default styling",
+      "Avoid modifying generated shadcn sources beyond small style adjustments — prefer wrapping so upgrades remain simple"
+    ],
+    "examples": {
+      "bad": "import { Select } from '@/shadcn/select' in many files and adapt props every time",
+      "good": "Create resources/js/common/components/FruitSelect/FruitSelect.tsx that wraps the shadcn Select and exposes a simple options prop"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "Managing shadcn/generated components"
+    }
+  },
+  {
+    "id": "INRT-005",
+    "title": "Imports, file casing, and barrel files",
+    "severity_default": "low",
+    "signals": [
+      "Using barrel (index) files to re-export many modules, causing indirection",
+      "Inconsistent import paths (relative vs alias) and mixed casing in filenames"
+    ],
+    "recommended_pattern": [
+      "Avoid barrel files; import components and utilities directly by their absolute aliased path",
+      "Use PascalCase for component filenames, camelCase for helper files, and kebab-case for directory names",
+      "Keep imports grouped: external libraries first, then application imports; use absolute aliased paths for app imports"
+    ],
+    "examples": {
+      "bad": "import { Button } from '@/common' // ambiguous barrel import",
+      "good": "import { Button } from '@/common/button/Button' // explicit, single-source import"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "Import conventions and file casing"
+    }
+  },
+  {
+    "id": "INRT-VUE-001",
+    "title": "Inertia + Vue app: follow the resources/js directory conventions",
+    "severity_default": "medium",
+    "signals": [
+      "Mixing generic design-system components with app-specific feature code in the same folders",
+      "Unclear boundaries between cross-app components and feature modules"
+    ],
+    "recommended_pattern": [
+      "Keep shared UI primitives and low-level helpers under resources/js/common",
+      "Put domain/feature code under resources/js/modules",
+      "Place Inertia-rendered pages in resources/js/pages and keep the structure close to URL paths",
+      "Keep auto-generated or third-party components (e.g. headless UI kit, design-system pieces) in resources/js/lib and wrap/abstract them into common when needed"
+    ],
+    "examples": {
+      "bad": "A project-wide Button component and a posts feature component both living in the same folder",
+      "good": "resources/js/common/button/Button.vue for the design primitive; resources/js/modules/posts/components/PostCard.vue for feature-specific UI"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "JavaScript application structure for Inertia + Vue"
+    }
+  },
+  {
+    "id": "INRT-VUE-002",
+    "title": "Page components: suffix with 'Page' and default-export the component",
+    "severity_default": "high",
+    "signals": [
+      "Page components named generically (Index.vue) or exported inconsistently",
+      "Routing and Inertia lookup failing due to inconsistent export shapes"
+    ],
+    "recommended_pattern": [
+      "Suffix Inertia-rendered components with 'Page' (e.g. PostsIndexPage.vue)",
+      "Use a default export for page components so Inertia can reliably resolve them (using <script setup> or export default)",
+      "Keep only page-level code in page files — helpers/components should live in subdirectories"
+    ],
+    "examples": {
+      "bad": "export const PostsIndex = { /* ... */ } // named export and missing Page suffix",
+      "good": "<script setup>\n// PostsIndexPage.vue\n</script>\n\n<!-- default export via script setup compiles to the default component -->\n<!-- or: export default defineComponent({ name: 'PostsIndexPage', ... }) -->"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "Page component naming and exports for Vue"
+    }
+  },
+  {
+    "id": "INRT-VUE-003",
+    "title": "Component files: one component per file, PascalCase for components, prefer <script setup>",
+    "severity_default": "medium",
+    "signals": [
+      "Multiple components declared and exported from a single file",
+      "Component file named in camelCase or kebab-case",
+      "Large anonymous options objects making debugging harder"
+    ],
+    "recommended_pattern": [
+      "One component per .vue file, named using PascalCase (Button.vue)",
+      "Prefer <script setup> and composition API for new components; use defineProps/defineEmits for clear typings",
+      "Keep non-component utilities as .ts/.js files in camelCase; directories in kebab-case",
+      "Group composables in resources/js/common/composables or resources/js/modules/<feature>/composables"
+    ],
+    "examples": {
+      "bad": "// components with multiple related subcomponents in one file",
+      "good": "resources/js/common/button/Button.vue // single SFC component using <script setup>"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "Vue component file organization and naming"
+    }
+  },
+  {
+    "id": "INRT-VUE-004",
+    "title": "Treat third-party UI library components as low-level primitives and wrap them",
+    "severity_default": "low",
+    "signals": [
+      "Direct, widespread imports of low-level library components across the app",
+      "Repeated ad-hoc styling or API adaptations in multiple places instead of a single wrapper"
+    ],
+    "recommended_pattern": [
+      "Keep third-party or generated components under resources/js/lib or resources/js/vendor",
+      "Create thin, well-named wrappers in resources/js/common when you need a project-friendly API or default styling",
+      "Avoid modifying upstream library sources — prefer wrapping so upgrades remain simple"
+    ],
+    "examples": {
+      "bad": "import { Dropdown } from 'some-ui-lib' in many files and adapt props every time",
+      "good": "Create resources/js/common/dropdown/Dropdown.vue that wraps the library and exposes a simpler props API"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "Managing third-party UI components in Vue apps"
+    }
+  },
+  {
+    "id": "INRT-VUE-005",
+    "title": "Imports, file casing, and barrel files (Vue)",
+    "severity_default": "low",
+    "signals": [
+      "Using barrel (index) files to re-export many modules, causing indirection",
+      "Inconsistent import paths (relative vs alias) and mixed casing in filenames"
+    ],
+    "recommended_pattern": [
+      "Avoid barrel files; import components and utilities directly by their absolute aliased path (e.g. @/common/button/Button.vue)",
+      "Use PascalCase for component filenames, camelCase for helper files, and kebab-case for directory names",
+      "Keep imports grouped: external libraries first, then application imports; prefer alias paths configured in the build tool"
+    ],
+    "examples": {
+      "bad": "import { Button } from '@/common' // ambiguous barrel import",
+      "good": "import Button from '@/common/button/Button.vue' // explicit, single-source import"
+    },
+    "reference": {
+      "repo": "internal/inertia-guidelines",
+      "topic": "Import conventions and file casing for Vue"
+    }
+  }
+]

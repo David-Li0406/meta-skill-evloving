@@ -1,0 +1,41 @@
+{
+  "name": "extract-first-line",
+  "description": "Extract the first line from a multiline string at a specified path",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'data.message')"
+    }
+  },
+  "output": {
+    "type": ["string", "null"],
+    "description": "The first line of the string, or null if path doesn't exist or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Extract first line from Unix newlines",
+      "input": {"text": "line1\nline2\nline3"},
+      "args": {"path": "text"},
+      "output": "line1"
+    },
+    {
+      "description": "Extract first line from Windows newlines",
+      "input": {"data": {"content": "first\r\nsecond\r\nthird"}},
+      "args": {"path": "data.content"},
+      "output": "first"
+    },
+    {
+      "description": "Single line returns entire string",
+      "input": {"message": "only one line"},
+      "args": {"path": "message"},
+      "output": "only one line"
+    }
+  ],
+  "tags": ["string", "line", "multiline", "extract"]
+}

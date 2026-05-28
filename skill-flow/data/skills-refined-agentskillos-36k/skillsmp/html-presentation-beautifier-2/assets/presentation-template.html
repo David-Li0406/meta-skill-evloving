@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PRESENTATION_TITLE}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        /* ===== McKinsey/BCG Design System ===== */
+
+        /* Color Variables */
+        :root {
+            --primary-bg: #FFFFFF;
+            --header-bg: #000000;
+            --primary-accent: #F85d42;
+            --secondary-accent: #74788d;
+            --deep-blue: #556EE6;
+            --green: #34c38f;
+            --blue: #50a5f1;
+            --yellow: #f1b44c;
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --text-muted: #666666;
+            --text-light: #FFFFFF;
+        }
+
+        /* Global Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ===== Navigation Bar ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: var(--header-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn {
+            background-color: var(--primary-accent);
+            color: var(--text-light);
+            border: none;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover:notisabled) {
+            background-color: #e04a31;
+            transform: translateY(-1px);
+        }
+
+        .nav-btn:disabled {
+            background-color: var(--secondary-accent);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .slide-counter {
+            color: var(--text-light);
+            font-size: 18px;
+            font-weight: 600;
+      }
+
+        /* ===== Presentation Container ===== */
+        .presentation-container {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+        }
+
+        /* ===== Slide Styles ===== */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 80px 100px;
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* =====itle Slide ===== */
+        .slide.title-slide {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .title-slide .title {
+            font-size: 64px;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .title-slide .subtitle {
+            font-size: 32px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 10px;
+        }
+
+        /* ===== Content Slides ===== */
+        .slide-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 40px;
+            line-height: 1.2;
+        }
+
+        .slide-subtitle {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary-accent);
+            margin: 30px 0 20px 0;
+        }
+
+        .section-heading {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--deep-blue);
+            margin: 25px 0 15px 0;
+        }
+
+        /* ===== Text Styles ===== */
+        .text-content {
+            font-size: 20px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin: 15px 0;
+        }
+
+        .key-point {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary-accent);
+            margin: 20px 0;
+        }
+
+        /* ===== Lists ===== */
+        .bullet-list {
+            list-style: none;
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .bullet-list li {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin: 15px 0;
+            padding-left: 40px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .bullet-list li::before {
+            content: "●";
+            color: var(--primary-accent);
+            font-size: 16px;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .numbered-list {
+            list-style: none;
+            counter-reset: item-counter;
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .numbered-list li {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin: 15px 0;
+            padding-left: 50px;
+            position: relative;
+            counter-increment: item-counter;
+            line-height: 1.6;
+        }
+
+        .numbered-list li::before {
+            content: counter(item-counter);
+            background-color: var(--primary-accent);
+            color: var(--text-light);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* ===== Layout Styles ===== */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 20px 0;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== Chart Container ===== */
+        .chart-container {
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container canvas {
+            max-height: 100%;
+        }
+
+        /* ===== Emphasis Box ===== */
+        .emphasis-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .emphasis-box {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px 30px;
+            border-radius: 12px;
+            border-left: 6px solid var(--primary-accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .emphahover {
+            transform: translateX(10px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .emphasis-icon {
+            font-size: 36px;
+            color: var(--primary-accent);
+            flex-shrink: 0;
+        }
+
+        .emphasis-text {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+       line-height: 1.5;
+        }
+
+        /* ===== Conclusions Grid ===== */
+        .conclusions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .conclusion-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            border-top: 4pxid var(--primary-accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .conclusion-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .conclusion-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--nt);
+            margin-bottom: 15px;
+        }
+
+        .conclusion-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .conclusion-text {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ===== Data Table ===== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table th {
+            background-color: var(--header-bg);
+            color: var(--text-light);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:last-child           border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* ===== Fullscreen Button ===== */
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--header-bg);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .fullscreen-btn:hover {
+            background-color: var(--secondary-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== Responsive Design ===== */
+        @media (max-width: 1200px) {
+            .slide {
+                padding: 60px 60px;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                 .conclions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .title-slide .title {
+                font-size: 52px;
+            }
+
+            .slide-title {
+                font-size: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 20px;
+            }
+
+            .slide {
+                padding: 40px 30px;
+        n            .title-slide .title {
+                font-size: 40px;
+            }
+
+            .title-slide .subtitle {
+                font-size: 24px;
+            }
+
+            .slide-title {
+                font-size: 32px;
+            }
+
+            .slide-subtitle {
+                font-size: 24px;
+            }
+
+            .bullet-list li,
+            .numbered-list l    .text-content {
+                font-size: 16px;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        /* ===== Print Styles ===== */
+        @media print {
+            .navbar,
+            .fullscreen-btn {
+                display: none;
+            }
+
+            .slide {
+                position: relative;
+             ge-break-after: always;
+                display: flex !important;
+                opacity: 1 !important;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .presentation-container {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        /* ===== Scrollbar Styles ===== */
+    ide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: var(--secondary-accent);
+            border-radius: 4px;
+        }
+
+        .slide::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-aent);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← 上一页</button>
+        <span class="slide-counter">第 <span id="currentSlide">1</span> 页 / 共 <span id="totalSlides">1</span> 页</span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">下一页 →</button>
+    </nav>
+
+    <!-- Presentation Container -->
+    <div class="presentation-container">
+        <!-- SLIDES GO HERE -->
+        <!-- Example slides below - replace with actual content -->
+
+        <!-- Slide 1: Title Slide -->
+        <div class="slide title-slide active" data-slide="1">
+            <h1 class="title">{{MAIN_TITLE}}</h1>
+            <p class="subtitle">{{SUBTITLE}}</p>
+        </div>
+
+        <!-- Slide 2: Content Slide with Bullets -->
+        <div class="slide" data-slide="2">
+            <h2 class="slide-title">{{SECTION_TITLE}}</h2>
+            <ul class="bullet-list">
+                <li>{{BULLET_POINT_1}}</li>
+                <li>{{BULLET_POINT_2}}</li>
+                <li>{{BULLET_POINT_3}}</li>
+            </ul>
+        </div>
+
+        <!-- Slide 3: Two Column Layout -->
+        <div class="slide" data-slide="3">
+            <h2 class="slide-title">{{SECTION_TITLE}}</h2>
+            <div class="two-column">
+                <div class="column">
+                    <h3 class="section-heading">{{LEFT_COLUMN_TITLE}}</h3>
+                    <ul class="bullet-list">
+                        <li>{{LEFT_POINT_1}}</li>
+                        <li>{{LEFT_POINT_2}}</li>
+                    </ul>
+                </div>
+                <div class="column">
+                    <h3 class="section-heading">{{RIGHT_COLUMN_TITLE}}</h3>
+                    <ul class="bullet-list">
+                        <li>{{RIGHT_POINT_1}}</li>
+                        <li>{{RIGHT_POINT_2}}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Data Visualization -->
+        <div class="slide" data-slide="4">
+            <h2 class="slide-title">{{CHART_TITLE}}</h2>
+            <div class="chart-container">
+                <canvas id="chart1"></canvas>
+            </div>
+        </div>
+
+        <!-- Slide 5: Emphasis Boxes -->
+        <div class="slide" data-slide="5">
+            <h2 class="slide-title">{{SECTION_TITLE}}</h2>
+            <div class="emphasis-container">
+                <div class="emphasis-box">
+                    <div class="emphasis-icon">💡</div>
+                    <div class="emphasis-text">{{EMPHASIS_POINT_1}}</div>
+                </div>
+                <div class="emphasis-box">
+                    <div class="emphasis-icon">🎯</div>
+                    <div class="emphasis-text">{{EMPHASIS_POINT_2}}</div>
+                </div>
+                <div class="emphasis-box">
+                    <div class="emphasis-icon">✨</div>
+                    <div class="emphasis-text">{{EMPHASIS_POINT_3}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Conclusions Grid -->
+        <div class="slide" data-slide="6">
+            <h2 class="slide-title">核心结论</h2>
+            <div class="conclusions-grid">
+                <div class="conclusion-card">
+                    <div class="conclusion-number">01</div>
+                    <h3 class="conclusion-title">{{CONCLUSION_1_TITLE}}</h3>
+                    <p class="conclusion-text">{{CONCLUSION_1_TEXT}}</p>
+                </div>
+                <div class="conclusion-card">
+                    <div class="conclusion-number">02</div>
+                    <h3 class="conclusion-title">{{CONCLUSION_2_TITLE}}</h3>
+                    <p class="conclusion-text">{{CONCLUSION_2_TEXT}}</p>
+                </div>
+                <div class="conclusion-card">
+                    <div class="conclusion-number">03</div>
+               ss="conclusion-title">{{CONCLUSION_3_TITLE}}</h3>
+                    <p class="conclusion-text">{{CONCLUSION_3_TEXT}}</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Fullscreen Button -->
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">全屏 ⛶</button>
+
+    <!-- Navigation JavaScript -->
+    <script>
+        let currentSlide = 1;
+        let totalSlides = 0;
+
+        function init() {
+            const slides = document.querySelectorAll('.slide');
+            totalSlides = slides.length;
+            document.getElementById('totalSlides').textContent = totalSlides;
+            document.addEventListener('keydown', handleKeyPress);
+            updateNavButtons();
+
+            // Initialize charts if any
+            initializeCharts();
+        }
+
+        function navigate(direction) {
+            const newSlide = currentSlide + direction;
+
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = newSlide;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('act            document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigate(-1);
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                jumpToSlide(1);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                jumpToSlide(totalSlides);
+            }
+        }
+
+        function jumpToSlide(slideNumber) {
+            if (slideNumber >= 1 && slideNumber <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = slideNumber;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function initializeCharts() {
+            // Example chart initialization
+            // Replace with actual chart data
+
+            const chart1Canvas = document.getElementById('chart1');
+            if (chart1Canvas) {
+                new Chart(chart1Canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: ['项目 A', '项目 B', '项目 C', '项目 D'],
+                        datasets: [{
+                            label: '数据示例',
+                            data: [65, 59, 80, 81],
+                            backgroundColor: [
+                                '#F85d42',
+                                '#556EE6',
+                                '#34c38f',
+                                '#50a5f1'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#e9ecef'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            // Recalculate chart sizes if needed
+            Chart.helpers.each(Chart.instances, function(instance) {
+                instance.resize();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "name": "array-chunk",
+  "description": "Split array into chunks of specified size",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "JSON object containing an array at the specified path"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'items' or 'data.items')"
+    },
+    "size": {
+      "type": "string",
+      "required": true,
+      "description": "Chunk size (must be positive integer)"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with array field replaced by array of chunks, or original object if path doesn't exist or value is not an array"
+  },
+  "examples": [
+    {
+      "description": "Chunk array evenly",
+      "input": {"items": [1, 2, 3, 4, 5, 6]},
+      "args": {"array_path": "items", "size": "2"},
+      "output": {"items": [[1, 2], [3, 4], [5, 6]]}
+    },
+    {
+      "description": "Chunk with remainder",
+      "input": {"items": [1, 2, 3, 4, 5]},
+      "args": {"array_path": "items", "size": "2"},
+      "output": {"items": [[1, 2], [3, 4], [5]]}
+    },
+    {
+      "description": "Chunk size 1",
+      "input": {"items": ["a", "b", "c"]},
+      "args": {"array_path": "items", "size": "1"},
+      "output": {"items": [["a"], ["b"], ["c"]]}
+    },
+    {
+      "description": "Chunk size larger than array",
+      "input": {"items": [1, 2]},
+      "args": {"array_path": "items", "size": "10"},
+      "output": {"items": [[1, 2]]}
+    },
+    {
+      "description": "Empty array",
+      "input": {"items": []},
+      "args": {"array_path": "items", "size": "3"},
+      "output": {"items": []}
+    },
+    {
+      "description": "Nested path",
+      "input": {"data": {"items": [1, 2, 3, 4, 5, 6, 7]}},
+      "args": {"array_path": "data.items", "size": "3"},
+      "output": {"data": {"items": [[1, 2, 3], [4, 5, 6], [7]]}}
+    }
+  ],
+  "tags": ["array", "chunk", "split", "group", "batch"]
+}

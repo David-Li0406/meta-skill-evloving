@@ -1,0 +1,54 @@
+# Example Backstage CR configurations for rhdh-operator
+
+# Minimal configuration
+---
+apiVersion: rhdh.redhat.com/v1alpha5
+kind: Backstage
+metadata:
+  name: rhdh-minimal
+  namespace: rhdh
+spec:
+  application: {}
+
+# Production configuration with external database
+---
+apiVersion: rhdh.redhat.com/v1alpha5
+kind: Backstage
+metadata:
+  name: rhdh-production
+  namespace: rhdh
+spec:
+  application:
+    appConfig:
+      configMaps:
+        - name: app-config-rhdh
+    dynamicPluginsConfigMapName: dynamic-plugins
+    extraEnvs:
+      secrets:
+        - name: rhdh-secrets
+    route:
+      enabled: true
+      host: rhdh.apps.example.com
+      tls:
+        externalCertificateSecretName: rhdh-tls
+
+  database:
+    enableLocalDb: false
+    authSecretName: external-postgres-credentials
+
+  monitoring:
+    enabled: true
+
+  deployment:
+    kind: Deployment
+    patch:
+      spec:
+        replicas: 2
+        template:
+          spec:
+            containers:
+              - name: backstage
+                resources:
+                  requests:
+                    memory: "2Gi"
+                    cpu: "500m"

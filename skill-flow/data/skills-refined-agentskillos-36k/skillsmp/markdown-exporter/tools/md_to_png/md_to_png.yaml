@@ -1,0 +1,56 @@
+identity:
+  name: md_to_png
+  author: bowenliang123
+  label:
+    en_US: Markdown ⮕ PNG
+    zh_Hans: Markdown ⮕ PNG
+description:
+  human:
+    en_US: Generate PNG images from Markdown text
+    zh_Hans: 将 Markdown 转换为 PNG 图片的工具
+  llm: Generate PNG images from Markdown text
+parameters:
+  - name: md_text
+    type: string
+    required: true
+    label:
+      en_US: Markdown text
+      zh_Hans: Markdown格式文本
+    human_description:
+      en_US: Markdown text
+      zh_Hans: Markdown格式文本
+    form: llm
+  - name: output_filename
+    type: string
+    required: false
+    label:
+      en_US: Output Filename
+      zh_Hans: 输出文件名
+    human_description:
+      en_US: Optional custom output file name, and the filename suffix is not required.
+      zh_Hans: 可选的自定义输出文件名，后缀名无需指定
+    form: llm
+  - name: is_compress
+    type: select
+    required: false
+    default: "false"
+    options:
+      - value: "true"
+        label:
+          en_US: "Yes"
+          zh_Hans: 是
+      - value: "false"
+        label:
+          en_US: "No"
+          zh_Hans: 否
+    label:
+      en_US: Generate into ZIP file
+      zh_Hans: 是否压缩为ZIP文件
+    human_description:
+      en_US: Whether to generate into ZIP file
+      zh_Hans: 是否压缩为ZIP文件
+    llm_description: Whether to generate into ZIP file, default to "false"
+    form: form
+extra:
+  python:
+    source: tools/md_to_png/md_to_png.py

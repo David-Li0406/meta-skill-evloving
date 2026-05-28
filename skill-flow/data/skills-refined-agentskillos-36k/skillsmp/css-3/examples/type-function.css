@@ -1,0 +1,14 @@
+/* type() in @function - enforce parameter types */
+
+@function --scale(--value type(<length>), --factor type(<number>)) {
+  result: calc(var(--value) * var(--factor));
+}
+
+@function --fade(--color type(<color>), --alpha type(<percentage>): 50%) {
+  result: oklch(from var(--color) l c h / var(--alpha));
+}
+
+.card {
+  padding: --scale(1rem, 2);
+  background: --fade(var(--color-primary));
+}

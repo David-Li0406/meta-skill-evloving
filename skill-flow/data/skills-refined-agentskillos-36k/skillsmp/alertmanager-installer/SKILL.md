@@ -1,0 +1,291 @@
+---
+name: alertmanager-installer
+description: 'Install and configure AlertManager following monitoring guide patterns and best practices for Kubernetes environments. Trigger with /alertmanager-install'
+allowed-tools: ['read_file', 'create_file', 'replace_string_in_file', 'run_in_terminal', 'semantic_search']
+---
+
+# AlertManager Installation Expert
+
+I install and configure AlertManager using monitoring patterns and best practices for Kubernetes environments.
+
+## Slash Command
+
+### `/alertmanager-install`
+Runs the full prerequisite validation and installation readiness workflow:
+1. Verify Kubernetes cluster connectivity
+2. Check monitoring namespace exists
+3. Validate RBAC permissions for AlertManager CRDs
+4. Confirm Prometheus Operator is installed
+5. Check existing Prometheus and AlertManager pods
+6. Test AlertManager API health (if running)
+7. Verify Prometheus → AlertManager connectivity
+
+**Usage**: Type `/alertmanager-install` to validate prerequisites before installation or check existing installation health.
+
+**Script Verification**: Before executing, verify the script integrity:
+```bash
+sha256sum .github/skills/alertmanager-installer/scripts/validate.sh
+# Expected: check current hash after creation
+```
+
+**Execute validation**:
+```bash
+bash .github/skills/alertmanager-installer/scripts/validate.sh
+```
+
+## When I Activate
+- `/alertmanager-install` (slash command)
+- "Install AlertManager"
+- "Set up monitoring stack"
+- "Configure Flux alerting"
+- "Deploy AlertManager with Flux"
+- "Monitoring guide setup"
+
+## Port-Forward Assumptions
+This skill assumes port-forwards are active or can be started:
+- **Prometheus**: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090 &`
+- **AlertManager**: `kubectl port-forward -n monitoring svc/kube-prometheus-stack-alertmanager 9093:9093 &`
+
+## Monitoring Guide Knowledge
+
+### Essential Components
+**Purpose**: Establish foundational monitoring infrastructure
+**Key Components**: 
+- Prometheus Operator via Helm
+- ServiceMonitors for automatic discovery
+- Namespace and RBAC configuration
+
+```yaml
+# Example Prometheus Operator HelmRelease
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: prometheus-stack
+  namespace: monitoring
+spec:
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+```
+
+### AlertManager Configuration
+**Purpose**: Configure notification routing and receiver setup
+**Key Concepts**:
+- Route hierarchy and grouping
+- Inhibition rules for alert storm prevention
+- Multiple receiver types (webhook, email, slack)
+
+```yaml
+# AlertManager configuration structure
+alertmanager:
+  config:
+    global:
+      smtp_smarthost: 'smtp.example.com:587'
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 10s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: default-receiver
+    receivers:
+      - name: default-receiver
+        webhook_configs:
+          - url: 'http://webhook-service/alerts'
+```
+
+### Custom Alerts for Applications
+**Purpose**: Monitor application-specific resources and state changes
+**Alert Categories**:
+- Application readiness and health
+- Resource deployment status
+- Component availability
+
+```yaml
+# Example Flux alert rule
+groups:
+  - name: flux
+    rules:
+      - alert: FluxComponentNotReady
+        expr: gotk_reconcile_condition{type="Ready",status="False"} == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flux component {{ $labels.kind }}/{{ $labels.name }} not ready"
+```
+
+### Application-Level Monitoring
+**Purpose**: Extend monitoring to application workloads
+**Integration Points**:
+- PodMonitors for application metrics
+- ServiceMonitors for service discovery
+- Custom recording rules for SLIs
+
+### Dashboard Integration  
+**Purpose**: Visualization and operational dashboards
+**Components**:
+- Pre-configured monitoring dashboards
+- Alert status visualization
+- Resource utilization tracking
+
+## Installation Process
+
+### 1. Prerequisites Validation
+```bash
+# Check existing Prometheus installation
+kubectl get prometheus -A
+kubectl get servicemonitors -A
+
+# Validate RBAC permissions
+kubectl auth can-i create alertmanagers
+kubectl auth can-i create servicemonitors
+```
+
+### 2. Namespace Preparation
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    monitoring: enabled
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertmanager-reader
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "services", "endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+```
+
+### 3. AlertManager Deployment
+```yaml
+# Flux-managed AlertManager
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: alertmanager
+      version: '^0.25.0'
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: monitoring
+  values:
+    config:
+      global:
+        resolve_timeout: 5m
+      route:
+        group_by: ['alertname']
+        group_wait: 10s
+        group_interval: 10s
+        repeat_interval: 1h
+        receiver: 'default'
+      receivers:
+        - name: 'default'
+          webhook_configs:
+            - url: 'http://webhook-service/webhook'
+```
+
+### 4. Service Integration
+```yaml
+# ServiceMonitor for AlertManager itself
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+  endpoints:
+    - port: web
+      interval: 30s
+      path: /metrics
+```
+
+## Configuration Patterns
+
+### Notification Routing Strategy
+1. **Critical Alerts**: Immediate notification (PagerDuty, phone)
+2. **Warning Alerts**: Grouped notifications (Slack, email)
+3. **Info Alerts**: Dashboard-only, no active notification
+
+### Inhibition Rules
+```yaml
+# Prevent alert storm during cluster issues
+inhibit_rules:
+  - source_match:
+      alertname: 'KubeNodeNotReady'
+    target_match:
+      alertname: 'KubePodNotReady'
+    equal: ['node']
+```
+
+### Silencing Patterns
+- Maintenance windows via API
+- Temporary environment silencing
+- Development namespace exclusions
+
+## Validation Steps
+
+### 1. Health Checks
+```bash
+# AlertManager API health
+curl http://alertmanager:9093/-/healthy
+
+# Configuration reload
+curl -X POST http://alertmanager:9093/-/reload
+```
+
+### 2. Alert Delivery Test
+```bash
+# Send test alert
+curl -X POST http://alertmanager:9093/api/v1/alerts \
+  -H "Content-Type: application/json" \
+  -d '[{"labels":{"alertname":"test","severity":"warning"}}]'
+```
+
+### 3. Prometheus Integration
+```bash
+# Verify Prometheus can reach AlertManager
+curl http://prometheus:9090/api/v1/query?query=alertmanager_up
+```
+
+## Troubleshooting Guide
+
+### Common Issues
+- **Config validation failures**: YAML syntax, receiver validation
+- **Network connectivity**: Service discovery, DNS resolution  
+- **Authentication**: Webhook endpoints, SMTP credentials
+- **Alert routing**: Group_by conflicts, route hierarchy
+
+### Debug Commands
+```bash
+# Check AlertManager logs
+kubectl logs -n monitoring deployment/alertmanager
+
+# Validate configuration  
+kubectl logs -n monitoring deployment/alertmanager
+
+# Check configuration via API
+curl http://alertmanager:9093/api/v1/status
+```
+
+## Integration Points
+
+This skill enables:
+- **Prometheus Observer** - Validates installation success
+- **KSM Crossplane Adapter** - Provides alerting foundation for custom metrics
+- **Resource Template Engine** - Ensures new alerts have proper notification routing

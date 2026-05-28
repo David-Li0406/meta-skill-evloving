@@ -1,0 +1,57 @@
+---
+name: x07-agent-playbook
+description: Agent-first workflow and design rails for building X07 programs with the released toolchain (no repo-only dependencies). Canonical execution is via `x07 run`.
+metadata:
+  short-description: X07 agent workflow + rails
+  version: 0.1.0
+  kind: docs
+---
+
+# x07-agent-playbook
+
+This skill sets the baseline workflow and constraints for autonomous agents writing X07 programs.
+It assumes end-users only have the released toolchain binaries, not the toolchain source repo.
+
+## Tooling
+
+See `references/tooling.md`.
+
+Execution should go through `x07 run` (single front door). The standalone runner binaries (`x07-host-runner`, `x07-os-runner`) remain available for expert usage, but are not part of the default agent loop.
+
+## Single canonical agent loop (edit → format → lint → run)
+
+1. Create or edit x07AST JSON (`*.x07.json`).
+2. Canonicalize formatting:
+   - `x07 fmt --input src/main.x07.json --write --report-json`
+3. Lint (world-gating + structural checks):
+   - `x07 lint --input src/main.x07.json --world solve-pure --report-json`
+4. Apply tool-provided quickfixes (when available):
+   - `x07 fix --input src/main.x07.json --world solve-pure --write --report-json`
+5. If a targeted structural change is needed, apply an explicit JSON Patch:
+   - `x07 ast apply-patch --in src/main.x07.json --patch /tmp/repair.patch.json --validate`
+6. Run in the correct capability world (canonical: `x07 run`):
+   - deterministic solve worlds (recommended default): `x07 run`
+   - OS worlds (unsandboxed): `x07 run --os` (equivalently: `x07 run --world run-os`)
+   - OS worlds (policy-enforced): `x07 policy init --template <cli|http-client|web-service|fs-tool|sqlite-app|postgres-client|worker>` (starting point; review and extend), then `x07 run --world run-os-sandboxed --policy .x07/policies/base/<template>.sandbox.base.policy.json` (optionally add `--allow-host ...` / `--deny-host ...` to materialize derived policies)
+
+   Expert backends (use only when you need runner-only flags or are debugging runner behavior):
+   - solve worlds: `x07-host-runner --project x07.json`
+   - OS worlds: `x07-os-runner --project x07.json --world run-os`
+7. If the project uses dependencies, update the lockfile:
+   - `x07 pkg lock --project x07.json`
+
+Keep each iteration small and deterministic; if a repair loop does not converge quickly, stop and re-evaluate the approach.
+
+## Recommended project layout (single canonical shape)
+
+- `x07.json`: project manifest (`x07.project@0.2.0`)
+- `x07.lock.json`: project lockfile (or `lockfile` configured in `x07.json`)
+- `src/main.x07.json`: entry
+- `src/`: module roots
+- `.x07/deps/<name>/<version>/`: fetched dependencies (when using `x07 pkg lock`)
+
+## Agent-first design rails
+
+See `references/design-rails.md`.
+
+For a built-in language/stdlib reference (toolchain-only), use `x07c guide`.

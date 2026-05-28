@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Iteration Input Schema",
+  "description": "Schema for log-iteration.py JSON input. Records iteration cycles with planning, execution, and learning.",
+  "type": "object",
+  "required": ["title", "focus"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Short title for this iteration",
+      "examples": ["MVP prototype", "Performance optimization cycle", "User feedback integration"]
+    },
+    "focus": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Primary focus or goal of this iteration",
+      "examples": ["Validate core user flow with clickable prototype"]
+    },
+    "plan": {
+      "type": "string",
+      "description": "Planned approach and activities",
+      "examples": ["Build wire frames, implement basic navigation, run usability test with 5 users"]
+    },
+    "execution": {
+      "type": "string",
+      "description": "What was actually done",
+      "examples": ["Created Figma wireframes, built React prototype, tested with 3 users"]
+    },
+    "results": {
+      "type": "string",
+      "description": "Outcomes and findings",
+      "examples": ["Users confused by navigation, checkout flow took too many steps"]
+    },
+    "learnings": {
+      "type": "string",
+      "description": "Key insights and lessons learned",
+      "examples": ["Simplify navigation to 3 main sections, reduce checkout to 2 steps"]
+    },
+    "next_actions": {
+      "type": "string",
+      "description": "Recommended next steps",
+      "examples": ["Redesign navigation, create new checkout mockups"]
+    },
+    "stories": {
+      "description": "Related story numbers. Can be single story, comma-separated string, or array.",
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Single story number"
+        },
+        {
+          "type": "string",
+          "pattern": "^\\d+(,\\s*\\d+)*$",
+          "description": "Comma-separated story numbers"
+        },
+        {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "description": "Array of story numbers"
+        }
+      ]
+    },
+    "decisions": {
+      "description": "Related decision IDs. Can be single ID, comma-separated string, or array.",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^D-?\\d+$",
+          "description": "Single decision ID"
+        },
+        {
+          "type": "string",
+          "pattern": "^D-?\\d+(,\\s*D-?\\d+)*$",
+          "description": "Comma-separated decision IDs"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^D-?\\d+$"
+          },
+          "description": "Array of decision IDs"
+        }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "title": "MVP Prototype",
+      "focus": "Validate core user flow",
+      "plan": "Build wireframes and test with 5 users",
+      "execution": "Created Figma prototypes, tested with 3 users",
+      "results": "Users confused by navigation",
+      "learnings": "Need simpler navigation structure",
+      "next_actions": "Redesign navigation to 3 main sections",
+      "stories": [1, 2],
+      "decisions": ["D5", "D7"]
+    },
+    {
+      "title": "Performance Optimization",
+      "focus": "Reduce page load time",
+      "plan": "Profile bottlenecks, optimize queries",
+      "stories": "3, 5"
+    }
+  ]
+}

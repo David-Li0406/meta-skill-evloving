@@ -1,0 +1,390 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Context Worknotes Artifact Schema"
+type: object
+description: "JSON Schema for PRD-level context worknotes (YAML frontmatter validation). One file per PRD for agent observations and notes during development."
+
+required:
+  - type
+  - prd
+  - title
+  - status
+  - created
+  - updated
+
+properties:
+  type:
+    type: string
+    enum: ["context"]
+    description: "Artifact type identifier"
+
+  prd:
+    type: string
+    minLength: 3
+    maxLength: 64
+    pattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+    description: "PRD identifier in kebab-case (e.g., 'artifact-flow-modal-redesign')"
+
+  title:
+    type: string
+    minLength: 5
+    maxLength: 256
+    description: "Context document title (e.g., 'Artifact Flow Modal - Development Context')"
+
+  status:
+    type: string
+    enum: ["active", "archived", "abandoned"]
+    description: "Context file status (active during development, archived when complete)"
+
+  created:
+    type: string
+    format: "date"
+    description: "Creation date in YYYY-MM-DD format"
+
+  updated:
+    type: string
+    format: "date"
+    description: "Last update date in YYYY-MM-DD format"
+
+  # Quick reference metrics for token-efficient queries
+  critical_notes_count:
+    type: integer
+    minimum: 0
+    default: 0
+    description: "Number of critical observations documented"
+
+  implementation_decisions_count:
+    type: integer
+    minimum: 0
+    default: 0
+    description: "Number of key decisions documented"
+
+  active_gotchas_count:
+    type: integer
+    minimum: 0
+    default: 0
+    description: "Number of unresolved gotchas"
+
+  agent_contributors:
+    type: array
+    maxItems: 50
+    items:
+      type: string
+      pattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+    default: []
+    description: "List of agents who have contributed notes"
+
+  # Agent communication index for efficient lookups
+  agents:
+    type: array
+    maxItems: 50
+    items:
+      type: object
+      required: ["agent", "note_count"]
+      properties:
+        agent:
+          type: string
+          pattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+          description: "Agent identifier"
+
+        note_count:
+          type: integer
+          minimum: 1
+          description: "Number of notes from this agent"
+
+        last_contribution:
+          type: string
+          format: "date"
+          description: "Date of last contribution (YYYY-MM-DD)"
+
+    default: []
+    description: "Index of agent contributions for efficient queries"
+
+  phase_status:
+    type: array
+    maxItems: 99
+    items:
+      type: object
+      required: ["phase", "status"]
+      properties:
+        phase:
+          type: integer
+          minimum: 1
+          maximum: 99
+          description: "Phase number"
+
+        status:
+          type: string
+          enum: ["complete", "blocked", "in-progress"]
+          description: "Phase status"
+
+        reason:
+          oneOf:
+            - type: "null"
+            - type: string
+              minLength: 10
+              maxLength: 512
+          default: null
+          description: "Reason for status (e.g., 'Waiting on backend endpoints')"
+
+    default: []
+    description: "Status of each phase"
+
+  blockers:
+    type: array
+    maxItems: 50
+    items:
+      type: object
+      required: ["id", "title", "description", "severity"]
+      properties:
+        id:
+          type: string
+          minLength: 2
+          maxLength: 32
+          pattern: "^[A-Z]+-[0-9]+$"
+          description: "Blocker identifier (e.g., 'BLOCKER-1')"
+
+        title:
+          type: string
+          minLength: 5
+          maxLength: 256
+          description: "Blocker title"
+
+        description:
+          type: string
+          minLength: 20
+          maxLength: 2048
+          description: "Detailed blocker description and impact"
+
+        blocking:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            minLength: 5
+            maxLength: 16
+            pattern: "^phase-[0-9]+$"
+          default: []
+          description: "Which phases are blocked (e.g., ['phase-3', 'phase-4'])"
+
+        depends_on:
+          oneOf:
+            - type: "null"
+            - type: array
+              maxItems: 20
+              items:
+                type: string
+                minLength: 5
+                maxLength: 64
+          default: null
+          description: "External dependencies (e.g., ['endpoint-name', 'service-name'])"
+
+        severity:
+          type: string
+          enum: ["critical", "high", "medium", "low"]
+          description: "Blocker severity level"
+
+    default: []
+    description: "Array of blocking issues"
+
+  decisions:
+    type: array
+    maxItems: 100
+    items:
+      type: object
+      required: ["id", "question", "decision"]
+      properties:
+        id:
+          type: string
+          minLength: 2
+          maxLength: 16
+          pattern: "^DECISION-[0-9]+$"
+          description: "Decision identifier (e.g., 'DECISION-1')"
+
+        question:
+          type: string
+          minLength: 10
+          maxLength: 512
+          description: "What question was being answered"
+
+        decision:
+          type: string
+          minLength: 10
+          maxLength: 512
+          description: "What decision was made"
+
+        rationale:
+          type: string
+          minLength: 10
+          maxLength: 1024
+          description: "Why this decision was chosen"
+
+        tradeoffs:
+          type: string
+          minLength: 10
+          maxLength: 1024
+          description: "What was given up with this choice"
+
+        location:
+          type: string
+          minLength: 5
+          maxLength: 256
+          pattern: "^[a-zA-Z0-9/_.-]+\\.([a-z]{2,})(:[0-9]+-[0-9]+)?$"
+          description: "File location where decision is implemented (e.g., 'path/to/file.ts:45')"
+
+        phase:
+          type: integer
+          minimum: 1
+          maximum: 99
+          description: "Phase when decision was made"
+
+    default: []
+    description: "Architecture and implementation decisions"
+
+  integrations:
+    type: array
+    maxItems: 50
+    items:
+      type: object
+      required: ["system", "component"]
+      properties:
+        system:
+          type: string
+          minLength: 3
+          maxLength: 64
+          description: "System name (e.g., 'frontend', 'api', 'database')"
+
+        component:
+          type: string
+          minLength: 3
+          maxLength: 256
+          description: "Component name (e.g., 'AttachedBlocksList')"
+
+        calls:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 5
+            maxLength: 256
+            pattern: "^(/[a-zA-Z0-9/_{}.-]+|[a-zA-Z0-9._()-]+)$"
+          default: []
+          description: "API endpoints or functions called (e.g., ['/api/v1/prompts/{id}/blocks'])"
+
+        status:
+          type: string
+          enum: ["waiting-on-backend", "waiting-on-frontend", "waiting-on-external", "complete", "in-progress"]
+          default: "in-progress"
+          description: "Integration status"
+
+        notes:
+          type: string
+          maxLength: 512
+          description: "Additional integration notes"
+
+    default: []
+    description: "Integration points between systems"
+
+  gotchas:
+    type: array
+    maxItems: 100
+    items:
+      type: object
+      required: ["id", "title", "description", "solution"]
+      properties:
+        id:
+          type: string
+          minLength: 2
+          maxLength: 16
+          pattern: "^GOTCHA-[0-9]+$"
+          description: "Gotcha identifier (e.g., 'GOTCHA-1')"
+
+        title:
+          type: string
+          minLength: 5
+          maxLength: 256
+          description: "Gotcha title"
+
+        description:
+          type: string
+          minLength: 20
+          maxLength: 2048
+          description: "Detailed description of what can go wrong"
+
+        solution:
+          type: string
+          minLength: 10
+          maxLength: 1024
+          description: "Solution or workaround"
+
+        location:
+          type: string
+          minLength: 5
+          maxLength: 256
+          pattern: "^[a-zA-Z0-9/_.-]+\\.([a-z]{2,})(:[0-9]+-[0-9]+)?$"
+          description: "File location of gotcha (e.g., 'BlockEditor.tsx:105-125')"
+
+        severity:
+          type: string
+          enum: ["critical", "high", "medium", "low"]
+          default: "medium"
+          description: "Severity if not addressed"
+
+        affects:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 3
+            maxLength: 256
+          default: []
+          description: "Components/systems affected"
+
+    default: []
+    description: "Critical gotchas and things to watch for"
+
+  modified_files:
+    type: array
+    maxItems: 200
+    items:
+      type: object
+      required: ["path"]
+      properties:
+        path:
+          type: string
+          minLength: 5
+          maxLength: 256
+          pattern: "^[a-zA-Z0-9/_.-]+\\.([a-z]{2,})$"
+          description: "File path (e.g., 'path/to/file.ts')"
+
+        changes:
+          type: string
+          minLength: 5
+          maxLength: 512
+          description: "Brief description of changes"
+
+        phase:
+          type: integer
+          minimum: 1
+          maximum: 99
+          description: "Phase when file was modified"
+
+        impact:
+          type: string
+          enum: ["critical", "high", "medium", "low"]
+          default: "medium"
+          description: "Impact of changes"
+
+    default: []
+    description: "Files modified during implementation"
+
+  updated:
+    type: string
+    format: "date-time"
+    description: "Last update timestamp in ISO 8601 format"
+
+  notes:
+    type: string
+    maxLength: 2048
+    description: "Additional notes for agents continuing this work"
+
+additionalProperties: false

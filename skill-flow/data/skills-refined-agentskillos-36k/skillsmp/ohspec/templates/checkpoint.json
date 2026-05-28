@@ -1,0 +1,133 @@
+{
+  "meta": {
+    "rfc_id": "{{RFC_ID}}",
+    "created_at": "{{CREATED_AT}}",
+    "trigger_reason": "{{TRIGGER_REASON}}",
+    "phase": "{{PHASE}}",
+    "version": "1.0"
+  },
+  "state_snapshot": {
+    "current_state": "{{CURRENT_STATE}}",
+    "previous_state": "{{PREVIOUS_STATE}}",
+    "last_completed_state": "{{LAST_COMPLETED_STATE}}",
+    "recent_transitions": []
+  },
+  "context_snapshot": {
+    "l0_metadata": {
+      "requirement": "{{REQUIREMENT}}",
+      "intent": "{{INTENT}}",
+      "complexity": "{{COMPLEXITY}}",
+      "keywords": []
+    },
+    "l1_decisions": {
+      "decisions": [],
+      "facts": [],
+      "constraints": {
+        "technical": [],
+        "business": [],
+        "scope": []
+      },
+      "key_files": []
+    },
+    "l2_dependencies": {
+      "internal": [],
+      "external": [],
+      "integration_points": []
+    }
+  },
+  "file_checksums": {
+    "rfc_md": {
+      "path": "{{RFC_DIR}}/rfc.md",
+      "checksum": "{{CHECKSUM}}",
+      "size": 0,
+      "modified_at": "{{MODIFIED_AT}}"
+    },
+    "findings_json": {
+      "path": "{{RFC_DIR}}/findings.json",
+      "checksum": "{{CHECKSUM}}",
+      "size": 0,
+      "modified_at": "{{MODIFIED_AT}}"
+    },
+    "progress_json": {
+      "path": "{{RFC_DIR}}/progress.json",
+      "checksum": "{{CHECKSUM}}",
+      "size": 0,
+      "modified_at": "{{MODIFIED_AT}}"
+    }
+  },
+  "token_snapshot": {
+    "current_tokens": 0,
+    "usage_ratio": 0.0,
+    "alert_level": "none",
+    "by_phase": {
+      "dispatcher": 0,
+      "analyze": 0,
+      "design": 0,
+      "precheck": 0,
+      "audit": 0
+    }
+  },
+  "recovery_guide": {
+    "recommended_strategy": "resume_current",
+    "steps": [
+      {
+        "step": 1,
+        "action": "验证检查点完整性",
+        "command": "验证 file_checksums 中所有文件的校验和"
+      },
+      {
+        "step": 2,
+        "action": "恢复上下文",
+        "command": "加载 context_snapshot 中的 L0 和 L1 信息"
+      },
+      {
+        "step": 3,
+        "action": "恢复状态机",
+        "command": "设置 state_machine.current_state 为 {{CURRENT_STATE}}"
+      },
+      {
+        "step": 4,
+        "action": "执行恢复工作流",
+        "command": "/ohspec:resume {{RFC_ID}} --from-checkpoint"
+      }
+    ],
+    "resume_command": "/ohspec:resume {{RFC_ID}} --from-checkpoint",
+    "fallback_options": [
+      {
+        "option": 1,
+        "description": "重新执行当前阶段",
+        "command": "/ohspec:{{PHASE}} {{RFC_ID}} --restart"
+      },
+      {
+        "option": 2,
+        "description": "回退到上一阶段",
+        "command": "/ohspec:resume {{RFC_ID}} --rollback"
+      },
+      {
+        "option": 3,
+        "description": "从头开始",
+        "command": "/ohspec:resume {{RFC_ID}} --restart"
+      }
+    ]
+  },
+  "validation": {
+    "checkpoint_checksum": "{{CHECKSUM}}",
+    "status": "valid",
+    "validated_at": "{{VALIDATED_AT}}",
+    "required_fields_check": {
+      "meta": true,
+      "state_snapshot": true,
+      "context_snapshot": true,
+      "file_checksums": true,
+      "recovery_guide": true
+    },
+    "ttl_hours": 24,
+    "expires_at": "{{EXPIRES_AT}}"
+  },
+  "notes": {
+    "reason": "{{REASON}}",
+    "progress": "{{PROGRESS}}",
+    "pending_issues": [],
+    "next_steps": []
+  }
+}

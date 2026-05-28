@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间轴示例 - McKinsey Style</title>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .chart-type-badge {
+            display: inline-block;
+            background: var(--accent-blue);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .timeline-container {
+            position: relative;
+            padding: 20px;
+            margin: 40px 0;
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-blue);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 50px;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            transform: translateX(-50%);
+            border: 4px solid white;
+            box-shadow: 0 0 0 4px var(--accent-primary)33;
+            z-index: 2;
+        }
+
+        .timeline-content {
+            position: relative;
+            width: 45%;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .timeline-left {
+            left: 0;
+        }
+
+        .timeline-right {
+            left: 55%;
+        }
+
+        .timeline-date {
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .timeline-desc {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+        }
+
+        /* Horizontal Timeline Styles */
+        .timeline-horizontal {
+            position: relative;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .timeline-horizontal::before {
+            content: '';
+            position: absolute;
+            left: 5%;
+            top: 14px;
+            right: 5%;
+            height: 4px;
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-blue-light));
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(85, 110, 230, 0.2);
+            z-index: 1;
+        }
+
+        .timeline-item-horizontal {
+            position: relative;
+            display: inline-block;
+            width: 18%;
+            margin-right: 2%;
+            vertical-align: top;
+        }
+
+        .timeline-item-horizontal:last-child {
+            margin-right: 0;
+        }
+
+        .timeline-dot-horizontal {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            border: 5px solid white;
+            box-shadow: 0 0 0 4px rgba(248, 93, 66, 0.2), 0 4px 12px rgba(248, 93, 66, 0.3);
+            z-index: 2;
+            transition: all 0.3s ease;
+            margin: 0 auto 30px;
+        }
+
+        .timeline-dot-horizontal:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 6px rgba(248, 93, 66, 0.3), 0 6px 16px rgba(248, 93, 66, 0.4);
+        }
+
+        .timeline-dot-horizontal::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .timeline-dot-horizontal::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 30px;
+            background: linear-gradient(to bottom, var(--accent-primary), transparent);
+        }
+
+        .timeline-content-horizontal {
+            position: relative;
+            padding: 24px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            border-top: 4px solid var(--accent-primary);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            min-height: 160px;
+        }
+
+        .timeline-content-horizontal:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .timeline-date-horizontal {
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .timeline-title-horizontal {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-main);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .timeline-desc-horizontal {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* 为不同的时间节点添加不同的强调色 */
+        .timeline-item-horizontal:nth-child(1) .timeline-dot-horizontal {
+            background: var(--accent-primary);
+        }
+
+        .timeline-item-horizontal:nth-child(1) .timeline-content-horizontal {
+            border-top-color: var(--accent-primary);
+        }
+
+        .timeline-item-horizontal:nth-child(2) .timeline-dot-horizontal {
+            background: var(--accent-blue);
+            box-shadow: 0 0 0 4px rgba(85, 110, 230, 0.2), 0 4px 12px rgba(85, 110, 230, 0.3);
+        }
+
+        .timeline-item-horizontal:nth-child(2) .timeline-content-horizontal {
+            border-top-color: var(--accent-blue);
+        }
+
+        .timeline-item-horizontal:nth-child(2) .timeline-dot-horizontal::after {
+            background: linear-gradient(to bottom, var(--accent-blue), transparent);
+        }
+
+        .timeline-item-horizontal:nth-child(3) .timeline-dot-horizontal {
+            background: var(--accent-green);
+            box-shadow: 0 0 0 4px rgba(52, 195, 143, 0.2), 0 4px 12px rgba(52, 195, 143, 0.3);
+        }
+
+        .timeline-item-horizontal:nth-child(3) .timeline-content-horizontal {
+            border-top-color: var(--accent-green);
+        }
+
+        .timeline-item-horizontal:nth-child(3) .timeline-dot-horizontal::after {
+            background: linear-gradient(to bottom, var(--accent-green), transparent);
+        }
+
+        .timeline-item-horizontal:nth-child(4) .timeline-dot-horizontal {
+            background: var(--accent-yellow);
+            box-shadow: 0 0 0 4px rgba(241, 180, 76, 0.2), 0 4px 12px rgba(241, 180, 76, 0.3);
+        }
+
+        .timeline-item-horizontal:nth-child(4) .timeline-content-horizontal {
+            border-top-color: var(--accent-yellow);
+        }
+
+        .timeline-item-horizontal:nth-child(4) .timeline-dot-horizontal::after {
+            background: linear-gradient(to bottom, var(--accent-yellow), transparent);
+        }
+
+        .timeline-item-horizontal:nth-child(5) .timeline-dot-horizontal {
+            background: var(--accent-blue-light);
+            box-shadow: 0 0 0 4px rgba(80, 165, 241, 0.2), 0 4px 12px rgba(80, 165, 241, 0.3);
+        }
+
+        .timeline-item-horizontal:nth-child(5) .timeline-content-horizontal {
+            border-top-color: var(--accent-blue-light);
+        }
+
+        .timeline-item-horizontal:nth-child(5) .timeline-dot-horizontal::after {
+            background: linear-gradient(to bottom, var(--accent-blue-light), transparent);
+        }
+
+        /* Horizontal Timeline Alternating (上下交替布局) */
+        .timeline-horizontal-alt {
+            position: relative;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 120px 20px;
+            overflow: visible;
+        }
+
+        .timeline-horizontal-alt::before {
+            content: '';
+            position: absolute;
+            left: 5%;
+            top: 50%;
+            right: 5%;
+            height: 4px;
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-blue-light));
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(85, 110, 230, 0.2);
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        .timeline-item-horizontal-alt {
+            position: relative;
+            display: inline-block;
+            width: 18%;
+            margin-right: 2%;
+            vertical-align: middle;
+        }
+
+        .timeline-item-horizontal-alt:last-child {
+            margin-right: 0;
+        }
+
+        /* 奇数项在上方 */
+        .timeline-item-horizontal-alt:nth-child(odd) {
+            vertical-align: top;
+        }
+
+        /* 偶数项在下方 */
+        .timeline-item-horizontal-alt:nth-child(even) {
+            vertical-align: bottom;
+        }
+
+        .timeline-dot-horizontal-alt {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            border: 6px solid white;
+            box-shadow: 0 0 0 4px rgba(248, 93, 66, 0.2), 0 4px 12px rgba(248, 93, 66, 0.3);
+            z-index: 3;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+        }
+
+        .timeline-dot-horizontal-alt:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 6px rgba(248, 93, 66, 0.3), 0 6px 16px rgba(248, 93, 66, 0.4);
+        }
+
+        .timeline-dot-horizontal-alt::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 奇数项：内容在上，圆点在下 */
+        .timeline-item-horizontal-alt:nth-child(odd) .timeline-content-horizontal-alt {
+            margin-bottom: 40px;
+        }
+
+        .timeline-item-horizontal-alt:nth-child(odd) .timeline-dot-horizontal-alt {
+            margin-bottom: 0;
+        }
+
+        /* 偶数项：圆点在上，内容在下 */
+        .timeline-item-horizontal-alt:nth-child(even) .timeline-dot-horizontal-alt {
+            margin-bottom: 40px;
+            margin-top: 0;
+        }
+
+        .timeline-content-horizontal-alt {
+            position: relative;
+            padding: 24px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            min-height: 140px;
+            z-index: 2;
+        }
+
+        /* 奇数项内容在上方，使用底部边框 */
+        .timeline-item-horizontal-alt:nth-child(odd) .timeline-content-horizontal-alt {
+            border-bottom: 4px solid var(--accent-primary);
+        }
+
+        /* 奇数项添加从内容到圆点的连接线 */
+        .timeline-item-horizontal-alt:nth-child(odd) .timeline-content-horizontal-alt::after {
+            content: '';
+            position: absolute;
+            bottom: -44px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--accent-primary), transparent);
+            z-index: 1;
+        }
+
+        /* 偶数项内容在下方，使用顶部边框 */
+        .timeline-item-horizontal-alt:nth-child(even) .timeline-content-horizontal-alt {
+            border-top: 4px solid var(--accent-primary);
+        }
+
+        /* 偶数项添加从圆点到内容的连接线 */
+        .timeline-item-horizontal-alt:nth-child(even) .timeline-content-horizontal-alt::before {
+            content: '';
+            position: absolute;
+            top: -44px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 40px;
+            background: linear-gradient(to bottom, transparent, var(--accent-primary));
+            z-index: 1;
+        }
+
+        .timeline-content-horizontal-alt:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .timeline-date-horizontal-alt {
+            color: var(--accent-primary);
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .timeline-title-horizontal-alt {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-main);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .timeline-desc-horizontal-alt {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* 为不同的时间节点添加不同的强调色 - 交替布局 */
+        .timeline-item-horizontal-alt:nth-child(1) .timeline-dot-horizontal-alt {
+            background: var(--accent-primary);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(1) .timeline-content-horizontal-alt {
+            border-bottom-color: var(--accent-primary);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(2) .timeline-dot-horizontal-alt {
+            background: var(--accent-blue);
+            box-shadow: 0 0 0 4px rgba(85, 110, 230, 0.2), 0 4px 12px rgba(85, 110, 230, 0.3);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(2) .timeline-content-horizontal-alt {
+            border-top-color: var(--accent-blue);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(2) .timeline-dot-horizontal-alt::after {
+            background: linear-gradient(to top, var(--accent-blue), transparent);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(3) .timeline-dot-horizontal-alt {
+            background: var(--accent-green);
+            box-shadow: 0 0 0 4px rgba(52, 195, 143, 0.2), 0 4px 12px rgba(52, 195, 143, 0.3);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(3) .timeline-content-horizontal-alt {
+            border-bottom-color: var(--accent-green);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(3) .timeline-dot-horizontal-alt::after {
+            background: linear-gradient(to bottom, var(--accent-green), transparent);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(4) .timeline-dot-horizontal-alt {
+            background: var(--accent-yellow);
+            box-shadow: 0 0 0 4px rgba(241, 180, 76, 0.2), 0 4px 12px rgba(241, 180, 76, 0.3);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(4) .timeline-content-horizontal-alt {
+            border-top-color: var(--accent-yellow);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(4) .timeline-dot-horizontal-alt::after {
+            background: linear-gradient(to top, var(--accent-yellow), transparent);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(5) .timeline-dot-horizontal-alt {
+            background: var(--accent-blue-light);
+            box-shadow: 0 0 0 4px rgba(80, 165, 241, 0.2), 0 4px 12px rgba(80, 165, 241, 0.3);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(5) .timeline-content-horizontal-alt {
+            border-bottom-color: var(--accent-blue-light);
+        }
+
+        .timeline-item-horizontal-alt:nth-child(5) .timeline-dot-horizontal-alt::after {
+            background: linear-gradient(to bottom, var(--accent-blue-light), transparent);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 30px;
+            }
+            
+            .timeline-dot {
+                left: 30px;
+            }
+            
+            .timeline-content {
+                width: calc(100% - 70px);
+                left: 70px !important;
+            }
+
+            .timeline-horizontal {
+                padding: 20px 10px;
+            }
+
+            .timeline-item-horizontal {
+                width: 100%;
+                display: block;
+                margin-right: 0;
+                margin-bottom: 30px;
+            }
+
+            .timeline-horizontal::before {
+                display: none;
+            }
+
+            .timeline-dot-horizontal {
+                margin-bottom: 20px;
+            }
+
+            .timeline-dot-horizontal::after {
+                display: none;
+            }
+
+            .timeline-content-horizontal {
+                min-height: auto;
+            }
+
+            /* 横向交替布局响应式 */
+            .timeline-horizontal-alt {
+                padding: 40px 10px;
+            }
+
+            .timeline-item-horizontal-alt {
+                width: 100%;
+                display: block;
+                margin-right: 0;
+                margin-bottom: 40px;
+                vertical-align: top !important;
+            }
+
+            .timeline-horizontal-alt::before {
+                display: none;
+            }
+
+            .timeline-dot-horizontal-alt {
+                margin-bottom: 20px;
+            }
+
+            .timeline-dot-horizontal-alt::after {
+                display: none;
+            }
+
+            .timeline-item-horizontal-alt:nth-child(odd) .timeline-content-horizontal-alt,
+            .timeline-item-horizontal-alt:nth-child(even) .timeline-content-horizontal-alt {
+                border-top: 4px solid var(--accent-primary);
+                border-bottom: none;
+                min-height: auto;
+            }
+
+            .timeline-content {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+            
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 时间轴示例</h1>
+        <p class="description">
+            McKinsey 风格项目里程碑可视化 | 垂直时间线，左右交替布局<br>
+            适用于项目规划、发展历程、产品路线图等场景
+        </p>
+
+        <!-- Example 1: Project Roadmap -->
+        <h2>示例 1：项目路线图</h2>
+        <p class="description">
+            展示项目从启动到完成的关键里程碑
+        </p>
+        
+        <div class="timeline-container">
+            <span class="chart-type-badge">Timeline (时间轴)</span>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-left">
+                        <div class="timeline-date">2025 Q1</div>
+                        <div class="timeline-title">项目启动</div>
+                        <div class="timeline-desc">完成需求分析、团队组建和技术选型，确立项目目标和范围。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-right">
+                        <div class="timeline-date">2025 Q2</div>
+                        <div class="timeline-title">开发阶段</div>
+                        <div class="timeline-desc">核心功能开发完成，包括用户界面、后端 API 和数据库设计。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-left">
+                        <div class="timeline-date">2025 Q3</div>
+                        <div class="timeline-title">测试上线</div>
+                        <div class="timeline-desc">全面测试、性能优化和正式发布，首批用户接入完成。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-right">
+                        <div class="timeline-date">2025 Q4</div>
+                        <div class="timeline-title">运营优化</div>
+                        <div class="timeline-desc">数据分析和功能优化，用户增长和商业变现。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 2: Company History -->
+        <h2>示例 2：公司发展历程</h2>
+        <p class="description">
+            展示公司从创立到现在的关键发展节点
+        </p>
+        
+        <div class="timeline-container">
+            <span class="chart-type-badge">Timeline (时间轴)</span>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-left">
+                        <div class="timeline-date">2018年</div>
+                        <div class="timeline-title">公司成立</div>
+                        <div class="timeline-desc">创始团队组建，完成天使轮融资，核心产品概念确立。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-right">
+                        <div class="timeline-date">2019年</div>
+                        <div class="timeline-title">产品发布</div>
+                        <div class="timeline-desc">首款产品上线，获得首批1000名付费用户，收入突破100万。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-left">
+                        <div class="timeline-date">2021年</div>
+                        <div class="timeline-title">B轮融资</div>
+                        <div class="timeline-desc">完成5000万美元B轮融资，估值达2亿美元，团队扩展至200人。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-right">
+                        <div class="timeline-date">2023年</div>
+                        <div class="timeline-title">国际化扩张</div>
+                        <div class="timeline-desc">进入东南亚和欧洲市场，海外用户占比超过40%。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-left">
+                        <div class="timeline-date">2025年</div>
+                        <div class="timeline-title">IPO筹备</div>
+                        <div class="timeline-desc">启动上市流程，计划在纳斯达克挂牌交易。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 3: Horizontal Timeline -->
+        <h2>示例 3：横向时间轴</h2>
+        <p class="description">
+            横向布局的时间轴，更适合幻灯片展示
+        </p>
+        
+        <div class="timeline-container">
+            <span class="chart-type-badge">Timeline (横向时间轴)</span>
+            
+            <div class="timeline-horizontal">
+                <div class="timeline-item-horizontal">
+                    <div class="timeline-dot-horizontal"></div>
+                    <div class="timeline-content-horizontal">
+                        <div class="timeline-date-horizontal">2025 Q1</div>
+                        <div class="timeline-title-horizontal">项目启动</div>
+                        <div class="timeline-desc-horizontal">需求分析、团队组建</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item-horizontal">
+                    <div class="timeline-dot-horizontal"></div>
+                    <div class="timeline-content-horizontal">
+                        <div class="timeline-date-horizontal">2025 Q2</div>
+                        <div class="timeline-title-horizontal">开发阶段</div>
+                        <div class="timeline-desc-horizontal">核心功能开发</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item-horizontal">
+                    <div class="timeline-dot-horizontal"></div>
+                    <div class="timeline-content-horizontal">
+                        <div class="timeline-date-horizontal">2025 Q3</div>
+                        <div class="timeline-title-horizontal">测试上线</div>
+                        <div class="timeline-desc-horizontal">全面测试、正式发布</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item-horizontal">
+                    <div class="timeline-dot-horizontal"></div>
+                    <div class="timeline-content-horizontal">
+                        <div class="timeline-date-horizontal">2025 Q4</div>
+                        <div class="timeline-title-horizontal">运营优化</div>
+                        <div class="timeline-desc-horizontal">数据分析和优化</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item-horizontal">
+                    <div class="timeline-dot-horizontal"></div>
+                    <div class="timeline-content-horizontal">
+                        <div class="timeline-date-horizontal">2026 Q1</div>
+                        <div class="timeline-title-horizontal">规模扩张</div>
+                        <div class="timeline-desc-horizontal">市场推广、用户增长</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 4: Horizontal Timeline Alternating -->
+        <h2>示例 4：横向时间轴(上下交替)</h2>
+        <p class="description">
+            上下交替布局，更具视觉节奏感和层次
+        </p>
+
+        <div class="timeline-container">
+            <span class="chart-type-badge">Timeline (横向上下交替)</span>
+
+            <div class="timeline-horizontal-alt">
+                <div class="timeline-item-horizontal-alt">
+                    <div class="timeline-content-horizontal-alt">
+                        <div class="timeline-date-horizontal-alt">第一阶段</div>
+                        <div class="timeline-title-horizontal-alt">需求调研</div>
+                        <div class="timeline-desc-horizontal-alt">深入市场调研，收集用户需求</div>
+                    </div>
+                    <div class="timeline-dot-horizontal-alt"></div>
+                </div>
+
+                <div class="timeline-item-horizontal-alt">
+                    <div class="timeline-dot-horizontal-alt"></div>
+                    <div class="timeline-content-horizontal-alt">
+                        <div class="timeline-date-horizontal-alt">第二阶段</div>
+                        <div class="timeline-title-horizontal-alt">方案设计</div>
+                        <div class="timeline-desc-horizontal-alt">完成技术架构设计与规划</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item-horizontal-alt">
+                    <div class="timeline-content-horizontal-alt">
+                        <div class="timeline-date-horizontal-alt">第三阶段</div>
+                        <div class="timeline-title-horizontal-alt">开发实施</div>
+                        <div class="timeline-desc-horizontal-alt">按模块推进开发与测试</div>
+                    </div>
+                    <div class="timeline-dot-horizontal-alt"></div>
+                </div>
+
+                <div class="timeline-item-horizontal-alt">
+                    <div class="timeline-dot-horizontal-alt"></div>
+                    <div class="timeline-content-horizontal-alt">
+                        <div class="timeline-date-horizontal-alt">第四阶段</div>
+                        <div class="timeline-title-horizontal-alt">测试优化</div>
+                        <div class="timeline-desc-horizontal-alt">全面测试与性能优化</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item-horizontal-alt">
+                    <div class="timeline-content-horizontal-alt">
+                        <div class="timeline-date-horizontal-alt">第五阶段</div>
+                        <div class="timeline-title-horizontal-alt">上线运营</div>
+                        <div class="timeline-desc-horizontal-alt">正式发布与持续迭代</div>
+                    </div>
+                    <div class="timeline-dot-horizontal-alt"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 5: Product Evolution -->
+        <h2>示例 5：产品演进历程</h2>
+        <p class="description">
+            展示产品从1.0到当前版本的演进路线
+        </p>
+        
+        <div class="timeline-container">
+            <span class="chart-type-badge">Timeline (时间轴)</span>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-left">
+                        <div class="timeline-date">v1.0 (2024.01)</div>
+                        <div class="timeline-title">基础版本</div>
+                        <div class="timeline-desc">核心功能上线，支持基本的文档编辑和协作功能。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-right">
+                        <div class="timeline-date">v2.0 (2024.06)</div>
+                        <div class="timeline-title">智能增强</div>
+                        <div class="timeline-desc">引入AI辅助功能，智能排版、内容推荐和自动校对。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-left">
+                        <div class="timeline-date">v3.0 (2025.01)</div>
+                        <div class="timeline-title">企业版发布</div>
+                        <div class="timeline-desc">企业级功能上线，包括权限管理、审计日志和私有化部署。</div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content timeline-right">
+                        <div class="timeline-date">v4.0 (2025.09)</div>
+                        <div class="timeline-title">生态平台</div>
+                        <div class="timeline-desc">开放API和插件系统，构建第三方开发者生态。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Use Cases -->
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>项目管理</h4>
+                <p>项目规划、里程碑跟踪、交付计划</p>
+            </div>
+            <div class="use-case-card">
+                <h4>公司历史</h4>
+                <p>发展历程、重要事件、融资记录</p>
+            </div>
+            <div class="use-case-card">
+                <h4>产品路线图</h4>
+                <p>版本演进、功能规划、技术升级</p>
+            </div>
+            <div class="use-case-card">
+                <h4>战略规划</h4>
+                <p>战略里程碑、实施路径、阶段目标</p>
+            </div>
+            <div class="use-case-card">
+                <h4>个人简历</h4>
+                <p>职业发展、教育经历、项目经验</p>
+            </div>
+            <div class="use-case-card">
+                <h4>事件追踪</h4>
+                <p>事故分析、问题溯源、改进计划</p>
+            </div>
+        </div>
+
+        <!-- Technical Implementation -->
+        <h2>🛠️ 技术实现</h2>
+        <div class="info-box">
+            <h4>核心 CSS 代码</h4>
+            <div class="code-block">
+<span style="color: #75715e;">/* 垂直中心线 */</span>
+<span style="color: #66d9ef;">.timeline::before</span> {
+    <span style="color: #66d9ef;">content</span>: <span style="color: #e6db74;">''</span>;
+    <span style="color: #66d9ef;">position</span>: <span style="color: #e6db74;">absolute</span>;
+    <span style="color: #66d9ef;">left</span>: <span style="color: #e6db74;">50%</span>;
+    <span style="color: #66d9ef;">width</span>: <span style="color: #e6db74;">3px</span>;
+    <span style="color: #66d9ef;">background</span>: <span style="color: #e6db74;">#556EE6</span>;
+}
+
+<span style="color: #75715e;">/* 时间节点圆点 */</span>
+<span style="color: #66d9ef;">.timeline-dot</span> {
+    <span style="color: #66d9ef;">width</span>: <span style="color: #e6db74;">24px</span>;
+    <span style="color: #66d9ef;">height</span>: <span style="color: #e6db74;">24px</span>;
+    <span style="color: #66d9ef;">border-radius</span>: <span style="color: #e6db74;">50%</span>;
+    <span style="color: #66d9ef;">background</span>: <span style="color: #e6db74;">#F85d42</span>;
+    <span style="color: #66d9ef;">box-shadow</span>: <span style="color: #e6db74;">0 0 0 4px rgba(248, 93, 66, 0.2)</span>;
+}
+
+<span style="color: #75715e;">/* 左右交替布局 */</span>
+<span style="color: #66d9ef;">.timeline-left</span> { <span style="color: #66d9ef;">left</span>: <span style="color: #e6db74;">0</span>; }
+<span style="color: #66d9ef;">.timeline-right</span> { <span style="color: #66d9ef;">left</span>: <span style="color: #e6db74;">55%</span>; }
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>McKinsey 配色方案</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>中心线</strong>：深蓝色 #556EE6（3px 宽度）</li>
+                <li><strong>时间节点</strong>：橙红色 #F85d42（24px 圆点）</li>
+                <li><strong>日期标签</strong>：橙红色（加粗 16px）</li>
+                <li><strong>内容卡片</strong>：浅灰背景 #f8f9fa，左边框强调色</li>
+            </ul>
+        </div>
+
+        <!-- Design Guidelines -->
+        <h2>📐 设计规范</h2>
+        <div class="info-box">
+            <h4>McKinsey 风格建议</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>时间顺序</strong>：从上到下，从早到晚排列</li>
+                <li><strong>交替布局</strong>：左右交替展示内容，增加视觉节奏</li>
+                <li><strong>清晰标注</strong>：每个事件包含日期、标题、描述</li>
+                <li><strong>视觉层次</strong>：使用颜色、大小、字重区分信息重要性</li>
+                <li><strong>响应式设计</strong>：小屏幕改为单侧布局</li>
+            </ul>
+        </div>
+
+        <!-- Best Practices -->
+        <h2>✅ 使用建议</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>✓ 时间顺序</h4>
+                <p>严格按时间顺序排列</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 简洁描述</h4>
+                <p>每条事件不超过2行文字</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 关键节点</h4>
+                <p>只展示重要里程碑</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 视觉平衡</h4>
+                <p>保持左右内容长度均衡</p>
+            </div>
+            <div class="use-case-card" style="border-left-color: #dc3545;">
+                <h4 style="color: #dc3545;">❌ 避免过多节点</h4>
+                <p>建议控制在5-7个关键事件</p>
+            </div>
+            <div class="use-case-card" style="border-left-color: #dc3545;">
+                <h4 style="color: #dc3545;">❌ 避免描述冗长</h4>
+                <p>保持简洁，突出重点</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>HTML Presentation Beautifier - McKinsey Style Timeline Example</p>
+            <p>垂直时间线，左右交替布局的事件可视化</p>
+        </footer>
+    </div>
+</body>
+</html>

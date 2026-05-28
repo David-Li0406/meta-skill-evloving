@@ -1,0 +1,83 @@
+# Example: Standard Project Configuration
+#
+# A typical project configuration for a team using the requirements framework.
+# Place this file at: .claude/requirements.yaml
+
+version: "1.0"
+inherit: true     # Inherit from ~/.claude/requirements.yaml
+enabled: true
+
+requirements:
+  # Commit Planning - Ensures thoughtful changes
+  commit_plan:
+    enabled: true
+    scope: session
+    trigger_tools:
+      - Edit
+      - Write
+      - MultiEdit
+    message: |
+      📋 **Commit Plan Required**
+
+      Before making changes, create a plan documenting your approach.
+
+      **To satisfy**: `req satisfy commit_plan`
+    checklist:
+      - "Plan created via EnterPlanMode"
+      - "Atomic commits identified"
+      - "TDD approach documented"
+      - "Relevant ADRs reviewed"
+
+  # ADR Review - Ensures architectural alignment
+  adr_reviewed:
+    enabled: true
+    scope: session
+    trigger_tools:
+      - Edit
+      - Write
+    message: |
+      📚 **ADR Review Checkpoint**
+
+      Have you reviewed relevant Architecture Decision Records?
+
+      **To satisfy**: `req satisfy adr_reviewed` after reviewing ADRs
+    checklist:
+      - "Found relevant ADRs"
+      - "Reviewed decision context"
+      - "Confirmed approach aligns with ADRs"
+
+  # Pre-commit Review - Code quality gate
+  pre_commit_review:
+    enabled: true
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "git\\s+commit"
+    message: |
+      📝 **Pre-commit Review Required**
+
+      Run `/requirements-framework:pre-commit` before committing.
+    auto_satisfy:
+      on_skill_complete:
+        - "requirements-framework:pre-commit"
+
+  # PR Quality Check - Comprehensive review before PR
+  pre_pr_review:
+    enabled: true
+    scope: single_use
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "gh\\s+pr\\s+create"
+    message: |
+      🔍 **PR Quality Check Required**
+
+      Run `/requirements-framework:quality-check` for comprehensive review.
+    auto_satisfy:
+      on_skill_complete:
+        - "requirements-framework:quality-check"
+
+# Hook configuration
+hooks:
+  stop:
+    verify_requirements: true
+    verify_scopes: [session]

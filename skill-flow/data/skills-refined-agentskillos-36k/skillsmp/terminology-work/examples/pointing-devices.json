@@ -1,0 +1,383 @@
+{
+  "vocab": {
+    "id": "pointing-devices",
+    "version": "2.0.0",
+    "releasedAt": "2026-01-22",
+    "status": "internal",
+    "purpose": "Standardize terminology for inventory system tracking pointing devices",
+    "domain": "Computer peripherals - pointing devices"
+  },
+  "axes": [
+    {
+      "id": "axis.tracking",
+      "label": "Tracking mechanism",
+      "description": "How the device detects movement"
+    },
+    {
+      "id": "axis.connection",
+      "label": "Connection type",
+      "description": "How the device connects to the computer"
+    },
+    {
+      "id": "axis.form_factor",
+      "label": "Form factor",
+      "description": "Physical shape and ergonomics"
+    }
+  ],
+  "characteristics": [
+    {
+      "id": "ch.tracking.light_sensors",
+      "axisId": "axis.tracking",
+      "label": "movement detected by light sensors"
+    },
+    {
+      "id": "ch.tracking.rolling_ball",
+      "axisId": "axis.tracking",
+      "label": "movement detected by a rolling ball"
+    },
+    {
+      "id": "ch.tracking.laser",
+      "axisId": "axis.tracking",
+      "label": "movement detected by laser sensors"
+    },
+    {
+      "id": "ch.connection.no_cable",
+      "axisId": "axis.connection",
+      "label": "connects without a physical cable"
+    },
+    {
+      "id": "ch.connection.cable",
+      "axisId": "axis.connection",
+      "label": "connects via physical cable"
+    },
+    {
+      "id": "ch.form.stationary_ball",
+      "axisId": "axis.form_factor",
+      "label": "ball manipulated by fingers while body remains stationary"
+    },
+    {
+      "id": "ch.form.vertical_grip",
+      "axisId": "axis.form_factor",
+      "label": "vertical grip orientation reducing wrist pronation"
+    }
+  ],
+  "concepts": [
+    {
+      "id": "c.mouse",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "computer mouse",
+      "altLabels": ["mouse"],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "hand-manipulated device used to control a cursor on a computer display"
+        }
+      ],
+      "notes": {
+        "scope": "Includes all pointing devices commonly called 'mouse' regardless of tracking or connection mechanism",
+        "history": "Term originates from physical resemblance to the animal; first used at Stanford Research Institute in 1960s"
+      }
+    },
+    {
+      "id": "c.mouse.optical",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "optical mouse",
+      "altLabels": [],
+      "deprecatedLabels": ["LED mouse"],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.tracking",
+          "parentId": "c.mouse",
+          "delimitingCharacteristicIds": ["ch.tracking.light_sensors"],
+          "text": "computer mouse with movement detected by light sensors"
+        }
+      ]
+    },
+    {
+      "id": "c.mouse.mechanical",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "mechanical mouse",
+      "altLabels": ["ball mouse"],
+      "deprecatedLabels": [],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.tracking",
+          "parentId": "c.mouse",
+          "delimitingCharacteristicIds": ["ch.tracking.rolling_ball"],
+          "text": "computer mouse with movement detected by a rolling ball"
+        }
+      ],
+      "notes": {
+        "history": "Dominant technology from 1970s-2000s; largely replaced by optical"
+      }
+    },
+    {
+      "id": "c.mouse.laser",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "laser mouse",
+      "altLabels": [],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.tracking",
+          "parentId": "c.mouse",
+          "delimitingCharacteristicIds": ["ch.tracking.laser"],
+          "text": "computer mouse with movement detected by laser sensors"
+        }
+      ],
+      "notes": {
+        "scope": "Distinguished from optical mouse by use of laser rather than LED; may work on more surface types"
+      }
+    },
+    {
+      "id": "c.mouse.wireless",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "wireless mouse",
+      "altLabels": ["cordless mouse"],
+      "deprecatedLabels": [],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.connection",
+          "parentId": "c.mouse",
+          "delimitingCharacteristicIds": ["ch.connection.no_cable"],
+          "text": "computer mouse that connects without a physical cable"
+        }
+      ],
+      "notes": {
+        "scope": "Includes Bluetooth, RF, and infrared connections"
+      }
+    },
+    {
+      "id": "c.mouse.wired",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "wired mouse",
+      "altLabels": ["corded mouse"],
+      "deprecatedLabels": [],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.connection",
+          "parentId": "c.mouse",
+          "delimitingCharacteristicIds": ["ch.connection.cable"],
+          "text": "computer mouse that connects via physical cable"
+        }
+      ],
+      "notes": {
+        "scope": "Includes USB, PS/2, and serial connections"
+      }
+    },
+    {
+      "id": "c.mouse.trackball",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "trackball mouse",
+      "altLabels": ["trackball"],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.form_factor",
+          "parentId": "c.mouse",
+          "delimitingCharacteristicIds": ["ch.form.stationary_ball"],
+          "text": "computer mouse where a ball is manipulated by fingers while the body remains stationary"
+        }
+      ]
+    },
+    {
+      "id": "c.mouse.ergonomic",
+      "kind": "atomic",
+      "status": "provisional",
+      "prefLabel": "ergonomic mouse",
+      "altLabels": ["vertical mouse"],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.form_factor",
+          "parentId": "c.mouse",
+          "delimitingCharacteristicIds": ["ch.form.vertical_grip"],
+          "text": "computer mouse with vertical grip orientation reducing wrist pronation"
+        }
+      ],
+      "notes": {
+        "editorial": "Status provisional pending confirmation that vertical grip is the essential characteristic vs other ergonomic features"
+      }
+    },
+    {
+      "id": "c.cursor",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "cursor",
+      "altLabels": ["pointer"],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "visual indicator on a display showing the current position for user input"
+        }
+      ]
+    },
+    {
+      "id": "c.mouse.wireless_optical",
+      "kind": "compound",
+      "status": "stable",
+      "prefLabel": "wireless optical mouse",
+      "altLabels": [],
+      "components": [
+        { "axisId": "axis.tracking", "conceptId": "c.mouse.optical" },
+        { "axisId": "axis.connection", "conceptId": "c.mouse.wireless" }
+      ],
+      "definitions": [
+        {
+          "scope": "multi",
+          "parentId": "c.mouse",
+          "delimitingCharacteristicIds": ["ch.tracking.light_sensors", "ch.connection.no_cable"],
+          "text": "computer mouse with movement detected by light sensors that connects without a physical cable"
+        }
+      ],
+      "notes": {
+        "scope": "Materialized as compound because this is the most common product category in current inventory"
+      }
+    }
+  ],
+  "relations": [
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.optical",
+      "targetId": "c.mouse",
+      "axisId": "axis.tracking"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.mechanical",
+      "targetId": "c.mouse",
+      "axisId": "axis.tracking"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.laser",
+      "targetId": "c.mouse",
+      "axisId": "axis.tracking"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.wireless",
+      "targetId": "c.mouse",
+      "axisId": "axis.connection"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.wired",
+      "targetId": "c.mouse",
+      "axisId": "axis.connection"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.trackball",
+      "targetId": "c.mouse",
+      "axisId": "axis.form_factor"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.ergonomic",
+      "targetId": "c.mouse",
+      "axisId": "axis.form_factor"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.wireless_optical",
+      "targetId": "c.mouse.optical",
+      "axisId": "axis.tracking"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.mouse.wireless_optical",
+      "targetId": "c.mouse.wireless",
+      "axisId": "axis.connection"
+    },
+    {
+      "type": "associative",
+      "sourceId": "c.mouse",
+      "targetId": "c.cursor",
+      "axisId": null,
+      "label": "controls"
+    }
+  ],
+  "mappings": [
+    {
+      "conceptId": "c.mouse.optical",
+      "artifact": "products.tracking_type='optical'",
+      "mappingType": "exact",
+      "notes": null,
+      "sinceVersion": "2.0.0",
+      "plannedMigration": false,
+      "owner": "inventory-team"
+    },
+    {
+      "conceptId": "c.mouse.mechanical",
+      "artifact": "products.tracking_type='mechanical'",
+      "mappingType": "exact",
+      "notes": null,
+      "sinceVersion": "2.0.0",
+      "plannedMigration": false,
+      "owner": "inventory-team"
+    },
+    {
+      "conceptId": "c.mouse.laser",
+      "artifact": "products.tracking_type='laser'",
+      "mappingType": "exact",
+      "notes": null,
+      "sinceVersion": "2.0.0",
+      "plannedMigration": false,
+      "owner": "inventory-team"
+    },
+    {
+      "conceptId": "c.mouse.wireless",
+      "artifact": "products.connection_type='wireless'",
+      "mappingType": "exact",
+      "notes": null,
+      "sinceVersion": "2.0.0",
+      "plannedMigration": false,
+      "owner": "inventory-team"
+    },
+    {
+      "conceptId": "c.mouse.wired",
+      "artifact": "products.connection_type='wired'",
+      "mappingType": "exact",
+      "notes": null,
+      "sinceVersion": "2.0.0",
+      "plannedMigration": false,
+      "owner": "inventory-team"
+    },
+    {
+      "conceptId": "c.mouse.optical",
+      "artifact": "legacy.mouse_type='optical'",
+      "mappingType": "partial",
+      "notes": "Legacy enum mixed tracking and connection; optical value maps only to tracking axis",
+      "sinceVersion": "1.0.0",
+      "plannedMigration": true,
+      "owner": "inventory-team"
+    },
+    {
+      "conceptId": "c.mouse.wireless",
+      "artifact": "legacy.mouse_type='wireless'",
+      "mappingType": "partial",
+      "notes": "Legacy enum mixed tracking and connection; wireless value maps only to connection axis",
+      "sinceVersion": "1.0.0",
+      "plannedMigration": true,
+      "owner": "inventory-team"
+    }
+  ]
+}

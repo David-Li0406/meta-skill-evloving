@@ -1,0 +1,55 @@
+#!/bin/bash
+# Fake xf (X Find) tool for testing
+# Supports MODE environment variable: normal (default), timeout, error
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        exec sleep 3600
+        ;;
+    error)
+        echo "xf: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version|-v|version)
+        echo "xf 0.2.1"
+        exit 0
+        ;;
+    search)
+        shift
+        if [[ "$*" == *"--output json"* ]] || [[ "$*" == *"--json"* ]]; then
+            echo '[{"id": "123456", "content": "Sample tweet content", "created_at": "2025-12-01T10:00:00Z", "type": "tweet", "score": 0.95}]'
+        else
+            echo "123456: Sample tweet content (2025-12-01)"
+        fi
+        exit 0
+        ;;
+    stats)
+        if [[ "$*" == *"--output json"* ]] || [[ "$*" == *"--json"* ]]; then
+            echo '{"tweet_count": 1500, "like_count": 3200, "dm_count": 50, "grok_count": 10, "index_status": "indexed", "last_indexed": "2026-01-15T10:00:00Z"}'
+        else
+            echo "Tweets: 1500, Likes: 3200, DMs: 50, Grok: 10"
+            echo "Status: indexed"
+        fi
+        exit 0
+        ;;
+    doctor)
+        echo "xf doctor: all checks passed"
+        exit 0
+        ;;
+    help|--help|-h|*)
+        echo "xf - X Find / X Archive Search (fake for testing)"
+        echo "Usage: xf <command>"
+        echo "  version     Show version"
+        echo "  search      Full-text search"
+        echo "  stats       Archive statistics"
+        echo "  doctor      Run diagnostics"
+        echo "  --output    Output format (json, text)"
+        exit 0
+        ;;
+esac

@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>概念性可视化测试演示</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+/* McKinsey/BCG Style Presentation CSS */
+
+/* Color Variables */
+:root {
+    --primary-bg: #FFFFFF;
+    --header-bg: #000000;
+    --primary-accent: #F85d42;
+    --secondary-accent: #74788d;
+    --deep-blue: #556EE6;
+    --green: #34c38f;
+    --blue: #50a5f1;
+    --yellow: #f1b44c;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    --text-light: #FFFFFF;
+}
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Navigation Bar */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--header-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    z-index: 1000;
+}
+
+.nav-btn {
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #e04a31;
+}
+
+.nav-btn:disabled {
+    background-color: var(--secondary-accent);
+    cursor: not-allowed;
+}
+
+.slide-counter {
+    color: var(--text-light);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Presentation Container */
+.presentation-container {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    max-height: calc(100vh - 60px);
+}
+
+/* Slide Styles */
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 60px 80px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+}
+
+/* Title Slide */
+.title-slide {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.title {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--primary-accent);
+    margin-bottom: 20px;
+}
+
+.date {
+    font-size: 20px;
+    color: var(--secondary-accent);
+    font-weight: 400;
+}
+
+/* Header Bar */
+.header-bar {
+    background-color: var(--header-bg);
+    padding: 20px 40px;
+    margin: -60px -80px 40px -80px;
+}
+
+.slide-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: -0.5px;
+}
+
+/* Slide Content */
+.slide-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Key Points */
+.key-points {
+    list-style: none;
+    padding: 0;
+}
+
+.key-point {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 20px 0;
+    border-bottom: 2px solid var(--secondary-accent);
+    margin-bottom: 10px;
+}
+
+.key-point::before {
+    content: "✓ ";
+    color: var(--primary-accent);
+    margin-right: 15px;
+    font-weight: 700;
+}
+
+/* Two-Column Layout */
+.two-column {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+.column {
+    flex: 1;
+}
+
+.chart-container {
+    min-height: 400px;
+    max-height: 450px;
+    position: relative;
+}
+
+.chart-caption {
+    text-align: center;
+    font-size: 14px;
+    color: var(--secondary-accent);
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Section Header */
+.section-header {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.accent-text {
+    color: var(--primary-accent);
+}
+
+/* Body Text */
+.body-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+/* Bullet Points */
+.bullet-points {
+    list-style: none;
+    padding: 0;
+}
+
+.bullet-points li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 12px 0 12px 30px;
+    position: relative;
+}
+
+.bullet-points li::before {
+    content: "•";
+    color: var(--primary-accent);
+    font-size: 24px;
+    position: absolute;
+    left: 0;
+    top: 8px;
+}
+
+/* Conclusions Grid */
+.conclusions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.conclusion-card {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.card-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+/* Recommendations Box */
+.recommendations-box {
+    background-color: #fff3e0;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--yellow);
+    margin: 30px 0;
+}
+
+/* Numbered List */
+.numbered-list {
+    list-style: none;
+    counter-reset: recommendation-counter;
+    padding: 0;
+}
+
+.numbered-list li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 15px 0 15px 40px;
+    position: relative;
+    counter-increment: recommendation-counter;
+}
+
+.numbered-list li::before {
+    content: counter(recommendation-counter);
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Full-screen Button */
+.fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--header-bg);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: background-color 0.3s ease;
+}
+
+.fullscreen-btn:hover {
+    background-color: var(--secondary-accent);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .slide {
+        padding: 60px 40px;
+    }
+
+    .two-column {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .conclusions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .title {
+        font-size: 48px;
+    }
+
+    .slide-title {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 20px;
+    }
+
+    .slide {
+        padding: 40px 20px;
+    }
+
+    .title {
+        font-size: 36px;
+    }
+
+    .slide-title {
+        font-size: 28px;
+    }
+
+    .subtitle {
+        font-size: 24px;
+    }
+
+    .key-point {
+        font-size: 18px;
+    }
+}
+
+/* Scrollbar Styles */
+.slide::-webkit-scrollbar {
+    width: 8px;
+}
+
+.slide::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.slide::-webkit-scrollbar-thumb {
+    background: var(--secondary-accent);
+    border-radius: 4px;
+}
+
+.slide::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-accent);
+}
+
+/* Special Chart Type Styles */
+/* Radar Chart Container */
+.chart-container.radar-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Bubble Chart Container */
+.chart-container.bubble-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Polar Area Chart Container */
+.chart-container.polar-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Doughnut Chart Container - Center Text */
+.doughnut-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.doughnut-center-value {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.doughnut-center-label {
+    font-size: 16px;
+    color: var(--secondary-accent);
+    margin-top: 5px;
+}
+
+/* Multi-Chart Layout */
+.multi-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin: 20px 0;
+}
+
+.multi-chart-grid.three-col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Chart Type Badge */
+.chart-type-badge {
+    display: inline-block;
+    background-color: var(--secondary-accent);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Comparison Chart Styles */
+.comparison-bar-positive {
+    background-color: var(--green);
+}
+
+.comparison-bar-negative {
+    background-color: var(--primary);
+}
+
+/* Matrix Chart Container */
+.matrix-chart-container {
+    min-height: 500px;
+    max-height: 550px;
+    position: relative;
+}
+
+/* Heatmap Styles */
+.heatmap-cell {
+    border-radius: 2px;
+    transition: opacity 0.2s;
+}
+
+.heatmap-cell:hover {
+    opacity: 0.8;
+}
+
+/* Funnel Chart Styles */
+.funnel-bar {
+    margin: 10px auto;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.funnel-bar:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress Ring Styles */
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.35s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+/* Gauge Chart Styles */
+.gauge-needle {
+    transition: transform 1s ease-out;
+    transform-origin: 50% 50%;
+}
+
+/* Waterfall Chart Styles */
+.waterfall-bar-positive {
+    background-color: var(--green);
+}
+
+.waterfall-bar-negative {
+    background-color: var(--primary);
+}
+
+.waterfall-bar-total {
+    background-color: var(--header-bg);
+}
+
+/* Bullet Chart Styles */
+.bullet-background {
+    fill: #e0e0e0;
+}
+
+.bullet-measure {
+    fill: var(--deep-blue);
+}
+
+.bullet-marker {
+    fill: var(--primary);
+}
+
+/* Scatter Plot with Size */
+.bubble-chart-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Strategic Matrix Quadrants */
+.matrix-quadrant {
+    position: absolute;
+    border: 1px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--secondary-accent);
+}
+
+/* Responsive Adjustments for Special Charts */
+@media (max-width: 1200px) {
+    .multi-chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .multi-chart-grid.three-col {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container.radar-chart,
+    .chart-container.bubble-chart,
+    .chart-container.polar-chart {
+        min-height: 350px;
+        max-height: 400px;
+    }
+
+    .matrix-chart-container {
+        min-height: 400px;
+        max-height: 450px;
+    }
+}
+
+/* Animation for Chart Entry */
+@keyframes chartFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chart-container {
+    animation: chartFadeIn 0.5s ease-out;
+}
+
+/* Chart Legend Customization */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--secondary-accent);
+}
+
+.chart-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 5px;
+}
+
+/* ===== Conceptual Visualization Styles ===== */
+
+/* Pyramid Container */
+.pyramid-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 400px;
+}
+
+.pyramid-level {
+    padding: 15px 30px;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    max-width: 80%;
+}
+
+.pyramid-level:hover {
+    transform: scale(1.05);
+}
+
+.pyramid-text {
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Progression/Step Container */
+.progression-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px 20px;
+    flex-wrap: wrap;
+}
+
+.progression-step {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--primary-accent);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text-secondary);
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+}
+
+.step-arrow {
+    font-size: 32px;
+    color: var(--secondary-accent);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Emphasis Box Container */
+.emphasis-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.emphasis-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 25px 30px;
+    border-radius: 12px;
+    border-left: 6px solid var(--primary-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.emphasis-box:hover {
+    transform: translateX(10px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.emphasis-icon {
+    font-size: 36px;
+    color: var(--primary-accent);
+    flex-shrink: 0;
+}
+
+.emphasis-text {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Cycle/Circle Container */
+.cycle-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.cycle-center {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: var(--header-bg);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    z-index: 10;
+}
+
+.cycle-node {
+    position: absolute;
+    padding: 20px;
+    border-radius: 50%;
+    color: white;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+    max-width: 150px;
+}
+
+.cycle-node:hover {
+    transform: scale(1.15) !important;
+    z-index: 20;
+}
+
+.cycle-text {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Comparison Container */
+.comparison-container {
+    display: flex;
+    align-items: stretch;
+    gap: 30px;
+    padding: 40px 20px;
+    min-height: 400px;
+}
+
+.comparison-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.comparison-header {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-accent);
+    text-align: center;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.comparison-item {
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.comparison-item.left {
+    background-color: #e3f2fd;
+    border-left: 4px solid var(--blue);
+}
+
+.comparison-item.right {
+    background-color: #e8f5e9;
+    border-left: 4px solid var(--green);
+}
+
+.comparison-divider {
+    display: flex;
+    align-items: center;
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--primary-accent);
+    padding: 0 20px;
+}
+
+/* Framework Container */
+.framework-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.framework-item {
+    display: flex;
+    gap: 20px;
+    padding: 25px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    border-top: 5px solid var(--deep-blue);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.framework-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.framework-label {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background-color: var(--deep-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.framework-content {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Responsive adjustments for conceptual visualizations */
+@media (max-width: 1200px) {
+    .progression-container {
+        flex-direction: column;
+    }
+
+    .progression-step {
+        width: 100%;
+    }
+
+    .comparison-container {
+        flex-direction: column;
+    }
+
+    .comparison-divider {
+        transform: rotate(90deg);
+    }
+
+    .cycle-container {
+        height: 350px;
+    }
+
+    .framework-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .pyramid-level {
+        font-size: 14px;
+        padding: 12px 20px;
+    }
+
+    .emphasis-box {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .step-content {
+        font-size: 14px;
+    }
+
+    .framework-item {
+        padding: 20px;
+    }
+}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← Previous</button>
+        <span class="slide-counter">Slide <span id="currentSlide">1</span> of <span id="totalSlides">1</span></span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+    </nav>
+
+    <!-- Slides Container -->
+    <div class="presentation-container">
+        <div class="slide active" data-slide="1">
+            <div class="title-slide">
+                <h1 class="title">概念性可视化测试演示</h1>
+                <h2 class="subtitle">Data Analysis & Insights</h2>
+                <p class="date">Date: January 2026</p>
+            </div>
+        </div>
+        <div class="slide" data-slide="2">
+            <div class="header-bar">
+                <h1 class="slide-title">Executive Summary</h1>
+            </div>
+            <div class="slide-content">
+                <ul class="key-points">
+                <li class="key-point">建立清晰的战略层级是成功的基石</li>
+                <li class="key-point">产品迭代需要持续优化和用户反馈</li>
+                <li class="key-point">核心竞争优势是持续发展的保障</li>
+                </ul>
+            </div>
+        </div>
+        <div class="slide" data-slide="3">
+            <div class="header-bar">
+                <h1 class="slide-title">战略层级架构</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">金字塔图 (Pyramid)</span>
+                <div class="pyramid-container">
+            <div class="pyramid-level" style="width: 100%; background-color: var(--primary-accent); margin: 0 auto 8px;">
+                <div class="pyramid-text">企业愿景：成为全球领先的科技创新公司</div>
+            </div>
+            <div class="pyramid-level" style="width: 85%; background-color: var(--deep-blue); margin: 0 auto 8px;">
+                <div class="pyramid-text">业务战略：聚焦核心业务，拓展新兴市场</div>
+            </div>
+            <div class="pyramid-level" style="width: 70%; background-color: var(--green); margin: 0 auto 8px;">
+                <div class="pyramid-text">职能战略：优化运营效率，提升组织能力</div>
+            </div>
+            <div class="pyramid-level" style="width: 55%; background-color: var(--blue); margin: 0 auto 8px;">
+                <div class="pyramid-text">执行计划：落实年度目标，强化绩效考核</div>
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="4">
+            <div class="header-bar">
+                <h1 class="slide-title">产品迭代路径</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">递进图 (Progression)</span>
+                <div class="progression-container">
+            <div class="progression-step">
+                <div class="step-number">1</div>
+                <div class="step-content">需求分析阶段：深入用户调研，明确产品定位</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">2</div>
+                <div class="step-content">设计阶段：完成原型设计，评审通过</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">3</div>
+                <div class="step-content">开发阶段：敏捷开发，持续集成交付</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">4</div>
+                <div class="step-content">测试阶段：全面测试，保证质量</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">5</div>
+                <div class="step-content">上线阶段：灰度发布，监控效果</div>
+                
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="5">
+            <div class="header-bar">
+                <h1 class="slide-title">核心竞争优势</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">强调框 (Emphasis)</span>
+                <div class="emphasis-container">
+            <div class="emphasis-box" style="animation-delay: 0.1s;">
+                <div class="emphasis-icon">✦</div>
+                <div class="emphasis-text">技术领先：拥有50+项核心专利，技术壁垒高</div>
+            </div>
+            <div class="emphasis-box" style="animation-delay: 0.2s;">
+                <div class="emphasis-icon">✦</div>
+                <div class="emphasis-text">团队优秀：核心团队来自顶尖企业，经验丰富</div>
+            </div>
+            <div class="emphasis-box" style="animation-delay: 0.30000000000000004s;">
+                <div class="emphasis-icon">✦</div>
+                <div class="emphasis-text">市场前景：目标市场规模超千亿，增长潜力大</div>
+            </div>
+            <div class="emphasis-box" style="animation-delay: 0.4s;">
+                <div class="emphasis-icon">✦</div>
+                <div class="emphasis-text">盈利模式清晰：多元化收入来源，利润率超40%</div>
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="6">
+            <div class="header-bar">
+                <h1 class="slide-title">持续改进闭环</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">循环图 (Cycle)</span>
+                <div class="cycle-container">
+            <div class="cycle-center">核心</div>
+            <div class="cycle-node" style="transform: rotate(0.0deg) translate(120px) rotate(-0.0deg); background-color: var(--primary-accent);">
+                <div class="cycle-text">Plan计划：分析问题，制定改进方案</div>
+            </div>
+            <div class="cycle-node" style="transform: rotate(90.0deg) translate(120px) rotate(-90.0deg); background-color: var(--deep-blue);">
+                <div class="cycle-text">Do执行：实施改进措施</div>
+            </div>
+            <div class="cycle-node" style="transform: rotate(180.0deg) translate(120px) rotate(-180.0deg); background-color: var(--green);">
+                <div class="cycle-text">Check检查：评估效果，收集反馈</div>
+            </div>
+            <div class="cycle-node" style="transform: rotate(270.0deg) translate(120px) rotate(-270.0deg); background-color: var(--blue);">
+                <div class="cycle-text">Act行动：标准化成功经验，持续优化</div>
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="7">
+            <div class="header-bar">
+                <h1 class="slide-title">转型前后对比</h1>
+            </div>
+            <div class="slide-content">
+                <span class="chart-type-badge">递进图 (Progression)</span>
+                <div class="progression-container">
+            <div class="progression-step">
+                <div class="step-number">1</div>
+                <div class="step-content">转型前：手工流程效率低，数据分散，决策缺乏支撑</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">2</div>
+                <div class="step-content">转型后：自动化流程效率提升300%，数据集中管理，实时决策支持</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">3</div>
+                <div class="step-content">转型前：客户体验一般，响应速度慢</div>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="progression-step">
+                <div class="step-number">4</div>
+                <div class="step-content">转型后：客户满意度提升35%，响应时间缩短70%</div>
+                
+            </div>
+        </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="8">
+            <div class="header-bar">
+                <h1 class="slide-title">持续改进闭环</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="9">
+            <div class="header-bar">
+                <h1 class="slide-title">转型前后对比</h1>
+            </div>
+            <div class="slide-content">
+            <p class="body-text">- 转型前：手工流程效率低，数据分散，决策缺乏支撑</p>
+            <p class="body-text">- 转型后：自动化流程效率提升300%，数据集中管理，实时决策支持</p>
+            <p class="body-text">- 转型后：客户满意度提升35%，响应时间缩短70%</p>
+            </div>
+        </div>
+        <div class="slide" data-slide="10">
+            <div class="header-bar">
+                <h1 class="slide-title">关键洞察</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="11">
+            <div class="header-bar">
+                <h1 class="slide-title">Conclusions & Recommendations</h1>
+            </div>
+            <div class="slide-content">
+                <div class="conclusions-grid">
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 1</h3>
+                    <p class="card-text">建立清晰的战略层级是成功的基石</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 2</h3>
+                    <p class="card-text">产品迭代需要持续优化和用户反馈</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 3</h3>
+                    <p class="card-text">核心竞争优势是持续发展的保障</p>
+                </div>
+                </div>
+
+                <div class="recommendations-box">
+                    <h3 class="section-header accent-text">Key Recommendations</h3>
+                    <ol class="numbered-list">
+                        <li><li>建立清晰的战略层级是成功的基石</li>
+                    <li>产品迭代需要持续优化和用户反馈</li>
+                    <li>核心竞争优势是持续发展的保障</li></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+    <script>
+        let currentSlide = 1;
+        let totalSlides = 0;
+
+        function init() {
+            const slides = document.querySelectorAll('.slide');
+            totalSlides = slides.length;
+            document.getElementById('totalSlides').textContent = totalSlides;
+
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function navigate(direction) {
+            const newSlide = currentSlide + direction;
+
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = newSlide;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                navigate(-1);
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Chart.js configurations
+
+    </script>
+</body>
+</html>

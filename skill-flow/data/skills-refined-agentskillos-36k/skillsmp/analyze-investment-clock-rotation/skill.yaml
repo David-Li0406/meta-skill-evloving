@@ -1,0 +1,233 @@
+displayName: 投資時鐘輪動分析
+emoji: "🕐"
+authorUrl: https://github.com/fatfingererr/macro-skills
+
+tools:
+  - claude-code
+
+featured: false
+installCount: 0
+
+testQuestions:
+  - question: '基於投資時鐘模型，分析目前美股市場處於哪個象限？'
+    expectedResult: |
+      投資時鐘分析結果（數據截至 2026-01-XX）
+
+      ┌────────────────────────────┬────────┬──────────────────────────┐
+      │            指標            │  數值  │           狀態           │
+      ├────────────────────────────┼────────┼──────────────────────────┤
+      │ 獲利成長 (Earnings Growth) │  5.2%  │ 正成長                   │
+      ├────────────────────────────┼────────┼──────────────────────────┤
+      │ 金融環境 (NFCI Z-score)    │ -0.35  │ 偏寬鬆（支持性）         │
+      └────────────────────────────┴────────┴──────────────────────────┘
+
+      當前象限：理想象限（Q1）
+      時鐘點位：約 10 點鐘方向
+
+      解讀：
+      - 獲利成長為正，企業基本面健康
+      - 金融環境偏寬鬆，流動性充裕
+      - 屬於風險資產相對順風的配置環境
+      - 需監控是否開始往金融環境轉緊的方向漂移
+
+  - question: '比較目前投資時鐘與 2020-2022 循環的差異'
+    expectedResult: |
+      投資時鐘循環比較
+
+      當前循環 vs 2020-2022 循環
+
+      ┌──────────────┬─────────────────┬─────────────────────────┐
+      │     項目     │   當前循環      │   2020-2022 循環        │
+      ├──────────────┼─────────────────┼─────────────────────────┤
+      │ 起始點位     │ 2 點鐘          │ 6 點鐘（疫情衝擊）      │
+      ├──────────────┼─────────────────┼─────────────────────────┤
+      │ 目前點位     │ 10 點鐘         │ 終點 12 點鐘            │
+      ├──────────────┼─────────────────┼─────────────────────────┤
+      │ 旋轉方向     │ 順時針          │ 順時針（大幅旋轉）      │
+      ├──────────────┼─────────────────┼─────────────────────────┤
+      │ 旋轉幅度     │ 中等（~240°）   │ 極端（>540°）           │
+      └──────────────┴─────────────────┴─────────────────────────┘
+
+      關鍵觀察：
+      1. 2020-2022 循環屬於「先大幅衰退、再劇烈修復」的路徑
+      2. 當前循環相對平緩，符合一般景氣循環的漂移特徵
+      3. 兩者不完全同質，不宜直接套用上一輪的經驗
+
+qualityScore:
+  overall: 71
+  badge: 中高級
+  evaluatedAt: "2026-01-23"
+
+  metrics:
+    problemFit: 78
+    correctness: 75
+    dataGovernance: 68
+    robustness: 65
+    maintainability: 72
+    usability: 68
+
+  metricDetails:
+    problemFit:
+      score: 78
+      strengths:
+        - 清晰的四象限模型框架
+        - 靈活的 X/Y 軸向定義
+        - 支持循環歷史比較
+      improvements:
+        - 可增加不適用情境說明
+        - 可增加模型限制描述
+
+    correctness:
+      score: 75
+      strengths:
+        - 方法論有完整說明
+        - testQuestions 有 expectedResult
+        - 投資時鐘邏輯清楚
+      improvements:
+        - 可增加更多驗證案例
+        - 可增加邊界條件測試
+
+    dataGovernance:
+      score: 68
+      strengths:
+        - 使用 FRED 免費公開數據
+        - 無需 API key
+      improvements:
+        - 缺少 data-sources.md 完整文檔
+        - 可增加數據更新頻率說明
+
+    robustness:
+      score: 65
+      strengths:
+        - pitfalls 詳列軸向錯誤風險
+        - bestPractices 有視窗選擇建議
+      improvements:
+        - 缺少 failure-modes.md
+        - 可增加數據缺失時的處理策略
+
+    maintainability:
+      score: 72
+      strengths:
+        - 參數定義完整
+        - 多資料來源支援
+      improvements:
+        - 可增加 manifest.json 版本控制
+        - 可增加資料頻率對齊說明
+
+    usability:
+      score: 68
+      strengths:
+        - FAQ 解答時鐘概念
+        - 輸出有象限與時鐘點位
+      improvements:
+        - 可增加 historical-episodes.md
+        - 可增加視覺化圖表輸出
+
+  details: |
+    **任務適配度（78/100）**
+    - 四象限模型與軸向定義清晰
+    - 待改進：增加不適用情境
+
+    **正確性（75/100）**
+    - 方法論完整
+    - 待改進：增加驗證案例
+
+    **資料治理（68/100）**
+    - 使用 FRED 免費數據
+    - 待改進：增加 data-sources.md
+
+    **穩健性（65/100）**
+    - pitfalls 詳列風險
+    - 待改進：增加 failure-modes.md
+
+    **可維護性（72/100）**
+    - 參數定義完整
+    - 待改進：增加版本控制
+
+    **輸出可用性（68/100）**
+    - FAQ 解答核心概念
+    - 待改進：增加歷史對照
+
+  upgradeNotes:
+    targetBadge: 高級
+    requirements:
+      - metric: dataGovernance
+        currentScore: 68
+        targetScore: 80
+        suggestion: 增加 data-sources.md 與數據頻率說明
+      - metric: robustness
+        currentScore: 65
+        targetScore: 80
+        suggestion: 增加 failure-modes.md 與降級處理
+
+bestPractices:
+  - title: 確認軸向定義
+    description: 不同來源的投資時鐘圖可能有不同的軸向定義，使用前務必確認 X/Y 軸代表什麼
+  - title: Z-score 視窗選擇
+    description: 52 週（1年）視窗適合週頻數據，若用月頻可考慮 36-60 個月
+  - title: 方向統一
+    description: 金融環境指標有「越高越緊」和「越高越寬鬆」兩種定義，需在 transform 中統一方向
+
+pitfalls:
+  - title: 軸向看錯
+    description: X/Y 軸定義錯誤會導致象限判讀完全相反
+    consequence: 完全錯誤的配置建議
+  - title: 忽略資料頻率
+    description: 獲利成長（季頻）與金融環境（週頻）需對齊
+    consequence: 時間點不一致導致錯誤判讀
+  - title: 過度依賴單一循環
+    description: 每輪循環特徵不同，不宜機械套用
+    consequence: 錯誤的預期管理
+
+faq:
+  - question: 什麼是「投資時鐘」？
+    answer: |
+      投資時鐘是將「獲利成長」與「金融環境」兩個維度映射到二維平面，
+      形成四個象限的分析框架。透過判斷當前落點和旋轉方向，
+      可以評估不同資產類別的相對吸引力。
+
+  - question: 時鐘的「順時針/逆時針」旋轉代表什麼？
+    answer: |
+      順時針旋轉通常代表典型的景氣循環路徑：
+      理想象限 → 好壞混合 → 最差象限 → 修復過渡 → 回到理想象限
+
+      逆時針旋轉則可能代表政策干預或非典型事件導致的路徑偏離。
+
+  - question: NFCI 是什麼？
+    answer: |
+      Chicago Fed National Financial Conditions Index（芝加哥聯儲國家金融狀況指數）
+      是衡量美國金融環境寬鬆/緊縮程度的綜合指標。
+
+      - 負值：金融環境比歷史平均寬鬆
+      - 正值：金融環境比歷史平均緊縮
+      - 接近 0：接近歷史平均
+
+about:
+  repository: https://github.com/fatfingererr/macro-skills
+  branch: main
+  additionalInfo: |
+    ## 參考來源
+
+    - Investment Clock 概念源自 Merrill Lynch
+    - 本技能使用公開 FRED 數據近似實作
+
+    ## 數據來源
+
+    **FRED（免費，無需 API key）**
+    - 金融環境：NFCI, STLFSI4, ANFCI
+    - 獲利代理：CP (Corporate Profits), GDP
+    - 使用 CSV endpoint 直接下載
+
+    ## 四象限定義
+
+    ```
+              金融環境支持
+                  ↑
+         Q3      │      Q1
+       修復過渡   │   理想象限
+    ─────────────┼─────────────→ 獲利成長
+         Q4      │      Q2
+       最差象限   │   好壞混合
+                  │
+              金融環境不支持
+    ```

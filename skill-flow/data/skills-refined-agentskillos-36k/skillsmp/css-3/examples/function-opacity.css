@@ -1,0 +1,14 @@
+/* Opacity function - semi-transparent color variants via oklch */
+
+@function --opacity(--color, --alpha) {
+  result: oklch(from --color l c h / --alpha);
+}
+
+.overlay {
+  background: --opacity(var(--color-primary), 80%);
+}
+
+.glass {
+  background: --opacity(oklch(100% 0 0), 10%);
+  backdrop-filter: blur(12px);
+}

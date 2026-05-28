@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "session-chronicle/s3-manifest.schema.json",
+  "title": "S3 Session Chronicle Manifest",
+  "description": "Schema for S3 manifest with full cross-reference structure (ADR: 2026-01-02-session-chronicle-s3-sharing)",
+  "type": "object",
+  "required": ["version", "created_at", "bucket", "prefix", "artifacts"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Schema version"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this manifest was created"
+    },
+    "bucket": {
+      "type": "string",
+      "description": "S3 bucket name"
+    },
+    "prefix": {
+      "type": "string",
+      "description": "S3 key prefix for this artifact set"
+    },
+    "total_sessions": {
+      "type": "integer",
+      "description": "Number of session files archived"
+    },
+    "total_lines": {
+      "type": "integer",
+      "description": "Total lines across all session files"
+    },
+    "total_bytes_compressed": {
+      "type": "integer",
+      "description": "Total compressed size in bytes"
+    },
+    "chain_depth": {
+      "type": "integer",
+      "description": "Number of UUIDs in the trace chain"
+    },
+    "first_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of first entry in chain"
+    },
+    "last_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last entry in chain"
+    },
+    "project_path": {
+      "type": "string",
+      "description": "Local project path where session was captured"
+    },
+    "compression": {
+      "type": "string",
+      "enum": ["brotli-9", "brotli-6", "gzip"],
+      "description": "Compression algorithm and level used"
+    },
+    "s3_location": {
+      "type": "string",
+      "description": "Full S3 URI for this artifact set"
+    },
+    "uploaded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When artifacts were uploaded to S3"
+    },
+    "finding": {
+      "type": "object",
+      "description": "Details about the associated finding",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique finding identifier"
+        },
+        "title": {
+          "type": "string",
+          "description": "Finding title/description"
+        },
+        "local_path": {
+          "type": "string",
+          "description": "Local path to finding document"
+        },
+        "git_commit": {
+          "type": "string",
+          "description": "Git commit SHA where finding was committed"
+        }
+      }
+    },
+    "related_documentation": {
+      "type": "object",
+      "description": "Cross-references to related documentation",
+      "properties": {
+        "adr": {
+          "type": "object",
+          "description": "Related Architecture Decision Record",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "ADR slug (YYYY-MM-DD-slug format)"
+            },
+            "path": {
+              "type": "string",
+              "description": "Repository path to ADR file"
+            },
+            "title": {
+              "type": "string",
+              "description": "ADR title"
+            }
+          }
+        },
+        "design_spec": {
+          "type": "object",
+          "description": "Related design specification",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Repository path to design spec"
+            },
+            "title": {
+              "type": "string",
+              "description": "Design spec title"
+            }
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "description": "List of archived artifact files",
+      "items": {
+        "type": "object",
+        "required": ["key"],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "S3 key (filename)"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "description": "File size in bytes"
+          },
+          "checksum_sha256": {
+            "type": "string",
+            "description": "SHA-256 checksum of the file"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Provenance metadata from session chronicle",
+      "properties": {
+        "edit_uuid": {
+          "type": "string",
+          "format": "uuid",
+          "description": "UUID of the target edit"
+        },
+        "parent_uuid": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Parent UUID in the chain"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the edit"
+        },
+        "model": {
+          "type": "string",
+          "description": "Claude model identifier"
+        },
+        "contributor": {
+          "type": "string",
+          "enum": ["claude", "human", "hybrid"],
+          "description": "Who made the change"
+        }
+      }
+    },
+    "retrieval": {
+      "type": "object",
+      "description": "Instructions for retrieving artifacts",
+      "properties": {
+        "aws_cli": {
+          "type": "string",
+          "description": "AWS CLI command to download artifacts"
+        },
+        "credential_source": {
+          "type": "string",
+          "description": "Where to get credentials (1Password path)"
+        },
+        "decompress_command": {
+          "type": "string",
+          "description": "Command to decompress Brotli files"
+        }
+      }
+    },
+    "note": {
+      "type": "string",
+      "description": "Additional notes about this artifact set"
+    }
+  }
+}

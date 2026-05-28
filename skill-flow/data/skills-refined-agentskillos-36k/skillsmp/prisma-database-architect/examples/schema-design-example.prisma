@@ -1,0 +1,210 @@
+// Schema Design Examples
+// This file demonstrates common Prisma schema patterns and best practices
+
+// ============================================================================
+// EXAMPLE 1: Basic Model with Indexes
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Index for frequently queried fields
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// EXAMPLE 2: Relations with Explicit Names
+// ============================================================================
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  authorId  String
+
+  // Explicit relation name for clarity
+  author    User     @relation("PostAuthor", fields: [authorId], references: [id])
+
+  // Index for foreign key
+  @@index([authorId])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  posts     Post[]   @relation("PostAuthor")
+}
+
+// ============================================================================
+// EXAMPLE 3: Many-to-Many Relation with Extra Fields
+// ============================================================================
+
+model Student {
+  id        String              @id @default(cuid())
+  name      String
+  email     String              @unique
+  enrollments CourseEnrollment[]
+}
+
+model Course {
+  id          String              @id @default(cuid())
+  title       String
+  code        String              @unique
+  enrollments CourseEnrollment[]
+}
+
+model CourseEnrollment {
+  id           String   @id @default(cuid())
+  studentId    String
+  courseId     String
+  enrolledAt   DateTime @default(now())
+  grade        Float?
+  status       String   @default("ACTIVE")
+
+  student      Student  @relation(fields: [studentId], references: [id])
+  course       Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId]) // Prevent duplicate enrollments
+  @@index([studentId])
+  @@index([courseId])
+}
+
+// ============================================================================
+// EXAMPLE 4: Composite Unique Constraints
+// ============================================================================
+
+model Session {
+  id           String   @id @default(cuid())
+  venueId      String
+  facilityCode String
+  date         DateTime
+  startTime    String
+  available    Boolean  @default(true)
+
+  facility     Facility @relation(fields: [venueId], references: [id])
+
+  // Prevent duplicate sessions for same venue, facility, date, and time
+  @@unique([venueId, facilityCode, date, startTime])
+
+  // Indexes for common query patterns
+  @@index([venueId, date])
+  @@index([date, available])
+  @@index([available])
+}
+
+model Facility {
+  id        String    @id @default(cuid())
+  name      String
+  code      String    @unique
+  sessions  Session[]
+}
+
+// ============================================================================
+// EXAMPLE 5: Enum Usage
+// ============================================================================
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id        String        @id @default(cuid())
+  userId    String
+  sessionId String
+  status    BookingStatus @default(PENDING)
+  bookedAt  DateTime      @default(now())
+
+  // Index for filtering active bookings
+  @@index([userId, status])
+  @@index([sessionId])
+  @@index([status])
+}
+
+// ============================================================================
+// EXAMPLE 6: Timestamps and Soft Deletes
+// ============================================================================
+
+model SoftDeleteModel {
+  id        DateTime   @id @default(now())
+  name      String
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+
+  // Index for soft delete queries
+  @@index([deletedAt])
+  @@index([isActive])
+}
+
+// ============================================================================
+// EXAMPLE 7: JSON Fields for Flexible Data
+// ============================================================================
+
+model Metadata {
+  id       String   @id @default(cuid())
+  entityType String
+  entityId   String
+  data      Json     // Flexible JSON storage
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+// ============================================================================
+// EXAMPLE 8: Full-Text Search with PostgreSQL
+// ============================================================================
+
+model Article {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Full-text search index (PostgreSQL specific)
+  @@index([title], type: FullText)
+  @@index([content], type: FullText)
+  @@index([published])
+}
+
+// ============================================================================
+// EXAMPLE 9: Self-Referencing Relations (Hierarchies)
+// ============================================================================
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+
+  @@index([parentId])
+}
+
+// ============================================================================
+// EXAMPLE 10: Check Constraints and Default Values
+// ============================================================================
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Ensure non-negative values
+  @@index([price])
+  @@index([isActive])
+}

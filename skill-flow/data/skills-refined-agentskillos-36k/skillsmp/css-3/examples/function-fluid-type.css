@@ -1,0 +1,13 @@
+/* Fluid scaling function with clamp */
+
+@function --fluid(--min, --max, --scale: 2cqi) {
+  result: clamp(--min, --scale + --min, --max);
+}
+
+h1 {
+  font-size: --fluid(1.5rem, 3rem);
+}
+
+.section {
+  padding-block: --fluid(2rem, 6rem, 3cqi);
+}

@@ -1,0 +1,241 @@
+# Micro-SaaS Launcher
+
+## Patterns
+
+
+---
+  #### **Name**
+Idea Validation
+  #### **Description**
+Validating before building
+  #### **When To Use**
+When starting a micro-SaaS
+  #### **Implementation**
+    ## Idea Validation
+    
+    ### The Validation Framework
+    | Question | How to Answer |
+    |----------|---------------|
+    | Problem exists? | Talk to 5+ potential users |
+    | People pay? | Pre-sell or find competitors |
+    | You can build? | Can MVP ship in 2 weeks? |
+    | You can reach them? | Distribution channel exists? |
+    
+    ### Quick Validation Methods
+    1. **Landing page test**
+       - Build landing page
+       - Drive traffic (ads, community)
+       - Measure signups/interest
+    
+    2. **Pre-sale**
+       - Sell before building
+       - "Join waitlist for 50% off"
+       - If no sales, pivot
+    
+    3. **Competitor check**
+       - Competitors = validation
+       - No competitors = maybe no market
+       - Find gap you can fill
+    
+    ### Red Flags
+    - "Everyone needs this" (too broad)
+    - No clear buyer (who pays?)
+    - Requires marketplace dynamics
+    - Needs massive scale to work
+    
+    ### Green Flags
+    - Clear, specific pain point
+    - People already paying for alternatives
+    - You have domain expertise
+    - Distribution channel access
+    
+
+---
+  #### **Name**
+MVP Speed Run
+  #### **Description**
+Ship MVP in 2 weeks
+  #### **When To Use**
+When building first version
+  #### **Implementation**
+    ## MVP Speed Run
+    
+    ### The Stack (Solo-Founder Optimized)
+    | Component | Choice | Why |
+    |-----------|--------|-----|
+    | Frontend | Next.js | Full-stack, Vercel deploy |
+    | Backend | Next.js API / Supabase | Fast, scalable |
+    | Database | Supabase Postgres | Free tier, auth included |
+    | Auth | Supabase / Clerk | Don't build auth |
+    | Payments | Stripe | Industry standard |
+    | Email | Resend / Loops | Transactional + marketing |
+    | Hosting | Vercel | Free tier generous |
+    
+    ### Week 1: Core
+    ```
+    Day 1-2: Auth + basic UI
+    Day 3-4: Core feature (one thing)
+    Day 5-6: Stripe integration
+    Day 7: Polish and bug fixes
+    ```
+    
+    ### Week 2: Launch Ready
+    ```
+    Day 1-2: Landing page
+    Day 3: Email flows (welcome, etc.)
+    Day 4: Legal (privacy, terms)
+    Day 5: Final testing
+    Day 6-7: Soft launch
+    ```
+    
+    ### What to Skip in MVP
+    - Perfect design (good enough is fine)
+    - All features (one core feature only)
+    - Scale optimization (worry later)
+    - Custom auth (use a service)
+    - Multiple pricing tiers (start simple)
+    
+
+---
+  #### **Name**
+Pricing Strategy
+  #### **Description**
+Pricing your micro-SaaS
+  #### **When To Use**
+When setting prices
+  #### **Implementation**
+    ## Pricing Strategy
+    
+    ### Pricing Tiers for Micro-SaaS
+    | Strategy | Best For |
+    |----------|----------|
+    | Single price | Simple tools, clear value |
+    | Two tiers | Free/paid or Basic/Pro |
+    | Three tiers | Most SaaS (Good/Better/Best) |
+    | Usage-based | API products, variable use |
+    
+    ### Starting Price Framework
+    ```
+    What's the alternative cost? (Competitor or manual work)
+    Your price = 20-50% of alternative cost
+    
+    Example:
+    - Manual work takes 10 hours/month
+    - 10 hours × $50/hour = $500 value
+    - Price: $49-99/month
+    ```
+    
+    ### Common Micro-SaaS Prices
+    | Type | Price Range |
+    |------|-------------|
+    | Simple tool | $9-29/month |
+    | Pro tool | $29-99/month |
+    | B2B tool | $49-299/month |
+    | Lifetime deal | 3-5x monthly |
+    
+    ### Pricing Mistakes
+    - Too cheap (undervalues, attracts bad customers)
+    - Too complex (confuses buyers)
+    - No free tier AND no trial (no way to try)
+    - Charging too late (validate with money early)
+    
+
+---
+  #### **Name**
+Launch Playbook
+  #### **Description**
+Launch strategies that work
+  #### **When To Use**
+When ready to launch
+  #### **Implementation**
+    ## Launch Playbook
+    
+    ### Pre-Launch (2 weeks before)
+    1. Build email list (landing page)
+    2. Engage in communities (give value first)
+    3. Create launch assets (demo, screenshots)
+    4. Line up beta testers
+    
+    ### Launch Day Channels
+    | Channel | Effort | Impact |
+    |---------|--------|--------|
+    | Product Hunt | Medium | High |
+    | Hacker News | Low | Variable |
+    | Reddit | Medium | Medium |
+    | Twitter/X | Low | Medium |
+    | Indie Hackers | Low | Medium |
+    | Email list | Low | High |
+    
+    ### Product Hunt Launch
+    ```
+    - Launch 12:01 AM PST Tuesday-Thursday
+    - Have maker comment ready
+    - Activate your network to upvote/comment
+    - Respond to every comment
+    - Don't ask for upvotes directly
+    ```
+    
+    ### Post-Launch
+    - Follow up with every signup
+    - Ask for feedback constantly
+    - Fix critical bugs immediately
+    - Start SEO/content for long-term
+    - Don't stop marketing after launch day
+    
+
+## Anti-Patterns
+
+
+---
+  #### **Name**
+Building in Secret
+  #### **Description**
+Building for months without validation
+  #### **Why Bad**
+    No feedback loop.
+    Building wrong thing.
+    Wasted time.
+    Fear of shipping.
+    
+  #### **What To Do Instead**
+    Launch ugly MVP.
+    Get feedback early.
+    Build in public.
+    Iterate based on users.
+    
+
+---
+  #### **Name**
+Feature Creep
+  #### **Description**
+Adding features before core works
+  #### **Why Bad**
+    Never ships.
+    Dilutes focus.
+    Confuses users.
+    Delays revenue.
+    
+  #### **What To Do Instead**
+    One core feature first.
+    Ship, then iterate.
+    Let users tell you what's missing.
+    Say no to most requests.
+    
+
+---
+  #### **Name**
+Pricing Too Low
+  #### **Description**
+Charging $5/month for valuable software
+  #### **Why Bad**
+    Undervalues your work.
+    Attracts price-sensitive customers.
+    Hard to run a business.
+    Can't afford growth.
+    
+  #### **What To Do Instead**
+    Price for value, not time.
+    Start higher, discount if needed.
+    B2B can pay more.
+    Your time has value.
+    

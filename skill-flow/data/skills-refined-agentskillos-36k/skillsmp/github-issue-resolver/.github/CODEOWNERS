@@ -1,0 +1,53 @@
+# Code Owners for OpenShift Cluster Health MCP
+#
+# This file defines individuals or teams responsible for code in this repository.
+# When a pull request modifies code in a directory with a designated code owner,
+# that owner will automatically be requested as a reviewer.
+#
+# Order matters: the last matching pattern takes precedence.
+# For more information: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repo
+# Unless a later match takes precedence, @tosin2013 will be requested for review
+* @tosin2013
+
+# Helm charts require approval from maintainers
+# Changes to chart templates, values, or configuration need careful review
+/charts/ @tosin2013
+
+# GitHub Actions workflows require approval
+# CI/CD changes can affect all contributors
+/.github/workflows/ @tosin2013
+
+# Security and RBAC configurations require approval
+# These control cluster permissions and must be reviewed carefully
+/charts/openshift-cluster-health-mcp/templates/clusterrole.yaml @tosin2013
+/charts/openshift-cluster-health-mcp/templates/rolebinding.yaml @tosin2013
+/charts/openshift-cluster-health-mcp/templates/serviceaccount.yaml @tosin2013
+
+# Architecture decisions require approval
+# ADRs document important technical choices
+/docs/adrs/ @tosin2013
+
+# CI/CD configuration files
+# Changes to build/test/deployment configuration
+/.github/ @tosin2013
+/Makefile @tosin2013
+/Dockerfile @tosin2013
+/Dockerfile.debug @tosin2013
+
+# Go core components - main server logic
+/cmd/ @tosin2013
+/internal/server/ @tosin2013
+
+# Client libraries for external integrations
+# K8s, Coordination Engine, KServe clients
+/pkg/clients/ @tosin2013
+
+# MCP tool implementations
+# New tools or modifications to existing tools
+/internal/tools/ @tosin2013
+
+# MCP resource implementations
+# New resources or modifications to existing resources
+/internal/resources/ @tosin2013

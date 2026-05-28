@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Schema Editor" default-menu-include="false" require-authentication="false">
+
+    <parameter name="schemaName" required="false"/>
+    <parameter name="jsonSchemaId" required="false"/>
+
+    <transition name="saveRefinedSchema" begin-transaction="false">
+        <actions>
+            <script location="component://darpan/screen/Reconciliation/JsonSchema/JsonSchemaEditorSave.groovy"/>
+            <service-call name="jsonschema.JsonSchemaServices.save#RefinedSchema" in-map="[jsonSchemaId:jsonSchemaId, schemaName:schemaName, fieldList:fieldList]" out-map="context"/>
+            <script><![CDATA[
+                // Clear session data after successful save
+                ec.web.session.removeAttribute("wizardResultList")
+                ec.web.session.removeAttribute("wizardSchemaName")
+                ec.web.session.removeAttribute("wizardSchemaId")
+            ]]>            </script>
+            <message>Updated Schema ${schemaName}</message>
+        </actions>
+        <!-- Redirect back to the manager browse tab on success -->
+        <default-response url="../Browse">
+            <parameter name="activeTab" value="browse"/>
+        </default-response>
+    </transition>
+
+    <transition name="addFieldToEditor" begin-transaction="false">
+        <actions>
+            <script><![CDATA[
+                List wList = ec.web.session.getAttribute("wizardResultList")
+                if (wList == null) wList = []
+                wList.add([
+                    fieldPath:'', type:'string', required:false, depth:0,
+                    schemaName: context.schemaName, jsonSchemaId: context.jsonSchemaId
+                ])
+                ec.web.session.setAttribute("wizardResultList", wList)
+            ]]>            </script>
+        </actions>
+        <default-response url=".">
+            <parameter name="schemaName" from="schemaName"/>
+            <parameter name="jsonSchemaId" from="jsonSchemaId"/>
+        </default-response>
+    </transition>
+
+    <transition name="removeFieldFromEditor" begin-transaction="false">
+        <parameter name="itemIndex"/>
+        <actions>
+            <script><![CDATA[
+                List wList = ec.web.session.getAttribute("wizardResultList")
+                if (wList != null && itemIndex) {
+                    int idx = itemIndex as int
+                    if (idx >= 0 && idx < wList.size()) {
+                        wList.remove(idx)
+                    }
+                    ec.web.session.setAttribute("wizardResultList", wList)
+                }
+            ]]>            </script>
+        </actions>
+        <default-response url=".">
+            <parameter name="schemaName" from="schemaName"/>
+            <parameter name="jsonSchemaId" from="jsonSchemaId"/>
+        </default-response>
+    </transition>
+
+    <pre-actions>
+        <set field="currentSessionId" from="ec.web.session.getAttribute('wizardSchemaId') ?: ec.web.session.getAttribute('wizardSchemaName')"/>
+        <set field="incomingId" from="jsonSchemaId ?: schemaName"/>
+
+        <if condition="incomingId &amp;&amp; (currentSessionId != incomingId || !ec.web.session.getAttribute('wizardResultList'))">
+            <then>
+                <script><![CDATA[
+                    ec.web.session.removeAttribute("wizardResultList")
+                    ec.web.session.removeAttribute("wizardSchemaName")
+                    ec.web.session.removeAttribute("wizardSchemaId")
+                ]]>                </script>
+
+                <log level="info" message="Reloading schema for ID: ${incomingId}"/>
+
+                <if condition="jsonSchemaId &amp;&amp; !schemaName">
+                    <entity-find-one entity-name="darpan.reconciliation.JsonSchema" value-field="schema">
+                        <field-map field-name="jsonSchemaId" from="jsonSchemaId"/>
+                    </entity-find-one>
+                    <if condition="schema">
+                        <set field="schemaName" from="schema.schemaName"/>
+                    </if>
+                </if>
+
+                <service-call name="jsonschema.JsonSchemaServices.flatten#JsonSchema" in-map="[schemaName:schemaName, jsonSchemaId:jsonSchemaId]" out-map="flattenResult"/>
+
+                <if condition="flattenResult.fieldList">
+                    <iterate list="flattenResult.fieldList" entry="fieldItem">
+                        <set field="fieldItem.schemaName" from="schemaName"/>
+                        <set field="fieldItem.jsonSchemaId" from="jsonSchemaId"/>
+                    </iterate>
+
+                    <script><![CDATA[
+                        ec.web.session.setAttribute("wizardResultList", flattenResult.fieldList)
+                        if (jsonSchemaId) ec.web.session.setAttribute("wizardSchemaId", jsonSchemaId)
+                        if (schemaName) ec.web.session.setAttribute("wizardSchemaName", schemaName)
+                    ]]>                    </script>
+
+                    <set field="resultList" from="flattenResult.fieldList"/>
+                    <set field="schemaName" from="schemaName"/>
+                </if>
+            </then>
+            <else>
+                <log level="info" message="Loading schema from session. ID: ${currentSessionId}"/>
+                <set field="resultList" from="ec.web.session.getAttribute('wizardResultList')"/>
+                <set field="schemaName" from="ec.web.session.getAttribute('wizardSchemaName')"/>
+                <set field="jsonSchemaId" from="ec.web.session.getAttribute('wizardSchemaId')"/>
+            </else>
+        </if>
+
+        <set field="rBox" from="context.resultList ?: ec.web.session.getAttribute('wizardResultList')"/>
+        <log level="info" message="Pre-actions Complete. SchemaVal: ${schemaName}, ID: ${jsonSchemaId}. ResultList Size: ${rBox ? rBox.size() : 'null'}"/>
+
+        <if condition="!schemaName &amp;&amp; context.schemaName">
+            <set field="schemaName" from="context.schemaName"/>
+        </if>
+    </pre-actions>
+
+    <widgets>
+        <container style="container">
+            <container style="page-header">
+                <label text="Schema Editor: ${schemaName}" type="h2"/>
+                <label text="Refine JSON schema structure and validation." type="p" style="text-muted"/>
+            </container>
+
+            <container style="well" id="EditorFormContainer">
+                <form-list name="EditorForm" list="resultList" transition="saveRefinedSchema" multi="true">
+
+                    <!-- Header fields ensure these are submitted even if list is empty, and without index suffixes -->
+                    <field name="jsonSchemaId">
+                        <header-field>
+                            <hidden/>
+                        </header-field>
+                        <default-field>
+                            <hidden/>
+                        </default-field>
+                    </field>
+                    <field name="schemaName">
+                        <header-field>
+                            <hidden/>
+                        </header-field>
+                        <default-field>
+                            <hidden/>
+                        </default-field>
+                    </field>
+
+                    <field name="fieldPath">
+                        <header-field title="Field path" show-order-by="true"/>
+                        <default-field>
+                            <text-line size="50"/>
+                        </default-field>
+                    </field>
+
+                    <field name="type">
+                        <default-field title="Type">
+                            <drop-down>
+                                <option key="string"/>
+                                <option key="integer"/>
+                                <option key="number"/>
+                                <option key="boolean"/>
+                                <option key="object"/>
+                                <option key="array"/>
+                            </drop-down>
+                        </default-field>
+                    </field>
+                    <field name="required">
+                        <default-field title="Required">
+                            <check>
+                                <option key="true" text="Yes"/>
+                            </check>
+                        </default-field>
+                    </field>
+
+                    <field name="removeBtn">
+                        <default-field title="">
+                            <link url="removeFieldFromEditor" text="Remove" btn-type="danger" style="btn-xs" icon="fa fa-trash">
+                                <parameter name="itemIndex" from="itemIndex"/>
+                                <parameter name="schemaName" from="schemaName"/>
+                                <parameter name="jsonSchemaId" from="jsonSchemaId"/>
+                            </link>
+                        </default-field>
+                    </field>
+                </form-list>
+
+                <container style="row">
+                    <container style="col-md-12">
+                        <link url="addFieldToEditor" text="Add Field" btn-type="success" icon="fa fa-plus">
+                            <parameter name="schemaName" from="schemaName"/>
+                            <parameter name="jsonSchemaId" from="jsonSchemaId"/>
+                        </link>
+                        <label text=" "/>
+                        <link url="../Browse" text="Cancel" btn-type="danger" icon="fa fa-times"/>
+                        <label text=" "/>
+                        <!-- Submits form to 'saveRefinedSchema' transition via JS. URL set to transition to ensure button is enabled. -->
+                        <link url="saveRefinedSchema" text="Save Schema" btn-type="primary" icon="fa fa-save" parameter-map="[schemaName:schemaName, jsonSchemaId:jsonSchemaId]" attributes="[onclick:'''$('input[name^=\\'fieldPath\\']').first().closest('form').submit(); event.preventDefault(); return false;''']"/>
+                    </container>
+                </container>
+            </container>
+        </container>
+    </widgets>
+
+</screen>

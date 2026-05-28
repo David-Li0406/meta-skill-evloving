@@ -1,0 +1,78 @@
+{
+  "name": "crud-query",
+  "description": "Query/filter objects from an array based on field value matching",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "JSON object containing an array at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'items' or 'data.users')"
+    },
+    "field": {
+      "type": "string",
+      "required": true,
+      "description": "Field name to match on within array objects"
+    },
+    "value": {
+      "type": "string",
+      "required": true,
+      "description": "Value to match (JSON string, e.g., '\"active\"', 'true', 'null', '42')"
+    }
+  },
+  "output": {
+    "type": ["array", "null"],
+    "description": "Array of matching objects, or null if path doesn't exist or value is not an array"
+  },
+  "examples": [
+    {
+      "description": "Filter users by status",
+      "input": {
+        "users": [
+          {"name": "alice", "status": "active"},
+          {"name": "bob", "status": "inactive"},
+          {"name": "charlie", "status": "active"}
+        ]
+      },
+      "args": {"path": "users", "field": "status", "value": "\"active\""},
+      "output": [
+        {"name": "alice", "status": "active"},
+        {"name": "charlie", "status": "active"}
+      ]
+    },
+    {
+      "description": "Filter by boolean value",
+      "input": {
+        "items": [
+          {"id": 1, "enabled": true},
+          {"id": 2, "enabled": false},
+          {"id": 3, "enabled": true}
+        ]
+      },
+      "args": {"path": "items", "field": "enabled", "value": "true"},
+      "output": [
+        {"id": 1, "enabled": true},
+        {"id": 3, "enabled": true}
+      ]
+    },
+    {
+      "description": "Filter by number",
+      "input": {
+        "scores": [
+          {"player": "alice", "score": 100},
+          {"player": "bob", "score": 50},
+          {"player": "charlie", "score": 100}
+        ]
+      },
+      "args": {"path": "scores", "field": "score", "value": "100"},
+      "output": [
+        {"player": "alice", "score": 100},
+        {"player": "charlie", "score": 100}
+      ]
+    }
+  ],
+  "tags": ["crud", "query", "filter", "search", "select"]
+}

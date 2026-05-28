@@ -1,0 +1,49 @@
+[[workflows]]
+name = "parallel-explore"
+description = "Multiple agents explore different approaches to the same problem"
+coordination = "parallel"
+
+[[workflows.agents]]
+profile = "explorer"
+role = "approach-a"
+description = "Explores first approach to the problem"
+
+[[workflows.agents]]
+profile = "explorer"
+role = "approach-b"
+description = "Explores second approach to the problem"
+
+[[workflows.agents]]
+profile = "explorer"
+role = "approach-c"
+description = "Explores third approach to the problem"
+
+[[workflows.prompts]]
+key = "problem"
+question = "What problem are you trying to solve?"
+required = true
+
+[[workflows.prompts]]
+key = "approach_a"
+question = "First approach to explore?"
+required = true
+
+[[workflows.prompts]]
+key = "approach_b"
+question = "Second approach to explore?"
+required = true
+
+[[workflows.prompts]]
+key = "approach_c"
+question = "Third approach to explore?"
+
+[[workflows.prompts]]
+key = "evaluation_criteria"
+question = "How should solutions be evaluated?"
+default = "Performance, maintainability, simplicity"
+
+[workflows.error_handling]
+on_agent_crash = "notify"
+on_agent_error = "notify"
+stage_timeout_minutes = 45
+on_timeout = "notify"

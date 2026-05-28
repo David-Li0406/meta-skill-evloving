@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cline Usage Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0f1117; color: #e5e7eb; font-family: 'Segoe UI', sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; transition: transform 0.2s; }
+        .card:hover { border-color: #60a5fa; transform: translateY(-2px); }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
+        .stat-label { font-size: 0.875rem; color: #94a3b8; }
+    </style>
+</head>
+<body class="p-6">
+    <header class="mb-8 border-b border-gray-700 pb-4 flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Cline Usage Dashboard</h1>
+            <p class="text-gray-500">AI coding assistant analytics</p>
+        </div>
+        <div class="text-right text-gray-400 text-sm">Updated: {{TIMESTAMP}}</div>
+    </header>
+
+    <!-- Key metrics -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+        <div class="card p-4"><div class="stat-label">Tasks</div><div class="stat-value">{{TOTAL_TASKS}}</div></div>
+        <div class="card p-4"><div class="stat-label">Total Cost</div><div class="stat-value text-green-400">${{TOTAL_COST}}</div></div>
+        <div class="card p-4"><div class="stat-label">Tokens In</div><div class="stat-value text-blue-400">{{TOKENS_IN}}</div></div>
+        <div class="card p-4"><div class="stat-label">Tokens Out</div><div class="stat-value text-purple-400">{{TOKENS_OUT}}</div></div>
+        <div class="card p-4"><div class="stat-label">Cache Writes</div><div class="stat-value text-orange-400">{{CACHE_WRITES}}</div></div>
+        <div class="card p-4"><div class="stat-label">Workspaces</div><div class="stat-value text-cyan-400">{{WORKSPACES}}</div></div>
+    </div>
+
+    <!-- Model usage over time (replaces daily activity) -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Model Usage Over Time <span class="text-gray-500 font-normal">(number of new chats/tasks open)</span></h3>
+        <canvas id="dailyModelsChart" height="80"></canvas>
+    </div>
+
+    <!-- Daily Cost -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Daily Cost ($)</h3>
+        <canvas id="costChart" height="80"></canvas>
+    </div>
+
+    <!-- Model session counts and Top workspaces side by side -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Model Session Counts</h3>
+            <table class="w-full text-left text-sm">
+                <thead class="border-b border-gray-600">
+                    <tr>
+                        <th class="p-2 text-gray-400">Model</th>
+                        <th class="p-2 text-gray-400 text-right">Count</th>
+                        <th class="p-2 text-gray-400 text-right">%</th>
+                    </tr>
+                </thead>
+                <tbody id="modelTable"></tbody>
+            </table>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Top Workspaces</h3>
+            <canvas id="workspaceChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent tasks -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Recent Tasks</h3>
+        <table class="w-full text-left">
+            <thead class="border-b border-gray-600">
+                <tr>
+                    <th class="p-2 text-gray-400">Date</th>
+                    <th class="p-2 text-gray-400">Task</th>
+                    <th class="p-2 text-gray-400">Tokens</th>
+                    <th class="p-2 text-gray-400">Cost</th>
+                </tr>
+            </thead>
+            <tbody>{{RECENT_TASKS}}</tbody>
+        </table>
+    </div>
+
+    <footer class="mt-8 pt-4 border-t border-gray-700 text-center text-gray-500 text-sm">
+        <p>Dashboard generated on {{TIMESTAMP}}</p>
+        <p class="mt-1">Cline - AI coding assistant</p>
+    </footer>
+
+<script>
+const daily = {{DAILY_DATA}};
+const workspaces = {{WORKSPACE_DATA}};
+const modelData = {{MODEL_DATA}};
+const allModels = {{ALL_MODELS}};
+const dailyModelsData = {{DAILY_MODELS_DATA}};
+
+const chartDates = daily.map(d => d.date);
+
+// Cost chart
+new Chart(document.getElementById('costChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: chartDates,
+        datasets: [{
+            label: 'Cost ($)',
+            data: daily.map(d => d.cost.toFixed(2)),
+            backgroundColor: 'rgba(74, 222, 128, 0.6)',
+            borderColor: 'rgba(74, 222, 128, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+        }
+    }
+});
+
+// Workspace chart
+new Chart(document.getElementById('workspaceChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+        labels: workspaces.map(w => w.name),
+        datasets: [{
+            data: workspaces.map(w => w.tasks),
+            backgroundColor: ['#60a5fa', '#a855f7', '#4ade80', '#fb923c', '#f472b6', '#22d3ee', '#facc15', '#94a3b8']
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'right', labels: { color: '#94a3b8' } } }
+    }
+});
+
+// Daily models stacked bar chart
+if (chartDates.length > 0 && allModels.length > 0) {
+    const modelColors = [
+        'rgba(96, 165, 250, 0.8)',
+        'rgba(168, 85, 247, 0.8)',
+        'rgba(74, 222, 128, 0.8)',
+        'rgba(251, 146, 60, 0.8)',
+        'rgba(248, 113, 113, 0.8)',
+        'rgba(34, 211, 238, 0.8)',
+        'rgba(236, 72, 153, 0.8)',
+        'rgba(163, 230, 53, 0.8)',
+    ];
+    const datasets = allModels.map((model, idx) => ({
+        label: model,
+        data: dailyModelsData[model] || [],
+        backgroundColor: modelColors[idx % modelColors.length],
+        borderWidth: 1
+    }));
+    new Chart(document.getElementById('dailyModelsChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chartDates,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 12, font: { size: 10 } } } },
+            scales: {
+                x: { stacked: true, ticks: { color: '#94a3b8' }, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+            }
+        }
+    });
+}
+
+// Model table with percentage
+const modelTable = document.getElementById('modelTable');
+const totalModelCount = modelData.reduce((sum, m) => sum + m.count, 0);
+modelData.forEach(m => {
+    const pct = totalModelCount > 0 ? ((m.count / totalModelCount) * 100).toFixed(1) : 0;
+    modelTable.innerHTML += `
+        <tr class="border-b border-gray-700 hover:bg-gray-800 transition-colors">
+            <td class="p-2 text-gray-300 font-mono text-xs">${m.name}</td>
+            <td class="p-2 text-blue-400 font-bold text-right">${m.count}</td>
+            <td class="p-2 text-gray-400 text-right">${pct}%</td>
+        </tr>
+    `;
+});
+</script>
+</body>
+</html>

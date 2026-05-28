@@ -1,0 +1,354 @@
+{
+  "metadata": {
+    "repository": "/home/user/projects/ecommerce-platform",
+    "author": "Jane Doe",
+    "author_email": "jane.doe@example.com",
+    "analysis_date": "2024-01-20",
+    "date_range": {
+      "start": "2023-01-15",
+      "end": "2024-01-20",
+      "duration_months": 12
+    }
+  },
+  "contribution_summary": {
+    "total_commits": 247,
+    "commits_per_month": 20.6,
+    "total_lines_added": 18547,
+    "total_lines_deleted": 4231,
+    "net_lines": 14316,
+    "files_modified": 156,
+    "unique_file_types": 18,
+    "impact_score": 78.5
+  },
+  "technologies": {
+    "languages": [
+      {
+        "name": "TypeScript",
+        "confidence": 0.98,
+        "file_count": 89,
+        "lines_written": 12450,
+        "percentage": 67.1
+      },
+      {
+        "name": "JavaScript",
+        "confidence": 0.95,
+        "file_count": 24,
+        "lines_written": 3200,
+        "percentage": 17.3
+      },
+      {
+        "name": "Python",
+        "confidence": 0.92,
+        "file_count": 18,
+        "lines_written": 2150,
+        "percentage": 11.6
+      },
+      {
+        "name": "SQL",
+        "confidence": 0.85,
+        "file_count": 8,
+        "lines_written": 447,
+        "percentage": 2.4
+      },
+      {
+        "name": "CSS/SCSS",
+        "confidence": 0.88,
+        "file_count": 12,
+        "lines_written": 300,
+        "percentage": 1.6
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "React",
+        "confidence": 0.99,
+        "evidence": ["package.json dependency", "87 .tsx files", "useState/useEffect in 45 files"],
+        "category": "frontend"
+      },
+      {
+        "name": "Next.js",
+        "confidence": 0.97,
+        "evidence": ["package.json dependency", "pages/ directory", "getServerSideProps usage"],
+        "category": "frontend_framework"
+      },
+      {
+        "name": "Express.js",
+        "confidence": 0.94,
+        "evidence": ["package.json dependency", "app.listen in server.js", "15 route files"],
+        "category": "backend"
+      },
+      {
+        "name": "Tailwind CSS",
+        "confidence": 0.96,
+        "evidence": ["tailwind.config.js", "@apply directives", "className patterns"],
+        "category": "styling"
+      }
+    ],
+    "databases": [
+      {
+        "name": "PostgreSQL",
+        "confidence": 0.98,
+        "evidence": ["package.json: pg", "migrations/ directory", "SQL files"],
+        "category": "sql"
+      },
+      {
+        "name": "Redis",
+        "confidence": 0.91,
+        "evidence": ["package.json: redis", "cache.ts implementation"],
+        "category": "cache"
+      }
+    ],
+    "tools": [
+      {
+        "name": "Docker",
+        "confidence": 1.0,
+        "evidence": ["Dockerfile", "docker-compose.yml", ".dockerignore"],
+        "category": "containerization"
+      },
+      {
+        "name": "GitHub Actions",
+        "confidence": 1.0,
+        "evidence": [".github/workflows/ci.yml", ".github/workflows/deploy.yml"],
+        "category": "cicd"
+      },
+      {
+        "name": "Jest",
+        "confidence": 0.95,
+        "evidence": ["package.json dependency", "45 .test.ts files", "jest.config.js"],
+        "category": "testing"
+      },
+      {
+        "name": "ESLint",
+        "confidence": 0.92,
+        "evidence": [".eslintrc.json", "package.json script"],
+        "category": "linting"
+      }
+    ],
+    "cloud_services": [
+      {
+        "name": "AWS",
+        "confidence": 0.87,
+        "evidence": ["AWS SDK imports", "infrastructure/ terraform files", "S3 bucket references"],
+        "services": ["S3", "EC2", "RDS", "CloudFront"]
+      }
+    ]
+  },
+  "commit_analysis": {
+    "by_type": {
+      "feature": {
+        "count": 87,
+        "percentage": 35.2,
+        "major_features": [
+          "User authentication system with JWT and OAuth",
+          "Product search with Elasticsearch integration",
+          "Shopping cart and checkout flow",
+          "Admin dashboard with analytics",
+          "Payment processing with Stripe integration"
+        ]
+      },
+      "fix": {
+        "count": 62,
+        "percentage": 25.1,
+        "critical_fixes": [
+          "Fixed race condition in order processing",
+          "Resolved memory leak in WebSocket connections",
+          "Fixed XSS vulnerability in user input handling"
+        ]
+      },
+      "refactor": {
+        "count": 41,
+        "percentage": 16.6,
+        "major_refactors": [
+          "Migrated class components to functional components with hooks",
+          "Refactored authentication flow for better security",
+          "Restructured database schema for performance"
+        ]
+      },
+      "perf": {
+        "count": 23,
+        "percentage": 9.3,
+        "optimizations": [
+          "Implemented lazy loading for product images",
+          "Optimized database queries with indexes",
+          "Added code splitting and dynamic imports"
+        ]
+      },
+      "test": {
+        "count": 18,
+        "percentage": 7.3,
+        "test_additions": "Added 120+ unit tests and 35 integration tests"
+      },
+      "docs": {
+        "count": 9,
+        "percentage": 3.6
+      },
+      "build": {
+        "count": 7,
+        "percentage": 2.8
+      }
+    },
+    "complexity_indicators": {
+      "files_per_commit_avg": 2.8,
+      "lines_per_commit_avg": 92.3,
+      "large_commits": 12,
+      "small_commits": 78,
+      "merge_commits": 31
+    }
+  },
+  "impact_indicators": {
+    "architectural_changes": {
+      "count": 8,
+      "examples": [
+        "Introduced microservices architecture for order processing",
+        "Implemented event-driven pattern with message queue",
+        "Established design system and component library"
+      ]
+    },
+    "performance_improvements": {
+      "count": 15,
+      "measurable_impacts": [
+        "Reduced API response time from 450ms to 120ms (-73%)",
+        "Improved page load time from 3.2s to 1.1s (-66%)",
+        "Decreased bundle size from 1.8MB to 520KB (-71%)"
+      ]
+    },
+    "security_enhancements": {
+      "count": 7,
+      "examples": [
+        "Implemented rate limiting and DDoS protection",
+        "Added CSRF token validation",
+        "Established security headers with Helmet.js"
+      ]
+    },
+    "testing_coverage": {
+      "initial": "42%",
+      "final": "87%",
+      "improvement": "+45%",
+      "tests_added": 155
+    },
+    "code_review_activity": {
+      "prs_authored": 34,
+      "prs_reviewed": 52,
+      "comments_made": 127
+    }
+  },
+  "file_change_patterns": {
+    "most_modified_files": [
+      {
+        "path": "src/components/ProductCard.tsx",
+        "modifications": 23,
+        "lines_changed": 847
+      },
+      {
+        "path": "src/api/products.ts",
+        "modifications": 19,
+        "lines_changed": 634
+      },
+      {
+        "path": "src/pages/checkout.tsx",
+        "modifications": 15,
+        "lines_changed": 521
+      }
+    ],
+    "directory_distribution": {
+      "src/components/": {
+        "files": 42,
+        "commits": 89,
+        "lines_changed": 5240
+      },
+      "src/api/": {
+        "files": 18,
+        "commits": 67,
+        "lines_changed": 4120
+      },
+      "src/pages/": {
+        "files": 24,
+        "commits": 54,
+        "lines_changed": 3890
+      },
+      "src/utils/": {
+        "files": 12,
+        "commits": 34,
+        "lines_changed": 1450
+      },
+      "tests/": {
+        "files": 45,
+        "commits": 28,
+        "lines_changed": 2890
+      }
+    }
+  },
+  "timeline_analysis": {
+    "monthly_activity": [
+      {"month": "2023-01", "commits": 12, "lines_added": 1240, "lines_deleted": 180},
+      {"month": "2023-02", "commits": 18, "lines_added": 1680, "lines_deleted": 310},
+      {"month": "2023-03", "commits": 24, "lines_added": 2150, "lines_deleted": 420},
+      {"month": "2023-04", "commits": 21, "lines_added": 1890, "lines_deleted": 380},
+      {"month": "2023-05", "commits": 19, "lines_added": 1720, "lines_deleted": 340},
+      {"month": "2023-06", "commits": 22, "lines_added": 1980, "lines_deleted": 390},
+      {"month": "2023-07", "commits": 20, "lines_added": 1820, "lines_deleted": 350},
+      {"month": "2023-08", "commits": 23, "lines_added": 2030, "lines_deleted": 410},
+      {"month": "2023-09", "commits": 19, "lines_added": 1710, "lines_deleted": 330},
+      {"month": "2023-10", "commits": 21, "lines_added": 1870, "lines_deleted": 370},
+      {"month": "2023-11", "commits": 24, "lines_added": 2140, "lines_deleted": 430},
+      {"month": "2023-12", "commits": 20, "lines_added": 1817, "lines_deleted": 321}
+    ],
+    "peak_activity_period": {
+      "period": "2023-03 to 2023-04",
+      "reason": "Initial product catalog and search feature development"
+    },
+    "recent_focus": {
+      "last_30_days": "Performance optimization and testing",
+      "last_90_days": "Admin dashboard and analytics features"
+    }
+  },
+  "resume_ready_content": {
+    "position_title": "Full-Stack Developer",
+    "project_name": "E-Commerce Platform",
+    "date_range": "Jan 2023 - Present (12 months)",
+    "bullet_points": [
+      "Architected and developed full-stack e-commerce platform using Next.js, React, and PostgreSQL, serving 25K+ monthly active users with $500K+ in monthly transactions",
+      "Implemented comprehensive product search with Elasticsearch, improving search speed by 75% and accuracy by 40%",
+      "Built secure payment processing integration with Stripe, handling 5K+ transactions monthly with PCI DSS compliance",
+      "Developed admin dashboard with real-time analytics using Chart.js and WebSockets, enabling business insights for 15+ team members",
+      "Optimized application performance, reducing page load time from 3.2s to 1.1s (66% improvement) and API response time by 73%",
+      "Established comprehensive test suite with Jest and React Testing Library, increasing coverage from 42% to 87%",
+      "Implemented CI/CD pipeline with GitHub Actions and Docker, reducing deployment time from 45 minutes to 8 minutes"
+    ],
+    "technical_skills_highlight": [
+      "TypeScript",
+      "React",
+      "Next.js",
+      "Node.js",
+      "Express.js",
+      "PostgreSQL",
+      "Redis",
+      "Elasticsearch",
+      "Docker",
+      "AWS",
+      "Jest"
+    ],
+    "key_achievements": [
+      "Led development of critical payment processing system handling $500K+ monthly volume",
+      "Reduced application load time by 66% through performance optimization initiatives",
+      "Increased test coverage by 45% to establish quality standards"
+    ]
+  },
+  "recommendations": {
+    "resume_prominence": "high",
+    "suggested_placement": "Primary/featured experience",
+    "bullet_count": "4-5 detailed bullets",
+    "emphasis_areas": [
+      "Full-stack capability",
+      "Performance optimization",
+      "Payment/security implementation",
+      "Testing and quality"
+    ],
+    "interview_talking_points": [
+      "Technical decision: Why Elasticsearch over database full-text search?",
+      "Challenge: Handling race conditions in order processing",
+      "Achievement: 87% test coverage strategy and implementation",
+      "Architecture: Event-driven order processing design"
+    ]
+  }
+}

@@ -1,0 +1,150 @@
+{
+  "name": "Wan2.1 Basic I2V Workflow",
+  "description": "Wan2.1を使用した基本的なImage-to-Videoワークフロー",
+  "version": "1.0.0",
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "title": "Load Input Image",
+      "properties": {
+        "image": "input_image.png"
+      },
+      "notes": "入力画像を読み込み。推奨サイズ: 576×1024 または 1024×576"
+    },
+    {
+      "id": 2,
+      "type": "LoadDiffusionModel",
+      "title": "Load Wan2.1 Model",
+      "properties": {
+        "model_name": "wan2.1_i2v_720p_14B_fp8_e4m3fn.safetensors"
+      },
+      "notes": "Wan2.1 14B fp8モデル。VRAM: 20-24GB推奨"
+    },
+    {
+      "id": 3,
+      "type": "LoadCLIP",
+      "title": "Load Text Encoder",
+      "properties": {
+        "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "type": "wan"
+      },
+      "notes": "UMT5-XXL fp8テキストエンコーダー"
+    },
+    {
+      "id": 4,
+      "type": "LoadCLIPVision",
+      "title": "Load CLIP Vision",
+      "properties": {
+        "clip_name": "clip_vision_h.safetensors"
+      },
+      "notes": "CLIP Vision H - 画像エンコード用"
+    },
+    {
+      "id": 5,
+      "type": "LoadVAE",
+      "title": "Load VAE",
+      "properties": {
+        "vae_name": "wan2.1_vae.safetensors"
+      },
+      "notes": "Wan2.1 VAE"
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "title": "Encode Positive Prompt",
+      "properties": {
+        "text": "A person slowly turns their head and smiles, soft natural lighting, cinematic quality, smooth motion"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      },
+      "notes": "ポジティブプロンプト。動きの記述を含めると効果的"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "title": "Encode Negative Prompt",
+      "properties": {
+        "text": "blurry, low quality, distorted, deformed, ugly, watermark, text"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      },
+      "notes": "ネガティブプロンプト"
+    },
+    {
+      "id": 8,
+      "type": "CLIPVisionEncode",
+      "title": "Encode Input Image",
+      "inputs": {
+        "clip_vision": { "node": 4, "output": "CLIP_VISION" },
+        "image": { "node": 1, "output": "IMAGE" }
+      },
+      "notes": "入力画像をCLIP Visionでエンコード"
+    },
+    {
+      "id": 9,
+      "type": "WanVideoI2VSampler",
+      "title": "Generate Video",
+      "properties": {
+        "width": 576,
+        "height": 1024,
+        "length": 81,
+        "cfg": 5.5,
+        "steps": 25,
+        "seed": -1
+      },
+      "inputs": {
+        "model": { "node": 2, "output": "MODEL" },
+        "positive": { "node": 6, "output": "CONDITIONING" },
+        "negative": { "node": 7, "output": "CONDITIONING" },
+        "clip_vision_output": { "node": 8, "output": "CLIP_VISION_OUTPUT" }
+      },
+      "notes": "81フレーム = 約3.4秒 @24fps。CFG 5.5は安定した出力を生成"
+    },
+    {
+      "id": 10,
+      "type": "VAEDecodeVideo",
+      "title": "Decode Video",
+      "inputs": {
+        "vae": { "node": 5, "output": "VAE" },
+        "samples": { "node": 9, "output": "LATENT" }
+      },
+      "notes": "潜在表現を動画フレームにデコード"
+    },
+    {
+      "id": 11,
+      "type": "SaveVideo",
+      "title": "Save Output",
+      "properties": {
+        "filename_prefix": "wan21_i2v_output",
+        "fps": 24,
+        "format": "mp4"
+      },
+      "inputs": {
+        "images": { "node": 10, "output": "IMAGE" }
+      },
+      "notes": "MP4形式で24fpsで保存"
+    }
+  ],
+  "connections": [
+    { "from": [1, "IMAGE"], "to": [8, "image"] },
+    { "from": [2, "MODEL"], "to": [9, "model"] },
+    { "from": [3, "CLIP"], "to": [6, "clip"] },
+    { "from": [3, "CLIP"], "to": [7, "clip"] },
+    { "from": [4, "CLIP_VISION"], "to": [8, "clip_vision"] },
+    { "from": [5, "VAE"], "to": [10, "vae"] },
+    { "from": [6, "CONDITIONING"], "to": [9, "positive"] },
+    { "from": [7, "CONDITIONING"], "to": [9, "negative"] },
+    { "from": [8, "CLIP_VISION_OUTPUT"], "to": [9, "clip_vision_output"] },
+    { "from": [9, "LATENT"], "to": [10, "samples"] },
+    { "from": [10, "IMAGE"], "to": [11, "images"] }
+  ],
+  "recommended_settings": {
+    "vram_requirement": "20-24GB",
+    "resolution": "576×1024",
+    "frames": 81,
+    "estimated_time": "40-60秒 (RTX 4090)"
+  }
+}

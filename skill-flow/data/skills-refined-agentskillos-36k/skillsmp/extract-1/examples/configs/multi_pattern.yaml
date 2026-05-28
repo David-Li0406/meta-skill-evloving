@@ -1,0 +1,174 @@
+# Multi-Pattern Extraction Example
+# Use this template when a page has multiple distinct item types with different HTML structures.
+# Common use cases: Mixed content pages, event listings with different event types, etc.
+
+version: "1.0"
+name: "mixed_events"
+description: "Extract different types of events (talks, workshops, socials) from a schedule page"
+
+source:
+  url: "https://events.example.com/schedule"
+  options:
+    headless: true
+
+output:
+  format: [json, csv]
+  path: "output/all_events"
+
+# Optional context for shared date/time
+contexts:
+  - name: day
+    selector: "div.day-section"
+    fields:
+      date:
+        selector: "h2.day-header"
+        extract: text
+
+# Multiple item patterns - each extracts different item types
+items:
+  # Pattern 1: Talk sessions
+  - name: talk
+    selector: "div.talk-session"
+    context: day
+    fields:
+      title:
+        selector: "h3.talk-title"
+        extract: text
+      speaker:
+        selector: ".speaker"
+        extract: text
+      time:
+        selector: ".time"
+        extract: text
+      url:
+        selector: "a.details"
+        extract: href
+        transform: absolute_url
+      session_type:
+        source: tag  # Will be "div", but we override below
+      event_type:
+        selector: ".type-badge"
+        extract: text
+
+  # Pattern 2: Workshop sessions (different HTML structure)
+  - name: workshop
+    selector: "div.workshop-item"
+    context: day
+    fields:
+      title:
+        selector: ".workshop-name"
+        extract: text
+      instructor:
+        selector: ".instructor-name"
+        extract: text
+      time:
+        selector: ".schedule-time"
+        extract: text
+      duration:
+        selector: ".duration"
+        extract: text
+      url:
+        selector: "a"
+        extract: href
+        transform: absolute_url
+      capacity:
+        selector: ".seats-available"
+        extract: text
+        transform:
+          regex: '(\d+)'
+          group: 1
+
+  # Pattern 3: Social events
+  - name: social
+    selector: "div.social-event"
+    context: day
+    fields:
+      title:
+        selector: ".event-name"
+        extract: text
+      time:
+        selector: ".event-time"
+        extract: text
+      location:
+        selector: ".venue"
+        extract: text
+      description:
+        selector: ".event-description"
+        extract: text
+
+  # Pattern 4: Breaks (simple structure)
+  - name: break
+    selector: "div.break-slot"
+    context: day
+    fields:
+      title:
+        selector: ".break-name"
+        extract: text
+      time:
+        selector: ".break-time"
+        extract: text
+
+  # Pattern 5: Using regex selector for class pattern matching
+  - name: poster
+    selector: "div[class*='poster-session'], div[class*='demo-session']"
+    selector_type: css  # CSS attribute selector works without regex mode
+    context: day
+    fields:
+      title:
+        selector: ".poster-title, .demo-title"
+        extract: text
+      presenter:
+        selector: ".author, .presenter"
+        extract: text
+      time:
+        selector: ".time-slot"
+        extract: text
+      type:
+        source: class
+        transform:
+          regex: '(poster|demo)'
+          group: 1
+
+# Named transforms
+transforms:
+  absolute_url:
+    type: url_join
+    base: "https://events.example.com"
+
+  extract_time:
+    type: regex
+    pattern: '(\d{1,2}:\d{2}(?:\s*-\s*\d{1,2}:\d{2})?)'
+    group: 1
+
+# Unified output schema - ensures all item types have consistent fields
+# Missing fields will be null
+schema:
+  fields:
+    - name: _type
+      required: true  # Will be: talk, workshop, social, break, poster
+    - name: title
+      required: true
+    - name: date
+      required: true
+    - name: time
+      required: true
+    - name: speaker
+      required: false
+    - name: instructor
+      required: false
+    - name: presenter
+      required: false
+    - name: location
+      required: false
+    - name: duration
+      required: false
+    - name: description
+      required: false
+    - name: url
+      required: false
+    - name: capacity
+      required: false
+    - name: event_type
+      required: false
+    - name: type
+      required: false

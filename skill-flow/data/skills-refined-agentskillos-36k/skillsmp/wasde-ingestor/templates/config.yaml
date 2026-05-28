@@ -1,0 +1,177 @@
+# WASDE Ingestor Configuration Template
+# Copy this file and customize for your use case
+
+version: "1.0"
+
+# ============================================================
+# Commodity Configuration
+# ============================================================
+commodities:
+  # Selection options:
+  #   - "all": All commodities
+  #   - "grains": Wheat, Corn, Rice, Barley, Sorghum, Oats
+  #   - "oilseeds": Soybeans, Soybean Oil, Soybean Meal
+  #   - "cotton": US & World Cotton
+  #   - "livestock": Beef, Pork, Broiler, Turkey, Eggs, Dairy (US only)
+  #   - "sugar": US & Mexico Sugar
+  #   - Or list specific commodities: ["wheat", "corn", "soybeans"]
+  selection: "all"
+
+  # Scope options: ["us"], ["world"], or ["us", "world"]
+  # Note: Livestock and Sugar are US-only
+  scope:
+    - us
+    - world
+
+  # Exclude specific commodities from selection
+  exclude: []
+
+# ============================================================
+# Output Configuration
+# ============================================================
+output:
+  # Base output directory
+  dir: "./data/wasde"
+
+  # Output format: "parquet" (recommended) or "csv"
+  format: "parquet"
+
+  # Directory structure:
+  #   {dir}/raw/{release_date}/         - Raw PDF files
+  #   {dir}/intermediate/{release_date}/ - Parsed tables (JSON)
+  #   {dir}/curated/                     - Final datasets (Parquet)
+  #   {dir}/logs/                        - Execution logs
+
+  # Storage backend configuration
+  storage:
+    # Kind: "local", "s3", or "gcs"
+    kind: "local"
+
+    # S3/GCS settings (required if kind != "local")
+    # bucket: "my-bucket"
+    # prefix: "wasde-data/"
+
+    # Local settings
+    # create_if_missing: true
+
+# ============================================================
+# Parsing Configuration
+# ============================================================
+parsing:
+  # Preferred format: "pdf" or "html"
+  prefer: "pdf"
+
+  # Allow fallback to HTML if PDF parsing fails
+  allow_fallback: true
+
+  # Fuzzy match threshold for table titles (0.0 - 1.0)
+  fuzzy_match_threshold: 0.8
+
+  # Locale for number parsing
+  locale: "en_US"
+
+  # PDF parser priority (try in order)
+  pdf_parsers:
+    - pdfplumber
+    - camelot
+    - tabula
+
+# ============================================================
+# Validation Configuration
+# ============================================================
+validation:
+  # Strict mode: fail on any validation error
+  strict_mode: false
+
+  # Balance formula tolerance
+  # "auto" = commodity-specific defaults
+  # or specify a number (e.g., 5.0 for million bushels)
+  balance_tolerance: "auto"
+
+  # Enable range checks (warn if values outside historical range)
+  range_check: true
+
+  # Action on schema drift: "fail", "warn", or "ignore"
+  schema_drift_action: "warn"
+
+  # Enable cross-table validation (e.g., crush relationship)
+  cross_table_validation: true
+
+# ============================================================
+# Network Configuration
+# ============================================================
+network:
+  # Request timeout in seconds
+  timeout_seconds: 30
+
+  # Maximum retry attempts
+  max_retries: 5
+
+  # Backoff strategy: "exponential" or "linear"
+  backoff_strategy: "exponential"
+
+  # Initial backoff delay in seconds
+  initial_backoff_seconds: 1
+
+  # User agent string
+  user_agent: "WASDE-Ingestor/0.2.0"
+
+  # Alternative data sources (fallback)
+  alternative_sources:
+    - "https://usda.library.cornell.edu/concern/publications/3t945q76s"
+    - "https://esmis.nal.usda.gov/"
+
+# ============================================================
+# Logging & Observability
+# ============================================================
+logging:
+  # Log level: "debug", "info", "warning", "error"
+  level: "info"
+
+  # Log file path (optional, defaults to stdout)
+  # file: "./data/wasde/logs/ingestor.log"
+
+  # Emit metrics for monitoring
+  emit_metrics: true
+
+  # Enable trace spans for performance analysis
+  trace_spans: true
+
+  # Trace span names
+  span_names:
+    - discover_releases
+    - fetch_report
+    - parse_tables
+    - normalize_data
+    - validate_data
+    - write_output
+
+# ============================================================
+# Scheduling Hints (informational only)
+# ============================================================
+schedule:
+  # WASDE release schedule
+  release_cadence: "monthly"
+
+  # Typical release day (around 10th-12th of each month)
+  typical_release_day: "10-12"
+
+  # Timezone for scheduling
+  timezone: "America/New_York"
+
+  # Recommended trigger: wait 1-2 hours after official release
+  trigger_delay_hours: 2
+
+# ============================================================
+# Commodity-Specific Overrides
+# ============================================================
+# Override settings for specific commodities
+commodity_overrides:
+  # Example: different tolerance for corn
+  # corn:
+  #   validation:
+  #     balance_tolerance: 10.0
+
+  # Example: exclude world scope for specific commodity
+  # rice:
+  #   scope: [us]

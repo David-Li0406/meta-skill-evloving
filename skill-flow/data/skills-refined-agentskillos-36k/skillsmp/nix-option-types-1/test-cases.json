@@ -1,0 +1,66 @@
+[
+  {
+    "ruleId": "",
+    "ruleTitle": "Basic Types",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Basic Types"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Basic Types",
+    "type": "good",
+    "code": "{\n  enable = lib.mkEnableOption \"Feature\";\n  port = lib.mkOption { type = lib.types.port; default = 8080; };\n  path = lib.mkOption { type = lib.types.path; };\n}",
+    "language": "nix",
+    "description": "Correct example for Basic Types"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Collection Types",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Collection Types"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Collection Types",
+    "type": "good",
+    "code": "{\n  logLevel = lib.mkOption {\n    type = lib.types.enum [ \"debug\" \"info\" \"error\" ];\n    default = \"info\";\n  };\n  packages = lib.mkOption {\n    type = lib.types.listOf lib.types.package;\n    default = [];\n  };\n}",
+    "language": "nix",
+    "description": "Correct example for Collection Types"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Package Options",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Package Options"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Package Options",
+    "type": "good",
+    "code": "package = lib.mkPackageOption pkgs \"git\" { };",
+    "language": "nix",
+    "description": "Correct example for Package Options"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Submodule Pattern",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Submodule Pattern"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Submodule Pattern",
+    "type": "good",
+    "code": "users = lib.mkOption {\n  type = lib.types.attrsOf (lib.types.submodule {\n    options = {\n      uid = lib.mkOption { type = lib.types.int; };\n      shell = lib.mkOption { type = lib.types.path; };\n    };\n  });\n};",
+    "language": "nix",
+    "description": "Correct example for Submodule Pattern"
+  }
+]

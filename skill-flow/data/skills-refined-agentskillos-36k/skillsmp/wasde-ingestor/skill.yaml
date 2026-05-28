@@ -1,0 +1,232 @@
+displayName: 下載與解析 WASDE 每月報告
+emoji: "\U0001F33E"
+authorUrl: https://github.com/fatfingererr/macro-skills
+
+tools:
+  - claude-code
+
+featured: false
+installCount: 0
+
+testQuestions:
+  - question: '匯入最新一期 WASDE 報告中的所有穀物資料（小麥、玉米、稻米）'
+    expectedResult: |
+      此匯入器會：
+      1. 找出最新一期 WASDE 發布版本
+      2. 下載 PDF 並解析穀物相關表格
+      3. 擷取美國與全球的小麥、玉米、稻米供需平衡表
+      4. 輸出標準化的 Parquet 資料集
+  - question: '回補過去 36 個月的 WASDE 玉米資料'
+    expectedResult: |
+      此匯入器會處理 36 期每月發布版本，擷取玉米供需平衡表，
+      並維持一致的 schema、內容雜湊（content hashes）與資料驗證檢查。
+  - question: '將既有 WASDE 資料與最新報告進行比對驗證'
+    expectedResult: |
+      驗證器會將已儲存的資料與最新解析結果比對，標記任何修訂，
+      並回報 schema 漂移或資料更正。
+
+qualityScore:
+  overall: 44
+  badge: 中級
+  evaluatedAt: "2026-01-23"
+
+  metrics:
+    problemFit: 55
+    correctness: 45
+    dataGovernance: 42
+    robustness: 38
+    maintainability: 45
+    usability: 39
+
+  metricDetails:
+    problemFit:
+      score: 55
+      strengths:
+        - 涵蓋所有 WASDE 商品類別
+        - 模組化 router pattern 設計
+      improvements:
+        - Alpha 階段，功能未完善
+        - PDF 解析複雜且脆弱
+
+    correctness:
+      score: 45
+      strengths:
+        - testQuestions 有概念性 expectedResult
+        - 包含欄位映射說明
+      improvements:
+        - PDF 解析準確性難以驗證
+        - Alpha 階段缺少實際測試
+
+    dataGovernance:
+      score: 42
+      strengths:
+        - 使用 USDA 官方公開數據
+        - 有行銷年度說明
+      improvements:
+        - 缺少 data-sources.md 完整文檔
+        - PDF 格式變化風險高
+        - Schema drift 偵測未實作
+
+    robustness:
+      score: 38
+      strengths:
+        - pitfalls 詳列 PDF 佈局風險
+        - bestPractices 有 schema drift 建議
+      improvements:
+        - 缺少 failure-modes.md
+        - PDF 格式變化會導致完全失敗
+        - Alpha 階段穩定性不足
+
+    maintainability:
+      score: 45
+      strengths:
+        - 工作流程分離設計
+        - 商品參考文件獨立
+      improvements:
+        - 可增加 manifest.json 版本控制
+        - PDF 解析邏輯需持續維護
+
+    usability:
+      score: 39
+      strengths:
+        - FAQ 解答商品與行銷年度
+        - 包含數據來源說明
+      improvements:
+        - expectedResult 過於概念性
+        - 缺少實際輸出範例
+
+  details: |
+    **任務適配度（55/100）**
+    - 涵蓋所有 WASDE 商品
+    - 待改進：Alpha 階段未完善
+
+    **正確性（45/100）**
+    - 有概念性 expectedResult
+    - 待改進：PDF 解析驗證
+
+    **資料治理（42/100）**
+    - 使用 USDA 公開數據
+    - 待改進：PDF 格式風險
+
+    **穩健性（38/100）**
+    - pitfalls 詳列風險
+    - 待改進：Alpha 穩定性不足
+
+    **可維護性（45/100）**
+    - 工作流程分離
+    - 待改進：PDF 解析維護
+
+    **輸出可用性（39/100）**
+    - FAQ 解答概念
+    - 待改進：缺少實際範例
+
+  upgradeNotes:
+    targetBadge: 中高級
+    requirements:
+      - metric: robustness
+        currentScore: 38
+        targetScore: 60
+        suggestion: 完成 Alpha 階段測試與 failure-modes.md
+      - metric: correctness
+        currentScore: 45
+        targetScore: 65
+        suggestion: 增加 PDF 解析驗證與實際測試
+      - metric: usability
+        currentScore: 39
+        targetScore: 60
+        suggestion: 增加實際輸出範例
+
+bestPractices:
+  - title: 等待 WASDE 正式發布
+    description: WASDE 通常在每月 10-12 日發布，確認官方發布後再執行 ingest
+  - title: 保留原始 PDF 備份
+    description: 保存原始報告 PDF 以便在解析失敗時進行人工檢查
+  - title: 監控 schema drift
+    description: USDA 可能調整表格格式，定期檢查 schema_hash 變化
+  - title: 使用 content_hash 進行版本控制
+    description: 利用 content_hash 確保數據冪等性
+  - title: 注意數據修正
+    description: WASDE 會在後續月份修正歷史數據，需追蹤修正值
+
+pitfalls:
+  - title: 忽略 PDF 佈局變化
+    description: USDA 可能在無預警情況下調整 PDF 格式
+    consequence: 可能產生錯誤數據或完全無法解析
+  - title: 單位混淆
+    description: 不同商品使用不同單位（bushels, cwt, metric tons 等）
+    consequence: 供需計算完全錯誤
+  - title: 忽略行銷年度差異
+    description: 不同商品的行銷年度起始月份不同
+    consequence: 時間序列對齊錯誤
+
+faq:
+  - question: WASDE 報告涵蓋哪些商品？
+    answer: |
+      WASDE 涵蓋以下商品類別：
+
+      **穀物 (Grains)**
+      - 小麥 (Wheat) - 包含 by-class 細分
+      - 玉米 (Corn)
+      - 稻米 (Rice) - 長粒/中短粒
+      - 大麥 (Barley)
+      - 高粱 (Sorghum)
+      - 燕麥 (Oats)
+
+      **油籽 (Oilseeds)**
+      - 大豆 (Soybeans)
+      - 豆油 (Soybean Oil)
+      - 豆粕 (Soybean Meal)
+
+      **棉花 (Cotton)**
+      - 美國棉花供需
+      - 世界棉花供需
+
+      **畜產品 (Livestock) - 僅美國**
+      - 牛肉 (Beef)
+      - 豬肉 (Pork)
+      - 禽肉 (Poultry)
+      - 雞蛋 (Eggs)
+      - 乳製品 (Dairy/Milk)
+
+      **糖 (Sugar)**
+      - 美國糖供需
+      - 墨西哥糖供需
+
+  - question: 不同商品的行銷年度是什麼？
+    answer: |
+      | 商品 | 美國行銷年度 | 世界行銷年度 |
+      |------|--------------|--------------
+      | 小麥 | Jun-May      | Jul-Jun      |
+      | 玉米 | Sep-Aug      | Oct-Sep      |
+      | 大豆 | Sep-Aug      | Oct-Sep      |
+      | 稻米 | Aug-Jul      | Jan-Dec      |
+      | 棉花 | Aug-Jul      | Aug-Jul      |
+
+  - question: 數據來源與發布時間？
+    answer: |
+      - **官網**: https://www.usda.gov/oce/commodity/wasde
+      - **發布日期**: 每月約 10-12 日
+      - **發布時間**: 美東時間中午 12:00
+      - **格式**: PDF, TXT
+      - **歷史檔案**: https://esmis.nal.usda.gov/
+
+about:
+  repository: https://github.com/fatfingererr/macro-skills
+  branch: main
+  additionalInfo: |
+    ## 數據來源
+
+    所有數據來自 USDA 官方 WASDE 報告：
+    - 官網：https://www.usda.gov/oce/commodity/wasde
+    - 歷史檔案：https://esmis.nal.usda.gov/
+    - 數據類型：公開、免費、無限制使用
+
+    ## 編製單位
+
+    WASDE 由 World Agricultural Outlook Board (WAOB) 編製，
+    整合以下機構資料：
+    - Agricultural Marketing Service (AMS)
+    - Economic Research Service (ERS)
+    - Farm Service Agency (FSA)
+    - Foreign Agricultural Service (FAS)
+    - National Agricultural Statistics Service (NASS)

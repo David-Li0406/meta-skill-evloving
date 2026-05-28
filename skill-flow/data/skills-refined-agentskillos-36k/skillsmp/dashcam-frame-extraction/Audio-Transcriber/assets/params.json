@@ -1,0 +1,81 @@
+{
+  "version": "2.0",
+  "description": "Default parameters for audio transcription pipeline",
+
+  "whisper_models": {
+    "tiny": {
+      "size_mb": 39,
+      "speed_factor": 32,
+      "accuracy": "basic",
+      "vram_mb": 1000
+    },
+    "base": {
+      "size_mb": 74,
+      "speed_factor": 16,
+      "accuracy": "good",
+      "vram_mb": 1500
+    },
+    "small": {
+      "size_mb": 244,
+      "speed_factor": 6,
+      "accuracy": "better",
+      "vram_mb": 2500
+    },
+    "medium": {
+      "size_mb": 769,
+      "speed_factor": 2,
+      "accuracy": "great",
+      "vram_mb": 5000
+    },
+    "large-v3": {
+      "size_mb": 1550,
+      "speed_factor": 1,
+      "accuracy": "best",
+      "vram_mb": 10000
+    }
+  },
+
+  "audio_extraction": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "codec_primary": "pcm_s16le",
+    "codec_fallback": "flac",
+    "format": "wav"
+  },
+
+  "segmentation": {
+    "fixed_chunk_sec": 30,
+    "vad_min_speech_sec": 2,
+    "vad_max_speech_sec": 60,
+    "min_silence_gap_sec": 0.2
+  },
+
+  "diarization": {
+    "pyannote_model": "pyannote/speaker-diarization-3.1",
+    "speechbrain_model": "speechbrain/spkrec-ecapa-voxceleb",
+    "min_speakers": 1,
+    "max_speakers": 10,
+    "similarity_threshold": 0.7
+  },
+
+  "quality_thresholds": {
+    "min_confidence_threshold": 0.5,
+    "srt_gap_clamp_ms": 50,
+    "text_truncate_csv_chars": 512
+  },
+
+  "performance": {
+    "default_workers": 3,
+    "gpu_sampling_hz": 2,
+    "max_run_duration_sec": 7200,
+    "batch_size_gpu": 8,
+    "batch_size_cpu": 1
+  },
+
+  "error_handling": {
+    "ffmpeg_retry_attempts": 3,
+    "transcription_retry_attempts": 1,
+    "skip_corrupted": true,
+    "continue_on_error": true
+  }
+}

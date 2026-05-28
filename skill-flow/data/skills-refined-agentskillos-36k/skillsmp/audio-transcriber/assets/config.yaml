@@ -1,0 +1,154 @@
+# LocalAV Transcriber Configuration
+
+# Input/Output paths
+paths:
+  input_root: ./input
+  output_root: ./outputs
+  embeddings_dir: ./embeddings
+  logs_dir: ./logs
+  cache_dir: ./.cache
+  models_dir: ./models
+
+# Video folder structure
+video_folders:
+  - Movie
+  - Park
+  - F
+  - R
+
+# File patterns to process
+file_patterns:
+  - "*.mp4"
+  - "*.mov"
+  - "*.mkv"
+  - "*.avi"
+  - "*.webm"
+
+# Audio extraction settings
+audio:
+  sample_rate: 16000
+  channels: 1  # mono
+  format: wav
+  normalize: true
+  denoise: false
+  high_pass_filter: false
+  high_pass_freq: 80  # Hz
+
+# ASR (Automatic Speech Recognition) settings
+asr:
+  model: "large-v3"  # Options: tiny, base, small, medium, large-v2, large-v3
+  device: "auto"  # auto, cuda, cpu
+  compute_type: "auto"  # auto, float16, int8_float16, int8
+  language: "en"  # ISO 639-1 code or auto
+  task: "transcribe"  # transcribe or translate
+  beam_size: 5
+  best_of: 5
+  patience: 1.0
+  temperature: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+  word_timestamps: true
+  vad_filter: true
+  vad_parameters:
+    threshold: 0.5
+    min_speech_duration_ms: 250
+    max_speech_duration_s: 0  # No limit
+    min_silence_duration_ms: 2000
+    speech_pad_ms: 400
+
+# VAD (Voice Activity Detection) settings
+vad:
+  backend: "silero"  # silero or webrtc
+  threshold: 0.5
+  min_speech_duration_ms: 250
+  min_silence_duration_ms: 1000
+  window_size_samples: 512
+  speech_pad_ms: 30
+  max_chunk_duration_s: 600  # 10 minutes
+
+# Diarization settings
+diarization:
+  backend: "pyannote"  # pyannote or speechbrain
+  model: "pyannote/speaker-diarization-3.1"
+  min_speakers: 1
+  max_speakers: 10
+  min_segment_duration: 0.5
+  clustering:
+    method: "agglomerative"  # agglomerative, spectral
+    threshold: 0.5
+
+# Speaker enrollment and identification
+speaker:
+  embedding_model: "speechbrain/spkrec-ecapa-voxceleb"
+  similarity_threshold: 0.7
+  min_samples_per_speaker: 3
+  max_enrollment_duration_s: 120
+  embedding_dim: 192
+
+# Voice sex classification (optional)
+voice_sex:
+  enabled: false  # Opt-in feature
+  model: "local"  # local or none
+  confidence_threshold: 0.6
+  use_pitch_features: true
+  pitch_range:
+    male_like: [85, 180]  # Hz
+    female_like: [165, 255]  # Hz
+
+# Performance settings
+performance:
+  preset: "balanced"  # speed, balanced, accuracy
+  batch_size: 16
+  num_workers: 4
+  gpu_memory_fraction: 0.8
+  cache_embeddings: true
+  parallel_files: 2
+  chunk_overlap_s: 1.0
+
+# Export settings
+export:
+  formats:
+    - srt
+    - vtt
+    - json
+    - csv
+  include_confidence: true
+  include_word_timestamps: true
+  max_line_length: 80
+  merge_consecutive_segments: true
+  merge_threshold_s: 0.5
+
+# UI settings
+ui:
+  host: "127.0.0.1"
+  port: 8501
+  theme: "dark"
+  max_upload_size_mb: 1000
+  enable_editing: true
+  auto_refresh_interval_s: 5
+
+# Database settings
+database:
+  type: "sqlite"
+  path: "./outputs/manifest.sqlite"
+  pool_size: 5
+  echo: false
+
+# Logging settings
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_rotation:
+    max_bytes: 10485760  # 10MB
+    backup_count: 5
+
+# Watch mode settings
+watch:
+  enabled: false
+  interval_s: 10
+  process_existing: false
+  recursive: true
+
+# Privacy settings
+privacy:
+  store_audio: true  # Keep extracted audio files
+  anonymize_speakers: false
+  redact_patterns: []  # Regex patterns to redact from transcripts

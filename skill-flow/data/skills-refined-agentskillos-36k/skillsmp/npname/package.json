@@ -1,0 +1,77 @@
+{
+  "name": "npname",
+  "version": "1.0.6",
+  "description": "Validate npm package names and check availability on the registry",
+  "keywords": [
+    "available",
+    "check",
+    "name",
+    "npm",
+    "package",
+    "registry",
+    "validate"
+  ],
+  "homepage": "https://github.com/dobroslavradosavljevic/npname#readme",
+  "bugs": {
+    "url": "https://github.com/dobroslavradosavljevic/npname/issues"
+  },
+  "license": "MIT",
+  "author": "Dobroslav Radosavljevic <dobroslav.radosavljevic@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dobroslavradosavljevic/npname.git"
+  },
+  "bin": {
+    "npname": "./dist/cli/index.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./cli": "./dist/cli/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "bun test",
+    "lint": "bun ultracite check",
+    "format": "bun ultracite fix",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build",
+    "bump": "bumpp --changelog",
+    "release": "bun publish",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "meow": "^14.0.0",
+    "ora": "^9.1.0",
+    "speakingurl": "^14.0.1"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@types/bun": "latest",
+    "@types/speakingurl": "^13.0.6",
+    "bumpp": "^10.3.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "oxfmt": "^0.26.0",
+    "oxlint": "^1.41.0",
+    "tsdown": "^0.18.1",
+    "typescript": "^5.9.3",
+    "ultracite": "7.0.12"
+  },
+  "lint-staged": {
+    "*.{ts,js,json,md,yml,yaml}": "bun ultracite fix"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

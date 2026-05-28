@@ -1,0 +1,795 @@
+#!/bin/bash
+# gumloop - The Ralph Wiggum Loop CLI
+# 
+# Run AI coding agents in autonomous loops until task completion.
+# Based on Geoffrey Huntley's Ralph Wiggum methodology.
+#
+# Usage:
+#   gumloop [options] [max_iterations]
+#
+# Options:
+#   --cli AGENT         Coding agent to use (claude, codex, gemini, opencode, amp, aider)
+#   --choo-choo         Enable autonomous mode (skip permission prompts)
+#   --no-push           Don't push to remote after each iteration
+#   -p, --prompt TEXT   Inline prompt text
+#   --prompt-file FILE  Use prompt file (default: PROMPT.md)
+#   --update            Update to latest version
+#   --uninstall         Remove gumloop from system
+#   --version           Show version
+#   --help              Show this help
+#
+# Examples:
+#   gumloop                                # Interactive mode
+#   gumloop --choo-choo                    # Autonomous mode
+#   gumloop --choo-choo 20                 # Autonomous, max 20 iterations
+#   gumloop -p "Fix the tests"             # Inline prompt
+#   gumloop --prompt-file PROMPT_plan.md   # Custom prompt file
+#
+# Environment:
+#   GUMLOOP_CLI       Agent CLI to use (default: claude)
+#   GUMLOOP_FLAGS     Custom flags for unsupported CLIs
+#
+# More info: https://github.com/ghuntley/ralph-wiggum-loop
+
+set -euo pipefail
+
+# Handle Ctrl+C gracefully
+trap 'echo ""; echo ""; echo "🛑 Interrupted. Exiting gumloop."; exit 130' INT
+
+VERSION="1.0.0"
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+CLI="${GUMLOOP_CLI:-claude}"
+YOLO_MODE=false
+AUTO_PUSH=true
+PROMPT_TEXT=""
+PROMPT_FILE="PROMPT.md"
+MAX_ITERATIONS=0
+STUCK_THRESHOLD=3
+VERIFY_CMD=""
+
+# Check for jq availability (for better JSON parsing)
+HAS_JQ=false
+if command -v jq &> /dev/null; then
+    HAS_JQ=true
+fi
+
+# ============================================================================
+# HELP & VERSION
+# ============================================================================
+
+RALPH_QUOTES=(
+    "I'm learnding!"
+    "Me fail English? That's unpossible!"
+    "My cat's breath smells like cat food."
+    "I bent my wookiee."
+    "It tastes like burning!"
+    "I'm a unitard!"
+    "That's where I saw the leprechaun. He told me to burn things."
+    "I found a moon rock in my nose!"
+    "My knob tastes funny."
+    "I eated the purple berries."
+    "When I grow up, I want to be a principal or a caterpillar."
+    "I'm Idaho!"
+)
+
+show_help() {
+    local quote="${RALPH_QUOTES[$RANDOM % ${#RALPH_QUOTES[@]}]}"
+
+    echo ""
+    echo "⠀⠀⠀⠀⠀⠀⣀⣤⣶⡶⢛⠟⡿⠻⢻⢿⢶⢦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢀⣠⡾⡫⢊⠌⡐⢡⠊⢰⠁⡎⠘⡄⢢⠙⡛⡷⢤⡀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢠⢪⢋⡞⢠⠃⡜⠀⠎⠀⠉⠀⠃⠀⠃⠀⠃⠙⠘⠊⢻⠦⠀⠀⠀⠀⠀⠀
+⠀⠀⢇⡇⡜⠀⠜⠀⠁⠀⢀⠔⠉⠉⠑⠄⠀⠀⡰⠊⠉⠑⡄⡇⠀⠀⠀⠀⠀⠀
+⠀⠀⡸⠧⠄⠀⠀⠀⠀⠀⠘⡀⠾⠀⠀⣸⠀⠀⢧⠀⠛⠀⠌⡇⠀⠀⠀⠀⠀⠀
+⠀⠘⡇⠀⠀⠀⠀⠀⠀⠀⠀⠙⠒⠒⠚⠁⠈⠉⠲⡍⠒⠈⠀⡇⠀⠀⠀⠀⠀⠀
+⠀⠀⠈⠲⣆⠀⠀⠀⠀⠀⠀⠀⠀⣠⠖⠉⡹⠤⠶⠁⠀⠀⠀⠈⢦⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠈⣦⡀⠀⠀⠀⠀⠧⣴⠁⠀⠘⠓⢲⣄⣀⣀⣀⡤⠔⠃⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⣜⠀⠈⠓⠦⢄⣀⣀⣸⠀⠀⠀⠀⠁⢈⢇⣼⡁⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢠⠒⠛⠲⣄⠀⠀⠀⣠⠏⠀⠉⠲⣤⠀⢸⠋⢻⣤⡛⣄⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢡⠀⠀⠀⠀⠉⢲⠾⠁⠀⠀⠀⠀⠈⢳⡾⣤⠟⠁⠹⣿⢆⠀⠀⠀⠀⠀⠀
+⠀⢀⠼⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠃⠀⠀⠀⠀⠀⠈⣧⠀⠀⠀⠀⠀
+⠀⡏⠀⠘⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠞⠁⠀⠀⠀⠀⠀⠀⠀⢸⣧⠀⠀⠀⠀
+⢰⣄⠀⠀⠀⠉⠳⠦⣤⣤⡤⠴⠖⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢯⣆⠀⠀⠀
+⢸⣉⠉⠓⠲⢦⣤⣄⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣠⣼⢹⡄⠀⠀
+⠘⡍⠙⠒⠶⢤⣄⣈⣉⡉⠉⠙⠛⠛⠛⠛⠛⠛⢻⠉⠉⠉⢙⣏⣁⣸⠇⡇⠀⠀
+⠀⢣⠀⠀⠀⠀⠀⠀⠉⠉⠉⠙⠛⠛⠛⠛⠛⠛⠛⠒⠒⠒⠋⠉⠀⠸⠚⢇⠀⠀
+⠀⠀⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠇⢤⣨⠇⠀
+⠀⠀⠀⢧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣤⢻⡀⣸⠀⠀⠀
+⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⠛⠉⠁⠀⠀⠀
+⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⢠⢄⣀⣤⠤⠴⠒⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠘⡆⠀⠀⠀⠀⠀
+⠀⠀⠀⡎⠀⠀⠀⠀⠀⠀⠀⠀⢷⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀
+⠀⠀⢀⡷⢤⣤⣀⣀⣀⣀⣠⠤⠾⣤⣀⡘⠛⠶⠶⠶⠶⠖⠒⠋⠙⠓⠲⢤⣀⠀
+⠀⠀⠘⠧⣀⡀⠈⠉⠉⠁⠀⠀⠀⠀⠈⠙⠳⣤⣄⣀⣀⣀⠀⠀⠀⠀⠀⢀⣈⡇
+⠀⠀⠀⠀⠀⠉⠛⠲⠤⠤⢤⣤⣄⣀⣀⣀⣀⡸⠇⠀⠀⠀⠉⠉⠉⠉⠉⠉⠁⠀"
+    echo "\"$quote\" — Ralph Wiggum"
+    cat << 'EOF'
+
+gumloop - The Ralph Wiggum Loop CLI
+
+Run AI coding agents in autonomous loops until task completion.
+
+USAGE:
+    gumloop [OPTIONS] [MAX_ITERATIONS]
+
+OPTIONS:
+    --cli <AGENT>           Coding agent (see AGENTS below)
+    --choo-choo             Loop mode (runs until max iterations or Ctrl+C)
+    --no-push               Don't push to remote after iterations
+    -p, --prompt <TEXT>     Inline prompt text
+    --prompt-file <FILE>    Prompt file (default: PROMPT.md)
+    --stuck-threshold <N>   Exit after N iterations without commits (default: 3)
+    --verify <CMD>          Run verification command after each iteration
+    --init [FILE]           Create a PROMPT.md template (default: PROMPT.md)
+    --recover [N]           Discard changes, or reset last N commits
+    --update                Update to latest version
+    --uninstall             Remove gumloop from system
+    --version               Show version
+    --help                  Show this help
+
+AGENTS:
+    claude                  Claude Code (default)
+    codex                   OpenAI Codex CLI
+    gemini                  Google Gemini CLI
+    opencode                OpenCode CLI
+    amp                     Sourcegraph Amp CLI
+    aider                   Aider CLI
+
+EXAMPLES:
+    gumloop --cli claude --choo-choo            Use Claude in autonomous mode
+    gumloop --cli codex --choo-choo 20          Use Codex, max 20 iterations
+    gumloop --cli gemini -p "Fix the tests"     Use Gemini with inline prompt
+    gumloop --prompt-file PROMPT_plan.md        Custom prompt file
+
+QUICK START:
+    gumloop --cli claude -p "Study the codebase and fix the most important bug"
+
+EOF
+}
+
+show_version() {
+    echo "gumloop $VERSION"
+}
+
+do_update() {
+    echo "🔄 Updating gumloop..."
+
+    local REPO="adriancodes/gumloop"
+    local INSTALL_DIR="$HOME/.local/bin"
+    local BINARY_NAME="gumloop"
+    local TEMP_FILE=$(mktemp)
+
+    # Download latest version
+    if ! curl -fsSL "https://raw.githubusercontent.com/$REPO/main/gumloop" -o "$TEMP_FILE"; then
+        echo "❌ Failed to download update"
+        rm -f "$TEMP_FILE"
+        exit 1
+    fi
+
+    # Check if we got a valid script
+    if ! head -1 "$TEMP_FILE" | grep -q "^#!/bin/bash"; then
+        echo "❌ Downloaded file is not a valid script"
+        rm -f "$TEMP_FILE"
+        exit 1
+    fi
+
+    # Get new version
+    local NEW_VERSION=$(grep '^VERSION=' "$TEMP_FILE" | cut -d'"' -f2)
+
+    # Install
+    mkdir -p "$INSTALL_DIR"
+    mv "$TEMP_FILE" "$INSTALL_DIR/$BINARY_NAME"
+    chmod +x "$INSTALL_DIR/$BINARY_NAME"
+
+    echo "✅ Updated to gumloop $NEW_VERSION"
+}
+
+do_uninstall() {
+    local INSTALL_DIR="$HOME/.local/bin"
+    local BINARY_NAME="gumloop"
+
+    if [ -f "$INSTALL_DIR/$BINARY_NAME" ]; then
+        rm "$INSTALL_DIR/$BINARY_NAME"
+        echo "✅ gumloop uninstalled"
+    else
+        echo "gumloop not found at $INSTALL_DIR/$BINARY_NAME"
+    fi
+}
+
+do_recover() {
+    local COMMITS="${1:-0}"
+
+    # Require git
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        echo "❌ ERROR: Not in a git repository"
+        exit 1
+    fi
+
+    echo "⚠️  RECOVERY MODE"
+    echo ""
+
+    if [ "$COMMITS" -gt 0 ]; then
+        echo "This will reset the last $COMMITS commit(s) and discard all uncommitted changes."
+        echo ""
+        echo "Commits to be reset:"
+        git log --oneline -n "$COMMITS"
+        echo ""
+        read -p "Are you sure? This cannot be undone. [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            git reset --hard "HEAD~$COMMITS"
+            echo "✅ Reset to HEAD~$COMMITS"
+        else
+            echo "Cancelled."
+        fi
+    else
+        echo "This will discard all uncommitted changes (staged and unstaged)."
+        echo ""
+        # Show what will be lost (--porcelain excludes branch info)
+        CHANGES=$(git status --porcelain)
+        if [ -n "$CHANGES" ]; then
+            echo "Changes to be discarded:"
+            echo "$CHANGES"
+            echo ""
+        else
+            echo "No uncommitted changes to discard."
+            exit 0
+        fi
+        read -p "Are you sure? This cannot be undone. [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            git reset --hard HEAD
+            git clean -fd
+            echo "✅ Discarded all uncommitted changes"
+        else
+            echo "Cancelled."
+        fi
+    fi
+}
+
+do_init() {
+    local PROMPT_FILE="${1:-PROMPT.md}"
+
+    if [ -f "$PROMPT_FILE" ]; then
+        echo "❌ $PROMPT_FILE already exists"
+        echo "   Use a different name: gumloop --init MY_PROMPT.md"
+        exit 1
+    fi
+
+    cat > "$PROMPT_FILE" << 'EOF'
+# Task
+
+Study the codebase. Find the most important thing to implement.
+Implement it completely. Run tests. Commit with a descriptive message.
+
+# Rules
+
+ONE task per session. After completing one task, commit and exit.
+
+Search the codebase before implementing to avoid duplicating existing code.
+
+No placeholders or TODOs. Implement completely or don't implement at all.
+
+Run tests before committing. If tests fail, fix them first.
+
+Keep commits atomic - one logical change per commit.
+
+# Guardrails
+
+Add new guardrails here when you observe failure patterns.
+Use high numbers for critical rules (e.g., 99999).
+
+EOF
+
+    echo "✅ Created $PROMPT_FILE"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Edit $PROMPT_FILE with your specific task"
+    echo "  2. Run: gumloop --prompt-file $PROMPT_FILE"
+    echo "  3. Or loop: gumloop --prompt-file $PROMPT_FILE --choo-choo"
+}
+
+# ============================================================================
+# ARGUMENT PARSING
+# ============================================================================
+
+# Show help if no arguments provided
+if [[ $# -eq 0 ]]; then
+    show_help
+    exit 0
+fi
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --cli)
+            if [[ -z "${2:-}" || "$2" == -* ]]; then
+                echo "❌ ERROR: --cli requires a value"
+                echo "Available agents: claude, codex, gemini, opencode, amp, aider"
+                exit 1
+            fi
+            CLI="$2"
+            shift 2
+            ;;
+        --choo-choo)
+            YOLO_MODE=true
+            shift
+            ;;
+        --no-push)
+            AUTO_PUSH=false
+            shift
+            ;;
+        -p|--prompt)
+            if [[ -z "${2:-}" || "$2" == -* ]]; then
+                echo "❌ ERROR: -p/--prompt requires a value"
+                exit 1
+            fi
+            PROMPT_TEXT="$2"
+            shift 2
+            ;;
+        --prompt-file)
+            if [[ -z "${2:-}" || "$2" == -* ]]; then
+                echo "❌ ERROR: --prompt-file requires a value"
+                exit 1
+            fi
+            PROMPT_FILE="$2"
+            shift 2
+            ;;
+        --stuck-threshold)
+            if [[ -z "${2:-}" || "$2" == -* ]]; then
+                echo "❌ ERROR: --stuck-threshold requires a number"
+                exit 1
+            fi
+            STUCK_THRESHOLD="$2"
+            shift 2
+            ;;
+        --verify)
+            if [[ -z "${2:-}" || "$2" == -* ]]; then
+                echo "❌ ERROR: --verify requires a command"
+                exit 1
+            fi
+            VERIFY_CMD="$2"
+            shift 2
+            ;;
+        --init)
+            if [[ -n "${2:-}" && "$2" != -* ]]; then
+                INIT_FILE="$2"
+                shift 2
+            else
+                INIT_FILE="PROMPT.md"
+                shift 1
+            fi
+            do_init "$INIT_FILE"
+            exit 0
+            ;;
+        --recover)
+            if [[ -n "${2:-}" && "$2" != -* ]]; then
+                RECOVER_COMMITS="$2"
+                shift 2
+            else
+                RECOVER_COMMITS="0"
+                shift 1
+            fi
+            do_recover "$RECOVER_COMMITS"
+            exit 0
+            ;;
+        --update)
+            do_update
+            exit 0
+            ;;
+        --uninstall)
+            do_uninstall
+            exit 0
+            ;;
+        -v|--version)
+            show_version
+            exit 0
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        [0-9]*)
+            MAX_ITERATIONS="$1"
+            shift
+            ;;
+        -*)
+            echo "❌ ERROR: Unknown option: $1"
+            echo "Run 'gumloop --help' for usage"
+            exit 1
+            ;;
+        *)
+            echo "❌ ERROR: Unexpected argument: $1"
+            echo "Run 'gumloop --help' for usage"
+            exit 1
+            ;;
+    esac
+done
+
+# ============================================================================
+# CLI FLAGS CONFIGURATION
+# ============================================================================
+
+# Configure CLI flags and prompt style
+# PROMPT_STYLE: "arg" = pass as argument, "pipe" = pipe to stdin
+if [ "$YOLO_MODE" = true ]; then
+    case "$CLI" in
+        claude)
+            # -p for auto-exit, stream-json for real-time output
+            CLI_FLAGS="-p --dangerously-skip-permissions --output-format stream-json"
+            PROMPT_STYLE="stream"
+            ;;
+        codex)
+            CLI_FLAGS="--full-auto"
+            PROMPT_STYLE="arg"
+            ;;
+        gemini)
+            CLI_FLAGS="--yolo"
+            PROMPT_STYLE="arg"
+            ;;
+        opencode)
+            CLI_FLAGS="-q"
+            PROMPT_STYLE="pipe"
+            ;;
+        amp)
+            CLI_FLAGS="--dangerously-allow-all"
+            PROMPT_STYLE="arg"
+            ;;
+        aider)
+            CLI_FLAGS="--yes-always --no-pretty"
+            PROMPT_STYLE="arg"
+            ;;
+        *)
+            CLI_FLAGS="${GUMLOOP_FLAGS:-}"
+            PROMPT_STYLE="pipe"
+            ;;
+    esac
+else
+    case "$CLI" in
+        claude)
+            # -p for auto-exit, stream-json for real-time output
+            CLI_FLAGS="-p --output-format stream-json"
+            PROMPT_STYLE="stream"
+            ;;
+        codex)
+            CLI_FLAGS=""
+            PROMPT_STYLE="arg"
+            ;;
+        gemini)
+            CLI_FLAGS=""
+            PROMPT_STYLE="arg"
+            ;;
+        opencode)
+            CLI_FLAGS=""
+            PROMPT_STYLE="pipe"
+            ;;
+        amp)
+            CLI_FLAGS=""
+            PROMPT_STYLE="arg"
+            ;;
+        aider)
+            CLI_FLAGS=""
+            PROMPT_STYLE="arg"
+            ;;
+        *)
+            CLI_FLAGS="${GUMLOOP_FLAGS:-}"
+            PROMPT_STYLE="pipe"
+            ;;
+    esac
+fi
+
+# Map CLI names to actual commands (e.g., codex -> codex exec)
+case "$CLI" in
+    codex)
+        CLI_CMD="codex exec"
+        CLI_CHECK="codex"
+        ;;
+    *)
+        CLI_CMD="$CLI"
+        CLI_CHECK="$CLI"
+        ;;
+esac
+
+# ============================================================================
+# SAFETY CHECKS
+# ============================================================================
+
+WORK_DIR="$(pwd)"
+
+# Refuse dangerous locations
+DANGEROUS_PATHS=("$HOME" "/" "/etc" "/usr" "/var" "/tmp" "/bin" "/sbin" "/lib")
+for dangerous in "${DANGEROUS_PATHS[@]}"; do
+    if [ "$WORK_DIR" = "$dangerous" ]; then
+        echo "❌ SAFETY: Refusing to run in $dangerous"
+        echo ""
+        echo "Run gumloop in a project directory, not system paths."
+        exit 1
+    fi
+done
+
+# Warn about home subdirectory + choo-choo mode
+if [[ "$WORK_DIR" == "$HOME"/* ]] && [ "$YOLO_MODE" = true ]; then
+    echo "⚠️  WARNING: Choo-choo mode in home directory"
+    echo "   Location: $WORK_DIR"
+    echo ""
+    echo "   Consider external sandboxing for better isolation."
+    echo ""
+    read -p "   Continue? [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+# Require git
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "❌ ERROR: Not in a git repository"
+    echo ""
+    echo "gumloop uses git to persist progress between iterations."
+    echo "Initialize with: git init"
+    exit 1
+fi
+
+# Require prompt (inline or file)
+if [ -z "$PROMPT_TEXT" ]; then
+    if [ ! -f "$PROMPT_FILE" ]; then
+        echo "❌ ERROR: No prompt provided"
+        echo ""
+        echo "Either use -p/--prompt for inline text:"
+        echo "  gumloop -p \"Fix the failing tests\""
+        echo ""
+        echo "Or create $PROMPT_FILE with your task instructions."
+        exit 1
+    fi
+fi
+
+# Require CLI
+if ! command -v "$CLI_CHECK" &> /dev/null; then
+    echo "❌ ERROR: $CLI_CHECK not found"
+    echo ""
+    echo "Install the agent CLI or use --cli to select a different agent:"
+    echo "  gumloop --cli claude"
+    echo "  gumloop --cli codex"
+    echo "  gumloop --cli gemini"
+    echo "  gumloop --cli opencode"
+    echo "  gumloop --cli amp"
+    echo "  gumloop --cli aider"
+    exit 1
+fi
+
+# ============================================================================
+# STARTUP
+# ============================================================================
+
+ITERATION=0
+START_TIME=$(date +%s)
+COMMITS_BEFORE=$(git rev-list --count HEAD 2>/dev/null || echo "0")
+BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
+ITERATIONS_WITHOUT_COMMIT=0
+EXIT_REASON=""
+
+echo "┌─────────────────────────────────────┐"
+echo "│           gumloop $VERSION             │"
+echo "└─────────────────────────────────────┘"
+echo " CLI:    $CLI"
+if [ "$YOLO_MODE" = true ]; then
+echo " Mode:   🚂 Choo-choo (autonomous)"
+else
+echo " Mode:   👀 Interactive"
+fi
+if [ -n "$PROMPT_TEXT" ]; then
+echo " Prompt: (inline)"
+else
+echo " Prompt: $PROMPT_FILE"
+fi
+echo " Branch: $BRANCH"
+[ $MAX_ITERATIONS -gt 0 ] && echo " Max:    $MAX_ITERATIONS iterations"
+echo ""
+
+# ============================================================================
+# MAIN LOOP
+# ============================================================================
+
+while true; do
+    if [ $MAX_ITERATIONS -gt 0 ] && [ $ITERATION -ge $MAX_ITERATIONS ]; then
+        echo ""
+        echo "┌─────────────────────────────────────┐"
+        echo "│  Max iterations reached: $MAX_ITERATIONS"
+        echo "└─────────────────────────────────────┘"
+        EXIT_REASON="max_iterations"
+        break
+    fi
+
+    ITERATION=$((ITERATION + 1))
+    ITER_START=$(date +%s)
+    COMMITS_BEFORE_ITER=$(git rev-list --count HEAD 2>/dev/null || echo "0")
+
+    echo ""
+    echo "══════════════════════════════════════"
+    if [ $MAX_ITERATIONS -gt 0 ]; then
+        echo "  🚂 ITERATION $ITERATION of $MAX_ITERATIONS"
+    else
+        echo "  🚂 ITERATION $ITERATION"
+    fi
+    echo "  $(date '+%H:%M:%S') | $CLI"
+    echo "══════════════════════════════════════"
+    echo ""
+
+    # Get prompt content
+    if [ -n "$PROMPT_TEXT" ]; then
+        PROMPT_CONTENT="$PROMPT_TEXT"
+    else
+        PROMPT_CONTENT=$(cat "$PROMPT_FILE")
+    fi
+
+    # Run agent
+    # PROMPT_STYLE="arg" passes prompt as argument
+    # PROMPT_STYLE="pipe" pipes prompt to stdin
+    # PROMPT_STYLE="stream" uses stream-json and parses output for display
+    if [ "$PROMPT_STYLE" = "stream" ]; then
+        # Stream JSON output, extract and display content in real-time
+        $CLI_CMD $CLI_FLAGS "$PROMPT_CONTENT" 2>&1 | while IFS= read -r line; do
+            if [ "$HAS_JQ" = true ]; then
+                # Use jq for reliable JSON parsing
+                type=$(echo "$line" | jq -r '.type // empty' 2>/dev/null)
+                case "$type" in
+                    assistant|result)
+                        content=$(echo "$line" | jq -r '.content // empty' 2>/dev/null)
+                        [ -n "$content" ] && echo "$content"
+                        ;;
+                    tool_use)
+                        tool=$(echo "$line" | jq -r '.name // empty' 2>/dev/null)
+                        [ -n "$tool" ] && echo "🔧 $tool"
+                        ;;
+                esac
+            else
+                # Fallback: sed-based parsing (less reliable)
+                if [[ "$line" == *'"type":"assistant"'* ]] || [[ "$line" == *'"type":"result"'* ]]; then
+                    content=$(echo "$line" | sed -n 's/.*"content":"\([^"]*\)".*/\1/p' | sed 's/\\n/\n/g')
+                    [ -n "$content" ] && echo "$content"
+                elif [[ "$line" == *'"type":"tool_use"'* ]]; then
+                    tool=$(echo "$line" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p')
+                    [ -n "$tool" ] && echo "🔧 $tool"
+                fi
+            fi
+        done || {
+            echo ""
+            echo "⚠️  Agent exited with error. Continuing..."
+            echo ""
+        }
+    elif [ "$PROMPT_STYLE" = "arg" ]; then
+        $CLI_CMD $CLI_FLAGS "$PROMPT_CONTENT" || {
+            echo ""
+            echo "⚠️  Agent exited with error. Continuing..."
+            echo ""
+        }
+    else
+        echo "$PROMPT_CONTENT" | $CLI_CMD $CLI_FLAGS || {
+            echo ""
+            echo "⚠️  Agent exited with error. Continuing..."
+            echo ""
+        }
+    fi
+
+    # Iteration timing
+    ITER_END=$(date +%s)
+    ITER_DURATION=$((ITER_END - ITER_START))
+
+    # Check if commits were made this iteration
+    COMMITS_AFTER_ITER=$(git rev-list --count HEAD 2>/dev/null || echo "0")
+    COMMITS_THIS_ITER=$((COMMITS_AFTER_ITER - COMMITS_BEFORE_ITER))
+
+    echo ""
+    echo "──────────────────────────────────────"
+    echo "  Iteration $ITERATION complete (${ITER_DURATION}s)"
+    if [ "$COMMITS_THIS_ITER" -gt 0 ]; then
+        echo "  ✓ Commits: $COMMITS_THIS_ITER"
+        ITERATIONS_WITHOUT_COMMIT=0
+    fi
+
+    # Show what changed
+    CHANGED_FILES=$(git diff --name-only 2>/dev/null | wc -l | tr -d ' ')
+    STAGED_FILES=$(git diff --staged --name-only 2>/dev/null | wc -l | tr -d ' ')
+    UNTRACKED=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')
+
+    if [ "$CHANGED_FILES" -gt 0 ] || [ "$STAGED_FILES" -gt 0 ] || [ "$UNTRACKED" -gt 0 ]; then
+        echo "  📝 Changes: $CHANGED_FILES modified, $STAGED_FILES staged, $UNTRACKED new"
+    fi
+
+    # Run verification command if specified
+    if [ -n "$VERIFY_CMD" ]; then
+        echo "  🔍 Verifying: $VERIFY_CMD"
+        if eval "$VERIFY_CMD" > /dev/null 2>&1; then
+            echo "  ✓ Verification passed"
+        else
+            echo "  ✗ Verification failed"
+        fi
+    fi
+
+    # Check for changes
+    if git diff --quiet && git diff --staged --quiet && [ "$UNTRACKED" -eq 0 ]; then
+        echo ""
+        echo "✅ No changes detected - work complete"
+        EXIT_REASON="complete"
+        break
+    fi
+
+    # Track iterations with changes but no commits (potential stuck)
+    if [ "$COMMITS_THIS_ITER" -eq 0 ]; then
+        ITERATIONS_WITHOUT_COMMIT=$((ITERATIONS_WITHOUT_COMMIT + 1))
+        if [ "$YOLO_MODE" = true ] && [ "$ITERATIONS_WITHOUT_COMMIT" -ge "$STUCK_THRESHOLD" ]; then
+            echo ""
+            echo "⚠️  Stuck: $ITERATIONS_WITHOUT_COMMIT iterations with changes but no commits"
+            echo "   Agent may be in a loop. Use --stuck-threshold to adjust (default: 3)"
+            EXIT_REASON="stuck"
+            break
+        fi
+    fi
+
+    # Push if enabled and commits were made
+    if [ "$AUTO_PUSH" = true ] && [ "$COMMITS_THIS_ITER" -gt 0 ]; then
+        if git push origin "$BRANCH" 2>/dev/null || git push -u origin "$BRANCH" 2>/dev/null; then
+            echo "  ☁️  Pushed to origin/$BRANCH"
+        fi
+    fi
+
+    echo "──────────────────────────────────────"
+
+    # Without --choo-choo, run once and exit
+    if [ "$YOLO_MODE" = false ]; then
+        EXIT_REASON="single_run"
+        break
+    fi
+done
+
+# ============================================================================
+# METRICS
+# ============================================================================
+
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+COMMITS_AFTER=$(git rev-list --count HEAD 2>/dev/null || echo "0")
+COMMITS_MADE=$((COMMITS_AFTER - COMMITS_BEFORE))
+
+# Format duration
+if [ $DURATION -ge 3600 ]; then
+    DURATION_FMT="$((DURATION / 3600))h $((DURATION % 3600 / 60))m $((DURATION % 60))s"
+elif [ $DURATION -ge 60 ]; then
+    DURATION_FMT="$((DURATION / 60))m $((DURATION % 60))s"
+else
+    DURATION_FMT="${DURATION}s"
+fi
+
+# Format exit reason
+case "$EXIT_REASON" in
+    complete)
+        EXIT_REASON_FMT="✅ Complete (no changes)"
+        ;;
+    max_iterations)
+        EXIT_REASON_FMT="⏹️  Max iterations ($MAX_ITERATIONS)"
+        ;;
+    stuck)
+        EXIT_REASON_FMT="⚠️  Stuck ($STUCK_THRESHOLD iterations without commit)"
+        ;;
+    single_run)
+        EXIT_REASON_FMT="Single run (no --choo-choo)"
+        ;;
+    *)
+        EXIT_REASON_FMT="Unknown"
+        ;;
+esac
+
+echo ""
+echo "┌─────────────────────────────────────┐"
+echo "│           RUN COMPLETE              │"
+echo "├─────────────────────────────────────┤"
+printf "│  Agent:       %-21s │\n" "$CLI"
+printf "│  Iterations:  %-21s │\n" "$ITERATION"
+printf "│  Commits:     %-21s │\n" "$COMMITS_MADE"
+printf "│  Duration:    %-21s │\n" "$DURATION_FMT"
+echo "├─────────────────────────────────────┤"
+echo "│  Exit: $EXIT_REASON_FMT"
+echo "└─────────────────────────────────────┘"

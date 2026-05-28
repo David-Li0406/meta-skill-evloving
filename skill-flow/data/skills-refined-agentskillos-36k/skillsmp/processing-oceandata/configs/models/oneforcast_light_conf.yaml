@@ -1,0 +1,30 @@
+# OneForecast Light Model Configuration - Resource-efficient version
+# Reduced parameters for faster training and lower memory usage
+
+# Temporal configuration - multi-frame input/output
+input_len: 7        # Number of input frames
+output_len: 1       # Number of output frames
+in_channels: 2      # u and v velocity components
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration (reduced)
+mesh_level: 4       # Reduced mesh refinement level for efficiency
+multimesh: false    # Disable multi-mesh for faster processing
+
+# Model architecture parameters (reduced)
+hidden_dim: 256     # Reduced hidden dimension for lower memory usage
+num_layers: 1       # Number of layers in MLPs
+processor_layers: 8   # Reduced processor layers for faster computation
+
+# Feature processing options
+use_dual_path: false       # Disable dual-path to save computation
+use_temporal_processing: false  # Disable temporal processing for simplicity
+
+# Training optimization hints
+# - This lighter version is suitable for:
+#   - GPUs with 8-12GB memory
+#   - Quick prototyping and experimentation
+#   - Batch size: 2-4 depending on GPU memory
+# - Trade-off: Lower accuracy for faster training and inference

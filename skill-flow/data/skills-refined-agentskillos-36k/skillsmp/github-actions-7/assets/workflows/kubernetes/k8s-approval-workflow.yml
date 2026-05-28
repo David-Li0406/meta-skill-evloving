@@ -1,0 +1,302 @@
+# Kubernetes Deployment with Manual Approval
+# Production deployment requires manual approval
+# Features: Environment protection, approval gates, rollback capability
+
+name: K8s Deployment with Approval
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build and push image
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+
+    outputs:
+      image-tag: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to staging (automatic)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+
+    environment:
+      name: staging
+      url: https://staging.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+
+      - name: Deploy application
+        run: |
+          kubectl set image deployment/app \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=staging
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=staging --timeout=5m
+
+      - name: Run smoke tests
+        run: |
+          kubectl run smoke-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://staging.example.com/health || exit 1
+
+  # Request production deployment approval
+  request-prod-approval:
+    name: Request Production Approval
+    runs-on: ubuntu-latest
+    needs: [build, deploy-staging]
+    if: github.ref == 'refs/heads/main'
+
+    outputs:
+      approved: ${{ steps.approval.outputs.approved }}
+
+    steps:
+      - name: Create approval issue
+        uses: actions/github-script@v7
+        id: approval
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Production Deployment Approval - ${{ github.sha }}`,
+              body: `## Deployment Request
+
+              **Commit:** ${{ github.sha }}
+              **Branch:** ${{ github.ref_name }}
+              **Image:** ${{ needs.build.outputs.image-tag }}
+              **Author:** ${{ github.actor }}
+
+              ## Changes
+              ${{ github.event.head_commit.message }}
+
+              ## Approval Required
+              Please review the staging deployment and approve for production.
+
+              - [ ] I have reviewed the changes
+              - [ ] Staging tests passed
+              - [ ] Approved for production deployment
+
+              ---
+
+              To approve, comment \`/approve\` on this issue.`,
+              labels: ['deployment', 'production-approval']
+            });
+
+            console.log(`Created issue #${issue.data.number}`);
+            return 'false';
+
+      - name: Wait for approval
+        id: wait
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: '@tech-lead,@devops-team'
+          minimum-approvals: 1
+          timeout-minutes: 60
+
+  # Deploy to production (after approval)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, request-prod-approval]
+    if: needs.request-prod-approval.outputs.approved == 'true'
+
+    environment:
+      name: production
+      url: https://example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PROD }}
+
+      - name: Pre-deployment backup
+        run: |
+          kubectl get deployment app --namespace=production -o yaml > /tmp/deployment-backup.yaml
+          echo "Backup created"
+
+      - name: Create deployment
+        run: |
+          # Create a new deployment for testing
+          kubectl apply -f k8s/production/
+          kubectl set image deployment/app \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=production
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=production --timeout=10m
+
+      - name: Health check
+        run: |
+          # Wait for pods to be ready
+          kubectl wait --for=condition=ready pod -l app=app --namespace=production --timeout=5m
+
+          # Run health check
+          kubectl run health-check --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://example.com/health || exit 1
+
+      - name: Run integration tests
+        run: |
+          kubectl run integration-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://example.com/test || exit 1
+
+      - name: Monitor deployment
+        run: |
+          sleep 60
+
+          # Check if pods are stable
+          READY=$(kubectl get deployment app --namespace=production -o jsonpath='{.status.readyReplicas}')
+          if [ -z "$READY" ] || [ "$READY" -lt 1 ]; then
+            echo "Deployment failed - no ready pods"
+            exit 1
+          fi
+
+          echo "Deployment successful"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed, rolling back..."
+          kubectl apply -f /tmp/deployment-backup.yaml
+          kubectl rollout status deployment/app --namespace=production
+          echo "Rollback complete"
+
+      - name: Notify success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `✅ Production deployment successful\n\nImage: ${{ needs.build.outputs.image-tag }}`
+            });
+
+  # Post-deployment validation
+  validate:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+
+    steps:
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PROD }}
+
+      - name: Check pod status
+        run: |
+          kubectl get pods --namespace=production -l app=app
+
+      - name: Check service endpoints
+        run: |
+          kubectl get endpoints app --namespace=production
+
+      - name: Monitor error rates
+        run: |
+          # Check for errors in logs
+          ERROR_COUNT=$(kubectl logs --namespace=production --selector=app=app --tail=100 | grep -i error | wc -l)
+
+          if [ "$ERROR_COUNT" -gt 10 ]; then
+            echo "High error rate detected: $ERROR_COUNT errors"
+            exit 1
+          fi
+
+          echo "Deployment validation passed"
+
+      - name: Performance check
+        run: |
+          # Simple response time check
+          START_TIME=$(date +%s)
+          kubectl run perf-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://example.com/api/health
+          END_TIME=$(date +%s)
+
+          RESPONSE_TIME=$((END_TIME - START_TIME))
+
+          if [ "$RESPONSE_TIME" -gt 5 ]; then
+            echo "Slow response time: ${RESPONSE_TIME}s"
+            exit 1
+          fi
+
+          echo "Response time acceptable: ${RESPONSE_TIME}s"
+
+  # Cleanup old resources
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [validate]
+    if: always()
+
+    steps:
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG_PROD }}
+
+      - name: Remove old completed pods
+        run: |
+          kubectl delete pods --namespace=production --field-selector=status.phase=Succeeded || true
+
+      - name: Remove old replica sets (keep last 5)
+        run: |
+          kubectl get replicasets --namespace=production -l app=app -o json | \
+            jq -r '.items | sort_by(.metadata.creationTimestamp) | reverse | .[5:] | .[].metadata.name' | \
+            xargs -I {} kubectl delete replicaset {} --namespace=production || true
+
+      - name: Create cleanup summary
+        run: |
+          echo "### Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Old completed pods removed" >> $GITHUB_STEP_SUMMARY
+          echo "- Old replica sets removed" >> $GITHUB_STEP_SUMMARY

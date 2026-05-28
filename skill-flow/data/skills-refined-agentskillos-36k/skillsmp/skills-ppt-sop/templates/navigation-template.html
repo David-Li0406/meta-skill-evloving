@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentation</title>
+<style>
+  :root {
+    --bg-main: #FFFFFF;
+    --bg-header: #000000;
+    --accent: #F85d42;
+    --gray: #74788d;
+    --aux1: #556EE6;
+    --aux2: #34c38f;
+    --aux3: #50a5f1;
+    --aux4: #f1b44c;
+    --gray-light: #F5F5F5;
+    --page-bg: #e0e0e0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    min-height: 100vh;
+    background: var(--page-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #333;
+    padding: 20px;
+  }
+
+  .presentation-wrapper {
+    position: relative;
+    width: 960px;
+    height: 540px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  }
+
+  .slide {
+    width: 960px;
+    height: 540px;
+    background: var(--bg-main);
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+  }
+
+  .slide-container {
+    display: grid;
+    grid-template-rows: 60px 1fr;
+    height: 100%;
+    padding: 0 40px 40px 40px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-header);
+    color: white;
+    padding: 0 20px;
+    margin: 0 -40px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+  
+  .header h1 { font-size: 24px; font-weight: bold; }
+  .header .logo { font-size: 16px; color: var(--accent); }
+
+  .content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .col-4 { grid-column: span 4; }
+  .col-6 { grid-column: span 6; }
+  .col-8 { grid-column: span 8; }
+  .col-12 { grid-column: span 12; }
+
+  .card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .card.gray { background: var(--gray-light); border: 0; }
+
+  h2 { font-size: 32px; margin-bottom: 10px; color: var(--accent); }
+  h3 { font-size: 24px; margin-bottom: 8px; font-weight: bold; }
+  p { font-size: 20px; line-height: 1.5; color: #333; }
+  .text-gray { color: var(--gray); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  table { width: 100%; border-collapse: collapse; font-family: Verdana, sans-serif; font-size: 20px; }
+  th { text-align: left; border-bottom: 2px solid var(--gray); padding: 10px; background: #f0f0f0; }
+  td { padding: 10px; border-bottom: 1px solid #eee; }
+  td.num, th.num { text-align: right; }
+  tr.total td { border-top: 3px double var(--gray); font-weight: bold; }
+
+  .nav-controls {
+    position: absolute;
+    bottom: -60px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    z-index: 100;
+  }
+
+  .nav-btn {
+    background: var(--bg-header);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .nav-btn:hover {
+    background: var(--accent);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .page-indicator {
+    font-size: 16px;
+    color: var(--gray);
+  }
+
+  @media (max-width: 1000px) {
+    .presentation-wrapper {
+      transform: scale(calc((100vw - 40px) / 960));
+      transform-origin: center center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="presentation-wrapper">
+  
+  <!-- Slide 1: Cover -->
+  <div class="slide active" id="slide-1">
+    <div class="slide-container">
+      <header class="header">
+        <h1>演示标题</h1>
+        <div class="logo">COMPANY LOGO</div>
+      </header>
+      <main class="content">
+        <div style="display: flex; align-items: center; padding-left: 40px;">
+          <div style="width: 40%;">
+            <h2 style="font-size: 56px; font-weight: bold; color: var(--accent); margin-bottom: 20px; line-height: 1.2;">主标题</h2>
+            <h3 style="font-size: 32px; color: var(--gray); margin-top: 20px;">副标题</h3>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add more slides here... -->
+
+  <!-- Navigation -->
+  <div class="nav-controls">
+    <button class="nav-btn" id="prevBtn" onclick="prevSlide()">上一页</button>
+    <span class="page-indicator"><span id="currentPage">1</span> / <span id="totalPages">1</span></span>
+    <button class="nav-btn" id="nextBtn" onclick="nextSlide()">下一页</button>
+  </div>
+</div>
+
+<script>
+  let currentSlide = 1;
+  const totalSlides = document.querySelectorAll('.slide').length;
+
+  document.getElementById('totalPages').textContent = totalSlides;
+
+  function showSlide(n) {
+    const slides = document.querySelectorAll('.slide');
+    
+    if (n > totalSlides) currentSlide = 1;
+    if (n < 1) currentSlide = totalSlides;
+    
+    slides.forEach(slide => slide.classList.remove('active'));
+    slides[currentSlide - 1].classList.add('active');
+    
+    document.getElementById('currentPage').textContent = currentSlide;
+    
+    document.getElementById('prevBtn').disabled = currentSlide === 1;
+    document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+  }
+
+  function nextSlide() {
+    currentSlide++;
+    showSlide(currentSlide);
+  }
+
+  function prevSlide() {
+    currentSlide--;
+    showSlide(currentSlide);
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      prevSlide();
+    }
+  });
+
+  showSlide(currentSlide);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "_comment": "Human Extractor Skill - Configuration Template",
+  "_version": "1.0 - Basic Human Cropping",
+
+  "roots": [
+    "G:\\My Drive\\PROJECTS\\INVESTIGATION\\DASHCAM\\Park_R\\20251006"
+  ],
+
+  "output_dir": "parsed",
+  "delete_original": false,
+
+  "_notes": {
+    "roots": "List of directories containing MP4 videos to process",
+    "output_dir": "Output directory for crops. Structure: {output_dir}/{Camera}/{Date}/",
+    "delete_original": "DANGEROUS: Delete original videos after successful processing"
+  },
+
+  "_output_structure": {
+    "full_frames": "{output_dir}/{Camera}/{Date}/frame_*.jpg",
+    "human_crops": "{output_dir}/{Camera}/{Date}/humans_summary/track*_frame*.jpg",
+    "manifest": "{output_dir}/{Camera}/{Date}/MANIFEST.csv",
+    "index": "{output_dir}/INDEX.csv"
+  },
+
+  "_examples": {
+    "basic_usage": {
+      "roots": ["G:\\My Drive\\PROJECTS\\INVESTIGATION\\DASHCAM\\Park_R"],
+      "output_dir": "parsed"
+    },
+    "specific_date": {
+      "roots": ["G:\\My Drive\\PROJECTS\\INVESTIGATION\\DASHCAM\\Park_R\\20251006"],
+      "output_dir": "parsed"
+    },
+    "multiple_cameras": {
+      "roots": [
+        "G:\\My Drive\\PROJECTS\\INVESTIGATION\\DASHCAM\\Park_R",
+        "G:\\My Drive\\PROJECTS\\INVESTIGATION\\DASHCAM\\Movie_F"
+      ],
+      "output_dir": "parsed"
+    }
+  }
+}

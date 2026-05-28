@@ -1,0 +1,271 @@
+{
+  "vocab": {
+    "id": "jj-terminology",
+    "version": "0.1.0",
+    "releasedAt": "2026-01-23",
+    "status": "draft",
+    "purpose": "Clarify jj workflow terminology used in the using-jj skill",
+    "domain": "Jujutsu (jj) version control"
+  },
+  "axes": [
+    {
+      "id": "axis.repo_layout",
+      "label": "Repository metadata layout",
+      "description": "Which VCS metadata directories are present at the repository root"
+    },
+    {
+      "id": "axis.identifier_target",
+      "label": "Identifier target",
+      "description": "What kind of jj entity an identifier refers to"
+    }
+  ],
+  "characteristics": [
+    {
+      "id": "ch.repo_layout.jj_only",
+      "axisId": "axis.repo_layout",
+      "label": "contains a .jj directory and no .git directory at the repository root"
+    },
+    {
+      "id": "ch.repo_layout.colocated",
+      "axisId": "axis.repo_layout",
+      "label": "contains both .jj and .git directories at the repository root"
+    },
+    {
+      "id": "ch.identifier_target.change",
+      "axisId": "axis.identifier_target",
+      "label": "identifies a change (mutable series of revisions)"
+    },
+    {
+      "id": "ch.identifier_target.revision",
+      "axisId": "axis.identifier_target",
+      "label": "identifies a revision snapshot (immutable)"
+    }
+  ],
+  "concepts": [
+    {
+      "id": "c.repo.jj",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "jj-managed repository",
+      "altLabels": ["jj repository"],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "version control repository tracked by jj metadata"
+        }
+      ]
+    },
+    {
+      "id": "c.repo.jj_only",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "jj-only repository",
+      "altLabels": [],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.repo_layout",
+          "parentId": "c.repo.jj",
+          "delimitingCharacteristicIds": ["ch.repo_layout.jj_only"],
+          "text": "jj-managed repository with only .jj metadata at the root"
+        }
+      ]
+    },
+    {
+      "id": "c.repo.colocated",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "colocated repository",
+      "altLabels": ["colocated jj/git repository"],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.repo_layout",
+          "parentId": "c.repo.jj",
+          "delimitingCharacteristicIds": ["ch.repo_layout.colocated"],
+          "text": "jj-managed repository with both jj and git metadata at the root"
+        }
+      ]
+    },
+    {
+      "id": "c.change",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "change",
+      "altLabels": [],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "mutable unit of work that can accumulate multiple revisions over time"
+        }
+      ]
+    },
+    {
+      "id": "c.revision",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "revision",
+      "altLabels": ["commit"],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "immutable snapshot of a change at a point in time"
+        }
+      ]
+    },
+    {
+      "id": "c.working_copy",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "working copy",
+      "altLabels": [],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "checked-out filesystem state for the current change"
+        }
+      ]
+    },
+    {
+      "id": "c.bookmark",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "bookmark",
+      "altLabels": [],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "named reference that follows rewrites to point at a revision"
+        }
+      ]
+    },
+    {
+      "id": "c.operation_log",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "operation log",
+      "altLabels": [],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "record of repository operations used to recover or undo changes"
+        }
+      ]
+    },
+    {
+      "id": "c.conflict",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "conflict",
+      "altLabels": [],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "unresolved merge state materialized in the working copy"
+        }
+      ]
+    },
+    {
+      "id": "c.identifier.jj",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "jj identifier",
+      "altLabels": [],
+      "definitions": [
+        {
+          "scope": "root",
+          "axisId": null,
+          "parentId": null,
+          "delimitingCharacteristicIds": [],
+          "text": "identifier used by jj to address changes or revisions"
+        }
+      ]
+    },
+    {
+      "id": "c.identifier.change_id",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "change id",
+      "altLabels": ["change ID"],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.identifier_target",
+          "parentId": "c.identifier.jj",
+          "delimitingCharacteristicIds": ["ch.identifier_target.change"],
+          "text": "jj identifier that refers to a change rather than a single revision"
+        }
+      ]
+    },
+    {
+      "id": "c.identifier.revision_id",
+      "kind": "atomic",
+      "status": "stable",
+      "prefLabel": "revision id",
+      "altLabels": ["revision ID", "commit id", "commit ID"],
+      "definitions": [
+        {
+          "scope": "axis",
+          "axisId": "axis.identifier_target",
+          "parentId": "c.identifier.jj",
+          "delimitingCharacteristicIds": ["ch.identifier_target.revision"],
+          "text": "jj identifier that refers to a specific revision snapshot"
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "type": "generic",
+      "sourceId": "c.repo.jj_only",
+      "targetId": "c.repo.jj",
+      "axisId": "axis.repo_layout"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.repo.colocated",
+      "targetId": "c.repo.jj",
+      "axisId": "axis.repo_layout"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.identifier.change_id",
+      "targetId": "c.identifier.jj",
+      "axisId": "axis.identifier_target"
+    },
+    {
+      "type": "generic",
+      "sourceId": "c.identifier.revision_id",
+      "targetId": "c.identifier.jj",
+      "axisId": "axis.identifier_target"
+    },
+    {
+      "type": "associative",
+      "sourceId": "c.working_copy",
+      "targetId": "c.change",
+      "axisId": null,
+      "label": "materializes"
+    }
+  ]
+}

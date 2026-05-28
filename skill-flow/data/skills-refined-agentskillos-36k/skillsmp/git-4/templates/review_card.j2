@@ -1,0 +1,46 @@
+{# review_card.j2 - Smart Commit Review Card Template #}
+{# LLM analysis template with Jinja2 variables #}
+
+### 📋 Commit Analysis
+
+| Field           | Value               |
+| --------------- | ------------------- |
+| **Type**        | `feat|fix|refactor|docs|style|test|chore` |
+| **Scope**       | `scope-name`        |
+| **Description** | {short_description} |
+
+#### 📁 Files to commit (already staged)
+
+{{ staged_files }}
+
+#### 🔍 Diff for Analysis
+```diff
+{{ diff }}
+```
+
+#### 📝 Message
+```
+
+{type}({scope}): {description}
+
+- {change_detail_1}
+- {change_detail_2}
+- ...
+
+---
+*🤖 Generated with [Claude Code](https://claude.com/claude-code)*
+
+*Co-Authored-By: Claude <noreply@anthropic.com>*
+
+**IMPORTANT**: Include ALL files shown in the staged diff in your analysis.
+
+## ✅ Approval
+
+After user confirms "Yes", call:
+```
+@omni("git.smart_commit", {
+    "action": "approve",
+    "workflow_id": "{{ workflow_id }}",
+    "message": "YOUR_GENERATED_MESSAGE"
+})
+```

@@ -1,0 +1,233 @@
+/**
+ * TheHUB Smart Auto-Fit Grid System
+ *
+ * Usage:
+ * - .grid-auto: Auto-fit columns (280px min)
+ * - .grid-2, .grid-3, .grid-4: Fixed column counts with breakpoints
+ * - .grid-stats: For stat cards (240px min)
+ * - .grid-compact: For small cards (200px min)
+ * - .grid-cards: For content cards (280px min)
+ * - .grid-mobile-2: Force 2 columns on mobile
+ */
+
+/* ========================================================================
+   BASE GRID
+   ======================================================================== */
+
+.grid {
+    display: grid;
+    gap: var(--space-lg);
+    width: 100%;
+}
+
+/* ========================================================================
+   AUTO-FIT GRIDS (Content determines columns)
+   ======================================================================== */
+
+/* Default auto-fit: 280px minimum column width */
+.grid-auto {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Stat cards: Smaller minimum (240px) */
+.grid-stats {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+/* Compact cards: Even smaller (200px) */
+.grid-compact {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+/* Content cards: Standard size (280px) */
+.grid-cards {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Wide cards: Larger minimum (360px) */
+.grid-wide {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+/* ========================================================================
+   FIXED COLUMN GRIDS (With smart breakpoints)
+   ======================================================================== */
+
+/* 2 Columns */
+.grid-2 {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 600px) {
+    .grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 3 Columns */
+.grid-3 {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 500px) {
+    .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* 4 Columns */
+.grid-4 {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 500px) {
+    .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .grid-4 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* 5 Columns */
+.grid-5 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 600px) {
+    .grid-5 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .grid-5 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .grid-5 {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* ========================================================================
+   GAP VARIATIONS
+   ======================================================================== */
+
+.grid-gap-xs {
+    gap: var(--space-xs);
+}
+
+.grid-gap-sm {
+    gap: var(--space-sm);
+}
+
+.grid-gap-md {
+    gap: var(--space-md);
+}
+
+.grid-gap-lg {
+    gap: var(--space-lg);
+}
+
+.grid-gap-xl {
+    gap: var(--space-xl);
+}
+
+/* ========================================================================
+   MOBILE OVERRIDES
+   ======================================================================== */
+
+/* Force 2 columns on mobile for compact content */
+@media (max-width: 599px) {
+    .grid-mobile-2 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .grid-mobile-2.grid-gap-sm,
+    .grid-mobile-2.grid-gap-xs {
+        gap: var(--space-xs);
+    }
+
+    .grid-mobile-1 {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ========================================================================
+   SPAN UTILITIES
+   ======================================================================== */
+
+.span-2 {
+    grid-column: span 2;
+}
+
+.span-3 {
+    grid-column: span 3;
+}
+
+.span-4 {
+    grid-column: span 4;
+}
+
+.span-full {
+    grid-column: 1 / -1;
+}
+
+/* Responsive spans - only apply on larger screens */
+@media (max-width: 599px) {
+    .span-2,
+    .span-3,
+    .span-4 {
+        grid-column: span 1;
+    }
+}
+
+/* Large screen specific spans */
+@media (min-width: 900px) {
+    .lg\:span-2 {
+        grid-column: span 2;
+    }
+
+    .lg\:span-3 {
+        grid-column: span 3;
+    }
+}
+
+/* ========================================================================
+   ALIGNMENT UTILITIES
+   ======================================================================== */
+
+.grid-center {
+    justify-items: center;
+    align-items: center;
+}
+
+.grid-stretch {
+    align-items: stretch;
+}
+
+.grid-start {
+    align-items: start;
+}
+
+.grid-end {
+    align-items: end;
+}

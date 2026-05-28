@@ -1,0 +1,32 @@
+# GraphCast Model Configuration - Light Version
+# Reduced version for faster training and lower memory usage
+# Suitable for quick experiments and limited GPU memory
+
+# Temporal configuration
+input_len: 7        # Number of input frames
+output_len: 1       # Number of output frames
+in_channels: 2      # Ocean velocity components (u, v)
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration (reduced)
+mesh_level: 3       # Lower mesh refinement for efficiency
+multimesh: false    # Single resolution mesh to save memory
+
+# Model architecture parameters (reduced)
+hidden_dim: 64      # Smaller hidden dimension
+processor_layers: 4 # Fewer processor layers
+mlp_layers: 1      # Keep single MLP layer for efficiency
+aggregation: "mean" # Mean aggregation is slightly more efficient
+
+# Processing options
+add_3d_dim: false        # Skip pseudo-3D to save computation
+temporal_encoding: "concat"  # Simple concatenation
+
+# Training recommendations
+# - Batch size: 2-8 depending on GPU
+# - Learning rate: 5e-4
+# - This configuration uses ~2-3 GB VRAM
+# - Training is 2-3x faster than standard version
+# - Suitable for prototyping and ablation studies

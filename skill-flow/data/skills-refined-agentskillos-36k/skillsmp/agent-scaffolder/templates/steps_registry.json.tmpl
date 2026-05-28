@@ -1,0 +1,116 @@
+{
+  "$schema": "../../agents/schemas/steps_registry.schema.json",
+  "agentId": "{{AGENT_NAME}}",
+  "version": "1.0.0",
+  "userPromptsBase": ".agent/{{AGENT_NAME}}/prompts",
+  "schemasBase": ".agent/{{AGENT_NAME}}/schemas",
+
+  "c1": "steps",
+  "pathTemplate": "{c1}/{c2}/{c3}/f_{edition}.md",
+
+  "entryStepMapping": {
+    "issue": "initial.default",
+    "default": "initial.default",
+    "stepMachine": "initial.default",
+    "externalState": "initial.default",
+    "iterate": "initial.default"
+  },
+
+  "steps": {
+    "initial.default": {
+      "stepId": "initial.default",
+      "stepKind": "work",
+      "name": "Initial Prompt",
+      "c2": "initial",
+      "c3": "default",
+      "edition": "default",
+      "fallbackKey": "default_initial",
+      "outputSchemaRef": {
+        "file": "step_outputs.schema.json",
+        "schema": "#/definitions/initial.default"
+      },
+      "structuredGate": {
+        "allowedIntents": ["next", "repeat"],
+        "intentField": "next_action.action",
+        "intentSchemaRef": "#/properties/next_action/properties/action",
+        "failFast": true,
+        "handoffFields": ["analysis", "plan"]
+      },
+      "transitions": {
+        "next": { "target": "continuation.default" },
+        "repeat": { "target": "initial.default" }
+      }
+    },
+    "continuation.default": {
+      "stepId": "continuation.default",
+      "stepKind": "work",
+      "name": "Continuation Prompt",
+      "c2": "continuation",
+      "c3": "default",
+      "edition": "default",
+      "outputSchemaRef": {
+        "file": "step_outputs.schema.json",
+        "schema": "#/definitions/continuation.default"
+      },
+      "structuredGate": {
+        "allowedIntents": ["next", "repeat", "handoff"],
+        "intentField": "next_action.action",
+        "intentSchemaRef": "#/properties/next_action/properties/action",
+        "failFast": true,
+        "handoffFields": ["progress"]
+      },
+      "transitions": {
+        "next": { "target": "verification.default" },
+        "repeat": { "target": "continuation.default" },
+        "handoff": { "target": "closure.default" }
+      }
+    },
+    "verification.default": {
+      "stepId": "verification.default",
+      "stepKind": "verification",
+      "name": "Verification Step",
+      "c2": "verification",
+      "c3": "default",
+      "edition": "default",
+      "outputSchemaRef": {
+        "file": "step_outputs.schema.json",
+        "schema": "#/definitions/verification.default"
+      },
+      "structuredGate": {
+        "allowedIntents": ["next", "repeat", "escalate"],
+        "intentField": "next_action.action",
+        "intentSchemaRef": "#/properties/next_action/properties/action",
+        "failFast": true,
+        "handoffFields": ["verification_result"]
+      },
+      "transitions": {
+        "next": { "target": "closure.default" },
+        "repeat": { "target": "continuation.default" },
+        "escalate": { "target": "continuation.default" }
+      }
+    },
+    "closure.default": {
+      "stepId": "closure.default",
+      "stepKind": "closure",
+      "name": "Closure Step",
+      "c2": "closure",
+      "c3": "default",
+      "edition": "default",
+      "outputSchemaRef": {
+        "file": "step_outputs.schema.json",
+        "schema": "#/definitions/closure.default"
+      },
+      "structuredGate": {
+        "allowedIntents": ["closing", "repeat"],
+        "intentField": "next_action.action",
+        "intentSchemaRef": "#/properties/next_action/properties/action",
+        "failFast": true,
+        "handoffFields": ["final_summary"]
+      },
+      "transitions": {
+        "closing": { "target": null },
+        "repeat": { "target": "continuation.default" }
+      }
+    }
+  }
+}

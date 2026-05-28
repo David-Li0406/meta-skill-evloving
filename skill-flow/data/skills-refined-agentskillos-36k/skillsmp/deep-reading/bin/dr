@@ -1,0 +1,37 @@
+#!/bin/bash
+# Deep Reading CLI
+# Usage: dr <command> [args]
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON_PATH="$SCRIPT_DIR/src"
+
+export PYTHONPATH="$PYTHON_PATH:$PYTHONPATH"
+
+case "${1:-help}" in
+    fetch|f)
+        shift
+        python3 -m fetcher.cli "$@"
+        ;;
+    play|p)
+        shift
+        python3 -m player.cli "$@"
+        ;;
+    review|r)
+        shift
+        python3 -m notes.cli "$@"
+        ;;
+    status|s)
+        python3 -m fetcher.status "$@"
+        ;;
+    *)
+        echo "Deep Reading v2"
+        echo ""
+        echo "Usage: dr <command> [args]"
+        echo ""
+        echo "Commands:"
+        echo "  fetch, f <url>    Download and process content"
+        echo "  play, p [id]      Play content in TUI player"
+        echo "  review, r         Review and sync notes to Obsidian"
+        echo "  status, s         Show processing status"
+        ;;
+esac

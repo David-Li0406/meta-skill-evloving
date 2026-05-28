@@ -1,0 +1,38 @@
+{
+  "name": "devup-ui",
+  "private": true,
+  "version": "1.0.0",
+  "description": "devup-ui",
+  "type": "module",
+  "scripts": {
+    "lint": "cargo fmt --all -- --check && cargo clippy --all-targets --all-features -- -D warnings && eslint",
+    "lint:fix": "eslint --fix",
+    "pretest": "bun run --filter @devup-ui/vite-plugin build",
+    "test": "cargo tarpaulin --out xml --out stdout --out html --all-targets --engine llvm && bun test",
+    "build": "bun run --filter @devup-ui/wasm --filter @devup-ui/plugin-utils build && bun run --filter @devup-ui/react --filter @devup-ui/webpack-plugin build && bun run --filter @devup-ui/eslint-plugin --filter @devup-ui/vite-plugin --filter @devup-ui/next-plugin --filter @devup-ui/rsbuild-plugin --filter @devup-ui/bun-plugin --filter @devup-ui/components --filter @devup-ui/reset-css build",
+    "dev": "bun run --filter '*' dev",
+    "benchmark": "bun benchmark.js",
+    "prepare": "husky",
+    "changepacks": "bunx @changepacks/cli"
+  },
+  "devDependencies": {
+    "@devup-ui/eslint-plugin": "workspace:^",
+    "@types/bun": "latest",
+    "@types/node": "^25.0",
+    "bun-test-env-dom": "^1.0.3",
+    "eslint": "^9.39",
+    "eslint-plugin-devup": "^2.0",
+    "eslint-plugin-eslint-plugin": "^7.2",
+    "eslint-plugin-jsonc": "^2.21",
+    "eslint-plugin-mdx": "^3.6",
+    "globals": "^17.0",
+    "husky": "^9.1"
+  },
+  "author": "devfive",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "bindings/*",
+    "benchmark/*"
+  ]
+}

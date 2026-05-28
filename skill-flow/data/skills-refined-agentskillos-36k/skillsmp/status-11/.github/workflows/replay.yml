@@ -1,0 +1,217 @@
+name: Replay Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+    paths:
+      - 'web/stories/**'
+      - 'scripts/**'
+      - 'tests/golden-path/**'
+      - '.github/workflows/replay.yml'
+
+jobs:
+  replay:
+    name: replay-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: replay-gate-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x]
+        os: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Pre-check golden scripts and story sources
+        shell: bash
+        run: |
+          set -e
+          echo "Checking for golden scripts and matching .ink sources..."
+          found=0
+          for script in web/stories/golden.*.json; do
+            [ -e "$script" ] || continue
+            base=$(basename "$script")
+            name=${base#golden.}
+            name=${name%.json}
+            if [ -f "web/stories/${name}.ink" ] || [ -f "web/stories/${name}.ink.json" ]; then
+              found=1
+              break
+            fi
+          done
+          if [ "$found" -ne 1 ]; then
+            echo "ERROR: No golden scripts found or matching story sources missing under web/stories/. Ensure at least one web/stories/golden.*.json and corresponding .ink exist."
+            exit 1
+          fi
+
+      - name: Create artifacts dir
+        run: mkdir -p artifacts/logs artifacts/results
+
+      - name: Check changed files
+        id: check-changes
+        shell: bash
+        run: |
+          set -e
+          echo "Determining changed files..."
+          # ensure enough history for diff and fetch base refs
+          git fetch --no-tags --prune origin '+refs/heads/*:refs/remotes/origin/*' --depth=50 || true
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA=${{ github.event.pull_request.base.sha }}
+            HEAD_SHA=${{ github.event.pull_request.head.sha }}
+            # fallback if base sha missing in shallow checkout
+            if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "null" ]; then
+              echo "BASE sha missing; computing merge-base with origin/main"
+              BASE_SHA=$(git merge-base origin/main $HEAD_SHA || true)
+            fi
+          else
+            BASE_SHA=${{ github.event.before }}
+            HEAD_SHA=${{ github.sha }}
+          fi
+          echo "Comparing $BASE_SHA..$HEAD_SHA"
+          changed=$(git diff --name-only $BASE_SHA $HEAD_SHA || true)
+          echo "$changed" > artifacts/results/changed_files.txt || true
+          echo "Changed files:\n$changed"
+          if echo "$changed" | grep -qE "^(web/stories/|scripts/|tests/golden-path/)"; then
+            echo "run_replay=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_replay=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run replay harness for golden scripts
+        if: steps.check-changes.outputs.run_replay == 'true'
+        id: run-replay
+        shell: bash
+        run: |
+          set -o pipefail
+          EXIT_SUM=0
+          echo "Scanning for golden scripts..."
+          for script in web/stories/golden.*.json; do
+            [ -e "$script" ] || continue
+            base=$(basename "$script")
+            name=${base#golden.}
+            name=${name%.json}
+            # prefer .ink story; fall back to compiled .ink.json if present
+            story=web/stories/${name}.ink
+            if [ ! -f "$story" ]; then
+              if [ -f "web/stories/${name}.ink.json" ]; then
+                # some workflows may want compiled JSON; scripts/replay.js expects ink source, so fail if .ink missing
+                echo "WARNING: $story not found but compiled JSON exists; scripts/replay.js expects .ink source."
+                story="web/stories/${name}.ink.json"
+              fi
+            fi
+
+            out=artifacts/logs/replay.${name}.log
+            echo "Running replay on story=$story script=$script -> $out"
+            # prefer structured result-out; fall back to log parsing
+            node scripts/replay.js --story "$story" --script "$script" --result-out "artifacts/results/replay.${name}.result.json" >"$out" 2>&1 || EXIT=$? && true
+            # capture exit per test
+            if [ -z "${EXIT+x}" ]; then
+              EXIT=0
+            fi
+            echo "REPLAY_EXIT=$EXIT" >>"$out"
+            if [ "$EXIT" -ne 0 ]; then
+              echo "Replay failed for $name (exit=$EXIT)"
+              # copy raw log (.failure.log) and write a small machine-readable JSON summary (.failure.json)
+              cp "$out" "artifacts/results/replay.${name}.failure.log" || true
+              # Prefer the runner-produced result file; if missing, synthesize a failure JSON
+                if [ -f "artifacts/results/replay.${name}.result.json" ]; then
+                  cp "artifacts/results/replay.${name}.result.json" "artifacts/results/replay.${name}.failure.json" || true
+                else
+                  printf '%s\n' "{\"story\":\"$story\",\"script\":\"$script\",\"log\":\"artifacts/results/replay.${name}.failure.log\",\"exit\":$EXIT}" > "artifacts/results/replay.${name}.failure.json" || true
+                fi
+            fi
+            EXIT_SUM=$((EXIT_SUM + EXIT))
+            unset EXIT
+          done
+
+          echo "Total exit sum: $EXIT_SUM"
+          # write a small summary
+          echo "{ \"exit_sum\": $EXIT_SUM }" >artifacts/results/summary.json
+          # expose exit via step output
+          echo "exit_sum=$EXIT_SUM" >>$GITHUB_OUTPUT
+          # fail the step if any non-zero exit
+          if [ "$EXIT_SUM" -ne 0 ]; then
+            echo "One or more replays failed"
+            exit 1
+          fi
+        
+      - name: Summarize replay results
+        if: always()
+        shell: bash
+        run: |
+          set -e
+          failed=0
+          for f in artifacts/results/*.failure.*; do
+            [ -e "$f" ] || continue
+            failed=$((failed+1))
+          done
+          total=0
+          if [ -f artifacts/results/summary.json ]; then
+            total=$(grep -oE '"exit_sum"[[:space:]]*:[[:space:]]*[0-9]+' artifacts/results/summary.json | grep -oE '[0-9]+' || true)
+            total=${total:-0}
+          fi
+          echo "replays_total_exit_sum: $total" > artifacts/results/summary.txt
+          echo "replays_failed_count: $failed" >> artifacts/results/summary.txt
+          echo "Replay summary:"; cat artifacts/results/summary.txt
+
+      - name: Compress artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -e
+          # compress logs and results to single archives (skip if empty)
+          if [ -d artifacts/logs ] && [ "$(ls -A artifacts/logs)" ]; then
+            tar -czf artifacts/replay-logs.tgz -C artifacts logs || true
+          else
+            echo "No logs to compress"
+            # create empty placeholder to avoid upload errors
+            : > artifacts/replay-logs.tgz || true
+          fi
+          if [ -d artifacts/results ] && [ "$(ls -A artifacts/results)" ]; then
+            tar -czf artifacts/replay-results.tgz -C artifacts results || true
+          else
+            echo "No results to compress"
+            # create empty placeholder to avoid upload errors
+            : > artifacts/replay-results.tgz || true
+          fi
+
+      - name: Upload replay logs (archive)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: replay-logs-${{ matrix.node-version }}
+          path: artifacts/replay-logs.tgz
+          retention-days: 14
+
+      - name: Upload replay results (archive)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: replay-results-${{ matrix.node-version }}
+          path: artifacts/replay-results.tgz
+          retention-days: 30
+
+      # optional: make this job explicitly required in branch protection settings

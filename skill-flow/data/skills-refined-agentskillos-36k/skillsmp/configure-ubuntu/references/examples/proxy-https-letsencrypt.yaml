@@ -1,0 +1,120 @@
+#cloud-config
+# =============================================================================
+# Nginx Reverse Proxy with HTTPS (Let's Encrypt Certificate)
+# =============================================================================
+#
+# Purpose: Public-facing web server with production HTTPS using Let's Encrypt
+#
+# Features:
+# - Automatic SSL certificate from Let's Encrypt (free, trusted)
+# - HTTP to HTTPS redirect
+# - Automatic certificate renewal via systemd timer
+# - Modern TLS configuration
+# - Reverse proxy to internal application
+#
+# Prerequisites:
+# - A domain name pointing to this server's public IP (A record)
+# - Port 80 open for Let's Encrypt HTTP-01 challenge
+# - Port 443 open for HTTPS traffic
+#
+# How it works:
+# 1. Installs nginx and certbot with nginx plugin
+# 2. Creates initial HTTP-only nginx configuration
+# 3. Runs certbot to obtain certificate and configure HTTPS
+# 4. Certbot automatically sets up renewal timer
+#
+# Configuration:
+# - Replace 'YOUR_DOMAIN' with your actual domain (e.g., app.example.com)
+# - Replace 'YOUR_EMAIL' with your email for Let's Encrypt notifications
+# - Replace 'APP_SERVER:5001' with your backend server address
+#
+# Note: Use proxy-https.yaml (self-signed) for development/testing.
+# Use this pattern only when you have a real domain name.
+#
+# =============================================================================
+package_update: true
+package_upgrade: true
+
+packages:
+  - nginx
+  - certbot
+  - python3-certbot-nginx
+
+write_files:
+  # Initial HTTP configuration (certbot will modify this for HTTPS)
+  - path: /etc/nginx/sites-available/app
+    content: |
+      server {
+          listen 80;
+          server_name YOUR_DOMAIN;
+
+          location / {
+              # Replace APP_SERVER with backend IP or hostname
+              proxy_pass http://APP_SERVER:5001;
+              proxy_http_version 1.1;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          }
+      }
+    owner: root:root
+    permissions: '0644'
+
+  # Setup script to configure Let's Encrypt
+  - path: /usr/local/bin/setup-letsencrypt.sh
+    content: |
+      #!/bin/bash
+      set -e
+
+      # Configuration - REPLACE THESE VALUES
+      DOMAIN="YOUR_DOMAIN"
+      EMAIL="YOUR_EMAIL"
+
+      echo "=== Setting up Let's Encrypt for $DOMAIN ==="
+
+      # Validate configuration
+      if [ "$DOMAIN" = "YOUR_DOMAIN" ] || [ "$EMAIL" = "YOUR_EMAIL" ]; then
+          echo "ERROR: Please edit this script and replace YOUR_DOMAIN and YOUR_EMAIL"
+          echo "Then run: sudo /usr/local/bin/setup-letsencrypt.sh"
+          exit 1
+      fi
+
+      # Enable nginx site
+      ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app
+      rm -f /etc/nginx/sites-enabled/default
+
+      # Test nginx configuration
+      nginx -t
+
+      # Reload nginx to apply HTTP configuration
+      systemctl reload nginx
+
+      # Obtain certificate and configure HTTPS
+      # --non-interactive: No prompts
+      # --agree-tos: Agree to Let's Encrypt terms
+      # --redirect: Add HTTP to HTTPS redirect
+      # --nginx: Use nginx plugin for configuration
+      certbot --nginx \
+          --non-interactive \
+          --agree-tos \
+          --email "$EMAIL" \
+          --redirect \
+          --domain "$DOMAIN"
+
+      echo "=== Let's Encrypt Setup Complete ==="
+      echo "Certificate will auto-renew via systemd timer"
+      echo "Check renewal status: sudo certbot renew --dry-run"
+    owner: root:root
+    permissions: '0755'
+
+runcmd:
+  # Enable nginx site (HTTP only initially)
+  - ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app
+  - rm -f /etc/nginx/sites-enabled/default
+  - systemctl reload nginx
+
+  # Note: Run setup-letsencrypt.sh manually after:
+  # 1. DNS is configured (domain points to this server)
+  # 2. Script is edited with real domain and email
+  # sudo /usr/local/bin/setup-letsencrypt.sh

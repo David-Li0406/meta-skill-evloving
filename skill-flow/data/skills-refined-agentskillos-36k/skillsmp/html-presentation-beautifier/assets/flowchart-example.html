@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>流程图示例 - McKinsey Style</title>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .flowchart-showcase {
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+            margin: 40px 0;
+        }
+
+        .flowchart-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .flowchart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .chart-type-badge {
+            display: inline-block;
+            background: var(--accent-blue);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .flow-node {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            padding: 15px;
+            background: white;
+            border: 2px solid var(--accent-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .flow-node:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* Node Types */
+        .flow-node-start {
+            border-radius: 25px;
+            background: var(--accent-green);
+            color: white;
+            border-color: var(--accent-green);
+        }
+
+        .flow-node-end {
+            border-radius: 25px;
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .flow-node-process {
+            border-radius: 4px;
+            background: white;
+        }
+
+        .flow-node-decision {
+            transform: translateX(-50%) rotate(45deg);
+            width: 120px;
+            height: 120px;
+            background: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+        }
+
+        .flow-node-decision .node-content {
+            transform: rotate(-45deg);
+        }
+
+        /* Arrows */
+        .flow-arrow {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            background: var(--text-light);
+        }
+
+        .flow-arrow-head {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%) rotate(180deg);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 10px solid var(--text-light);
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        .node-legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-shape {
+            width: 40px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 流程图示例</h1>
+        <p class="description">
+            McKinsey 风格业务流程可视化 | 垂直流程布局，多种节点类型<br>
+            适用于决策流程、业务流程、审批流程等场景
+        </p>
+
+        <!-- Node Legend -->
+        <div class="node-legend">
+            <div class="legend-item">
+                <div class="legend-shape" style="border-radius: 25px; background: var(--accent-green); border-color: var(--accent-green); color: white;">开始</div>
+                <span>开始节点</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-shape" style="border-radius: 4px; background: white; border-color: var(--accent-blue);">过程</div>
+                <span>过程节点</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-shape" style="transform: rotate(45deg); background: var(--accent-yellow); border-color: var(--accent-yellow);">判断</div>
+                <span>决策节点</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-shape" style="border-radius: 25px; background: var(--accent-primary); border-color: var(--accent-primary); color: white;">结束</div>
+                <span>结束节点</span>
+            </div>
+        </div>
+
+        <!-- Example 1: Decision Flow -->
+        <div class="flowchart-showcase">
+            <div class="flowchart-section">
+                <h2>示例 1：产品开发决策流程</h2>
+                <p class="description">
+                    从产品构思到最终决策的完整流程
+                </p>
+                
+                <div class="flowchart-container" style="height: 700px;">
+                    <span class="chart-type-badge">Flowchart (流程图)</span>
+                    
+                    <!-- Nodes -->
+                    <div class="flow-node flow-node-start" style="top: 20px;">开始</div>
+                    
+                    <div class="flow-node flow-node-process" style="top: 140px;">需求分析</div>
+                    
+                    <div class="flow-node flow-node-decision" style="top: 280px;">
+                        <div class="node-content" style="font-size: 12px;">可行性?</div>
+                    </div>
+                    
+                    <div class="flow-node flow-node-process" style="top: 450px; left: 25%;">原型设计</div>
+                    
+                    <div class="flow-node flow-node-process" style="top: 450px; left: 75%;">终止项目</div>
+                    
+                    <div class="flow-node flow-node-end" style="top: 580px;">完成</div>
+                    
+                    <!-- Arrows -->
+                    <div class="flow-arrow" style="top: 70px; height: 60px;"></div>
+                    <div class="flow-arrow-head" style="top: 125px;"></div>
+                    
+                    <div class="flow-arrow" style="top: 175px; height: 95px;"></div>
+                    <div class="flow-arrow-head" style="top: 265px;"></div>
+                    
+                    <div class="flow-arrow" style="top: 410px; left: 50%; width: 100px; height: 2px; background: var(--text-light); transform-origin: left center;"></div>
+                    <div class="flow-arrow" style="top: 410px; left: 25%; height: 30px;"></div>
+                    <div class="flow-arrow-head" style="top: 435px; left: 25%;"></div>
+                    
+                    <div class="flow-arrow" style="top: 410px; left: 75%; height: 30px;"></div>
+                    <div class="flow-arrow-head" style="top: 435px; left: 75%;"></div>
+                    
+                    <div class="flow-arrow" style="top: 510px; left: 25%; height: 60px;"></div>
+                    <div class="flow-arrow-head" style="top: 565px; left: 25%;"></div>
+                    
+                    <!-- Labels -->
+                    <div style="position: absolute; top: 390px; left: 35%; font-size: 12px; color: var(--accent-green); font-weight: bold;">是</div>
+                    <div style="position: absolute; top: 390px; left: 65%; font-size: 12px; color: var(--accent-primary); font-weight: bold;">否</div>
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 流程说明</h4>
+                    <p>该流程图展示了产品开发的决策路径：</p>
+                    <ul style="line-height: 1.8; margin-top: 10px;">
+                        <li><strong>绿色圆角</strong>：流程开始</li>
+                        <li><strong>蓝色矩形</strong>：需求分析</li>
+                        <li><strong>黄色菱形</strong>：可行性决策节点</li>
+                        <li><strong>双分支</strong>：可行则继续设计，不可行则终止</li>
+                        <li><strong>红色圆角</strong>：流程结束</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 2: Approval Process -->
+        <div class="flowchart-showcase">
+            <div class="flowchart-section">
+                <h2>示例 2：采购审批流程</h2>
+                <p class="description">
+                    企业内部采购申请的多级审批流程
+                </p>
+                
+                <div class="flowchart-container" style="height: 750px;">
+                    <span class="chart-type-badge">Flowchart (流程图)</span>
+                    
+                    <!-- Nodes -->
+                    <div class="flow-node flow-node-start" style="top: 20px;">提交申请</div>
+                    
+                    <div class="flow-node flow-node-process" style="top: 140px;">部门审批</div>
+                    
+                    <div class="flow-node flow-node-decision" style="top: 280px;">
+                        <div class="node-content" style="font-size: 12px;">通过?</div>
+                    </div>
+                    
+                    <div class="flow-node flow-node-process" style="top: 450px;">财务审批</div>
+                    
+                    <div class="flow-node flow-node-decision" style="top: 560px;">
+                        <div class="node-content" style="font-size: 12px;">通过?</div>
+                    </div>
+                    
+                    <div class="flow-node flow-node-end" style="top: 680px;">批准执行</div>
+                    
+                    <!-- Arrows -->
+                    <div class="flow-arrow" style="top: 70px; height: 60px;"></div>
+                    <div class="flow-arrow-head" style="top: 125px;"></div>
+                    
+                    <div class="flow-arrow" style="top: 175px; height: 95px;"></div>
+                    <div class="flow-arrow-head" style="top: 265px;"></div>
+                    
+                    <div class="flow-arrow" style="top: 410px; height: 30px;"></div>
+                    <div class="flow-arrow-head" style="top: 435px;"></div>
+                    
+                    <div class="flow-arrow" style="top: 485px; height: 65px;"></div>
+                    <div class="flow-arrow-head" style="top: 545px;"></div>
+                    
+                    <div class="flow-arrow" style="top: 620px; height: 50px;"></div>
+                    <div class="flow-arrow-head" style="top: 665px;"></div>
+                    
+                    <!-- Reject arrow -->
+                    <div style="position: absolute; top: 350px; right: 20%; font-size: 12px; color: var(--accent-primary); font-weight: bold;">否 → 退回修改</div>
+                    
+                    <div style="position: absolute; top: 630px; right: 20%; font-size: 12px; color: var(--accent-primary); font-weight: bold;">否 → 拒绝申请</div>
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 审批层级</h4>
+                    <p>该流程展示了企业采购的审批层级：</p>
+                    <ul style="line-height: 1.8; margin-top: 10px;">
+                        <li><strong>第一级</strong>：部门经理审批</li>
+                        <li><strong>决策点1</strong>：部门是否批准</li>
+                        <li><strong>第二级</strong>：财务部门审批</li>
+                        <li><strong>决策点2</strong>：财务是否批准</li>
+                        <li><strong>最终执行</strong>：两级都通过后方可执行</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Use Cases -->
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>业务流程</h4>
+                <p>订单处理、客户服务流程</p>
+            </div>
+            <div class="use-case-card">
+                <h4>审批流程</h4>
+                <p>采购审批、请假审批、报销流程</p>
+            </div>
+            <div class="use-case-card">
+                <h4>决策流程</h4>
+                <p>投资决策、产品立项、战略选择</p>
+            </div>
+            <div class="use-case-card">
+                <h4>技术流程</h4>
+                <p>开发流程、测试流程、发布流程</p>
+            </div>
+            <div class="use-case-card">
+                <h4>用户旅程</h4>
+                <p>客户路径、用户转化流程</p>
+            </div>
+            <div class="use-case-card">
+                <h4>异常处理</h4>
+                <p>错误处理、故障排查流程</p>
+            </div>
+        </div>
+
+        <!-- Technical Implementation -->
+        <h2>🛠️ 技术实现</h2>
+        <div class="info-box">
+            <h4>核心 CSS 代码</h4>
+            <div class="code-block">
+<span style="color: #75715e;">/* 节点基础样式 */</span>
+<span style="color: #66d9ef;">.flow-node</span> {
+    <span style="color: #66d9ef;">position</span>: <span style="color: #e6db74;">absolute</span>;
+    <span style="color: #66d9ef;">left</span>: <span style="color: #e6db74;">50%</span>;
+    <span style="color: #66d9ef;">transform</span>: <span style="color: #e6db74;">translateX(-50%)</span>;
+    <span style="color: #66d9ef;">border</span>: <span style="color: #e6db74;">2px solid #556EE6</span>;
+    <span style="color: #66d9ef;">padding</span>: <span style="color: #e6db74;">15px</span>;
+}
+
+<span style="color: #75715e;">/* 决策节点（菱形）*/</span>
+<span style="color: #66d9ef;">.flow-node-decision</span> {
+    <span style="color: #66d9ef;">transform</span>: <span style="color: #e6db74;">translateX(-50%) rotate(45deg)</span>;
+    <span style="color: #66d9ef;">width</span>: <span style="color: #e6db74;">120px</span>;
+    <span style="color: #66d9ef;">height</span>: <span style="color: #e6db74;">120px</span>;
+}
+
+<span style="color: #75715e;">/* 箭头 */</span>
+<span style="color: #66d9ef;">.flow-arrow-head</span> {
+    <span style="color: #66d9ef;">border-left</span>: <span style="color: #e6db74;">8px solid transparent</span>;
+    <span style="color: #66d9ef;">border-right</span>: <span style="color: #e6db74;">8px solid transparent</span>;
+    <span style="color: #66d9ef;">border-top</span>: <span style="color: #e6db74;">10px solid #74788d</span>;
+}
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>节点类型与形状</h4>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <tr style="background: #e0e0e0;">
+                    <th style="padding: 10px; text-align: left;">类型</th>
+                    <th style="padding: 10px; text-align: left;">形状</th>
+                    <th style="padding: 10px; text-align: left;">颜色</th>
+                    <th style="padding: 10px; text-align: left;">用途</th>
+                </tr>
+                <tr>
+                    <td style="padding: 10px;">开始</td>
+                    <td style="padding: 10px;">圆角矩形</td>
+                    <td style="padding: 10px;">绿色</td>
+                    <td style="padding: 10px;">流程起点</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td style="padding: 10px;">过程</td>
+                    <td style="padding: 10px;">矩形</td>
+                    <td style="padding: 10px;">蓝色边框</td>
+                    <td style="padding: 10px;">处理步骤</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px;">决策</td>
+                    <td style="padding: 10px;">菱形</td>
+                    <td style="padding: 10px;">黄色</td>
+                    <td style="padding: 10px;">判断分支</td>
+                </tr>
+                <tr style="background: #f8f9fa;">
+                    <td style="padding: 10px;">结束</td>
+                    <td style="padding: 10px;">圆角矩形</td>
+                    <td style="padding: 10px;">红色</td>
+                    <td style="padding: 10px;">流程终点</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Design Guidelines -->
+        <h2>📐 设计规范</h2>
+        <div class="info-box">
+            <h4>McKinsey 风格建议</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>简洁明了</strong>：每个节点只包含核心信息（2-4个字）</li>
+                <li><strong>逻辑清晰</strong>：流程从上到下，分支清晰标注</li>
+                <li><strong>颜色语义</strong>：开始（绿）、过程（蓝）、决策（黄）、结束（红）</li>
+                <li><strong>形状规范</strong>：严格遵循流程图标准形状</li>
+                <li><strong>间距均匀</strong>：节点间距一致（约120px）</li>
+            </ul>
+        </div>
+
+        <!-- Best Practices -->
+        <h2>✅ 使用建议</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>✓ 控制节点数</h4>
+                <p>建议5-7个节点，保持简洁</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 明确分支</h4>
+                <p>标注"是/否"或"通过/拒绝"</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 单向流程</h4>
+                <p>避免循环，保持线性流程</p>
+            </div>
+            <div class="use-case-card">
+                <h4>✓ 统一风格</h4>
+                <p>使用一致的配色和形状</p>
+            </div>
+            <div class="use-case-card" style="border-left-color: #dc3545;">
+                <h4 style="color: #dc3545;">❌ 避免复杂嵌套</h4>
+                <p>不要创建多层级分支</p>
+            </div>
+            <div class="use-case-card" style="border-left-color: #dc3545;">
+                <h4 style="color: #dc3545;">❌ 避免过长文本</h4>
+                <p>节点文字不超过4个字</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>HTML Presentation Beautifier - McKinsey Style Flowchart Example</p>
+            <p>垂直流程布局，多种节点类型的流程图实现</p>
+        </footer>
+    </div>
+</body>
+</html>

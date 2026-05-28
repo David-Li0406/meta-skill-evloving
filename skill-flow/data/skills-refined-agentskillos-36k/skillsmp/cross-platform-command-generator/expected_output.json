@@ -1,0 +1,32 @@
+{
+  "task_description": "find all files larger than 100mb in the current directory",
+  "identified_pattern": "find_large_files",
+  "description": "Find files larger than specified size",
+  "platforms": {
+    "linux": {
+      "command": "find . -type f -size +100M -exec ls -lh {} \\;",
+      "description": "Find files larger than specified size",
+      "requires_sudo": false,
+      "safety_level": "safe"
+    },
+    "macos": {
+      "command": "find . -type f -size +100M -exec ls -lh {} \\;",
+      "description": "Find files larger than specified size",
+      "requires_sudo": false,
+      "safety_level": "safe"
+    },
+    "windows": {
+      "powershell": "Get-ChildItem -Path . -Recurse | Where-Object {$_.Length -gt 100MB} | Select-Object FullName, @{Name='Size(MB)';Expression={[math]::Round($_.Length/1MB,2)}}",
+      "cmd": "forfiles /P . /S /M * /C \"cmd /c if @fsize GEQ 104857600 echo @path @fsize\"",
+      "description": "Find files larger than specified size",
+      "requires_admin": false,
+      "safety_level": "safe"
+    }
+  },
+  "compatibility_notes": [
+    "命令在所有平台上完全兼容",
+    "输出格式在不同平台上会有差异",
+    "Windows CMD 版本需要指定字节大小 (100MB = 104857600 bytes)"
+  ],
+  "security_warnings": []
+}

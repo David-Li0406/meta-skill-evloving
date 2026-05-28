@@ -1,0 +1,35 @@
+# Technical/engineering feed with syntax highlighting
+version: 1
+
+style_profiles:
+  technical:
+    description: Code-first, dense, monospace friendly
+    base_css: styles/base.css
+    css: styles/technical.css
+    features:
+      syntax_highlighting: auto
+      callouts: on
+      inline_code: on
+
+templates:
+  rss_readability:
+    transform:
+      - readability
+      - sanitize_html
+      - normalize_code_blocks
+
+feeds:
+  - id: {{id}}
+    title: {{title}}
+    extends: [rss_readability]
+
+    sources: {{source_list}}
+
+    select:
+      since: 7d
+      max_items: 40
+
+    style:
+      profile: technical
+      features:
+        syntax_highlighting: auto

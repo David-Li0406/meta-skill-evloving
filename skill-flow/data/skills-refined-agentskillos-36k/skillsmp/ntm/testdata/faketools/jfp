@@ -1,0 +1,119 @@
+#!/bin/bash
+# Fake jfp tool for testing
+# Supports MODE environment variable: normal (default), timeout, error
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        exec sleep 3600
+        ;;
+    error)
+        echo "jfp: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version)
+        echo "jfp/1.0.0 linux-x64 node-v24.3.0 (fake)"
+        exit 0
+        ;;
+    list)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"id": "test-prompt", "title": "Test Prompt", "category": "testing"}]'
+        else
+            echo "test-prompt  Test Prompt  testing"
+        fi
+        exit 0
+        ;;
+    search)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"id": "test-prompt", "title": "Test Prompt", "score": 0.95}]'
+        else
+            echo "test-prompt  Test Prompt (0.95)"
+        fi
+        exit 0
+        ;;
+    show)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"id": "test-prompt", "title": "Test Prompt", "content": "Test content"}'
+        else
+            echo "# Test Prompt"
+            echo "Test content"
+        fi
+        exit 0
+        ;;
+    status)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"auth": {"authenticated": false}, "cache": {"exists": true}, "meta": {"version": "1.0.0", "promptCount": 21}}'
+        else
+            echo "Auth: Not authenticated"
+            echo "Cache: OK (21 prompts)"
+        fi
+        exit 0
+        ;;
+    categories)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"name": "testing", "count": 5}]'
+        else
+            echo "testing (5)"
+        fi
+        exit 0
+        ;;
+    tags)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"name": "test", "count": 3}]'
+        else
+            echo "test (3)"
+        fi
+        exit 0
+        ;;
+    bundles)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"id": "test-bundle", "name": "Test Bundle", "promptCount": 5}]'
+        else
+            echo "test-bundle  Test Bundle (5 prompts)"
+        fi
+        exit 0
+        ;;
+    bundle)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"id": "test-bundle", "name": "Test Bundle", "prompts": []}'
+        else
+            echo "# Test Bundle"
+        fi
+        exit 0
+        ;;
+    installed)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[]'
+        else
+            echo "No skills installed"
+        fi
+        exit 0
+        ;;
+    suggest)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"id": "test-prompt", "title": "Test Prompt", "relevance": 0.8}]'
+        else
+            echo "Suggested: test-prompt"
+        fi
+        exit 0
+        ;;
+    --help|-h)
+        echo "jfp - JeffreysPrompts CLI (fake for testing)"
+        echo "Usage: jfp [command] [options]"
+        echo "  --version          Show version"
+        echo "  list               List all prompts"
+        echo "  search <query>     Search prompts"
+        echo "  show <id>          Show prompt details"
+        echo "  status             Show registry status"
+        exit 0
+        ;;
+    *)
+        echo "jfp: unknown command: $1" >&2
+        exit 1
+        ;;
+esac

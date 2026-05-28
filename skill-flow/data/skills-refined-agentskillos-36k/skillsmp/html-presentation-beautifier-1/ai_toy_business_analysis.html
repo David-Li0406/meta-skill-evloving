@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童玩具+AI 智能商业分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary-bg: #FFFFFF; --header-bg: #000000; --primary-accent: #F85d42; --secondary-accent: #74788d; --deep-blue: #556EE6; --green: #34c38f; --blue: #50a5f1; --yellow: #f1b44c; --dark-gray: #343a40; --light-gray: #f8f9fa; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--light-gray); overflow: hidden; height: 100vh; }
+        .presentation-container { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+        .slide { width: 100%; height: 100%; display: none; background: var(--primary-bg); padding: 60px 80px; opacity: 0; transition: opacity 0.5s ease; }
+        .slide.active { display: flex; flex-direction: column; opacity: 1; }
+        .slide-header { background: var(--header-bg); color: white; padding: 20px 40px; margin-bottom: 40px; }
+        .slide-header h2 { font-size: 36px; font-weight: 700; }
+        .slide-header p { font-size: 18px; color: var(--secondary-accent); margin-top: 8px; }
+        .slide-content { flex: 1; overflow-y: auto; }
+        .nav-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 20px; background: rgba(0, 0, 0, 0.9); padding: 15px 30px; border-radius: 50px; z-index: 1000; }
+        .nav-btn { background: var(--primary-accent); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s ease; }
+        .nav-btn:hover { transform: scale(1.05); background: #e04d32; }
+        .slide-counter { color: white; font-size: 16px; font-weight: 600; min-width: 80px; text-align: center; }
+        .fullscreen-btn { background: var(--deep-blue); position: fixed; top: 30px; right: 30px; z-index: 1000; }
+        .title-center { justify-content: center; align-items: center; text-align: center; }
+        .title-center h1 { font-size: 64px; font-weight: 800; color: var(--header-bg); margin-bottom: 30px; line-height: 1.2; }
+        .title-center p { font-size: 24px; color: var(--secondary-accent); margin-bottom: 40px; }
+        .title-center .key-points { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; max-width: 900px; }
+        .title-center .key-point-item { background: var(--light-gray); padding: 15px 25px; border-radius: 8px; font-size: 16px; color: var(--dark-gray); }
+        .bullet-point-item { display: flex; align-items: flex-start; gap: 15px; padding: 20px; background: var(--light-gray); border-radius: 8px; border-left: 4px solid var(--primary-accent); margin-bottom: 15px; }
+        .bullet-point-item .bullet { color: var(--primary-accent); font-size: 24px; font-weight: 700; }
+        .bullet-point-item .text { font-size: 18px; color: var(--dark-gray); line-height: 1.6; }
+        .chart-container { width: 100%; height: 450px; position: relative; margin-bottom: 20px; }
+        .key-points-box { background: var(--light-gray); padding: 25px; border-radius: 8px; margin-top: 20px; }
+        .key-points-box h4 { font-size: 18px; color: var(--header-bg); margin-bottom: 15px; }
+        .key-points-box ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+        .key-points-box li { padding: 10px 15px; background: white; border-radius: 5px; font-size: 14px; color: var(--dark-gray); }
+        .pyramid-container { display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 40px; }
+        .pyramid-level { background: var(--deep-blue); color: white; padding: 20px 40px; text-align: center; font-size: 16px; font-weight: 600; border-radius: 8px; }
+        .pyramid-level:nth-child(1) { width: 100%; background: var(--primary-accent); }
+        .pyramid-level:nth-child(2) { width: 80%; background: var(--deep-blue); }
+        .pyramid-level:nth-child(3) { width: 60%; background: var(--blue); }
+        .progression-container { display: flex; justify-content: space-around; align-items: center; padding: 60px 40px; }
+        .progression-step { text-align: center; max-width: 250px; }
+        .step-number { width: 60px; height: 60px; background: var(--primary-accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; margin: 0 auto 15px; }
+        .step-content { background: var(--light-gray); padding: 20px; border-radius: 8px; }
+        .step-title { font-size: 18px; font-weight: 700; color: var(--header-bg); margin-bottom: 10px; }
+        .step-desc { font-size: 14px; color: var(--secondary-accent); }
+        .framework-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; padding: 20px; }
+        .framework-item { background: var(--light-gray); padding: 25px; border-radius: 10px; border-top: 4px solid var(--deep-blue); }
+        .framework-title { font-size: 18px; font-weight: 700; color: var(--header-bg); margin-bottom: 12px; }
+        .framework-content { font-size: 15px; color: var(--dark-gray); line-height: 1.6; }
+        .conclusions-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; padding: 20px; }
+        .conclusion-item { background: var(--light-gray); padding: 30px; border-radius: 10px; border-left: 5px solid var(--primary-accent); }
+        .conclusion-item.highlight { grid-column: 1 / -1; background: linear-gradient(135deg, var(--primary-accent) 0%, var(--deep-blue) 100%); color: white; }
+        .conclusion-item.highlight .conclusion-text { color: white; }
+        .conclusion-title { font-size: 20px; font-weight: 700; margin-bottom: 15px; color: var(--header-bg); }
+        .conclusion-item.highlight .conclusion-title { color: white; }
+        .conclusion-text { font-size: 16px; line-height: 1.7; color: var(--dark-gray); }
+        @media (max-width: 1200px) { .slide { padding: 40px 50px; } .title-center h1 { font-size: 48px; } .conclusions-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .slide { padding: 20px; } .title-center h1 { font-size: 36px; } .nav-bar { width: 90%; justify-content: space-around; } }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="slide active title-center" data-slide="1">
+            <h1>儿童玩具+AI 智能商业分析报告</h1>
+            <p>2024-2030年全球及中国市场深度研究 | 2026年1月</p>
+            <div class="key-points">
+                <div class="key-point-item">研究范围：全球及中国市场</div>
+                <div class="key-point-item">时间跨度：2024-2030</div>
+                <div class="key-point-item">研究方法：公开数据交叉验证、产业链访谈、消费者调研、竞品拆解</div>
+            </div>
+        </div>
+        <div class="slide" data-slide="2">
+            <div class="slide-header">
+                <h2>执行摘要：三重拐点叠加的爆发期</h2>
+                <p>市场、需求、技术三周期叠加，2026-2027为并购窗口期</p>
+            </div>
+            <div class="slide-content">
+                <div class="bullet-point-item"><span class="bullet">•</span><span class="text">市场规模：2025年全球181-246亿美元，中国300亿元，年复合增速25-30%</span></div>
+                <div class="bullet-point-item"><span class="bullet">•</span><span class="text">需求拐点：双减后"课后3小时"空白、精细化育儿、孤独经济三股力量叠加</span></div>
+                <div class="bullet-point-item"><span class="bullet">•</span><span class="text">技术拐点：硬件BOM成本2年降幅38%，进入大众价格带</span></div>
+                <div class="bullet-point-item"><span class="bullet">•</span><span class="text">竞争格局：IP+渠道型龙头、AI原生独角兽、跨界赋能平台三层梯队</span></div>
+                <div class="bullet-point-item"><span class="bullet">•</span><span class="text">商业模型：硬件一次性毛利25-35%，订阅/内容/数据服务毛利60-70%</span></div>
+                <div class="bullet-point-item"><span class="bullet">•</span><span class="text">投资建议：重点关注"自研模型+线下体验网络+IP矩阵"三合一标的</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="nav-bar">
+        <button class="nav-btn" id="prevBtn">← 上一页</button>
+        <span class="slide-counter" id="slideCounter">1 / 18</span>
+        <button class="nav-btn" id="nextBtn">下一页 →</button>
+        <button class="nav-btn fullscreen-btn" id="fullscreenBtn">⛶ 全屏</button>
+    </div>
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 18;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            if (slides.length === 0) return;
+
+            if (n > totalSlides) currentSlide = 1;
+            if (n < 1) currentSlide = totalSlides;
+
+            slides.forEach(slide => slide.classList.remove('active'));
+            if (slides[currentSlide - 1]) {
+                slides[currentSlide - 1].classList.add('active');
+            }
+            document.getElementById('slideCounter').textContent = currentSlide + ' / ' + totalSlides;
+        }
+
+        function initPresentation() {
+            document.getElementById('prevBtn').addEventListener('click', () => { currentSlide--; showSlide(currentSlide); });
+            document.getElementById('nextBtn').addEventListener('click', () => { currentSlide++; showSlide(currentSlide); });
+            document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ') {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                } else if (e.key === 'ArrowLeft') {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
+            });
+            showSlide(currentSlide);
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPresentation);
+    </script>
+</body>
+</html>

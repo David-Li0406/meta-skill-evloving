@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+            color: white;
+            min-height: 100vh;
+        }
+        header {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            text-align: center;
+            border-bottom: 3px solid #00d4ff;
+        }
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        header p {
+            font-size: 1.2em;
+            color: #00d4ff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+        .card h2 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        .card p {
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        .feature-list {
+            margin: 20px 0;
+        }
+        .feature-list li {
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid #00d4ff;
+            border-radius: 5px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 50px 0;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            min-width: 200px;
+        }
+        .stat-number {
+            font-size: 3em;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 1.2em;
+            color: #b0b0b0;
+            margin-top: 10px;
+        }
+        footer {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            text-align: center;
+            margin-top: 60px;
+            border-top: 3px solid #00d4ff;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        .highlight-box h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #00d4ff;
+            color: #0f2027;
+        }
+        .btn-secondary {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <header id="main-header">
+        <h1>📸 Screenshot Testing</h1>
+        <p>Visual Regression Testing with Playwright</p>
+    </header>
+
+    <div class="container">
+        <div class="highlight-box">
+            <h2>Capture Every Pixel</h2>
+            <p>Learn how to take full-page screenshots, element-specific captures, and test across different viewport sizes.</p>
+            <div class="button-group">
+                <button class="btn-primary">Get Started</button>
+                <button class="btn-secondary">Learn More</button>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; font-size: 2.5em; text-align: center;">Key Features</h2>
+
+        <div class="card-grid">
+            <div class="card">
+                <h2>Full Page Capture</h2>
+                <p>Capture entire pages including content below the fold. Perfect for documenting complete page layouts.</p>
+            </div>
+
+            <div class="card">
+                <h2>Element Screenshots</h2>
+                <p>Take screenshots of specific elements like headers, cards, or sections for targeted visual testing.</p>
+            </div>
+
+            <div class="card">
+                <h2>Responsive Testing</h2>
+                <p>Test how your page looks on different devices by changing viewport sizes programmatically.</p>
+            </div>
+
+            <div class="card">
+                <h2>Visual Regression</h2>
+                <p>Compare screenshots over time to detect unintended visual changes in your application.</p>
+            </div>
+
+            <div class="card">
+                <h2>Before/After Comparison</h2>
+                <p>Capture states before and after interactions to verify UI changes work as expected.</p>
+            </div>
+
+            <div class="card">
+                <h2>Documentation</h2>
+                <p>Generate visual documentation of your application automatically with screenshot automation.</p>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; font-size: 2.5em; text-align: center;">Testing Statistics</h2>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-number">99.9%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">1000+</div>
+                <div class="stat-label">Tests Run Daily</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">50ms</div>
+                <div class="stat-label">Avg. Screenshot Time</div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; font-size: 2.5em;">What You'll Learn</h2>
+
+        <ul class="feature-list">
+            <li>📷 Taking full-page screenshots with <code>full_page=True</code></li>
+            <li>🎯 Capturing specific elements using locators</li>
+            <li>📱 Testing different viewport sizes (desktop, tablet, mobile)</li>
+            <li>💾 Organizing screenshot outputs in directories</li>
+            <li>🔍 Using screenshots for debugging and visual verification</li>
+        </ul>
+    </div>
+
+    <footer>
+        <p>webapp-testing tutorial • Beginner Level • Example 03</p>
+        <p style="margin-top: 10px; color: #00d4ff;">This page is designed to look great in screenshots!</p>
+    </footer>
+</body>
+</html>

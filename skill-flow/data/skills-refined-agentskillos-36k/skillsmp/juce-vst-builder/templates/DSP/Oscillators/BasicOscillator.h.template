@@ -1,0 +1,109 @@
+#pragma once
+
+#include <juce_dsp/juce_dsp.h>
+#include <cmath>
+
+/**
+ * BasicOscillator
+ *
+ * A simple wavetable-free oscillator with multiple waveforms.
+ * Suitable for basic synthesis applications.
+ */
+class BasicOscillator
+{
+public:
+    enum class Waveform
+    {
+        Sine,
+        Triangle,
+        Saw,
+        Square,
+        Pulse
+    };
+
+    BasicOscillator() = default;
+
+    //==========================================================================
+    void prepare(double sampleRate)
+    {
+        this->sampleRate = sampleRate;
+        reset();
+    }
+
+    void reset()
+    {
+        phase = 0.0f;
+    }
+
+    //==========================================================================
+    void setFrequency(float frequencyHz)
+    {
+        frequency = frequencyHz;
+        phaseIncrement = frequency / static_cast<float>(sampleRate);
+    }
+
+    void setWaveform(Waveform w)
+    {
+        waveform = w;
+    }
+
+    void setPulseWidth(float width)
+    {
+        pulseWidth = juce::jlimit(0.01f, 0.99f, width);
+    }
+
+    //==========================================================================
+    float getNextSample()
+    {
+        float sample = 0.0f;
+
+        switch (waveform)
+        {
+            case Waveform::Sine:
+                sample = std::sin(phase * juce::MathConstants<float>::twoPi);
+                break;
+
+            case Waveform::Triangle:
+                sample = 2.0f * std::abs(2.0f * phase - 1.0f) - 1.0f;
+                break;
+
+            case Waveform::Saw:
+                sample = 2.0f * phase - 1.0f;
+                break;
+
+            case Waveform::Square:
+                sample = phase < 0.5f ? 1.0f : -1.0f;
+                break;
+
+            case Waveform::Pulse:
+                sample = phase < pulseWidth ? 1.0f : -1.0f;
+                break;
+        }
+
+        // Advance phase
+        phase += phaseIncrement;
+        if (phase >= 1.0f)
+            phase -= 1.0f;
+
+        return sample;
+    }
+
+    //==========================================================================
+    // Process a block of samples
+    void process(juce::AudioBuffer<float>& buffer, int channel)
+    {
+        auto* channelData = buffer.getWritePointer(channel);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            channelData[i] += getNextSample();
+        }
+    }
+
+private:
+    double sampleRate = 44100.0;
+    float phase = 0.0f;
+    float phaseIncrement = 0.0f;
+    float frequency = 440.0f;
+    float pulseWidth = 0.5f;
+    Waveform waveform = Waveform::Sine;
+};

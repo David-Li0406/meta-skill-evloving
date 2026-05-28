@@ -1,0 +1,255 @@
+/**
+ * TheHUB Advanced Color Picker Styles
+ * Modern design matching the reference UI
+ */
+
+.hub-color-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.hub-color-picker.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hcp-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.hcp-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  width: 300px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25), 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.2s ease;
+}
+
+.hub-color-picker.is-open .hcp-modal {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Gradient Area (Saturation/Brightness) - Large square */
+.hcp-gradient-area {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  cursor: crosshair;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.hcp-gradient-white {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, #ffffff 0%, transparent 100%);
+}
+
+.hcp-gradient-black {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #000000 0%, transparent 100%);
+}
+
+.hcp-gradient-cursor {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: width 0.1s, height 0.1s;
+}
+
+.hcp-gradient-area:active .hcp-gradient-cursor {
+  width: 24px;
+  height: 24px;
+}
+
+/* Hue Slider - Rainbow bar */
+.hcp-hue-slider {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: linear-gradient(to right,
+    #ff0000 0%,
+    #ffff00 17%,
+    #00ff00 33%,
+    #00ffff 50%,
+    #0000ff 67%,
+    #ff00ff 83%,
+    #ff0000 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.hcp-hue-cursor {
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  background: #ffffff;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: transform 0.1s;
+}
+
+.hcp-hue-slider:active .hcp-hue-cursor {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Preview Row */
+.hcp-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hcp-preview-swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+  /* Checkerboard for transparency */
+  background-image:
+    linear-gradient(45deg, #e0e0e0 25%, transparent 25%),
+    linear-gradient(-45deg, #e0e0e0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e0e0e0 75%),
+    linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hcp-preview-swatch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  border-radius: inherit;
+}
+
+.hcp-hex-input {
+  flex: 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Mono', 'Monaco', 'Menlo', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 14px;
+  background: #f5f5f7;
+  border: 1px solid #e5e5e7;
+  border-radius: 10px;
+  color: #1d1d1f;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.hcp-hex-input:focus {
+  outline: none;
+  border-color: #007aff;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+}
+
+/* Actions */
+.hcp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.hcp-actions .btn {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 10px;
+}
+
+.hcp-cancel {
+  background: #f5f5f7;
+  color: #1d1d1f;
+  border: none;
+}
+
+.hcp-cancel:hover {
+  background: #e8e8ed;
+}
+
+.hcp-confirm {
+  background: #007aff;
+  color: #ffffff;
+  border: none;
+}
+
+.hcp-confirm:hover {
+  background: #0066d6;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 400px) {
+  .hcp-modal {
+    width: calc(100vw - 32px);
+    max-width: 300px;
+    padding: 16px;
+  }
+}
+
+/* Dark mode support for the picker modal */
+@media (prefers-color-scheme: dark) {
+  .hcp-modal {
+    background: #2c2c2e;
+  }
+
+  .hcp-hex-input {
+    background: #1c1c1e;
+    border-color: #3a3a3c;
+    color: #ffffff;
+  }
+
+  .hcp-hex-input:focus {
+    border-color: #0a84ff;
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
+  }
+
+  .hcp-cancel {
+    background: #3a3a3c;
+    color: #ffffff;
+  }
+
+  .hcp-cancel:hover {
+    background: #48484a;
+  }
+
+  .hcp-confirm {
+    background: #0a84ff;
+  }
+
+  .hcp-confirm:hover {
+    background: #409cff;
+  }
+}

@@ -1,0 +1,12 @@
+/* Tree counting: staggered animations without hard-coded delays */
+
+.list > li {
+  animation: fade-in 0.3s ease-out backwards;
+  animation-delay: calc(0.05s * (sibling-index() - 1));
+}
+
+/* Gradient based on position */
+.grid > * {
+  --position: calc(sibling-index() / sibling-count());
+  background: oklch(from var(--color-primary) l c calc(h + 60 * var(--position)));
+}

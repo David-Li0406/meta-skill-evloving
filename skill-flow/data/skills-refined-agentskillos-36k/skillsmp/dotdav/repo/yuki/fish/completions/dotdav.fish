@@ -1,0 +1,1 @@
+/home/yuki/Documents/CodeProjects/dotdav/completions.fish

@@ -1,0 +1,468 @@
+package pipeline
+
+import (
+	"testing"
+)
+
+func TestConditionEvaluator_Evaluate(t *testing.T) {
+	state := &ExecutionState{
+		Variables: map[string]interface{}{
+			"name":       "Alice",
+			"count":      10,
+			"flag":       true,
+			"empty":      "",
+			"zero":       0,
+			"env":        "production",
+			"features":   "auth,api,ui",
+			"score":      85,
+			"tests_pass": true,
+			"deploy":     true,
+		},
+	}
+
+	sub := NewSubstitutor(state, "test-session", "test-workflow")
+	evaluator := NewConditionEvaluator(sub)
+
+	tests := []struct {
+		name      string
+		condition string
+		wantValue bool // true = step should RUN
+		wantErr   bool
+	}{
+		// Empty condition
+		{
+			name:      "empty condition runs step",
+			condition: "",
+			wantValue: true,
+		},
+
+		// Boolean truthy checks
+		{
+			name:      "truthy variable",
+			condition: "${vars.flag}",
+			wantValue: true,
+		},
+		{
+			name:      "falsy empty string",
+			condition: "${vars.empty}",
+			wantValue: false,
+		},
+		{
+			name:      "falsy zero",
+			condition: "${vars.zero}",
+			wantValue: false,
+		},
+		{
+			name:      "truthy string",
+			condition: "${vars.name}",
+			wantValue: true,
+		},
+		{
+			name:      "truthy number",
+			condition: "${vars.count}",
+			wantValue: true,
+		},
+
+		// Equality operators
+		{
+			name:      "equal match",
+			condition: `${vars.env} == "production"`,
+			wantValue: true,
+		},
+		{
+			name:      "equal mismatch",
+			condition: `${vars.env} == "staging"`,
+			wantValue: false,
+		},
+		{
+			name:      "not equal match",
+			condition: `${vars.env} != "staging"`,
+			wantValue: true,
+		},
+		{
+			name:      "not equal mismatch",
+			condition: `${vars.env} != "production"`,
+			wantValue: false,
+		},
+		{
+			name:      "equal with single quotes",
+			condition: `${vars.env} == 'production'`,
+			wantValue: true,
+		},
+
+		// Numeric comparisons
+		{
+			name:      "greater than true",
+			condition: "${vars.score} > 80",
+			wantValue: true,
+		},
+		{
+			name:      "greater than false",
+			condition: "${vars.score} > 90",
+			wantValue: false,
+		},
+		{
+			name:      "less than true",
+			condition: "${vars.count} < 20",
+			wantValue: true,
+		},
+		{
+			name:      "less than false",
+			condition: "${vars.count} < 5",
+			wantValue: false,
+		},
+		{
+			name:      "greater equal true (equal)",
+			condition: "${vars.score} >= 85",
+			wantValue: true,
+		},
+		{
+			name:      "greater equal true (greater)",
+			condition: "${vars.score} >= 80",
+			wantValue: true,
+		},
+		{
+			name:      "greater equal false",
+			condition: "${vars.score} >= 90",
+			wantValue: false,
+		},
+		{
+			name:      "less equal true (equal)",
+			condition: "${vars.count} <= 10",
+			wantValue: true,
+		},
+		{
+			name:      "less equal true (less)",
+			condition: "${vars.count} <= 20",
+			wantValue: true,
+		},
+		{
+			name:      "less equal false",
+			condition: "${vars.count} <= 5",
+			wantValue: false,
+		},
+
+		// Contains operator
+		{
+			name:      "contains true",
+			condition: `${vars.features} contains "auth"`,
+			wantValue: true,
+		},
+		{
+			name:      "contains false",
+			condition: `${vars.features} contains "database"`,
+			wantValue: false,
+		},
+		{
+			name:      "contains multiple",
+			condition: `${vars.features} contains "api"`,
+			wantValue: true,
+		},
+
+		// Logical operators
+		{
+			name:      "AND both true",
+			condition: "${vars.deploy} AND ${vars.tests_pass}",
+			wantValue: true,
+		},
+		{
+			name:      "AND one false",
+			condition: "${vars.deploy} AND ${vars.empty}",
+			wantValue: false,
+		},
+		{
+			name:      "OR both true",
+			condition: "${vars.deploy} OR ${vars.tests_pass}",
+			wantValue: true,
+		},
+		{
+			name:      "OR one true",
+			condition: "${vars.deploy} OR ${vars.empty}",
+			wantValue: true,
+		},
+		{
+			name:      "OR both false",
+			condition: "${vars.empty} OR ${vars.zero}",
+			wantValue: false,
+		},
+		{
+			name:      "NOT true",
+			condition: "NOT ${vars.empty}",
+			wantValue: true,
+		},
+		{
+			name:      "NOT false",
+			condition: "NOT ${vars.flag}",
+			wantValue: false,
+		},
+		{
+			name:      "legacy negation true",
+			condition: "!${vars.empty}",
+			wantValue: true,
+		},
+		{
+			name:      "legacy negation false",
+			condition: "!${vars.flag}",
+			wantValue: false,
+		},
+
+		// Complex expressions
+		{
+			name:      "complex AND with comparison",
+			condition: `${vars.score} > 80 AND ${vars.env} == "production"`,
+			wantValue: true,
+		},
+		{
+			name:      "complex OR with comparison",
+			condition: `${vars.score} > 90 OR ${vars.count} < 20`,
+			wantValue: true,
+		},
+		{
+			name:      "parentheses simple",
+			condition: "(${vars.flag})",
+			wantValue: true,
+		},
+		{
+			name:      "AND OR precedence (OR has lower precedence)",
+			condition: "${vars.empty} AND ${vars.flag} OR ${vars.deploy}",
+			wantValue: true, // (false AND true) OR true = true
+		},
+
+		// Edge cases
+		{
+			name:      "literal true string",
+			condition: "true",
+			wantValue: true,
+		},
+		{
+			name:      "literal false string",
+			condition: "false",
+			wantValue: false,
+		},
+		{
+			name:      "literal 1 string",
+			condition: "1",
+			wantValue: true,
+		},
+		{
+			name:      "literal 0 string",
+			condition: "0",
+			wantValue: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := evaluator.Evaluate(tt.condition)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Evaluate(%q) error = %v, wantErr %v", tt.condition, err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && result.Value != tt.wantValue {
+				t.Errorf("Evaluate(%q) = %v, want %v", tt.condition, result.Value, tt.wantValue)
+			}
+		})
+	}
+}
+
+func TestConditionEvaluator_NumericErrors(t *testing.T) {
+	state := &ExecutionState{
+		Variables: map[string]interface{}{
+			"text": "hello",
+		},
+	}
+
+	sub := NewSubstitutor(state, "test-session", "test-workflow")
+	evaluator := NewConditionEvaluator(sub)
+
+	// Test all numeric comparison operators with non-numeric values
+	tests := []struct {
+		name      string
+		condition string
+	}{
+		{"greater than", "${vars.text} > 10"},
+		{"less than", "${vars.text} < 10"},
+		{"greater equal", "${vars.text} >= 10"},
+		{"less equal", "${vars.text} <= 10"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := evaluator.Evaluate(tt.condition)
+			if err == nil {
+				t.Errorf("Expected error for non-numeric %s comparison", tt.name)
+			}
+		})
+	}
+}
+
+func TestEvaluateCondition_BackwardCompatibility(t *testing.T) {
+	state := &ExecutionState{
+		Variables: map[string]interface{}{
+			"name":              "Alice",
+			"steps.prev.output": "previous result",
+		},
+	}
+
+	sub := NewSubstitutor(state, "test-session", "test-workflow")
+
+	tests := []struct {
+		condition string
+		wantSkip  bool // true = step should be SKIPPED
+	}{
+		// Original tests from executor_test.go
+		{"${vars.name}", false},            // truthy, don't skip
+		{"", false},                        // empty, don't skip
+		{`${vars.name} == "Alice"`, false}, // equal, don't skip
+		{`${vars.name} != "Alice"`, true},  // not equal, skip
+		{"!${vars.name}", true},            // negation of truthy, skip
+		{"false", true},                    // literal false, skip
+	}
+
+	for _, tt := range tests {
+		skip, err := EvaluateCondition(tt.condition, sub)
+		if err != nil {
+			t.Errorf("EvaluateCondition(%q) error = %v", tt.condition, err)
+			continue
+		}
+		if skip != tt.wantSkip {
+			t.Errorf("EvaluateCondition(%q) skip = %v, want %v", tt.condition, skip, tt.wantSkip)
+		}
+	}
+}
+
+func TestCleanValue(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{`"quoted"`, "quoted"},
+		{`'single'`, "single"},
+		{"  spaces  ", "spaces"},
+		{`"with spaces"`, "with spaces"},
+		{"unquoted", "unquoted"},
+		{`""`, ""},
+		{`''`, ""},
+	}
+
+	for _, tt := range tests {
+		got := cleanValue(tt.input)
+		if got != tt.want {
+			t.Errorf("cleanValue(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestParseNumericPair(t *testing.T) {
+	tests := []struct {
+		left    string
+		right   string
+		wantL   float64
+		wantR   float64
+		wantErr bool
+	}{
+		{"10", "20", 10, 20, false},
+		{"10.5", "20.5", 10.5, 20.5, false},
+		{"-5", "5", -5, 5, false},
+		{`"10"`, "20", 10, 20, false}, // quoted number
+		{"abc", "20", 0, 0, true},
+		{"10", "xyz", 0, 0, true},
+	}
+
+	for _, tt := range tests {
+		gotL, gotR, err := parseNumericPair(tt.left, tt.right)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("parseNumericPair(%q, %q) error = %v, wantErr %v", tt.left, tt.right, err, tt.wantErr)
+			continue
+		}
+		if !tt.wantErr {
+			if gotL != tt.wantL || gotR != tt.wantR {
+				t.Errorf("parseNumericPair(%q, %q) = (%v, %v), want (%v, %v)", tt.left, tt.right, gotL, gotR, tt.wantL, tt.wantR)
+			}
+		}
+	}
+}
+
+func TestValidateCondition(t *testing.T) {
+	tests := []struct {
+		condition  string
+		wantIssues int
+	}{
+		{"${vars.x} == 1", 0},
+		{"(${vars.x} AND ${vars.y})", 0},
+		{"((nested))", 0},
+		{"(unbalanced", 1},
+		{"unbalanced)", 1},
+		{`"unclosed`, 1},
+		{`'unclosed`, 1},
+		{`"balanced"`, 0},
+		{"", 0},
+	}
+
+	for _, tt := range tests {
+		issues := ValidateCondition(tt.condition)
+		if len(issues) != tt.wantIssues {
+			t.Errorf("ValidateCondition(%q) = %d issues, want %d: %v", tt.condition, len(issues), tt.wantIssues, issues)
+		}
+	}
+}
+
+func TestFindLogicalOp(t *testing.T) {
+	tests := []struct {
+		expr string
+		op   string
+		want int
+	}{
+		{"a AND b", " AND ", 1},
+		{"a OR b", " OR ", 1},
+		{`"a AND b" OR c`, " OR ", 9}, // AND inside quotes should be ignored, " OR " starts at 9
+		{"(a AND b) OR c", " OR ", 9}, // AND inside parens should be ignored, " OR " starts at 9
+		{"no operators", " AND ", -1},
+	}
+
+	for _, tt := range tests {
+		got := findLogicalOp(tt.expr, tt.op)
+		if got != tt.want {
+			t.Errorf("findLogicalOp(%q, %q) = %d, want %d", tt.expr, tt.op, got, tt.want)
+		}
+	}
+}
+
+func TestConditionEvaluator_WithStepOutputs(t *testing.T) {
+	state := &ExecutionState{
+		Variables: map[string]interface{}{
+			"steps.check.output": "PASS",
+		},
+		Steps: map[string]StepResult{
+			"score": {
+				StepID: "score",
+				Output: "95",
+				Status: StatusCompleted,
+			},
+		},
+	}
+
+	sub := NewSubstitutor(state, "test-session", "test-workflow")
+	evaluator := NewConditionEvaluator(sub)
+
+	tests := []struct {
+		condition string
+		wantValue bool
+	}{
+		{`${steps.check.output} == "PASS"`, true},
+		{`${steps.check.output} != "SKIP"`, true},
+		// Step output as number (from Steps map)
+		// Note: the score step output is "95" which should be coerced
+	}
+
+	for _, tt := range tests {
+		result, err := evaluator.Evaluate(tt.condition)
+		if err != nil {
+			t.Errorf("Evaluate(%q) error = %v", tt.condition, err)
+			continue
+		}
+		if result.Value != tt.wantValue {
+			t.Errorf("Evaluate(%q) = %v, want %v", tt.condition, result.Value, tt.wantValue)
+		}
+	}
+}

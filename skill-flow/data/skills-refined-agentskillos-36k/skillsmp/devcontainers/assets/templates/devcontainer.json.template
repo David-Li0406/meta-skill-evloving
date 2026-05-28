@@ -1,0 +1,27 @@
+{
+  "name": "{{PROJECT_NAME}} Devspace",
+  "image": "mcr.microsoft.com/vscode/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": "false"
+    },
+    "ghcr.io/duplocloud/devcontainers/duploctl:latest": {}
+  },
+  "runArgs": [
+    "--env-file=${localWorkspaceFolder}/.env"
+  ],
+  "initializeCommand": ".devcontainer/init.sh",
+  "postStartCommand": ".devcontainer/post-start.sh",
+  "containerEnv": {
+    "WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
+    "DUPLO_CONFIG": "${containerWorkspaceFolder}/config/duplo.yaml",
+    "XDG_CONFIG_HOME": "${containerWorkspaceFolder}/config",
+    "EDITOR": "code --wait"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [],
+      "settings": {}
+    }
+  }
+}

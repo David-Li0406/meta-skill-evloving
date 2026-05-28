@@ -1,0 +1,78 @@
+<!--
+  ============================================================
+  TITLE ZONE - Top section of every slide
+  ============================================================
+  Contains: Badge + Title + Subtitle
+  Position: Fixed at top (y: 0-130px, with 24px margin below)
+
+  Data attributes for PPTX export:
+  - data-pptx-region: "badge" | "title" | "subtitle"
+  - data-pptx-x, y, w, h: Position in pixels
+
+  POSITION VALUES: See reference/region-defaults.md for current values.
+  ============================================================
+-->
+
+<!-- Title Zone Container -->
+<div style="width: 920px; margin: 0 20px; padding-top: 16px; margin-bottom: 24px;" class="fit">
+
+  <!-- Badge + Title Row (same line) -->
+  <div class="row items-center gap-md" style="margin-bottom: 8px;">
+    <!-- Step Badge (position FIXED: 20, 16, 100, 30) -->
+    <div data-pptx-region="badge"
+         data-pptx-x="20" data-pptx-y="16"
+         data-pptx-w="100" data-pptx-h="30"
+         style="background: #1791e8; color: #ffffff; padding: 4px 12px; border-radius: 16px; display: inline-block; flex-shrink: 0;">
+      <p style="margin: 0; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+        {{badge_text}}
+      </p>
+    </div>
+
+    <!-- Main Title (position FIXED: 130, 16, 810, 30) - same row as badge -->
+    <h1 data-pptx-region="title"
+        data-pptx-x="130" data-pptx-y="16"
+        data-pptx-w="810" data-pptx-h="30"
+        style="margin: 0; font-size: 22px; font-weight: bold; color: #1791e8; line-height: 1.2;">
+      {{title}}
+    </h1>
+  </div>
+
+  <!-- Subtitle / Instruction (position FIXED: 20, 55, 920, 30)
+  <p data-pptx-region="subtitle"
+     data-pptx-x="20" data-pptx-y="55"
+     data-pptx-w="920" data-pptx-h="30"
+     style="margin: 0; color: #1d1d1d; font-size: 16px; line-height: 1.4;">
+    {{subtitle}}
+  </p>
+  -->
+
+</div>
+
+<!-- Footnote (position FIXED: 700, 8, 240, 25) -->
+<p data-pptx-region="footnote"
+   data-pptx-x="700" data-pptx-y="8"
+   data-pptx-w="240" data-pptx-h="25"
+   style="position: absolute; top: 8px; right: 20px; font-size: 10pt; color: #666; margin: 0; text-align: right;">
+  {{footnote}}
+</p>
+
+
+<!--
+  ============================================================
+  BADGE VARIATIONS
+  ============================================================
+-->
+
+<!-- Badge text variations (all use same position from region-defaults.md) -->
+
+<!-- STRATEGY - Slide 1 -->
+<p style="...">STRATEGY</p>
+
+<!-- STEP 1, STEP 2, STEP 3 - Slides 2-12 -->
+<p style="...">STEP 1</p>
+
+<!-- SUMMARY - Slide 13 -->
+<p style="...">SUMMARY</p>
+
+<!-- PRACTICE - Slides 14-15 -->
+<p style="...">PRACTICE</p>

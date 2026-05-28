@@ -1,0 +1,124 @@
+import { Ent{{EntityName}} } from "@core/domain/{{domain}}";
+import type { InferRouterInputs, InferRouterOutputs } from "@orpc/server";
+import * as z from "zod";
+import { orpcBuilder } from "../context";
+import { withWorkspaceRole } from "../middleware";
+import {
+  createWorkspaceInputSchema,
+  workspaceRoleMappers,
+} from "../shared/workspace-helpers";
+
+// =============================================================================
+// Input Schemas
+// =============================================================================
+
+const createInput = createWorkspaceInputSchema(
+  z.object({
+    name: z.string().min(1),
+    description: z.string().optional(),
+  })
+);
+
+const getByIdInput = createWorkspaceInputSchema(
+  z.object({
+    id: z.string(),
+  })
+);
+
+const listInput = createWorkspaceInputSchema(
+  z.object({
+    status: z.enum(["active", "paused", "archived"]).optional(),
+  })
+);
+
+const updateInput = createWorkspaceInputSchema(
+  z.object({
+    id: z.string(),
+    name: z.string().min(1).optional(),
+    description: z.string().optional(),
+    status: z.enum(["active", "paused", "archived"]).optional(),
+  })
+);
+
+const deleteInput = createWorkspaceInputSchema(
+  z.object({
+    id: z.string(),
+  })
+);
+
+// =============================================================================
+// Routes
+// =============================================================================
+
+const create = orpcBuilder
+  .input(createInput)
+  .use(withWorkspaceRole, workspaceRoleMappers.editor)
+  .handler(async ({ input }) => {
+    const {{entityName}} = await Ent{{EntityName}}.create({
+      name: input.name,
+      description: input.description,
+    });
+
+    return { {{entityName}}: {{entityName}}.toJSON() };
+  });
+
+const getById = orpcBuilder
+  .input(getByIdInput)
+  .use(withWorkspaceRole, workspaceRoleMappers.viewer)
+  .handler(async ({ input }) => {
+    const {{entityName}} = await Ent{{EntityName}}.fromID(input.id);
+
+    return { {{entityName}}: {{entityName}}.toJSON() };
+  });
+
+const list = orpcBuilder
+  .input(listInput)
+  .use(withWorkspaceRole, workspaceRoleMappers.viewer)
+  .handler(async ({ input }) => {
+    const {{entities}} = await Ent{{EntityName}}.list({ status: input.status });
+
+    return { {{entities}}: {{entities}}.map((e) => e.toJSON()) };
+  });
+
+const update = orpcBuilder
+  .input(updateInput)
+  .use(withWorkspaceRole, workspaceRoleMappers.editor)
+  .handler(async ({ input }) => {
+    const {{entityName}} = await Ent{{EntityName}}.fromID(input.id);
+    await {{entityName}}.update({
+      name: input.name,
+      description: input.description,
+      status: input.status,
+    });
+
+    return { {{entityName}}: {{entityName}}.toJSON() };
+  });
+
+const remove = orpcBuilder
+  .input(deleteInput)
+  .use(withWorkspaceRole, workspaceRoleMappers.admin)
+  .handler(async ({ input }) => {
+    const {{entityName}} = await Ent{{EntityName}}.fromID(input.id);
+    await {{entityName}}.remove();
+
+    return { success: true };
+  });
+
+// =============================================================================
+// Router Export
+// =============================================================================
+
+export const {{entityName}}Router = orpcBuilder.router({
+  create,
+  getById,
+  list,
+  update,
+  remove,
+});
+
+// =============================================================================
+// Type Exports
+// =============================================================================
+
+export type {{EntityName}}RouterInputs = InferRouterInputs<typeof {{entityName}}Router>;
+export type {{EntityName}}RouterOutputs = InferRouterOutputs<typeof {{entityName}}Router>;

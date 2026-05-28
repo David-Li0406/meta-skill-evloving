@@ -1,0 +1,53 @@
+# Gate: Phase 1 (Discovery) -> Phase 2 (Requirements)
+# Valida que a descoberta de dominio foi concluida
+
+gate:
+  name: "Discovery to Requirements"
+  from_phase: 1
+  to_phase: 2
+  description: "Valida que pesquisa de dominio foi realizada"
+
+required_artifacts:
+  - name: "Research Brief"
+    path: ".agentic_sdlc/projects/*/research/*.yml"
+    fallback_path: ".claude/memory/research/*.yml"
+    description: "Documentacao de pesquisa de dominio"
+    agent: "domain-researcher"
+
+  - name: "Domain Knowledge"
+    path: ".agentic_sdlc/projects/*/knowledge/*.md"
+    fallback_path: ".specify/knowledge/*.md"
+    description: "Conhecimento de dominio documentado"
+    agent: "domain-researcher"
+
+  - name: "Documentation Index"
+    path: ".agentic_sdlc/corpus/docs/**/*.md"
+    fallback_path: ".claude/rag/docs/**/*.md"
+    description: "Documentacao oficial capturada e indexada"
+    agent: "doc-crawler"
+    optional: true
+
+  - name: "RAG Corpus"
+    path: ".agentic_sdlc/corpus/index.yml"
+    fallback_path: ".claude/rag/corpus.yml"
+    description: "Corpus RAG inicializado com conhecimento do dominio"
+    agent: "rag-curator"
+
+quality_checks:
+  - check: "Best practices documentadas"
+    validation: "grep -r 'best_practices' .agentic_sdlc/projects/*/research/ .claude/memory/research/ 2>/dev/null | head -1"
+
+  - check: "Fontes referenciadas"
+    validation: "grep -r 'sources:' .agentic_sdlc/projects/*/research/ .claude/memory/research/ 2>/dev/null | head -1"
+
+  - check: "Documentacao oficial capturada"
+    validation: "ls .agentic_sdlc/corpus/docs/ .claude/rag/docs/ 2>/dev/null | head -1"
+
+human_approval:
+  required: false
+  reason: "Discovery nao requer aprovacao formal"
+
+blockers:
+  - "Nenhuma pesquisa de dominio realizada"
+  - "Tecnologias nao avaliadas"
+  - "Corpus RAG nao inicializado"

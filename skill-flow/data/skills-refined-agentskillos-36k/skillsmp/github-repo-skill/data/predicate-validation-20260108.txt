@@ -1,0 +1,216 @@
+# Predicate Validation Report for kg-microbe (2026-01-08)
+
+This report validates the predicates found in kg-microbe data against the official ontology sources:
+- Biolink Model v4.3.6 (biolink-model.yaml)
+- METPO v2025-12-12 (metpo-full.obo)
+
+## Summary
+
+- **Total unique predicates checked**: 63 (10 biolink + 53 METPO)
+- **Predicates found in official ontologies**: 62
+- **Predicates NOT found in official ontologies**: 1
+- **Deprecated predicates**: 0
+
+## Validation Results
+
+### Biolink Predicates (10 total)
+
+All biolink predicates are verified against: /home/mark/gitrepos/biolink-model/biolink-model.yaml
+
+#### FOUND (9/10):
+
+1. **biolink:associated_with_resistance_to** ✓
+   - Status: Active (canonical predicate)
+   - Parent: associated with response to
+   - Description: A relation that holds between a named thing and a chemical that specifies that the change in the named thing is found to be associated with the degree of resistance to treatment by the chemical.
+   - Domain: named thing → Range: chemical entity
+
+2. **biolink:associated_with_sensitivity_to** ✓
+   - Status: Active (canonical predicate)
+   - Parent: associated with response to
+   - Description: A relation that holds between a named thing and a chemical that specifies that the change in the named thing is found to be associated with the degree of sensitivity to treatment by the chemical.
+   - Domain: named thing → Range: chemical entity
+
+3. **biolink:has_chemical_role** ✓
+   - Status: Active
+   - Parent: related to at concept level
+   - Description: A role is particular behaviour which a chemical entity may exhibit.
+   - Range: chemical role (primarily CHEBI chemical roles)
+
+4. **biolink:has_input** ✓
+   - Status: Active (canonical predicate)
+   - Parent: has participant
+   - Description: holds between a process and a continuant, where the continuant is an input into the process
+   - Domain: biological process or activity → Range: named thing
+   - Subset: translator_minimal
+
+5. **biolink:has_part** ✓
+   - Status: Active (canonical predicate)
+   - Parent: overlaps
+   - Description: holds between wholes and their parts (material entities or processes)
+   - Exact mapping: BFO:0000051
+   - Subset: translator_minimal
+
+6. **biolink:has_phenotype** ✓
+   - Status: Active
+   - Parent: related to at instance level
+   - Aliases: disease presents symptom
+   - Description: holds between a biological entity and a phenotype
+   - Domain: biological entity → Range: phenotypic feature
+
+7. **biolink:location_of** ✓
+   - Status: Active
+   - Parent: related to at instance level
+   - Aliases: site of
+   - Description: holds between material entity or site and a material entity that is located within it (but not considered a part of it)
+   - Domain: named thing → Range: named thing
+   - Inverse: located in
+   - Subset: translator_minimal
+
+8. **biolink:occurs_in** ✓
+   - Status: Active (canonical predicate)
+   - Parent: related to at instance level
+   - Description: holds between a process and a material entity or site within which the process occurs
+   - Close mappings: BFO:0000067
+   - Subset: translator_minimal
+
+9. **biolink:subclass_of** ✓
+   - Status: Active (canonical predicate)
+   - Parent: related to at concept level
+   - Description: holds between two classes where the domain class is a specialization of the range class
+   - Domain: ontology class → Range: ontology class
+   - Subset: translator_minimal
+
+#### NOT FOUND (1/10):
+
+1. **biolink:is_assessed_by** ✗
+   - Status: NOT FOUND in biolink-model.yaml v4.3.6
+   - Issue: This predicate does not exist in the current Biolink Model specification
+   - Recommendation: Verify if this is a typo or if a different predicate should be used (e.g., "assessed by" or "evaluated by")
+
+### METPO Predicates (53 total)
+
+All METPO predicates are verified against: /home/mark/gitrepos/metpo/metpo-full.obo (v2025-12-12)
+
+#### FOUND (53/53): ✓ ALL VALIDATED
+
+All 53 METPO predicates were found in the official METPO ontology. None are deprecated or obsolete.
+
+**Top 10 Most Frequently Used METPO Predicates:**
+
+1. METPO:2000303 (542,740 edges) - does not show activity of
+2. METPO:2000028 (321,601 edges) - does not build acid from
+3. METPO:2000302 (287,208 edges) - shows activity of
+4. METPO:2000037 (284,331 edges) - does not ferment
+5. METPO:2000027 (163,711 edges) - does not assimilate
+6. METPO:2000038 (157,869 edges) - does not use for growth
+7. METPO:2000003 (104,968 edges) - builds acid from
+8. METPO:2000006 (93,823 edges) - uses as carbon source
+9. METPO:2000517 (91,855 edges) - grows in
+10. METPO:2000002 (89,156 edges) - assimilates
+
+**Complete List of All 53 METPO Predicates:**
+
+1. METPO:2000002 - assimilates
+2. METPO:2000003 - builds acid from
+3. METPO:2000004 - builds base from
+4. METPO:2000005 - builds gas from
+5. METPO:2000006 - uses as carbon source
+6. METPO:2000007 - degrades
+7. METPO:2000008 - uses as electron acceptor
+8. METPO:2000009 - uses as electron donor
+9. METPO:2000010 - uses as energy source
+10. METPO:2000011 - ferments
+11. METPO:2000012 - uses for growth
+12. METPO:2000013 - hydrolyzes
+13. METPO:2000014 - uses as nitrogen source
+14. METPO:2000015 - uses in other way
+15. METPO:2000016 - oxidizes
+16. METPO:2000017 - reduces
+17. METPO:2000019 - uses for respiration
+18. METPO:2000020 - uses as sulfur source
+19. METPO:2000021 - does not use for aerobic catabolization
+20. METPO:2000022 - does not use for aerobic growth
+21. METPO:2000024 - does not use for anaerobic growth
+22. METPO:2000025 - does not use for anaerobic growth in the dark
+23. METPO:2000026 - does not use for anaerobic growth with light
+24. METPO:2000027 - does not assimilate
+25. METPO:2000028 - does not build acid from
+26. METPO:2000029 - does not build base from
+27. METPO:2000030 - does not build gas from
+28. METPO:2000031 - does not use as carbon source
+29. METPO:2000032 - uses for aerobic catabolization
+30. METPO:2000033 - does not degrade
+31. METPO:2000034 - does not use as electron acceptor
+32. METPO:2000035 - does not use as electron donor
+33. METPO:2000036 - does not use as energy source
+34. METPO:2000037 - does not ferment
+35. METPO:2000038 - does not use for growth
+36. METPO:2000039 - does not hydrolyze
+37. METPO:2000040 - does not use as nitrogen source
+38. METPO:2000041 - does not use in other way
+39. METPO:2000042 - does not oxidize
+40. METPO:2000043 - uses for aerobic growth
+41. METPO:2000044 - does not reduce
+42. METPO:2000045 - is not required for growth
+43. METPO:2000046 - does not use for respiration
+44. METPO:2000047 - does not use as sulfur source
+45. METPO:2000048 - uses for anaerobic catabolization
+46. METPO:2000049 - uses for anaerobic growth
+47. METPO:2000051 - uses for anaerobic growth with light
+48. METPO:2000103 - capable of
+49. METPO:2000202 - produces
+50. METPO:2000222 - does not produce
+51. METPO:2000302 - shows activity of
+52. METPO:2000303 - does not show activity of
+53. METPO:2000517 - grows in
+
+## Issues Found
+
+### Critical Issues
+
+1. **biolink:is_assessed_by** - NOT FOUND
+   - This predicate is used in kg-microbe data but does not exist in Biolink Model v4.3.6
+   - Action Required: Investigate usage in kg-microbe and either:
+     a) Replace with a valid Biolink predicate
+     b) Request addition to Biolink Model if this is a needed predicate
+     c) Verify if this is a typo (should it be a different predicate?)
+
+### No Deprecation Issues
+
+- None of the predicates are marked as deprecated or obsolete in either ontology
+- All METPO predicates are current and active (as of 2025-12-12 release)
+- All found Biolink predicates are current and active (as of v4.3.6)
+
+## Usage Statistics
+
+From kg-microbe predicate analysis (2026-01-08 build):
+
+- **METPO predicates**: 2,517,546 edges (72.9%)
+- **biolink predicates**: 937,401 edges (27.1%)
+- **Total edges**: 3,454,947
+
+The heavy use of METPO predicates reflects the domain-specific nature of microbial metabolic and phenotypic data, which requires specialized predicates beyond what Biolink Model provides for general biomedical knowledge graphs.
+
+## Recommendations
+
+1. **Immediate**: Investigate and resolve the use of `biolink:is_assessed_by` in kg-microbe data
+2. Consider documenting the rationale for using domain-specific METPO predicates alongside standard Biolink predicates
+3. Monitor both Biolink Model and METPO releases for any deprecations or changes to these predicates
+4. Ensure proper prefix handling in KGX files (biolink: vs METPO:)
+
+## Validation Methodology
+
+- Biolink predicates checked against: biolink-model.yaml (v4.3.6, modified 2024-12-19)
+- METPO predicates checked against: metpo-full.obo (v2025-12-12)
+- All predicates from kg-microbe-predicate-analysis-20260108.txt were validated
+- Deprecation status checked for all predicates
+- No deprecated or obsolete predicates found in either ontology
+
+---
+Generated: 2026-01-08
+Validator: Claude Code
+Sources:
+- /home/mark/gitrepos/biolink-model/biolink-model.yaml
+- /home/mark/gitrepos/metpo/metpo-full.obo
+- /home/mark/gitrepos/cmm-ai-automation/data/kg-microbe-predicate-analysis-20260108.txt

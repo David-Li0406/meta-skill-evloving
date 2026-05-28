@@ -1,0 +1,1 @@
+../../../rules/coding/general.md

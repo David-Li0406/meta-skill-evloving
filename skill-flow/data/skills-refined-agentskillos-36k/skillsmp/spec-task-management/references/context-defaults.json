@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Context Grouping Configuration Defaults",
+  "description": "Default values for context window-aware task grouping",
+  "default_max_tokens": 100000,
+  "default_reserve_tokens": 20000,
+  "complexity_tokens": {
+    "XS": 500,
+    "S": 1500,
+    "M": 4000,
+    "L": 10000,
+    "XL": 25000
+  },
+  "overhead_tokens": {
+    "base_per_task": 200,
+    "per_hard_dependency": 100,
+    "group_transition": 500
+  },
+  "complexity_descriptions": {
+    "XS": "Single function, simple change, < 20 lines",
+    "S": "Single file, straightforward logic, 20-100 lines",
+    "M": "Multiple files, moderate complexity, 100-300 lines",
+    "L": "Multiple components, significant logic, 300-800 lines",
+    "XL": "System-wide, complex integration, > 800 lines"
+  }
+}

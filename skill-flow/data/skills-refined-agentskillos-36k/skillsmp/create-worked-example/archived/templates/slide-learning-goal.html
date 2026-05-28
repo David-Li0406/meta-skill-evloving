@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Learning Goal</title>
+  <style>
+    /* PPTX-Compatible CSS Variables */
+    :root {
+      --color-primary: #1791e8;
+      --color-primary-foreground: #ffffff;
+      --color-surface: #ffffff;
+      --color-surface-foreground: #1d1d1d;
+      --color-muted: #f5f5f5;
+      --color-muted-foreground: #737373;
+      --color-cfu: #fef3c7;
+      --color-answer: #dcfce7;
+      --color-border: #e5e7eb;
+    }
+
+    /* Layout classes required by html2pptx */
+    .row { display: flex; flex-direction: row; }
+    .col { display: flex; flex-direction: column; }
+    .fit { flex: 0 0 auto; }
+    .fill-width { flex: 1 1 auto; width: 100%; }
+    .fill-height { flex: 1 1 auto; }
+    .center { display: flex; align-items: center; justify-content: center; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+
+    /* Background classes */
+    .bg-surface { background: var(--color-surface); }
+    .bg-primary { background: var(--color-primary); }
+    .bg-muted { background: var(--color-muted); }
+
+    /* Text classes */
+    .text-surface-foreground { color: var(--color-surface-foreground); }
+    .text-primary { color: var(--color-primary); }
+    .text-muted-foreground { color: var(--color-muted-foreground); }
+
+    /* Spacing classes (4px base unit) */
+    .gap-sm { gap: 8px; }
+    .gap-md { gap: 12px; }
+    .gap-lg { gap: 20px; }
+
+    /* Border radius */
+    .rounded { border-radius: 8px; }
+    .pill { border-radius: 9999px; }
+  </style>
+</head>
+<body class="col bg-surface" style="width: 960px; height: 540px; position: relative; font-family: Arial, sans-serif; margin: 0; padding: 0; overflow: hidden;">
+
+  <!-- Learning Goal Opening Slide -->
+  <div class="col center fill-height" style="padding: 40px;">
+
+    <!-- Strategy Badge -->
+    <div data-pptx-region="strategy-badge"
+         data-pptx-x="380" data-pptx-y="80" data-pptx-w="200" data-pptx-h="40"
+         style="background: #1791e8; color: #ffffff; padding: 8px 24px; border-radius: 20px; margin-bottom: 24px;">
+      <p style="margin: 0; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">{{strategy_badge}}</p>
+    </div>
+
+    <!-- Strategy Name -->
+    <h1 data-pptx-region="strategy-name"
+        data-pptx-x="80" data-pptx-y="130" data-pptx-w="800" data-pptx-h="50"
+        style="margin: 0 0 16px 0; font-size: 40px; color: #1d1d1d; text-align: center;">{{strategy_name}}</h1>
+
+    <!-- Strategy Summary -->
+    <p data-pptx-region="strategy-summary"
+       data-pptx-x="130" data-pptx-y="190" data-pptx-w="700" data-pptx-h="60"
+       style="margin: 0; font-size: 20px; color: #737373; text-align: center; max-width: 700px; line-height: 1.5;">{{strategy_summary}}</p>
+
+    <!-- Learning Goal Box -->
+    <div data-pptx-region="learning-goal-box"
+         data-pptx-x="80" data-pptx-y="280" data-pptx-w="800" data-pptx-h="120"
+         style="background: #f5f5f5; border-radius: 12px; padding: 20px 32px; margin-top: 32px; max-width: 800px;">
+      <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #737373; text-transform: uppercase; letter-spacing: 1px;">Learning Goal</p>
+      <p style="margin: 0; font-size: 16px; color: #1d1d1d; line-height: 1.5;">{{learning_goal}}</p>
+    </div>
+
+  </div>
+
+  <!-- Label Zone (top right) -->
+  <p data-pptx-region="footnote"
+     data-pptx-x="700" data-pptx-y="8" data-pptx-w="240" data-pptx-h="25"
+     style="position: absolute; top: 8px; right: 20px; font-size: 10pt; color: #666; margin: 0; text-align: right;">
+    {{footnote}}
+  </p>
+
+</body>
+</html>

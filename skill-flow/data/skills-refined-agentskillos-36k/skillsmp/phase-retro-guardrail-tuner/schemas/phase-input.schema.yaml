@@ -1,0 +1,95 @@
+# Phase Input Schema
+# Input format for phase retrospective analysis
+
+phase_input:
+  type: object
+  required:
+    - phase_name
+    - tasks
+  properties:
+    phase_name:
+      type: string
+      description: Identifier for the phase being reviewed
+
+    sprint_name:
+      type: string
+      description: Parent sprint identifier
+
+    tasks:
+      type: array
+      items:
+        type: object
+        required:
+          - id
+          - title
+        properties:
+          id:
+            type: string
+            pattern: "^TASK-\\d+$"
+          title:
+            type: string
+          status:
+            type: string
+            enum: [completed, blocked, partial, in_progress]
+          owner:
+            type: string
+          engineer_summary:
+            type: string
+            description: Content from Implementation Summary section
+          engineer_questions:
+            type: array
+            items:
+              type: object
+              properties:
+                question:
+                  type: string
+                answer:
+                  type: string
+                date:
+                  type: string
+          review_notes:
+            type: array
+            items:
+              type: string
+            description: PR review comments and feedback
+          ci_issues:
+            type: array
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [test_failure, lint_error, type_error, build_failure, coverage]
+                description:
+                  type: string
+                resolved:
+                  type: boolean
+          merge_issues:
+            type: array
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [conflict, sequencing, dependency]
+                description:
+                  type: string
+                resolution:
+                  type: string
+
+    current_guardrails_doc:
+      type: string
+      description: Path or content of current guardrails document
+
+    additional_context:
+      type: object
+      description: Any additional context for the retro
+      properties:
+        goals_achieved:
+          type: array
+          items:
+            type: string
+        external_factors:
+          type: array
+          items:
+            type: string

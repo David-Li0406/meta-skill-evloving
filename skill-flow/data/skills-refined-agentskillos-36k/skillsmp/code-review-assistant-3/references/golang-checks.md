@@ -1,0 +1,468 @@
+# Golang 代码审核检查规则
+
+## 审核排除规则
+
+### [GO-EX001] vendor 目录
+
+- **描述**: `vendor/` 目录及其中的所有文件不进行代码审核
+- **处理方式**:
+  - 不审核 `vendor/` 目录下的任何文件内容
+  - 不提示关于 `vendor/` 目录存储方式的改进建议（如是否使用 go modules）
+  - 不对 vendor 目录的变更生成任何审核意见
+- **示例**:
+
+```
+以下文件路径应被跳过审核:
+- vendor/github.com/...
+- vendor/golang.org/...
+- vendor/*.go
+```
+
+---
+
+### [GO-EX002] 单元测试文件
+
+- **描述**: 单元测试文件不进行代码审核，测试代码有其特殊的编写规范和灵活性要求
+- **处理方式**:
+  - 不审核以 `_test.go` 结尾的文件内容
+  - 不对测试文件中的代码风格、命名规范等提出改进建议
+  - 不提示测试文件中的魔法数字、未使用变量等问题
+- **示例**:
+
+```
+以下文件路径应被跳过审核:
+- app/api/store/terminal_encryption_detail_test.go
+- app/api/store/suite_test.go
+- **/*_test.go
+```
+
+---
+
+## 检查规则按严重程度分类
+
+---
+
+## 🔴 Must Fix (-2)
+
+### [GO-MF001] 错误处理缺失
+
+- **描述**: 函数返回错误但未检查处理
+- **影响**: 可能导致程序继续执行错误状态，引发空指针异常或其他未预期行为
+- **检测方式**:
+  - 检测函数调用返回 `(T, error)` 但未处理 `err`
+  - 检测 `err != nil` 但未做任何操作
+- **示例**:
+
+```go
+// Bad - 错误未处理
+user, _ := db.GetUser(id)
+
+// Bad - 错误被忽略
+if err := someFunc(); err != nil {
+    // 空处理
+}
+
+// Good
+user, err := db.GetUser(id)
+if err != nil {
+    return fmt.Errorf("failed to get user: %w", err)
+}
+```
+
+- **建议修改**: 添加适当的错误处理，记录日志或返回错误
+
+---
+
+### [GO-MF002] SQL 注入风险
+
+- **描述**: 使用字符串拼接构建 SQL 查询，存在注入风险
+- **影响**: 恶意输入可能导致数据库被攻击
+- **检测方式**:
+  - 检测 SQL 字符串拼接
+  - 检测 `fmt.Sprintf` 构建 SQL 查询
+- **示例**:
+
+```go
+// Bad - 字符串拼接
+query := "SELECT * FROM users WHERE id = " + userID
+
+// Bad - fmt.Sprintf
+query := fmt.Sprintf("SELECT * FROM users WHERE name = '%s'", name)
+
+// Good - 参数化查询
+query := "SELECT * FROM users WHERE id = ?"
+rows, err := db.Query(query, userID)
+```
+
+- **建议修改**: 使用参数化查询或 ORM 的安全查询方法
+
+---
+
+### [GO-MF003] 并发安全问题 - 竞态条件
+
+- **描述**: 多个 goroutine 同时访问共享变量，未进行同步保护
+- **影响**: 数据竞争导致不可预期的行为、数据损坏或程序崩溃
+- **检测方式**:
+  - 检测共享变量的并发读写
+  - 使用 `go build -race` 可以检测
+- **示例**:
+
+```go
+// Bad - 无保护的共享访问
+var counter int
+
+func increment() {
+    counter++  // 竞态条件
+}
+
+// Good - 使用 sync.Mutex
+var counter int
+var mu sync.Mutex
+
+func increment() {
+    mu.Lock()
+    counter++
+    mu.Unlock()
+}
+
+// Good - 使用 atomic
+var counter int64
+
+func increment() {
+    atomic.AddInt64(&counter, 1)
+}
+```
+
+- **建议修改**: 使用 `sync.Mutex`、`sync.RWMutex` 或 `sync/atomic` 保护共享数据
+
+---
+
+### [GO-MF004] 资源泄漏
+
+- **描述**: 打开的文件、网络连接、数据库连接等资源未被正确关闭
+- **影响**: 文件描述符耗尽、连接数超限
+- **检测方式**:
+  - 检测 `os.Open`、`net.Dial` 等返回的资源未关闭
+  - 检测缺省 `defer close()`
+- **示例**:
+
+```go
+// Bad - 资源可能未关闭
+func readFile(path string) ([]byte, error) {
+    file, err := os.Open(path)
+    if err != nil {
+        return nil, err
+    }
+    // 如果后续返回错误，file 未关闭
+    return ioutil.ReadAll(file)
+}
+
+// Good
+func readFile(path string) ([]byte, error) {
+    file, err := os.Open(path)
+    if err != nil {
+        return nil, err
+    }
+    defer file.Close()
+    return ioutil.ReadAll(file)
+}
+```
+
+- **建议修改**: 对所有需要关闭的资源使用 `defer` 确保关闭
+
+---
+
+### [GO-MF005] 空指针解引用
+
+- **描述**: 在未检查 nil 的情况下解引用指针
+- **影响**: 导致 panic
+- **检测方式**:
+  - 检测指针的解引用操作未进行 nil 检查
+  - 检测接口类型断言未使用 `ok` 模式
+- **示例**:
+
+```go
+// Bad - 未检查 nil
+func process(data []byte) {
+    str := string(data)  // 如果 data 为 nil 可能出问题
+}
+
+// Bad - 类型断言未检查
+var x interface{} = "hello"
+num := x.(int)  // panic
+
+// Good
+func process(data []byte) {
+    if data == nil {
+        return
+    }
+    str := string(data)
+}
+
+// Good
+if num, ok := x.(int); ok {
+    // 使用 num
+}
+```
+
+- **建议修改**: 解引用前检查 nil，类型断言使用 `ok` 模式
+
+---
+
+## 🟡 Should Fix (-2)
+
+### [GO-SF001] 命名不符合规范
+
+- **描述**: 变量、函数、类型名称不符合 Go 命名约定
+- **影响**: 降低代码可读性，与 Go 社区规范不一致
+- **检测方式**:
+  - 导出标识符首字母应大写
+  - 非导出标识符首字母应小写
+  - 使用驼峰命名，不使用下划线
+  - 包名全小写，无下划线或大写
+- **示例**:
+
+```go
+// Bad - 下划线命名
+var user_name string
+
+// Bad - 包名不规范
+package MyPackage
+
+// Good
+var userName string
+
+// Good
+package mypackage
+```
+
+- **建议修改**: 遵循 Effective Go 和 CodeReviewComments 中的命名规范
+
+---
+
+### [GO-SF002] 函数过长
+
+- **描述**: 单个函数代码行数过多（建议超过 100 行）
+- **影响**: 降低可读性和可维护性，难以测试
+- **检测方式**: 统计函数体有效行数
+- **示例**:
+
+```go
+// Bad - 超过100行的函数
+func processData() {
+    // ... 100+ 行代码 ...
+}
+
+// Good - 拆分成多个小函数
+func processData() {
+    data := loadData()
+    validated := validateData(data)
+    result := transformData(validated)
+    saveResult(result)
+}
+```
+
+- **建议修改**: 将长函数拆分成多个职责单一的小函数
+
+---
+
+### [GO-SF003] 魔法数字
+
+- **描述**: 代码中出现未命名的数字字面量（0、1 除外）
+- **影响**: 降低代码可读性，修改时容易遗漏
+- **检测方式**: 检测非 0/1 的数字字面量
+- **示例**:
+
+```go
+// Bad - 魔法数字
+if size > 1024 {
+    // ...
+}
+time.Sleep(5000)
+
+// Good
+const MaxSize = 1024
+const RetryDelay = 5 * time.Second
+
+if size > MaxSize {
+    // ...
+}
+time.Sleep(RetryDelay)
+```
+
+- **建议修改**: 定义常量或配置项替代魔法数字
+
+---
+
+### [GO-SF004] 缺少注释的复杂逻辑
+
+- **描述**: 复杂的条件判断、循环或算法缺少解释性注释
+- **影响**: 降低代码可读性，增加维护难度
+- **检测方式**:
+  - 多层嵌套条件
+  - 复杂的正则表达式
+  - 算法核心逻辑
+- **示例**:
+
+```go
+// Bad - 复杂逻辑无注释
+if (a > 10 && b < 20) || (c != "" && d == 0) {
+    // ...
+}
+
+// Good
+// Check if user is eligible for discount:
+// - Level > 10 and balance < 20, OR
+// - Has special promo code and new customer
+if (level > 10 && balance < 20) || (promoCode != "" && isNewCustomer) {
+    // ...
+}
+```
+
+- **建议修改**: 为复杂逻辑添加解释性注释
+
+---
+
+### [GO-SF005] 过度嵌套
+
+- **描述**: 代码嵌套层级过深（建议超过 3 层）
+- **影响**: 降低可读性，增加圈复杂度
+- **检测方式**: 统计代码块嵌套层级
+- **示例**:
+
+```go
+// Bad - 深层嵌套
+if a {
+    if b {
+        if c {
+            if d {
+                // ...
+            }
+        }
+    }
+}
+
+// Good - 提前返回
+if !a {
+    return
+}
+if !b {
+    return
+}
+if !c {
+    return
+}
+if d {
+    // ...
+}
+```
+
+- **建议修改**: 使用卫宁语句（guard clauses）或提取函数减少嵌套
+
+---
+
+## 🔵 Nice to Have (-1)
+
+### [GO-NH001] 可使用 stdlib 等效功能
+
+- **描述**: 重复实现了标准库已有的功能
+- **影响**: 增加维护负担，标准库是经过充分测试的
+- **检测方式**: 检测自实现函数与 stdlib 功能重复
+- **示例**:
+
+```go
+// Bad - 自实现 trim
+func trimSpace(s string) string {
+    return strings.Trim(s, " ")
+}
+
+// Good
+func trimSpace(s string) string {
+    return strings.TrimSpace(s)
+}
+```
+
+- **建议修改**: 优先使用标准库功能
+
+---
+
+### [GO-NH002] 变量声明但未使用
+
+- **描述**: 声明了变量但未读取其值
+- **影响**: 可能是代码冗余或逻辑错误
+- **检测方式**: 静态分析检测未使用变量
+- **示例**:
+
+```go
+// Bad
+func calculate() int {
+    x := 10
+    y := 20  // 未使用
+    return x * 2
+}
+
+// Good - 删除未使用变量或使用 _ 忽略
+func calculate() int {
+    x := 10
+    return x * 2
+}
+```
+
+- **建议修改**: 删除未使用的变量
+
+---
+
+### [GO-NH003] 导入但未使用
+
+- **描述**: 导入了包但未使用
+- **影响**: 代码不干净，影响编译
+- **检测方式**: `go build` 会报错
+- **示例**:
+
+```go
+// Bad
+import (
+    "fmt"
+    "os"  // 未使用
+)
+
+// Good - 删除未使用的导入
+import (
+    "fmt"
+)
+```
+
+- **建议修改**: 删除未使用的导入，可以使用 `goimports` 自动处理
+
+---
+
+### [GO-NH004] 可简化的字符串拼接
+
+- **描述**: 使用 `fmt.Sprintf` 但实际只需要简单拼接
+- **影响**: 性能稍差，代码可读性不如直接拼接
+- **检测方式**: `fmt.Sprintf` 中只有字符串拼接和简单格式
+- **示例**:
+
+```go
+// Bad
+s := fmt.Sprintf("%s%s", a, b)
+
+// Good
+s := a + b
+
+// Or with builder for many concatenations
+var b strings.Builder
+b.WriteString(a)
+b.WriteString(b)
+s := b.String()
+```
+
+- **建议修改**: 简单拼接使用 `+`，大量拼接使用 `strings.Builder`
+
+---
+
+## 参考资源
+
+- [Effective Go - Comments](https://go.dev/doc/effective_go#comments)
+- [Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
+- [Go Code Review Checklist](https://github.com/golang/go/wiki/CodeReviewChecklist)

@@ -1,0 +1,72 @@
+model:
+  name: 'GraphCast' 
+
+data:
+  name: 'ocean'      # Use ocean dataset type
+  dataset: 'pearl_river'   # For logging directory naming
+  data_path: 'datasets/data/data_pearl_river_estuary_combined.mat'
+  use_old_split: true
+  patches_per_day: 1  # Pearl River Estuary is a single continuous region
+
+  # Temporal configuration
+  input_len: 7
+  output_len: 1
+
+  # Data splitting
+  train_ratio: 0.7    # 70% for training (~1278 days)
+  valid_ratio: 0.15   # 15% for validation (~274 days)
+  test_ratio: 0.15    # 15% for testing (~274 days)
+
+  train_batchsize: 8  
+  eval_batchsize: 8  
+
+  # Subset for quick testing
+  subset: False
+  subset_ratio: 1
+
+  # Options: 'standardize', 'normalize', 'none'
+  normalization_mode: 'normalize'
+
+  # Data loading
+  num_workers: 4
+  pin_memory: True
+
+train:
+  random_seed: 42
+  cuda: True
+  device_ids: [0, 1, 2, 3, 4, 5, 6, 7] 
+  epochs: 400               
+  patience: 20              
+  eval_freq: 5             
+  saving_best: True
+  saving_checkpoint: True
+  checkpoint_freq: 2
+
+  # Options: 'DP' (DataParallel) or 'DDP' (DistributedDataParallel)
+  distribute_mode: 'DP'  
+  local_rank: 0
+
+optimizer:
+  optimizer: 'AdamW'
+  lr: 0.0004
+  weight_decay: 0.00005
+
+scheduler:
+  scheduler: 'CosineAnnealingWarmRestarts'
+  T_0: 30                 # 第一个周期长度 (30 epochs)
+  T_mult: 2               # 每次重启后周期翻倍 (30 → 60 → 120)
+  eta_min: 0.000005        # 最小学习率
+  
+  # 自适应调度器
+  # scheduler: 'ReduceLROnPlateau'
+  # mode: 'min'             # 监控验证损失下降
+  # factor: 0.5             # 学习率衰减因子
+  # patience: 5             # 5个epoch无改进则衰减
+  # min_lr: 0.000005         # 最小学习率
+
+log:
+  verbose: True
+  log: True
+  log_dir: './logs'
+  wandb: False
+  wandb_project: 'pearl_river_ocean_prediction'

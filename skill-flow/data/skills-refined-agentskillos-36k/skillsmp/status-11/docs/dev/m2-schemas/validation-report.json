@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Validation Report Schema",
+  "description": "JSON schema for branch proposal validation reports in the M2 AI-assisted branching system. Reports document the results of policy checks, sanitization transforms, and Director evaluation.",
+  "type": "object",
+  "required": ["id", "proposal_id", "created_at", "status", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this validation report (UUID format).",
+      "pattern": "^[a-f0-9-]{36}$"
+    },
+    "proposal_id": {
+      "type": "string",
+      "description": "Reference to the proposal being validated.",
+      "pattern": "^[a-f0-9-]{36}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when validation completed."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["passed", "failed", "rejected_with_sanitization", "pending"],
+      "description": "Overall validation outcome. 'pending' indicates validation is in progress."
+    },
+    "rules": {
+      "type": "array",
+      "description": "Results of individual policy and validation rules.",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "rule_name", "category", "result"],
+        "additionalProperties": false,
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "description": "Unique identifier for this rule (e.g., 'profanity_filter', 'theme_consistency_check')."
+          },
+          "rule_name": {
+            "type": "string",
+            "description": "Human-readable name of the rule (e.g., 'Profanity Filter', 'Thematic Consistency')."
+          },
+          "category": {
+            "type": "string",
+            "enum": ["policy", "sanitization", "structural", "content", "performance"],
+            "description": "Category of the rule."
+          },
+          "result": {
+            "type": "string",
+            "enum": ["passed", "failed", "warning", "sanitized"],
+            "description": "Outcome of rule evaluation."
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"],
+            "description": "Severity if rule failed (critical = auto-reject; low = log only)."
+          },
+          "message": {
+            "type": "string",
+            "description": "Explanation of the result (e.g., 'Found 3 instances of prohibited slur')."
+          },
+          "violations": {
+            "type": "array",
+            "description": "Specific violations detected by this rule.",
+            "items": {
+              "type": "object",
+              "required": ["offset", "text", "explanation"],
+              "properties": {
+                "offset": {
+                  "type": "integer",
+                  "description": "Character offset in the proposal text where violation was found."
+                },
+                "text": {
+                  "type": "string",
+                  "description": "The problematic text snippet (may be redacted for privacy)."
+                },
+                "explanation": {
+                  "type": "string",
+                  "description": "Why this is a violation (e.g., 'matches prohibited profanity list')."
+                }
+              }
+            }
+          },
+          "sanitization_applied": {
+            "type": "object",
+            "description": "If sanitization was applied, describe the transformation.",
+            "additionalProperties": false,
+            "properties": {
+              "original_text": {
+                "type": "string",
+                "description": "Original text before sanitization (may be redacted)."
+              },
+              "sanitized_text": {
+                "type": "string",
+                "description": "Text after sanitization transform."
+              },
+              "transform_type": {
+                "type": "string",
+                "enum": ["redaction", "replacement", "removal", "normalization"],
+                "description": "Type of sanitization applied."
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Additional context (e.g., version of profanity list used, embedding distance).",
+            "additionalProperties": true
+          }
+        }
+      }
+    },
+    "overall_risk_score": {
+      "type": "number",
+      "description": "Aggregate risk score (0.0–1.0). Higher = riskier. Computed from individual rule results.",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": ["approve", "approve_with_caution", "reject", "manual_review"],
+      "description": "Validation pipeline's recommendation for acceptance."
+    },
+    "sanitized_proposal": {
+      "type": "object",
+      "description": "If sanitization was applied, the sanitized version of the proposal (same structure as original proposal).",
+      "additionalProperties": true
+    },
+    "director_notes": {
+      "type": "object",
+      "description": "Optional notes from the AI Director (if Director evaluation was performed).",
+      "additionalProperties": false,
+      "properties": {
+        "return_path_feasible": {
+          "type": "boolean",
+          "description": "Whether Director found a feasible return path to scripted content."
+        },
+        "return_path_score": {
+          "type": "number",
+          "description": "Score (0.0–1.0) of confidence in return path.",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "coherence_assessment": {
+          "type": "string",
+          "description": "Director's qualitative assessment of branch coherence."
+        },
+        "risk_metrics": {
+          "type": "object",
+          "description": "Detailed risk metrics from Director evaluation. Includes thematic_consistency, lore_adherence, character_voice, narrative_pacing, player_preference_fit, and proposal_confidence.",
+          "additionalProperties": true
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Validation context and performance metrics.",
+      "additionalProperties": false,
+      "properties": {
+        "validation_time_ms": {
+          "type": "integer",
+          "description": "Total time in milliseconds for all validation checks."
+        },
+        "ruleset_version": {
+          "type": "string",
+          "description": "Version of the policy ruleset used (e.g., 'v1.2.3')."
+        },
+        "actor": {
+          "type": "string",
+          "description": "Component that performed validation (e.g., 'validation_pipeline_v1')."
+        },
+        "story_id": {
+          "type": "string",
+          "description": "Story being validated, for grouping reports."
+        }
+      }
+    }
+  }
+}

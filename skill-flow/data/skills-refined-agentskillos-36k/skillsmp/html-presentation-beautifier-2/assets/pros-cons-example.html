@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优缺点对比示例 - McKinsey Style</title>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .pros-cons-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+        }
+
+        .pros-column, .cons-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid;
+        }
+
+        .column-header h3 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .pros-column .column-header {
+            border-color: var(--accent-green);
+        }
+
+        .cons-column .column-header {
+            border-color: var(--accent-primary);
+        }
+
+        .pros-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+        }
+
+        .cons-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+        }
+
+        .item-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .item-card.pros-item {
+            border-left: 4px solid var(--accent-green);
+        }
+
+        .item-card.cons-item {
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .item-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .item-text {
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        .summary-box {
+            background: #e3f2fd;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid var(--accent-blue);
+            margin: 30px 0;
+        }
+
+        .summary-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+        }
+
+        @media (max-width: 768px) {
+            .pros-cons-container {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚖️ 优缺点对比示例</h1>
+        <p class="description">
+            McKinsey 风格决策分析工具 | 左右优缺点对照<br>
+            适用于方案评估、决策分析、利弊权衡等场景
+        </p>
+
+        <h2>示例 1：远程办公决策分析</h2>
+        <div class="pros-cons-container">
+            <div class="pros-column">
+                <div class="column-header">
+                    <div class="pros-icon">✓</div>
+                    <h3>优点</h3>
+                </div>
+
+                <div class="item-card pros-item">
+                    <span class="item-icon">💰</span>
+                    <span class="item-text">节省办公租金和水电成本</span>
+                </div>
+
+                <div class="item-card pros-item">
+                    <span class="item-icon">🌍</span>
+                    <span class="item-text">可招聘全球人才，不受地域限制</span>
+                </div>
+
+                <div class="item-card pros-item">
+                    <span class="item-icon">⏰</span>
+                    <span class="item-text">员工节省通勤时间，提高工作效率</span>
+                </div>
+
+                <div class="item-card pros-item">
+                    <span class="item-icon">🌱</span>
+                    <span class="item-text">减少碳排放，更加环保</span>
+                </div>
+
+                <div class="item-card pros-item">
+                    <span class="item-icon">😊</span>
+                    <span class="item-text">提高员工满意度和工作生活平衡</span>
+                </div>
+            </div>
+
+            <div class="cons-column">
+                <div class="column-header">
+                    <div class="cons-icon">✗</div>
+                    <h3>缺点</h3>
+                </div>
+
+                <div class="item-card cons-item">
+                    <span class="item-icon">🤝</span>
+                    <span class="item-text">团队协作沟通效率降低</span>
+                </div>
+
+                <div class="item-card cons-item">
+                    <span class="item-icon">📊</span>
+                    <span class="item-text">员工绩效监控变得困难</span>
+                </div>
+
+                <div class="item-card cons-item">
+                    <span class="item-icon">🏠</span>
+                    <span class="item-text">工作与生活边界模糊</span>
+                </div>
+
+                <div class="item-card cons-item">
+                    <span class="item-icon">🔒</span>
+                    <span class="item-text">信息安全风险增加</span>
+                </div>
+
+                <div class="item-card cons-item">
+                    <span class="item-icon">🎯</span>
+                    <span class="item-text">企业文化建设和团队凝聚力受挑战</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-box">
+            <h4>💡 决策建议</h4>
+            <p style="font-size: 16px; line-height: 1.8;">
+                采用混合办公模式：每周2-3天远程办公，其余时间到岗工作。这样既能享受远程办公的成本和人才优势，又能保持团队协作和企业文化。同时需加强数字化工具投资和信息安全建设。
+            </p>
+        </div>
+
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>方案评估</h4>
+                <p>产品方案、技术选型、供应商选择</p>
+            </div>
+            <div class="use-case-card">
+                <h4>投资决策</h4>
+                <p>项目投资、股票投资、并购决策</p>
+            </div>
+            <div class="use-case-card">
+                <h4>招聘决策</h4>
+                <p>候选人评估、部门设置、组织架构</p>
+            </div>
+            <div class="use-case-card">
+                <h4>产品分析</h4>
+                <p>产品特性、市场定位、竞争分析</p>
+            </div>
+            <div class="use-case-card">
+                <h4>策略分析</h4>
+                <p>战略选择、市场进入、渠道选择</p>
+            </div>
+            <div class="use-case-card">
+                <h4>技术选型</h4>
+                <p>技术栈选择、框架对比、工具评估</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>HTML Presentation Beautifier - McKinsey Style Pros & Cons Comparison Example</p>
+            <p>左右优缺点对照的决策分析可视化</p>
+        </footer>
+    </div>
+</body>
+</html>

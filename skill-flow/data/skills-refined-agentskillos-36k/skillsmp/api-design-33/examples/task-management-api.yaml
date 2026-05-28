@@ -1,0 +1,680 @@
+# Task Management API - Example following API Design Patterns
+# This is a complete example showing resource-oriented design
+
+openapi: 3.1.0
+info:
+  title: Task Management API
+  description: |
+    A task management API demonstrating API Design Patterns.
+
+    ## Resources
+    - **Projects**: Top-level containers for tasks
+    - **Tasks**: Work items within projects
+    - **Comments**: Discussion on tasks
+    - **Labels**: Tags for organizing tasks
+  version: "1.0.0"
+
+servers:
+  - url: https://api.taskmanager.com/v1
+
+paths:
+  # ========================================
+  # PROJECTS
+  # ========================================
+  /projects:
+    get:
+      summary: List projects
+      operationId: listProjects
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+        - name: filter
+          in: query
+          schema:
+            type: string
+          example: 'status = "ACTIVE" AND owner = "users/123"'
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  next_page_token:
+                    type: string
+
+    post:
+      summary: Create a project
+      operationId: createProject
+      parameters:
+        - name: project_id
+          in: query
+          description: Client-provided ID (optional, for idempotency)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [display_name]
+              properties:
+                display_name:
+                  type: string
+                  example: "Q1 Marketing Campaign"
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  /projects/{project_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      summary: Get a project
+      operationId: getProject
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Update a project
+      operationId: updateProject
+      parameters:
+        - name: update_mask
+          in: query
+          schema:
+            type: string
+          example: "display_name,description"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: Updated project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+    delete:
+      summary: Delete a project (soft delete)
+      operationId: deleteProject
+      responses:
+        '204':
+          description: Project deleted
+
+  # Custom method: Archive project
+  /projects/{project_id}:archive:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Archive a project
+      operationId: archiveProject
+      responses:
+        '200':
+          description: Project archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  # Custom method: Unarchive project
+  /projects/{project_id}:unarchive:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Unarchive a project
+      operationId: unarchiveProject
+      responses:
+        '200':
+          description: Project unarchived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  # ========================================
+  # TASKS (Sub-resource of Projects)
+  # ========================================
+  /projects/{project_id}/tasks:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      summary: List tasks in a project
+      operationId: listTasks
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+        - name: filter
+          in: query
+          schema:
+            type: string
+          example: 'status = "TODO" AND priority = "HIGH"'
+        - name: order_by
+          in: query
+          schema:
+            type: string
+          example: "due_date asc"
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  next_page_token:
+                    type: string
+
+    post:
+      summary: Create a task
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  example: "Design landing page"
+                description:
+                  type: string
+                assignee:
+                  type: string
+                  description: Reference to user resource
+                  example: "users/456"
+                due_date:
+                  type: string
+                  format: date
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, CRITICAL]
+                labels:
+                  type: array
+                  items:
+                    type: string
+                  example: ["labels/design", "labels/urgent"]
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /projects/{project_id}/tasks/{task_id}:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      summary: Get a task
+      operationId: getTask
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+    patch:
+      summary: Update a task
+      operationId: updateTask
+      parameters:
+        - name: update_mask
+          in: query
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+    delete:
+      summary: Delete a task
+      operationId: deleteTask
+      responses:
+        '204':
+          description: Task deleted
+
+  # Custom method: Complete task
+  /projects/{project_id}/tasks/{task_id}:complete:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Mark task as complete
+      operationId: completeTask
+      responses:
+        '200':
+          description: Task completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  # Custom method: Reopen task
+  /projects/{project_id}/tasks/{task_id}:reopen:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Reopen a completed task
+      operationId: reopenTask
+      responses:
+        '200':
+          description: Task reopened
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  # Custom method: Move task to different project
+  /projects/{project_id}/tasks/{task_id}:move:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Move task to another project
+      operationId: moveTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [destination_project]
+              properties:
+                destination_project:
+                  type: string
+                  example: "projects/other-project"
+      responses:
+        '200':
+          description: Task moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  # ========================================
+  # COMMENTS (Sub-resource of Tasks)
+  # ========================================
+  /projects/{project_id}/tasks/{task_id}/comments:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: task_id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      summary: List comments on a task
+      operationId: listComments
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+                  next_page_token:
+                    type: string
+
+    post:
+      summary: Add a comment
+      operationId: createComment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  example: "Great progress on this task!"
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+
+  # ========================================
+  # LABELS (Top-level resource)
+  # ========================================
+  /labels:
+    get:
+      summary: List labels
+      operationId: listLabels
+      responses:
+        '200':
+          description: List of labels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  labels:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Label'
+
+    post:
+      summary: Create a label
+      operationId: createLabel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [display_name, color]
+              properties:
+                display_name:
+                  type: string
+                  example: "Bug"
+                color:
+                  type: string
+                  example: "#FF0000"
+      responses:
+        '201':
+          description: Label created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
+
+  # ========================================
+  # BATCH OPERATIONS
+  # ========================================
+  /projects/{project_id}/tasks:batchUpdate:
+    parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      summary: Batch update tasks
+      operationId: batchUpdateTasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requests:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      task:
+                        $ref: '#/components/schemas/Task'
+                      update_mask:
+                        type: string
+      responses:
+        '200':
+          description: Tasks updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+
+components:
+  parameters:
+    PageSize:
+      name: page_size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+
+    PageToken:
+      name: page_token
+      in: query
+      schema:
+        type: string
+
+  schemas:
+    Project:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          example: "projects/abc123"
+        display_name:
+          type: string
+          example: "Q1 Marketing Campaign"
+        description:
+          type: string
+        owner:
+          type: string
+          description: Reference to user
+          example: "users/789"
+        status:
+          type: string
+          enum: [ACTIVE, ARCHIVED]
+          default: ACTIVE
+        task_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    Task:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          example: "projects/abc123/tasks/task456"
+        title:
+          type: string
+          example: "Design landing page"
+        description:
+          type: string
+        assignee:
+          type: string
+          example: "users/456"
+        status:
+          type: string
+          enum: [TODO, IN_PROGRESS, DONE]
+          default: TODO
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+          default: MEDIUM
+        due_date:
+          type: string
+          format: date
+        labels:
+          type: array
+          items:
+            type: string
+          example: ["labels/design", "labels/urgent"]
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    Comment:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          example: "projects/abc/tasks/123/comments/456"
+        author:
+          type: string
+          readOnly: true
+          example: "users/789"
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    Label:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          example: "labels/bug"
+        display_name:
+          type: string
+          example: "Bug"
+        color:
+          type: string
+          example: "#FF0000"
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 404
+                  status:
+                    type: string
+                    example: "NOT_FOUND"
+                  message:
+                    type: string
+                    example: "Project not found"

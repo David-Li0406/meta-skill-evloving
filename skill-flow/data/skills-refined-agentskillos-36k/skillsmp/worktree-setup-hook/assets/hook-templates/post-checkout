@@ -1,0 +1,90 @@
+#!/bin/sh
+# Git post-checkout hook for automatic worktree setup
+# This hook detects new worktree creation and runs setup tasks
+
+# Exit if this is not a new worktree (previous HEAD is not null-ref)
+# Git sets $3 (previous HEAD) to 0000000000000000000000000000000000000000 for new worktrees
+if [ "$3" != "0000000000000000000000000000000000000000" ]; then
+    exit 0
+fi
+
+# Get the worktree root directory
+WORKTREE_ROOT="$(git rev-parse --show-toplevel)"
+
+echo "🔄 New worktree detected. Running setup..."
+
+# Change to worktree root
+cd "$WORKTREE_ROOT" || exit 0
+
+# Copy environment files from main worktree or template
+# Look for common env file patterns
+if [ -f ".env.example" ] && [ ! -f ".env" ]; then
+    echo "📋 Copying .env.example to .env"
+    cp .env.example .env
+fi
+
+if [ -f ".env.local.example" ] && [ ! -f ".env.local" ]; then
+    echo "📋 Copying .env.local.example to .env.local"
+    cp .env.local.example .env.local
+fi
+
+# Try to find and copy env files from main worktree
+MAIN_WORKTREE="$(git rev-parse --git-dir)/.."
+if [ -d "$MAIN_WORKTREE" ] && [ "$MAIN_WORKTREE" != "$WORKTREE_ROOT" ]; then
+    for env_file in .env .env.local .env.development; do
+        if [ -f "$MAIN_WORKTREE/$env_file" ] && [ ! -f "$env_file" ]; then
+            echo "📋 Copying $env_file from main worktree"
+            cp "$MAIN_WORKTREE/$env_file" "$env_file"
+        fi
+    done
+fi
+
+# Detect package manager and install dependencies
+if [ -f "package.json" ]; then
+    echo "📦 Detected Node.js project"
+    if command -v yarn >/dev/null 2>&1 && [ -f "yarn.lock" ]; then
+        echo "📦 Installing dependencies with yarn..."
+        yarn install
+    elif command -v npm >/dev/null 2>&1; then
+        echo "📦 Installing dependencies with npm..."
+        npm install
+    fi
+elif [ -f "requirements.txt" ]; then
+    echo "📦 Detected Python project"
+    if command -v pip >/dev/null 2>&1; then
+        echo "📦 Installing dependencies with pip..."
+        pip install -r requirements.txt
+    elif command -v pip3 >/dev/null 2>&1; then
+        echo "📦 Installing dependencies with pip3..."
+        pip3 install -r requirements.txt
+    fi
+elif [ -f "Cargo.toml" ]; then
+    echo "📦 Detected Rust project"
+    if command -v cargo >/dev/null 2>&1; then
+        echo "📦 Building with cargo..."
+        cargo build
+    fi
+elif [ -f "go.mod" ]; then
+    echo "📦 Detected Go project"
+    if command -v go >/dev/null 2>&1; then
+        echo "📦 Downloading dependencies with go..."
+        go mod download
+    fi
+elif [ -f "Gemfile" ]; then
+    echo "📦 Detected Ruby project"
+    if command -v bundle >/dev/null 2>&1; then
+        echo "📦 Installing dependencies with bundle..."
+        bundle install
+    fi
+fi
+
+# Check for setup scripts
+if [ -f "setup.sh" ] && [ -x "setup.sh" ]; then
+    echo "🔧 Running setup.sh..."
+    ./setup.sh
+elif [ -f "scripts/setup.sh" ] && [ -x "scripts/setup.sh" ]; then
+    echo "🔧 Running scripts/setup.sh..."
+    ./scripts/setup.sh
+fi
+
+echo "✅ Worktree setup complete!"

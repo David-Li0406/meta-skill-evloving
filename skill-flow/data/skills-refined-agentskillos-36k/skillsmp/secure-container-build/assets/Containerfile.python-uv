@@ -1,0 +1,74 @@
+# syntax=docker/dockerfile:1
+
+# Global ARG for runtime image selection
+# - latest: Production (no shell, minimal, most secure)
+# - latest-dev: Development/debugging (includes shell and basic tools)
+ARG RUNTIME_TAG=latest
+
+###############################
+# Builder stage
+###############################
+FROM docker.io/python:3-slim AS builder
+
+# Install system dependencies first
+RUN <<EOT
+apt update -qy
+DEBIAN_FRONTEND=noninteractive \
+  apt install -qyy --no-install-recommends --no-install-suggests \
+  tini curl \
+  ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOT
+
+# Install uv using official distroless image (best practice)
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Configure uv environment variables
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
+
+# Set working directory
+WORKDIR /app
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev --no-editable
+
+# Then, add the rest of the project source code and install it
+COPY . ./
+
+# Installing separately from its dependencies allows optimal layer caching
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-dev --no-editable
+
+###############################
+# Runtime stage (Wolfi glibc-dynamic)
+###############################
+# Re-declare ARG for this stage
+ARG RUNTIME_TAG=latest
+FROM cgr.dev/chainguard/glibc-dynamic:${RUNTIME_TAG} AS runtime
+
+# Copy tini from builder (Wolfi doesn't include it)
+COPY --from=builder /usr/bin/tini-static /usr/bin/tini
+
+# Copy the application from the builder
+COPY --from=builder --chown=65532:65532 /app /app
+
+# Setup virtual environment and place executables in the environment at the front of the path
+ENV PYTHONUNBUFFERED=1 \
+    VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:/app/bin:$PATH"
+
+# Switch to non-root user (Wolfi uses uid 65532 by default)
+USER 65532:65532
+WORKDIR /app
+
+ENTRYPOINT ["tini", "--"]
+CMD ["python", "your_app.py"]
+
+# To build for debugging with shell access:
+# podman build --build-arg RUNTIME_TAG=latest-dev -t myapp:debug .

@@ -1,0 +1,360 @@
+# Basic Concourse CI Pipeline
+# Build-Test-Deploy pattern with notifications
+#
+# Usage:
+# fly -t target set-pipeline -p my-app -c basic-pipeline.yml \
+#   -v git_uri=https://github.com/org/repo.git \
+#   -v git_branch=main \
+#   -v registry_repo=registry.example.com/org/app
+
+################################################
+# Reusable YAML Anchors
+################################################
+
+git-source: &git-source
+  uri: ((git_uri))
+  branch: ((git_branch))
+  username: ((git.username))
+  password: ((git.token))
+
+registry-source: &registry-source
+  repository: ((registry_repo))
+  username: ((registry.username))
+  password: ((registry.password))
+
+notify-success: &notify-success
+  put: notify
+  params:
+    text: ":white_check_mark: $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME #$BUILD_NAME succeeded"
+
+notify-failure: &notify-failure
+  put: notify
+  params:
+    text: ":x: $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME #$BUILD_NAME failed"
+
+# Build log retention policy
+log-retention: &log-retention
+  build_log_retention:
+    days: 14
+    builds: 100
+    minimum_succeeded_builds: 1
+
+################################################
+# Resource Types
+################################################
+
+resource_types:
+- name: slack-notification
+  type: registry-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+
+################################################
+# Resources
+################################################
+
+resources:
+# Source code
+- name: source
+  type: git
+  icon: gitlab
+  check_every: 2m
+  source:
+    <<: *git-source
+    ignore_paths:
+    - "*.md"
+    - docs/**
+
+# Release candidate image
+- name: app-image-rc
+  type: registry-image
+  icon: docker
+  source:
+    <<: *registry-source
+    tag: rc
+
+# Production image
+- name: app-image
+  type: registry-image
+  icon: docker
+  source:
+    <<: *registry-source
+    tag: latest
+
+# Version management
+- name: version
+  type: semver
+  icon: tag
+  source:
+    driver: git
+    uri: ((git_uri))
+    branch: version
+    file: version
+    username: ((git.username))
+    password: ((git.token))
+    initial_version: 0.1.0
+
+# Notifications
+- name: notify
+  type: slack-notification
+  icon: slack
+  source:
+    url: ((slack.webhook_url))
+
+################################################
+# Groups
+################################################
+
+groups:
+- name: all
+  jobs: ["*"]
+- name: build
+  jobs: [build, test]
+- name: release
+  jobs: [release]
+- name: deploy
+  jobs: [deploy-staging, deploy-prod]
+
+################################################
+# Jobs
+################################################
+
+jobs:
+#-----------------------------------------
+# Build Job
+#-----------------------------------------
+- name: build
+  <<: *log-retention
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      trigger: true
+    - get: version
+      params: { pre: rc }
+
+  - task: compile
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: node
+          tag: 20-slim
+      inputs:
+      - name: source
+      - name: version
+      outputs:
+      - name: build
+      caches:
+      - path: source/node_modules
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          cd source
+          npm ci
+          npm run build
+          cp -r dist ../build/
+          cp ../version/version ../build/
+
+  # Build container image using modern oci-build-task
+  - task: build-image
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/oci-build-task
+      inputs:
+      - name: source
+      - name: build
+      outputs:
+      - name: image
+      params:
+        CONTEXT: source
+        DOCKERFILE: source/Dockerfile
+      caches:
+      - path: cache
+      run:
+        path: build
+
+  - put: app-image-rc
+    params:
+      image: image/image.tar
+    get_params:
+      skip_download: true
+
+  on_failure:
+    <<: *notify-failure
+
+#-----------------------------------------
+# Test Job
+#-----------------------------------------
+- name: test
+  <<: *log-retention
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [build]
+      trigger: true
+    - get: app-image-rc
+      passed: [build]
+      trigger: true
+
+  - task: unit-tests
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: node
+          tag: 20-slim
+      inputs:
+      - name: source
+      caches:
+      - path: source/node_modules
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          cd source
+          npm ci
+          npm test
+
+  - task: integration-tests
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: node
+          tag: 20-slim
+      inputs:
+      - name: source
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          cd source
+          npm run test:integration
+
+  on_failure:
+    <<: *notify-failure
+
+#-----------------------------------------
+# Release Job
+#-----------------------------------------
+- name: release
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [test]
+    - get: app-image-rc
+      passed: [test]
+      trigger: true
+      params:
+        format: oci
+    - get: version
+      params: { bump: final }
+
+  - put: app-image
+    params:
+      image: app-image-rc/image.tar
+      version: version/version
+      bump_aliases: true
+
+  - put: version
+    params:
+      file: version/version
+
+  on_success:
+    <<: *notify-success
+  on_failure:
+    <<: *notify-failure
+
+#-----------------------------------------
+# Deploy Staging
+#-----------------------------------------
+- name: deploy-staging
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [release]
+    - get: app-image
+      passed: [release]
+      trigger: true
+
+  - task: deploy
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: bitnami/kubectl
+          tag: latest
+      inputs:
+      - name: source
+      params:
+        KUBECONFIG_CONTENT: ((k8s.staging_kubeconfig))
+        NAMESPACE: staging
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+          export KUBECONFIG=/tmp/kubeconfig
+          kubectl -n $NAMESPACE apply -f source/k8s/
+
+  on_success:
+    <<: *notify-success
+  on_failure:
+    <<: *notify-failure
+
+#-----------------------------------------
+# Deploy Production (Manual)
+#-----------------------------------------
+- name: deploy-prod
+  serial: true
+  plan:
+  - in_parallel:
+    - get: source
+      passed: [deploy-staging]
+    - get: app-image
+      passed: [deploy-staging]
+      # No trigger - manual deployment
+
+  - task: deploy
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: bitnami/kubectl
+          tag: latest
+      inputs:
+      - name: source
+      params:
+        KUBECONFIG_CONTENT: ((k8s.prod_kubeconfig))
+        NAMESPACE: production
+      run:
+        path: /bin/bash
+        args:
+        - -exc
+        - |
+          echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+          export KUBECONFIG=/tmp/kubeconfig
+          kubectl -n $NAMESPACE apply -f source/k8s/
+
+  on_success:
+    <<: *notify-success
+  on_failure:
+    <<: *notify-failure

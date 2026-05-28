@@ -1,0 +1,287 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Spec Task Manager Task List",
+  "description": "Schema for task lists generated from specification documents",
+  "type": "object",
+  "required": ["metadata", "tasks"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["source_document", "generated_at", "version", "total_tasks", "completion_percentage"],
+      "properties": {
+        "source_document": {
+          "type": "string",
+          "description": "Path or name of the source specification document"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp when task list was created"
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp of last modification"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version of the task list"
+        },
+        "total_tasks": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of tasks in the list"
+        },
+        "completion_percentage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage of tasks completed"
+        },
+        "context_config": {
+          "type": "object",
+          "properties": {
+            "max_tokens": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum tokens available in context window"
+            },
+            "reserve_tokens": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Tokens reserved for agent responses and overhead"
+            },
+            "effective_limit": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Effective token limit (max_tokens - reserve_tokens)"
+            }
+          },
+          "description": "Configuration for context window grouping"
+        },
+        "total_context_groups": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of context groups"
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "description", "status", "priority", "complexity", "dependencies", "testing", "source_requirements"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^TASK-\\d{3,}$",
+            "description": "Unique task identifier (e.g., TASK-001)"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Brief descriptive title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of what needs to be done"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["not_started", "in_progress", "blocked", "complete", "obsolete"],
+            "description": "Current task status"
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"],
+            "description": "Task priority level"
+          },
+          "complexity": {
+            "type": "string",
+            "enum": ["XS", "S", "M", "L", "XL"],
+            "description": "T-shirt size complexity estimate"
+          },
+          "dependencies": {
+            "type": "object",
+            "properties": {
+              "hard": {
+                "type": "array",
+                "items": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+                "description": "Tasks that MUST be complete before this task can start"
+              },
+              "soft": {
+                "type": "array",
+                "items": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+                "description": "Tasks that benefit from being complete but are not blocking"
+              }
+            },
+            "default": { "hard": [], "soft": [] }
+          },
+          "blocked_by": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+            "description": "Tasks currently blocking this task (computed from hard dependencies)"
+          },
+          "blocks": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+            "description": "Tasks that this task is blocking"
+          },
+          "testing": {
+            "type": "object",
+            "required": ["acceptance_criteria"],
+            "properties": {
+              "acceptance_criteria": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1,
+                "description": "Conditions that must be true when task is complete"
+              },
+              "test_scenarios": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Concrete test cases to verify implementation"
+              },
+              "edge_cases": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Boundary conditions and error scenarios to consider"
+              }
+            }
+          },
+          "source_requirements": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1,
+            "description": "References to specification sections this task addresses"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional additional context or implementation notes"
+          },
+          "estimated_effort": {
+            "type": "string",
+            "description": "Optional time estimate (e.g., '2-4 hours', '1 day')"
+          },
+          "context_group_id": {
+            "type": "string",
+            "pattern": "^CG-\\d{3,}$",
+            "description": "ID of the context group this task belongs to (e.g., CG-001)"
+          },
+          "context_group_start": {
+            "type": "boolean",
+            "description": "True if this is the first task in its context group"
+          },
+          "context_group_end": {
+            "type": "boolean",
+            "description": "True if this is the last task in its context group"
+          },
+          "estimated_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Estimated tokens required to complete this task"
+          }
+        }
+      }
+    },
+    "dependency_graph": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+          "description": "All task IDs in the graph"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "type"],
+            "properties": {
+              "from": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+              "to": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+              "type": { "type": "string", "enum": ["hard", "soft", "resource"] }
+            }
+          },
+          "description": "Dependency relationships between tasks"
+        }
+      }
+    },
+    "execution_phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["phase", "name", "tasks"],
+        "properties": {
+          "phase": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Phase number for execution ordering"
+          },
+          "name": {
+            "type": "string",
+            "description": "Descriptive name for this phase"
+          },
+          "tasks": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+            "description": "Tasks that can be executed in this phase"
+          },
+          "description": {
+            "type": "string",
+            "description": "Explanation of what this phase accomplishes"
+          }
+        }
+      }
+    },
+    "context_groups": {
+      "type": "array",
+      "description": "Groups of tasks organized by context window capacity",
+      "items": {
+        "type": "object",
+        "required": ["id", "tasks", "estimated_tokens"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^CG-\\d{3,}$",
+            "description": "Unique context group identifier (e.g., CG-001)"
+          },
+          "tasks": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^TASK-\\d{3,}$" },
+            "description": "Task IDs in this context group, in execution order"
+          },
+          "estimated_tokens": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total estimated tokens for all tasks in this group"
+          },
+          "phases_covered": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 1 },
+            "description": "Execution phases included in this context group"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "active", "completed"],
+            "description": "Current status of this context group"
+          },
+          "oversized_warning": {
+            "type": "boolean",
+            "description": "True if group contains a task exceeding token limit"
+          },
+          "context_handoff": {
+            "type": "object",
+            "properties": {
+              "from_group": { "type": "string" },
+              "to_group": { "type": "string" },
+              "split_reason": { "type": "string" }
+            },
+            "description": "Metadata for dependency chains split across groups"
+          }
+        }
+      }
+    }
+  }
+}

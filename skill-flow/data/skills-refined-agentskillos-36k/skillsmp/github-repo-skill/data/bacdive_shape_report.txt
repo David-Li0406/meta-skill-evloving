@@ -1,0 +1,88 @@
+==================================================================================================================================
+BACDIVE SHAPE VARIABILITY REPORT
+==================================================================================================================================
+
+Total strains: 99392
+
+====================================================================================================
+INTERMEDIATE NODES: object | array<object>
+These nodes can be either a single object OR an array of objects
+====================================================================================================
+
+Path                                                             Object    Array    Total   %Array
+----------------------------------------------------------------------------------------------
+Culture and growth conditions.culture medium                      19587    21299    40886    52.1%
+Culture and growth conditions.culture pH                           1147     5649     6796    83.1%
+Culture and growth conditions.culture temp                        32617    16889    49506    34.1%
+External links.literature                                         10636     9062    19698    46.0%
+External links.phages                                               134       78      212    36.8%
+External links.straininfo link                                    45914      171    46085     0.4%
+General.NCBI tax id                                               94863     3711    98574     3.8%
+General.strain history                                            32204    11317    43521    26.0%
+Isolation, sampling and environmental information.isolation       44689    14399    59088    24.4%
+Isolation, sampling and environmental information.isolation source categories    11768    31611    43379    72.9%
+Morphology.cell morphology                                        13251     2781    16032    17.3%
+Morphology.colony morphology                                       8122     2451    10573    23.2%
+Morphology.multicellular morphology                                6528     1400     7928    17.7%
+Morphology.multimedia                                              3022      788     3810    20.7%
+Morphology.pigmentation                                            4090      444     4534     9.8%
+Name and taxonomic classification.LPSN.synonyms                   24090    37801    61891    61.1%
+Physiology and metabolism.antibiogram                               107      112      219    51.1%
+Physiology and metabolism.antibiotic resistance                    4163     2397     6560    36.5%
+Physiology and metabolism.compound production                      1615      893     2508    35.6%
+Physiology and metabolism.enzymes                                   659    28660    29319    97.8%
+Physiology and metabolism.fatty acid profile                       5420      214     5634     3.8%
+Physiology and metabolism.halophily                                3209     6478     9687    66.9%
+Physiology and metabolism.metabolite production                   15933     7587    23520    32.3%
+Physiology and metabolism.metabolite tests                        12093     8106    20199    40.1%
+Physiology and metabolism.metabolite utilization                    298    29901    30199    99.0%
+Physiology and metabolism.murein                                   1307       12     1319     0.9%
+Physiology and metabolism.nutrition type                            460       30      490     6.1%
+Physiology and metabolism.observation                              7136     3911    11047    35.4%
+Physiology and metabolism.oxygen tolerance                        18655     4600    23255    19.8%
+Physiology and metabolism.spore formation                          5050      393     5443     7.2%
+Safety information.risk assessment                                26678     4964    31642    15.7%
+Sequence information.16S sequences                                21353     5691    27044    21.0%
+Sequence information.GC content                                   10426     5390    15816    34.1%
+Sequence information.Genome sequences                              4465    13140    17605    74.6%
+----------------------------------------------------------------------------------------------
+TOTAL                                                            491689   282330   774019 36.5%
+
+====================================================================================================
+TERMINAL NODES WITH TYPE VARIABILITY
+These leaf nodes have different types in different documents
+====================================================================================================
+
+Path                                                           Type Distribution
+------------------------------------------------------------------------------------------------------
+General.keywords                                               array:53693, string:45384
+Morphology.cell morphology.cell shape                          string:12463, array:2719
+Morphology.cell morphology.gram stain                          string:12873, array:2757
+Morphology.cell morphology.motility                            string:11411, array:2649
+Morphology.cell morphology.cell length                         string:4037, array:1939
+Morphology.colony morphology.colony color                      string:2649, array:1937
+Physiology and metabolism.oxygen tolerance.oxygen tolerance    string:18654, array:4600
+Physiology and metabolism.halophily.halophily level            array:341, string:23
+Physiology and metabolism.spore formation.spore formation      string:5050, array:393
+Culture and growth conditions.culture medium.name              array:21299, string:19585
+Culture and growth conditions.culture temp.temperature         string:32616, array:16889
+Culture and growth conditions.culture pH.pH                    array:5649, string:1147
+Safety information.risk assessment.biosafety level             string:26677, array:4964
+
+====================================================================================================
+SUMMARY
+====================================================================================================
+
+PATTERN 1: Intermediate nodes
+  - Can be: object (single record) OR array<object> (multiple records)
+  - Never: scalar values
+  - Overall: 491689 object (63.5%), 282330 array (36.5%)
+
+PATTERN 2: Terminal nodes inside variable containers
+  - When parent is OBJECT: terminal is scalar (string/int)
+  - When parent is ARRAY: MongoDB dot-path returns array of all values
+  - The 'array' type is an ARTIFACT of the parent being an array
+
+PATTERN 3: Independently variable terminals
+  - General.keywords: genuinely string OR array<string>
+  - These have true type variability independent of parent

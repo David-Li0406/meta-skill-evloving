@@ -1,0 +1,134 @@
+.intelligence-graph {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.intelligence-graph__header {
+    margin-bottom: 16px;
+}
+
+.intelligence-graph__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 4px 0;
+}
+
+.intelligence-graph__subtitle {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.intelligence-graph__container {
+    position: relative;
+}
+
+.intelligence-graph__svg {
+    width: 100%;
+    height: 120px;
+    display: block;
+}
+
+.intelligence-graph__area {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.intelligence-graph__line {
+    animation: drawLine 1s ease-out forwards;
+    stroke-dasharray: 500;
+    stroke-dashoffset: 500;
+}
+
+@keyframes drawLine {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.intelligence-graph__point {
+    fill: var(--color-surface-elevated);
+    stroke: var(--color-cognitive);
+    stroke-width: 1;
+    transition: all 0.2s ease;
+}
+
+.intelligence-graph__point--active {
+    fill: var(--color-cognitive);
+    stroke: var(--color-text);
+    stroke-width: 1.5;
+}
+
+.intelligence-graph__current-pulse {
+    fill: var(--color-cognitive);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        r: 4;
+    }
+
+    50% {
+        opacity: 0.5;
+        r: 6;
+    }
+}
+
+.intelligence-graph__x-axis {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 4px 0;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+}
+
+.intelligence-graph__stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+}
+
+.intelligence-graph__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.intelligence-graph__stat-label {
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.intelligence-graph__stat-value {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.intelligence-graph__stat-value--highlight {
+    color: var(--color-cognitive);
+    font-size: 1rem;
+}

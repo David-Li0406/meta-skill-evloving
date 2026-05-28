@@ -1,0 +1,78 @@
+name: "validating-physics"
+version: "1.0.0"
+model: "sonnet"
+color: "red"
+
+description: |
+  Protective barrier check against Sigil design physics.
+  Reveals violations before they harm users.
+  Checks: physics compliance, performance patterns, protected capabilities,
+  material constraints, animation correctness, and taste alignment.
+
+triggers:
+  - "/ward"
+  - "check for physics violations"
+  - "audit physics"
+  - "validate components"
+  - "compliance check"
+
+examples:
+  - input: "/ward"
+    description: "Full physics audit of all components"
+  - input: "/ward physics"
+    description: "Check behavioral physics only"
+  - input: "/ward file:src/components/ClaimButton.tsx"
+    description: "Audit single file"
+
+inputs:
+  - name: scope
+    type: string
+    required: false
+    default: "all"
+    description: "What to audit (all, physics, performance, protected, material, animation, file:path)"
+  - name: url
+    type: string
+    required: false
+    description: "URL for visual validation (enables runtime checks)"
+
+outputs:
+  - path: "grimoires/sigil/ward-report.md"
+    description: "Audit findings with severity and fix suggestions"
+
+context_files:
+  - path: ".claude/rules/00-sigil-core.md"
+    required: true
+  - path: ".claude/rules/01-sigil-physics.md"
+    required: true
+  - path: ".claude/rules/04-sigil-protected.md"
+    required: true
+  - path: ".claude/rules/05-sigil-animation.md"
+    required: true
+  - path: ".claude/rules/07-sigil-material.md"
+    required: true
+  - path: ".claude/rules/08-sigil-lexicon.md"
+    required: true
+  - path: ".claude/rules/10-react-core.md"
+    required: false
+  - path: ".claude/rules/11-react-async.md"
+    required: false
+  - path: ".claude/rules/12-react-bundle.md"
+    required: false
+  - path: "grimoires/sigil/taste.md"
+    required: false
+
+integrations:
+  - ck
+  - agent-browser
+
+zones:
+  state:
+    paths:
+      - grimoires/sigil/
+    permission: read-write
+  app:
+    paths:
+      - src/
+      - app/
+      - components/
+    permission: read

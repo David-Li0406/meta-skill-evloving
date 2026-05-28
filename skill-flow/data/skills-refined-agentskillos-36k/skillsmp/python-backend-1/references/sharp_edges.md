@@ -1,0 +1,534 @@
+# Python Backend - Sharp Edges
+
+## Async Blocking
+
+### **Id**
+async-blocking
+### **Summary**
+Blocking calls in async code freeze the event loop
+### **Severity**
+critical
+### **Situation**
+  You write an async FastAPI endpoint. You call requests.get() or
+  Django's ORM directly. Under load, your API becomes unresponsive.
+  One slow external call blocks ALL concurrent requests.
+  
+### **Why**
+  Python's async is cooperative multitasking. When you call blocking code
+  in an async function, the event loop can't switch to other tasks. One
+  blocked call = one blocked server.
+  
+### **Solution**
+  # NEVER BLOCK THE EVENT LOOP
+  
+  # WRONG: requests is blocking
+  @app.get("/data")
+  async def get_data():
+      response = requests.get("https://api.example.com")  # BLOCKS!
+      return response.json()
+  
+  # RIGHT: Use httpx for async HTTP
+  import httpx
+  
+  @app.get("/data")
+  async def get_data():
+      async with httpx.AsyncClient() as client:
+          response = await client.get("https://api.example.com")
+      return response.json()
+  
+  
+  # WRONG: Django ORM is sync
+  @app.get("/users")
+  async def get_users():
+      return list(User.objects.all())  # BLOCKS!
+  
+  # RIGHT: Use sync_to_async
+  from asgiref.sync import sync_to_async
+  
+  @app.get("/users")
+  async def get_users():
+      return await sync_to_async(list)(User.objects.all())
+  
+  # BETTER: Use async ORM (SQLAlchemy 2.0)
+  @app.get("/users")
+  async def get_users(db: AsyncSession = Depends(get_db)):
+      result = await db.execute(select(User))
+      return result.scalars().all()
+  
+  
+  # WRONG: time.sleep blocks
+  async def slow_task():
+      time.sleep(5)  # BLOCKS!
+  
+  # RIGHT: asyncio.sleep yields
+  async def slow_task():
+      await asyncio.sleep(5)
+  
+### **Symptoms**
+  - API becomes slow under load
+  - Requests timing out
+  - High latency variance
+  - Server appears hung
+### **Detection Pattern**
+async def.*\n.*requests\.|time\.sleep|\.objects\.
+
+## N Plus One Orm
+
+### **Id**
+n-plus-one-orm
+### **Summary**
+ORM queries in loops cause N+1 query problem
+### **Severity**
+high
+### **Situation**
+  You query users, then loop through them to get their posts. Django
+  makes one query per user. 100 users = 101 queries. Your page takes
+  10 seconds to load.
+  
+### **Why**
+  ORMs are lazy by default. When you access a relationship, it queries
+  the database. In a loop, that's one query per iteration.
+  
+### **Solution**
+  # AVOID N+1 QUERIES
+  
+  # WRONG: N+1 queries
+  users = User.objects.all()
+  for user in users:
+      print(user.posts.count())  # Query per user!
+  
+  # RIGHT: select_related (ForeignKey, OneToOne)
+  users = User.objects.select_related('profile').all()
+  for user in users:
+      print(user.profile.bio)  # Already loaded
+  
+  # RIGHT: prefetch_related (ManyToMany, reverse FK)
+  users = User.objects.prefetch_related('posts').all()
+  for user in users:
+      print(len(user.posts.all()))  # Already loaded
+  
+  
+  # SQLAlchemy equivalent:
+  # WRONG
+  users = session.query(User).all()
+  for user in users:
+      print(user.posts)  # Lazy load per user
+  
+  # RIGHT: joinedload
+  from sqlalchemy.orm import joinedload
+  
+  users = session.query(User).options(
+      joinedload(User.posts)
+  ).all()
+  
+  # Async SQLAlchemy
+  result = await db.execute(
+      select(User).options(selectinload(User.posts))
+  )
+  
+  
+  # Use Django Debug Toolbar to see queries
+  # pip install django-debug-toolbar
+  
+### **Symptoms**
+  - Slow page loads
+  - Many similar queries in logs
+  - Database CPU spikes
+  - 100+ queries per request
+### **Detection Pattern**
+for.*in.*\.all\(\)|for.*in.*objects\.
+
+## Mutable Defaults
+
+### **Id**
+mutable-defaults
+### **Summary**
+Mutable default arguments are shared across calls
+### **Severity**
+high
+### **Situation**
+  You define a function with a default list argument. Each call
+  modifies the same list. Data leaks between function calls.
+  Users see each other's data.
+  
+### **Why**
+  Python evaluates default arguments once when the function is defined,
+  not when it's called. Mutable defaults (list, dict, set) are shared
+  across all calls.
+  
+### **Solution**
+  # MUTABLE DEFAULTS ARE SHARED
+  
+  # WRONG: Shared list
+  def add_item(item, items=[]):
+      items.append(item)
+      return items
+  
+  add_item("a")  # ["a"]
+  add_item("b")  # ["a", "b"]  # Same list!
+  
+  
+  # RIGHT: Use None sentinel
+  def add_item(item, items=None):
+      if items is None:
+          items = []
+      items.append(item)
+      return items
+  
+  
+  # WRONG in FastAPI: Mutable default in Pydantic
+  class Config(BaseModel):
+      tags: list[str] = []  # Shared across instances!
+  
+  # RIGHT: Use default_factory
+  from pydantic import Field
+  
+  class Config(BaseModel):
+      tags: list[str] = Field(default_factory=list)
+  
+  
+  # WRONG in dataclass
+  @dataclass
+  class Item:
+      tags: list[str] = []  # Shared!
+  
+  # RIGHT: Use field default_factory
+  from dataclasses import field
+  
+  @dataclass
+  class Item:
+      tags: list[str] = field(default_factory=list)
+  
+### **Symptoms**
+  - Data appearing in wrong places
+  - State persisting between requests
+  - Seemingly random data corruption
+### **Detection Pattern**
+def.*=\\[\\]|def.*=\\{\\}
+
+## Circular Imports
+
+### **Id**
+circular-imports
+### **Summary**
+Circular imports cause ImportError or None types
+### **Severity**
+medium
+### **Situation**
+  Module A imports from B, B imports from A. Python raises ImportError.
+  Or worse, it silently succeeds but some names are None because they
+  weren't defined yet when imported.
+  
+### **Why**
+  Python executes imports top-to-bottom. If A imports B, and B tries
+  to import from A before A finishes executing, B gets A in a partially
+  initialized state.
+  
+### **Solution**
+  # AVOID CIRCULAR IMPORTS
+  
+  # Problem structure:
+  # models.py imports from schemas.py
+  # schemas.py imports from models.py
+  
+  # Solution 1: Import inside function
+  def create_user():
+      from .schemas import UserSchema  # Local import
+      return UserSchema()
+  
+  # Solution 2: Use TYPE_CHECKING
+  from typing import TYPE_CHECKING
+  
+  if TYPE_CHECKING:
+      from .models import User  # Only for type hints
+  
+  class UserSchema(BaseModel):
+      user: "User"  # Forward reference as string
+  
+  
+  # Solution 3: Restructure (best)
+  # Put shared types in a separate module
+  # types.py - no imports from other app modules
+  # models.py - imports from types
+  # schemas.py - imports from types
+  
+  
+  # In FastAPI, use forward references:
+  class UserResponse(BaseModel):
+      posts: list["PostResponse"] = []
+  
+  class PostResponse(BaseModel):
+      author: "UserResponse"
+  
+  # Then update forward refs
+  UserResponse.model_rebuild()
+  PostResponse.model_rebuild()
+  
+### **Symptoms**
+  - ImportError at startup
+  -     ##### **Attributeerror**
+module has no attribute
+  - Type is None when it shouldn't be
+### **Detection Pattern**
+
+
+## Secret In Code
+
+### **Id**
+secret-in-code
+### **Summary**
+Secrets hardcoded in Python files
+### **Severity**
+critical
+### **Situation**
+  You put the API key directly in your code to test. You commit it.
+  Now it's in Git history forever. Someone clones your repo and steals
+  your AWS credentials.
+  
+### **Why**
+  Git never forgets. Even if you remove the secret, it's in history.
+  Bots scan GitHub for exposed credentials. Your account will be
+  compromised within hours.
+  
+### **Solution**
+  # NEVER HARDCODE SECRETS
+  
+  # WRONG: Secret in code
+  API_KEY = "sk_live_xxxxxxxxxxxxx"
+  db = connect(password="supersecret")
+  
+  # RIGHT: Environment variables
+  import os
+  API_KEY = os.getenv("API_KEY")
+  
+  # RIGHT: pydantic-settings
+  from pydantic_settings import BaseSettings
+  
+  class Settings(BaseSettings):
+      api_key: str
+      database_url: str
+  
+      class Config:
+          env_file = ".env"
+  
+  settings = Settings()
+  
+  # .env (add to .gitignore!)
+  API_KEY=sk_live_xxxxxxxxxxxxx
+  DATABASE_URL=postgresql://user:pass@localhost/db
+  
+  
+  # RIGHT: Use secrets manager in production
+  import boto3
+  
+  def get_secret(name: str) -> str:
+      client = boto3.client('secretsmanager')
+      response = client.get_secret_value(SecretId=name)
+      return response['SecretString']
+  
+  
+  # If you already committed a secret:
+  # 1. Rotate the secret immediately
+  # 2. Use git-filter-repo to remove from history
+  # 3. Force push (coordinate with team)
+  
+### **Symptoms**
+  - Secrets visible in Git
+  - Unauthorized access
+  - Cloud bills spiking
+### **Detection Pattern**
+(api_key|password|secret).*=.*["'][a-zA-Z0-9]{20,}
+
+## Global State
+
+### **Id**
+global-state
+### **Summary**
+Global mutable state causes race conditions
+### **Severity**
+medium
+### **Situation**
+  You store state in a module-level variable. Works in development.
+  In production with multiple workers, each worker has its own copy.
+  Users see inconsistent data.
+  
+### **Why**
+  Python workers (gunicorn, uvicorn with workers) are separate processes.
+  Global variables are per-process. State isn't shared.
+  
+### **Solution**
+  # AVOID GLOBAL MUTABLE STATE
+  
+  # WRONG: Global cache
+  cache = {}
+  
+  @app.get("/data/{key}")
+  async def get_data(key: str):
+      if key not in cache:
+          cache[key] = expensive_computation(key)
+      return cache[key]
+  # Worker 1 caches, Worker 2 doesn't see it
+  
+  
+  # RIGHT: Use Redis for shared state
+  import redis
+  
+  redis_client = redis.Redis.from_url(settings.redis_url)
+  
+  @app.get("/data/{key}")
+  async def get_data(key: str):
+      cached = redis_client.get(f"data:{key}")
+      if cached:
+          return json.loads(cached)
+      data = expensive_computation(key)
+      redis_client.setex(f"data:{key}", 3600, json.dumps(data))
+      return data
+  
+  
+  # RIGHT: Use database for persistent state
+  # RIGHT: Use Celery for distributed tasks
+  # RIGHT: Use request context for request-scoped state
+  
+### **Symptoms**
+  - Inconsistent behavior across requests
+  - Cache misses in multi-worker setup
+  - Data not persisting
+### **Detection Pattern**
+
+
+## Django Migrations
+
+### **Id**
+django-migrations
+### **Summary**
+Migration conflicts in team development
+### **Severity**
+medium
+### **Situation**
+  Two developers create migrations on the same branch. Both name
+  their migration 0015. Merge conflict. Or both work, but Django
+  complains about branched migrations.
+  
+### **Why**
+  Django auto-generates migration names based on the previous one.
+  If two people branch from the same point, they get the same
+  number. Merging creates conflicts.
+  
+### **Solution**
+  # HANDLE MIGRATION CONFLICTS
+  
+  # When you get: "Conflicting migrations detected"
+  
+  # Option 1: Merge migrations
+  python manage.py makemigrations --merge
+  
+  # Option 2: Rebase and regenerate
+  # 1. Delete your new migration file
+  # 2. Pull latest main
+  # 3. Run makemigrations again
+  
+  
+  # Prevention: Always pull before makemigrations
+  git pull origin main
+  python manage.py makemigrations
+  
+  
+  # Squash migrations periodically
+  python manage.py squashmigrations myapp 0001 0015
+  
+  
+  # Never edit applied migrations
+  # If it's in production, it's history
+  # Create a new migration instead
+  
+  
+  # For CI: Check for unapplied migrations
+  python manage.py migrate --check
+  
+### **Symptoms**
+  - Conflicting migrations detected
+  - Migrations in wrong order
+  - Database out of sync
+### **Detection Pattern**
+
+
+## Pydantic V1 V2
+
+### **Id**
+pydantic-v1-v2
+### **Summary**
+Pydantic v1 vs v2 incompatibilities
+### **Severity**
+medium
+### **Situation**
+  You upgrade FastAPI or a dependency. Suddenly your Pydantic models
+  break. Field validators have different syntax. Config classes don't
+  work. .dict() is now .model_dump().
+  
+### **Why**
+  Pydantic v2 is a complete rewrite with significant breaking changes.
+  Many packages still support both. Mixing versions causes issues.
+  
+### **Solution**
+  # PYDANTIC V1 VS V2
+  
+  # Check your version
+  import pydantic
+  print(pydantic.VERSION)  # 2.x or 1.x
+  
+  # V1 -> V2 MIGRATION:
+  
+  # Config class -> model_config
+  # V1:
+  class User(BaseModel):
+      class Config:
+          orm_mode = True
+  
+  # V2:
+  class User(BaseModel):
+      model_config = ConfigDict(from_attributes=True)
+  
+  
+  # .dict() -> .model_dump()
+  # V1:
+  user.dict()
+  user.dict(exclude={'password'})
+  
+  # V2:
+  user.model_dump()
+  user.model_dump(exclude={'password'})
+  
+  
+  # @validator -> @field_validator
+  # V1:
+  @validator('name')
+  def validate_name(cls, v):
+      return v.upper()
+  
+  # V2:
+  @field_validator('name')
+  @classmethod
+  def validate_name(cls, v: str) -> str:
+      return v.upper()
+  
+  
+  # __root__ -> RootModel
+  # V1:
+  class Tags(BaseModel):
+      __root__: list[str]
+  
+  # V2:
+  from pydantic import RootModel
+  class Tags(RootModel[list[str]]):
+      pass
+  
+  
+  # Use pydantic.v1 for compatibility
+  from pydantic.v1 import BaseModel  # Use v1 API in v2 install
+  
+### **Symptoms**
+  - AttributeError on Pydantic models
+  - Validators not running
+  - Config not applied
+### **Detection Pattern**
+class Config:|@validator|\.dict\(\)

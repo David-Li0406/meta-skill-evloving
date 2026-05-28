@@ -1,0 +1,87 @@
+{
+  "name": "test-generator",
+  "description": "Generate test cases from transformation schema",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Transformation schema.json with name, description, input, args, output, examples fields"
+  },
+  "args": {
+    "format": {
+      "type": "string",
+      "required": false,
+      "description": "Output format: 'bash' for test.sh script (default), 'json' for test case array"
+    }
+  },
+  "output": {
+    "type": ["string", "array"],
+    "description": "Bash test script (string) if format='bash', or array of test case objects if format='json'"
+  },
+  "examples": [
+    {
+      "description": "Generate bash test script from schema",
+      "input": {
+        "name": "crud-get",
+        "examples": [
+          {
+            "description": "Get existing value",
+            "input": {"user": {"name": "test"}},
+            "args": {"path": "user.name"},
+            "output": "test"
+          }
+        ]
+      },
+      "args": {"format": "bash"},
+      "output": "#!/usr/bin/env bash\nset -euo pipefail\n\n# Test crud-get transformation\n\nSCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\nTRANSFORM=\"$SCRIPT_DIR/transform.jq\"\n\necho \"Testing crud-get transformation...\"\n\n# Test 1: Get existing value\necho -n \"Test 1: Get existing value... \"\nresult=$(jq -f \"$TRANSFORM\" --arg path \"user.name\" <<'EOF'\n{\"user\":{\"name\":\"test\"}}\nEOF\n)\nexpected='\"test\"'\nif [[ \"$result\" == \"$expected\" ]]; then\n    echo \"PASS\"\nelse\n    echo \"FAIL\"\n    echo \"  Expected: $expected\"\n    echo \"  Got: $result\"\n    exit 1\nfi\n\necho \"All crud-get tests passed!\""
+    },
+    {
+      "description": "Generate JSON test cases from schema",
+      "input": {
+        "name": "crud-get",
+        "examples": [
+          {
+            "description": "Get existing value",
+            "input": {"user": {"name": "test"}},
+            "args": {"path": "user.name"},
+            "output": "test"
+          }
+        ]
+      },
+      "args": {"format": "json"},
+      "output": [
+        {
+          "test_number": 1,
+          "description": "Get existing value",
+          "input": {"user": {"name": "test"}},
+          "args": {"path": "user.name"},
+          "expected": "test"
+        }
+      ]
+    },
+    {
+      "description": "Generate tests with object output",
+      "input": {
+        "name": "array-filter",
+        "examples": [
+          {
+            "description": "Filter items",
+            "input": {"items": [{"active": true}]},
+            "args": {"array_field": "items", "field": "active", "value": "true"},
+            "output": {"items": [{"active": true}]}
+          }
+        ]
+      },
+      "args": {"format": "json"},
+      "output": [
+        {
+          "test_number": 1,
+          "description": "Filter items",
+          "input": {"items": [{"active": true}]},
+          "args": {"array_field": "items", "field": "active", "value": "true"},
+          "expected": {"items": [{"active": true}]}
+        }
+      ]
+    }
+  ],
+  "tags": ["meta", "testing", "code-generation", "schema"]
+}
