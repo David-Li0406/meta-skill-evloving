@@ -1,0 +1,106 @@
+{
+  "sentiment_analysis": [
+    {
+      "input": "这个产品超出了我的期望！质量非常出色。",
+      "output": "正面"
+    },
+    {
+      "input": "糟糕的体验。商品送达时已损坏，客户服务毫无帮助。",
+      "output": "负面"
+    },
+    {
+      "input": "产品按描述工作。没什么特别的，但完成了工作。",
+      "output": "中性"
+    }
+  ],
+  "entity_extraction": [
+    {
+      "input": "苹果公司CEO蒂姆·库克在9月12日于库比蒂诺的活动上宣布了新款iPhone。",
+      "output": {
+        "persons": ["蒂姆·库克"],
+        "organizations": ["苹果公司"],
+        "products": ["iPhone"],
+        "locations": ["库比蒂诺"],
+        "dates": ["9月12日"]
+      }
+    },
+    {
+      "input": "微软在2018年以75亿美元收购了GitHub。",
+      "output": {
+        "persons": [],
+        "organizations": ["微软", "GitHub"],
+        "products": [],
+        "locations": [],
+        "dates": ["2018年"],
+        "monetary_values": ["75亿美元"]
+      }
+    }
+  ],
+  "code_generation": [
+    {
+      "input": "写一个Python函数检查字符串是否是回文",
+      "output": "def is_palindrome(s: str) -> bool:\n    \"\"\"检查字符串是否为回文，忽略大小写和空格。\"\"\"\n    # 移除空格并转换为小写\n    cleaned = s.replace(' ', '').lower()\n    # 与反转后的字符串比较\n    return cleaned == cleaned[::-1]"
+    }
+  ],
+  "text_classification": [
+    {
+      "input": "如何重置我的密码？",
+      "output": "账户管理"
+    },
+    {
+      "input": "我的订单还没到。它在哪里？",
+      "output": "运送查询"
+    },
+    {
+      "input": "我想取消我的订阅。",
+      "output": "订阅取消"
+    },
+    {
+      "input": "当我尝试登录时应用程序一直崩溃。",
+      "output": "技术支持"
+    }
+  ],
+  "data_transformation": [
+    {
+      "input": "约翰·史密斯, john@email.com, (555) 123-4567",
+      "output": {
+        "name": "约翰·史密斯",
+        "email": "john@email.com",
+        "phone": "(555) 123-4567"
+      }
+    },
+    {
+      "input": "简·多伊 | jane.doe@company.com | +1-555-987-6543",
+      "output": {
+        "name": "简·多伊",
+        "email": "jane.doe@company.com",
+        "phone": "+1-555-987-6543"
+      }
+    }
+  ],
+  "question_answering": [
+    {
+      "context": "埃菲尔铁塔是位于法国巴黎的一座锻铁格子塔。它建于1887年至1889年，高324米（1,063英尺）。",
+      "question": "埃菲尔铁塔是什么时候建造的？",
+      "answer": "埃菲尔铁塔建于1887年至1889年。"
+    },
+    {
+      "context": "Python 3.11于2022年10月24日发布。它包括性能改进和新功能，如异常组和改进的错误消息。",
+      "question": "Python 3.11的新功能是什么？",
+      "answer": "Python 3.11包括异常组、改进的错误消息和性能改进。"
+    }
+  ],
+  "summarization": [
+    {
+      "input": "气候变化是指全球温度和天气模式的长期转变。虽然气候变化是自然的，但自1800年代以来人类活动一直是主要驱动因素，主要是由于煤、石油和天然气等化石燃料的燃烧产生吸热温室气体。后果包括海平面上升、更极端的天气事件和对生物多样性的威胁。",
+      "output": "气候变化涉及全球温度和天气模式的长期改变，主要由1800年代以来的人类化石燃料消耗驱动，导致海平面上升、极端天气和生物多样性威胁。"
+    }
+  ],
+  "sql_generation": [
+    {
+      "schema": "users (id, name, email, created_at)\norders (id, user_id, total, order_date)",
+      "request": "查找所有订单总额超过1000美元的用户",
+      "output": "SELECT u.id, u.name, u.email, SUM(o.total) as total_spent\nFROM users u\nJOIN orders o ON u.id = o.user_id\nGROUP BY u.id, u.name, u.email\nHAVING SUM(o.total) > 1000;"
+    }
+  ]
+}

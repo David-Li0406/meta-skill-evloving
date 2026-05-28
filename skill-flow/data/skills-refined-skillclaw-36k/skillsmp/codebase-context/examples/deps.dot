@@ -1,0 +1,50 @@
+// Dependency Graph for ExampleApp (GraphViz DOT format)
+// More token-efficient than Mermaid for large codebases
+// Render with: dot -Tsvg deps.dot -o deps.svg
+
+digraph deps {
+  rankdir=LR;
+  node [shape=box, style=rounded];
+
+  // Clusters for visual organization
+  subgraph cluster_api {
+    label="API Routes";
+    style=dashed;
+    "api/tasks" [label="api/v1/tasks/route.ts"];
+    "api/tasks_id" [label="api/v1/tasks/[id]/route.ts"];
+    "api/users" [label="api/v1/users/route.ts"];
+    "api/auth_login" [label="api/auth/login/route.ts"];
+  }
+
+  subgraph cluster_db {
+    label="Database";
+    style=dashed;
+    "db/client" [label="lib/db/client.ts"];
+    "db/queries" [label="lib/db/queries.ts"];
+    "db/mutations" [label="lib/db/mutations.ts"];
+  }
+
+  subgraph cluster_auth {
+    label="Auth";
+    style=dashed;
+    "auth/session" [label="lib/auth/session.ts"];
+    "middleware" [label="middleware.ts"];
+  }
+
+  // Dependencies
+  "api/tasks" -> "db/queries";
+  "api/tasks" -> "db/mutations";
+  "api/tasks" -> "auth/session";
+  "api/tasks_id" -> "db/queries";
+  "api/tasks_id" -> "db/mutations";
+  "api/users" -> "db/queries";
+  "api/users" -> "auth/session";
+  "api/auth_login" -> "auth/session";
+  "api/auth_login" -> "db/queries";
+
+  "db/queries" -> "db/client";
+  "db/mutations" -> "db/client";
+
+  "auth/session" -> "db/queries";
+  "middleware" -> "auth/session";
+}

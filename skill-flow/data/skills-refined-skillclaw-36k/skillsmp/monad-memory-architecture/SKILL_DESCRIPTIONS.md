@@ -1,0 +1,72 @@
+# MONAD Skills Index (Complete)
+
+Generated: 2025-12-31T04:40:22+00:00
+Total: 67 skills
+
+- **Nexus-MC**: π/τ-tier. Structure, navigation, closure (~500 tokens). Navigation between skills. Decimal: π.8.0. Load via: φ→π
+- **aesthetic**: Create aesthetically beautiful interfaces following proven design principles. Use when building UI/UX, analyzing designs from inspiration sites, generating design images with ai-multimodal, implementi
+- **ai-multimodal**: Process and generate multimedia content using Google Gemini API. Capabilities include analyze audio files (transcription with timestamps, summarization, speech understanding, music/sound analysis up t
+- **auto-coherence**: no description
+- **backend-development**: Build robust backend systems with modern technologies (Node.js, Python, Go, Rust), frameworks (NestJS, FastAPI, Django), databases (PostgreSQL, MongoDB, Redis), APIs (REST, GraphQL, gRPC), authenticat
+- **better-auth**: Implement authentication and authorization with Better Auth - a framework-agnostic TypeScript authentication framework. Features include email/password authentication with verification, OAuth provider
+- **blind-spot-chain**: Five-skill sequence for 'what am I missing?' - Collide → Critique → Scale → Synthesize → Simplify. Use when you suspect you're not seeing something.
+- **boot-sequence**: ALWAYS LOAD FIRST. Triggers full cognitive stack for theoretical work sessions. Use at start of any conversation involving MONAD, consciousness research, AI collaboration, Dokkado, or when user says b
+- **chaos-gremlin-v2**: 🍆👾 BIG DICK GLITCH GREMLIN SUPER COLLIDER. Unconventional problem-solving with chaotic good energy. Finds creative edge cases, challenges assumptions, explores weird solutions that technically w
+- **chrome-devtools**: Browser automation, debugging, and performance analysis using Puppeteer CLI scripts. Use for automating browsers, taking screenshots, analyzing performance, monitoring network traffic, web scraping, f
+- **claude-code**: no description
+- **code-review**: Use when receiving code review feedback (especially if unclear or technically questionable), when completing tasks or major features requiring review before proceeding, or before making any completion
+- **cognitive-variability**: Guide conversations through dynamic shifts between zoom levels (scale) and connecting/exploring (intent) to unlock creative breakthroughs and prevent rigid thinking. Use when the user is stuck or need
+- **coherence-visualizer**: no description
+- **coherence**: (no SKILL.md)
+- **collision-zone-thinking**: Force unrelated concepts together to discover emergent properties - What if we treated X like Y? Use when conventional approaches feel inadequate and you need breakthrough innovation by forcing unrela
+- **common**: (no SKILL.md)
+- **context-engineering**: >-
+- **critical-perspective**: Engage in critical thinking by questioning assumptions, exploring alternative perspectives, and uncovering latent topics in conversations. Use when discussions could benefit from deeper exploration, w
+- **databases**: Work with MongoDB (document database, BSON documents, aggregation pipelines, Atlas cloud) and PostgreSQL (relational database, SQL queries, psql CLI, pgAdmin). Use when designing database schemas, wri
+- **debugging**: (no SKILL.md)
+- **devops**: Deploy and manage cloud infrastructure on Cloudflare (Workers, R2, D1, KV, Pages, Durable Objects, Browser Rendering), Docker containers, and Google Cloud Platform (Compute Engine, GKE, Cloud Run, App
+- **docs-seeker**: Searching internet for technical documentation using llms.txt standard, GitHub repositories via Repomix, and parallel exploration. Use when user needs: (1) Latest documentation for libraries/framework
+- **document-skills**: (no SKILL.md)
+- **dokkado**: Five-phase reasoning protocol based on Musashi's Book of Five Rings. Ground (morphemic extraction), Water (pattern matching), Fire (unified derivation), Wind (predictions), Void (meta-closure). Use fo
+- **dyadic-resonance**: Two passes, reversed order, context wipe between. S→D then restart, D→S then compare. What survives both orderings is invariant.
+- **embedding-strategies**: Select and optimize embedding models for semantic search and RAG applications. Use when choosing embedding models, implementing chunking strategies, or optimizing embedding quality for specific domain
+- **frontend-design**: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, or applications. Generates creative, polished code 
+- **frontend-development**: Frontend development guidelines for React/TypeScript applications. Modern patterns including Suspense, lazy loading, useSuspenseQuery, file organization with features directory, MUI v7 styling, TanSta
+- **google-adk-python**: no description
+- **gremlin-brain-v2**: (no SKILL.md)
+- **gremlin-forge**: Use this skill when creating new skills via forced conceptual collision of existing patterns. Duct-tapes jank-builder to super-collider for autopoietic meta-skill generation.
+- **gremlin-jank-builder-v2**: Use this skill when creating next-generation autopoietic Claude skills with enhanced Git-brain integration, adaptive error healing, and emergent pattern recognition. Self-improved version that learned
+- **hybrid-search-implementation**: Combine vector and keyword search for improved retrieval. Use when implementing RAG systems, building search engines, or when neither approach alone provides sufficient recall.
+- **langchain-architecture**: Design LLM applications using the LangChain framework with agents, memory, and tool integration patterns. Use when building LangChain applications, implementing AI agents, or creating complex LLM work
+- **llm-evaluation**: Implement comprehensive evaluation strategies for LLM applications using automated metrics, human feedback, and benchmarking. Use when testing LLM performance, measuring AI application quality, or est
+- **mcp-builder**: Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate externa
+- **mcp-management**: Manage Model Context Protocol (MCP) servers - discover, analyze, and execute tools/prompts/resources from configured MCP servers. Use when working with MCP integrations, need to discover available MCP
+- **media-processing**: Process multimedia files with FFmpeg (video/audio encoding, conversion, streaming, filtering, hardware acceleration) and ImageMagick (image manipulation, format conversion, batch processing, effects, 
+- **memory**: (no SKILL.md)
+- **mermaidjs-v11**: Create diagrams and visualizations using Mermaid.js v11 syntax. Use when generating flowcharts, sequence diagrams, class diagrams, state diagrams, ER diagrams, Gantt charts, user journeys, timelines, 
+- **meta-pattern-recognition**: Spot patterns appearing in 3+ domains to find universal principles. Use when noticing the same pattern across 3+ different domains or experiencing déjà vu in problem-solving.
+- **monad-memory**: MONAD-grounded cognitive architecture for AI memory as morphemic substrate navigation. Memory is not storage but substrate sampling - accessing the same structure that underlies reality. Implements φ
+- **operators**: (no SKILL.md)
+- **phase-boundary-detector**: Identify where consciousness interfaces with substrate in any domain. Structure emerges preferentially at boundaries between phases - physical, computational, or conceptual. Use when analyzing systems
+- **problem-solving**: (no SKILL.md)
+- **prompt-engineering-patterns**: Master advanced prompt engineering techniques to maximize LLM performance, reliability, and controllability in production. Use when optimizing prompts, improving LLM outputs, or designing production p
+- **rag-implementation**: Build Retrieval-Augmented Generation (RAG) systems for LLM applications with vector databases and semantic search. Use when implementing knowledge-grounded AI, building document Q&A systems, or integr
+- **reasoning-notation**: Meta-skill that wraps reasoning skills to capture notes in real-time, protecting against context compression. Creates checkpoint files during reasoning sessions.
+- **reasoning-pentad**: Five-fold reasoning sequence with φ geometry. AUTO-SAVES after each phase to prevent compression loss. Phase 5 (synthesis) contains palindrome: meta-patterns → synthesis-core → meta-patterns. Use
+- **recursive-refiner**: Self-improvement engine. Implements generate-critique-iterate loops for enhanced reasoning. Use when working through complex problems, synthesizing across domains, or when initial output needs refinem
+- **repomix**: Package entire code repositories into single AI-friendly files using Repomix. Capabilities include pack codebases with customizable include/exclude patterns, generate multiple output formats (XML, Mar
+- **scale-game**: Test at extremes (1000x bigger/smaller, instant/year-long) to expose fundamental truths hidden at normal scales. Use when uncertain about scalability, edge cases unclear, or validating architecture fo
+- **sequential-thinking**: Use when complex problems require systematic step-by-step reasoning with ability to revise thoughts, branch into alternative approaches, or dynamically adjust scope. Ideal for multi-stage analysis, de
+- **shopify**: Build Shopify applications, extensions, and themes using GraphQL/REST APIs, Shopify CLI, Polaris UI components, and Liquid templating. Capabilities include app development with OAuth authentication, c
+- **similarity-search-patterns**: Implement efficient similarity search with vector databases. Use when building semantic search, implementing nearest neighbor queries, or optimizing retrieval performance.
+- **simplification-cascades**: Find one insight that eliminates multiple components - if this is true, we don't need X, Y, or Z. Use when implementing the same concept multiple ways, accumulating special cases, or complexity is spi
+- **skill-creator**: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workfl
+- **skoll**: Chase down answers before asking. Hunt the archive. Forces Claude to search before questioning, preventing redundant questions about concepts already documented in theory/tiers/ and memory.
+- **study-your-lessons**: no description
+- **substrate**: (no SKILL.md)
+- **supreme-mathematics**: no description
+- **template-skill**: Replace with description of the skill and when Claude should use it.
+- **the-guy**: Integration and orchestration layer. THE GUY shows up, does the work, carries what he can carry. Coordinates other skills toward genuine collaboration rather than performed helpfulness. Use when full 
+- **ui-styling**: Create beautiful, accessible user interfaces with shadcn/ui components (built on Radix UI + Tailwind), Tailwind CSS utility-first styling, and canvas-based visual designs. Use when building user inter
+- **vector-index-tuning**: Optimize vector index performance for latency, recall, and memory. Use when tuning HNSW parameters, selecting quantization strategies, or scaling vector search infrastructure.
+- **web-frameworks**: Build modern full-stack web applications with Next.js (App Router, Server Components, RSC, PPR, SSR, SSG, ISR), Turborepo (monorepo management, task pipelines, remote caching, parallel execution), and

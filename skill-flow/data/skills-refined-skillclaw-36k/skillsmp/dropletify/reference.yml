@@ -1,0 +1,249 @@
+name: Build and Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  # DigitalOcean registry and droplet details (these ones are always required)
+  REGISTRY: registry.digitalocean.com
+  REGISTRY_NAME: ${{ secrets.DO_REGISTRY_NAME }}
+  IMAGE_NAME: ${{ secrets.DO_IMAGE_NAME }}
+  DO_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+  DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+  DROPLET_USER: ${{ secrets.DROPLET_USER }}
+  DROPLET_SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+  # Application secrets
+  PORT: ${{ secrets.PORT }}
+  # ... (add other application secrets as needed)
+
+jobs:
+  setup-cleanup-cron:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy cleanup script to Droplet
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.DROPLET_HOST }}
+          username: ${{ env.DROPLET_USER }}
+          key: ${{ env.DROPLET_SSH_KEY }}
+          source: "scripts/docker-cleanup.sh"
+          target: "/tmp/"
+
+      - name: Setup automated cleanup on Droplet
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ env.DROPLET_HOST }}
+          username: ${{ env.DROPLET_USER }}
+          key: ${{ env.DROPLET_SSH_KEY }}
+          script: |
+            set -e
+            
+            CLEANUP_SCRIPT="/usr/local/bin/docker-cleanup.sh"
+            CRON_JOB="0 3 * * * $CLEANUP_SCRIPT >> /var/log/docker-cleanup.log 2>&1"
+            
+            # Check if cleanup script already exists
+            if [ -f "$CLEANUP_SCRIPT" ]; then
+              echo "✓ Cleanup script already exists at $CLEANUP_SCRIPT"
+              echo "Skipping setup..."
+              exit 0
+            fi
+            
+            echo "=== Setting up automated Docker cleanup ==="
+            
+            # Move script from tmp to final location
+            sudo mv /tmp/scripts/docker-cleanup.sh "$CLEANUP_SCRIPT"
+            sudo chmod +x "$CLEANUP_SCRIPT"
+            echo "✓ Installed cleanup script at $CLEANUP_SCRIPT"
+            echo "✓ Installed cleanup script at $CLEANUP_SCRIPT"
+            
+            # Check if cron job already exists
+            if crontab -l 2>/dev/null | grep -qF "$CLEANUP_SCRIPT"; then
+              echo "✓ Cron job already exists"
+            else
+              # Add cron job (daily at 3 AM)
+              (crontab -l 2>/dev/null || echo "") | { cat; echo "$CRON_JOB"; } | crontab -
+              echo "✓ Added cron job: $CRON_JOB"
+            fi
+            
+            # Create log file with proper permissions
+            sudo touch /var/log/docker-cleanup.log
+            sudo chown ${{ env.DROPLET_USER }}:${{ env.DROPLET_USER }} /var/log/docker-cleanup.log
+            echo "✓ Created log file at /var/log/docker-cleanup.log"
+            
+            # Run cleanup immediately to verify it works
+            echo ""
+            echo "Running initial cleanup to verify setup..."
+            $CLEANUP_SCRIPT >> /var/log/docker-cleanup.log 2>&1
+            
+            echo ""
+            echo "=== Setup completed successfully ==="
+            echo "Cleanup will run daily at 3 AM"
+            echo "Logs available at: /var/log/docker-cleanup.log"
+
+  build-and-push:
+    needs: setup-cleanup-cron
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ env.DO_TOKEN }}
+
+      - name: Log in to DigitalOcean Container Registry
+        run: doctl registry login --expiry-seconds 1200
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          provenance: false
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy rollback script to Droplet
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.DROPLET_HOST }}
+          username: ${{ env.DROPLET_USER }}
+          key: ${{ env.DROPLET_SSH_KEY }}
+          source: "scripts/rollback.sh"
+          target: "/tmp/"
+
+      - name: Deploy to DigitalOcean Droplet
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ env.DROPLET_HOST }}
+          username: ${{ env.DROPLET_USER }}
+          key: ${{ env.DROPLET_SSH_KEY }}
+          script: |
+            set -e
+            set -o pipefail
+
+            echo "=== Starting deployment ==="
+
+            # Setup variables
+            CONTAINER_NAME="${{ github.event.repository.name }}"
+            IMAGE_NAME="${{ env.IMAGE_NAME }}"
+            CURRENT_TAG="${{ github.sha }}"
+            REGISTRY_PATH="${{ env.REGISTRY }}/${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}"
+            IMAGE_PATH="${REGISTRY_PATH}:${CURRENT_TAG}"
+            ROLLBACK_FILE="$HOME/.rollback-${IMAGE_NAME}.env"
+            ROLLBACK_SCRIPT="/usr/local/bin/rollback.sh"
+
+            # Install rollback script if not exists
+            if [ ! -f "$ROLLBACK_SCRIPT" ]; then
+              echo "Installing rollback script..."
+              sudo mv /tmp/scripts/rollback.sh "$ROLLBACK_SCRIPT"
+              sudo chmod +x "$ROLLBACK_SCRIPT"
+              echo "✓ Installed rollback script at $ROLLBACK_SCRIPT"
+            fi
+
+            # Create working directory
+            WORK_DIR="/home/${{ env.DROPLET_USER }}/${{ github.event.repository.name }}"
+            mkdir -p "$WORK_DIR"
+            cd "$WORK_DIR"
+            echo "Working directory: $WORK_DIR"
+
+            # Create .env file with application secrets
+            cat > .env << 'EOF'
+            PORT=${{ env.PORT }}
+            EOF
+
+            if [ ! -f .env ]; then
+              echo "Failed to create .env file"
+              exit 1
+            fi
+            echo "Created .env file"
+
+            # Login to DigitalOcean registry
+            echo "${{ env.DO_TOKEN }}" | docker login registry.digitalocean.com -u "${{ env.DO_TOKEN }}" --password-stdin
+            echo "Logged into DigitalOcean registry"
+
+            # Pull latest image
+            docker pull "$IMAGE_PATH"
+            echo "Pulled image: $IMAGE_PATH"
+
+            # Stop and remove existing container
+            docker stop "$CONTAINER_NAME" 2>/dev/null || true
+            docker rm "$CONTAINER_NAME" 2>/dev/null || true
+            echo "Cleaned up existing container"
+
+            # Start new container
+            docker run -d \
+              --name "$CONTAINER_NAME" \
+              --restart unless-stopped \
+              -p ${{ env.PORT }}:${{ env.PORT }} \
+              --env-file "$WORK_DIR/.env" \
+              "$IMAGE_PATH"
+            echo "Started container: $CONTAINER_NAME"
+
+            # Verify container is running
+            sleep 5
+            if ! docker ps --filter "name=$CONTAINER_NAME" --filter "status=running" | grep -q "$CONTAINER_NAME"; then
+              echo "✗ Container is not running after deployment"
+              docker logs "$CONTAINER_NAME" --tail=50
+
+              echo ""
+              echo "=== Initiating automatic rollback ==="
+
+              # Execute rollback
+              if $ROLLBACK_SCRIPT "$CONTAINER_NAME" "$IMAGE_NAME" "$REGISTRY_PATH"; then
+                echo "✓ Rollback completed successfully"
+                # Clean up .env file
+                rm -f .env
+                exit 0
+              else
+                echo "✗ Rollback failed - manual intervention required"
+                rm -f .env
+                exit 1
+              fi
+            fi
+
+            echo "✓ Container is running successfully"
+
+            # Update rollback file with current working tag
+            echo "Updating rollback configuration..."
+            cat > "$ROLLBACK_FILE" << EOF
+            # Rollback configuration for $IMAGE_NAME
+            # Last successful deployment: $(date '+%Y-%m-%d %H:%M:%S')
+            LAST_WORKING_TAG=$CURRENT_TAG
+            EOF
+            echo "✓ Updated $ROLLBACK_FILE with tag: $CURRENT_TAG"
+
+            # Clean up .env file for security
+            rm -f .env
+            echo "Cleaned up .env file"
+
+            # Clean up old images locally
+            docker image prune -f
+            echo "Cleaned up dangling images"
+
+            echo "=== Deployment completed successfully ==="

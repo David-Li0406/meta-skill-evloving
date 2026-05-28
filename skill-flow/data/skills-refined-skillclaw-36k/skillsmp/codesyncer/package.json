@@ -1,0 +1,83 @@
+{
+  "name": "codesyncer",
+  "version": "3.4.1",
+  "description": "Claude forgets everything when the session ends. CodeSyncer makes it remember.",
+  "keywords": [
+    "ai-collaboration",
+    "claude-code",
+    "cursor",
+    "github-copilot",
+    "multi-repo",
+    "monorepo",
+    "turborepo",
+    "pnpm",
+    "nx",
+    "lerna",
+    "developer-tools",
+    "cli",
+    "ai-assistant",
+    "code-documentation",
+    "codesyncer"
+  ],
+  "main": "dist/index.js",
+  "bin": {
+    "codesyncer": "./bin/codesyncer.js"
+  },
+  "scripts": {
+    "build": "tsc && npm run copy-templates",
+    "copy-templates": "mkdir -p dist/templates && cp -r src/templates/* dist/templates/",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run test && npm run build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "src/templates",
+    "README.md",
+    "README.ko.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bitjaru/codesyncer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bitjaru/codesyncer/issues"
+  },
+  "homepage": "https://github.com/bitjaru/codesyncer#readme",
+  "author": {
+    "name": "bitjaru",
+    "email": "bitjaru0402@naver.com",
+    "url": "https://github.com/bitjaru"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "chokidar": "^3.6.0",
+    "commander": "^11.1.0",
+    "fs-extra": "^11.2.0",
+    "inquirer": "^8.2.6",
+    "js-yaml": "^4.1.1",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/jest": "^29.5.11",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

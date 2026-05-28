@@ -1,0 +1,92 @@
+{
+  "name": "filter-by-pattern",
+  "description": "Filter array of objects where a specified field matches a regex pattern",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing an array at the specified path"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the array field (e.g., 'items', 'data.users')"
+    },
+    "field_name": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the field within array items to test against the pattern"
+    },
+    "pattern": {
+      "type": "string",
+      "required": true,
+      "description": "Regex pattern to test against (e.g., '^[0-9]+$', '[a-z]+', '\\d{3}-\\d{4}')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with filtered array containing only items where the specified field matches the pattern"
+  },
+  "examples": [
+    {
+      "description": "Filter users by email pattern",
+      "input": {
+        "users": [
+          {"name": "alice", "email": "alice@example.com"},
+          {"name": "bob", "email": "bob.smith@test.org"},
+          {"name": "charlie", "email": "invalid-email"}
+        ]
+      },
+      "args": {
+        "array_path": "users",
+        "field_name": "email",
+        "pattern": "^[^@]+@[^@]+\\.[^@]+$"
+      },
+      "output": {
+        "users": [
+          {"name": "alice", "email": "alice@example.com"},
+          {"name": "bob", "email": "bob.smith@test.org"}
+        ]
+      }
+    },
+    {
+      "description": "Filter products by SKU containing digits",
+      "input": {
+        "products": [
+          {"sku": "ABC123", "name": "Product A"},
+          {"sku": "NODIGITS", "name": "Product B"},
+          {"sku": "XYZ789", "name": "Product C"}
+        ]
+      },
+      "args": {
+        "array_path": "products",
+        "field_name": "sku",
+        "pattern": "\\d+"
+      },
+      "output": {
+        "products": [
+          {"sku": "ABC123", "name": "Product A"},
+          {"sku": "XYZ789", "name": "Product C"}
+        ]
+      }
+    },
+    {
+      "description": "Filter by pattern with no matches",
+      "input": {
+        "items": [
+          {"code": "abc"},
+          {"code": "def"}
+        ]
+      },
+      "args": {
+        "array_path": "items",
+        "field_name": "code",
+        "pattern": "^[0-9]+$"
+      },
+      "output": {
+        "items": []
+      }
+    }
+  ],
+  "tags": ["array", "filter", "regex", "pattern", "string", "validation"]
+}

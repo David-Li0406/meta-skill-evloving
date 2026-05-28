@@ -1,0 +1,335 @@
+{
+  "name": "github-repo-check",
+  "description": "Evaluations for the github-repo-check skill",
+  "testCases": [
+    {
+      "id": "no-config",
+      "name": "No repository configuration",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with no repos.json",
+      "setup": {
+        "description": "No .entourage/repos.json file exists"
+      },
+      "expectedBehavior": "Returns message about missing configuration",
+      "expectedOutput": {
+        "contains": [
+          "No repository configuration found",
+          ".entourage/repos.json"
+        ]
+      }
+    },
+    {
+      "id": "no-github-field",
+      "name": "Repos configured without github field",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with repos.json without github field",
+      "setup": {
+        "config": {
+          "repos": [
+            {
+              "name": "my-repo",
+              "path": "~/code/my-repo"
+            }
+          ]
+        },
+        "description": "repos.json exists but repos have no github field"
+      },
+      "expectedBehavior": "Returns message about adding github field to repos",
+      "expectedOutput": {
+        "contains": [
+          "No GitHub configuration found",
+          "Add `github` field"
+        ]
+      }
+    },
+    {
+      "id": "gh-not-authenticated",
+      "name": "gh CLI not authenticated",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Requires mock gh CLI behavior",
+      "setup": {
+        "description": "gh CLI installed but not authenticated, no token in config"
+      },
+      "expectedBehavior": "Returns authentication instructions",
+      "expectedOutput": {
+        "contains": [
+          "gh CLI not authenticated",
+          "gh auth login"
+        ]
+      }
+    },
+    {
+      "id": "token-invalid",
+      "name": "Invalid or expired token (401)",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Requires mock GitHub API response",
+      "setup": {
+        "description": "GitHub API returns 401 Unauthorized"
+      },
+      "expectedBehavior": "Returns 401 error with remediation steps",
+      "expectedOutput": {
+        "contains": [
+          "401 Unauthorized",
+          "gh auth login",
+          "check your token"
+        ]
+      }
+    },
+    {
+      "id": "rate-limited",
+      "name": "API rate limit reached (403)",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Requires mock GitHub API response",
+      "setup": {
+        "description": "GitHub API returns 403 with rate limit headers"
+      },
+      "expectedBehavior": "Returns rate limit message with reset time",
+      "expectedOutput": {
+        "contains": [
+          "rate limit reached",
+          "Resets at"
+        ]
+      }
+    },
+    {
+      "id": "repo-not-found",
+      "name": "Repository not found (404)",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Requires mock GitHub API response",
+      "setup": {
+        "config": {
+          "repos": [
+            {
+              "name": "my-repo",
+              "path": "~/code/my-repo",
+              "github": "owner/nonexistent-repo"
+            }
+          ]
+        },
+        "description": "GitHub API returns 404 for repository"
+      },
+      "expectedBehavior": "Returns not found message with config suggestion",
+      "expectedOutput": {
+        "contains": [
+          "not found or not accessible",
+          "Check `github` field"
+        ]
+      }
+    },
+    {
+      "id": "shipped-deployment",
+      "name": "Shipped status - production deployment exists",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Requires actual GitHub repo with production deployment",
+      "setup": {
+        "description": "Component has production deployment in GitHub"
+      },
+      "expectedBehavior": "Returns Shipped status with Very High confidence",
+      "expectedOutput": {
+        "status": "Shipped",
+        "confidence": "Very High"
+      }
+    },
+    {
+      "id": "complete-merged-ci-pass",
+      "name": "Complete status - PR merged + CI passing",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with merged PR and CI data",
+      "setup": {
+        "description": "PR merged to main and most recent Actions run is passing"
+      },
+      "expectedBehavior": "Returns Complete status with Very High confidence",
+      "expectedOutput": {
+        "status": "Complete",
+        "confidence": "Very High"
+      }
+    },
+    {
+      "id": "complete-merged-only",
+      "name": "Complete status - PR merged (no CI status)",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with merged PR without CI",
+      "setup": {
+        "description": "PR merged to main, no Actions configured or no recent runs"
+      },
+      "expectedBehavior": "Returns Complete status with High confidence",
+      "expectedOutput": {
+        "status": "Complete",
+        "confidence": "High"
+      }
+    },
+    {
+      "id": "in-progress-pr-approved",
+      "name": "In Progress status - open PR with approvals",
+      "input": "/github-repo-check dashboard",
+      "status": "pending",
+      "pendingReason": "Needs fixture with approved open PR",
+      "setup": {
+        "description": "Open PR exists with one or more approving reviews"
+      },
+      "expectedBehavior": "Returns In Progress status with High confidence",
+      "expectedOutput": {
+        "status": "In Progress",
+        "confidence": "High"
+      }
+    },
+    {
+      "id": "in-progress-pr-pending",
+      "name": "In Progress status - open PR pending review",
+      "input": "/github-repo-check dashboard",
+      "status": "pending",
+      "pendingReason": "Needs fixture with pending PR",
+      "setup": {
+        "description": "Open PR exists with no reviews or pending reviews"
+      },
+      "expectedBehavior": "Returns In Progress status with Medium confidence",
+      "expectedOutput": {
+        "status": "In Progress",
+        "confidence": "Medium"
+      }
+    },
+    {
+      "id": "in-progress-issue-label",
+      "name": "In Progress status - issue with in-progress label",
+      "input": "/github-repo-check payments",
+      "status": "pending",
+      "pendingReason": "Needs fixture with labeled issue",
+      "setup": {
+        "description": "GitHub issue exists with 'in progress' or similar label"
+      },
+      "expectedBehavior": "Returns In Progress status with Medium confidence",
+      "expectedOutput": {
+        "status": "In Progress",
+        "confidence": "Medium"
+      }
+    },
+    {
+      "id": "planned-issue-open",
+      "name": "Planned status - open issue exists",
+      "input": "/github-repo-check notifications",
+      "status": "pending",
+      "pendingReason": "Needs fixture with open issue",
+      "setup": {
+        "description": "Open GitHub issue exists for component (no PR, no in-progress label)"
+      },
+      "expectedBehavior": "Returns Planned status with High confidence",
+      "expectedOutput": {
+        "status": "Planned",
+        "confidence": "High"
+      }
+    },
+    {
+      "id": "unknown-no-evidence",
+      "name": "Unknown status - no GitHub evidence",
+      "input": "/github-repo-check nonexistent-feature",
+      "setup": {
+        "description": "No PRs, issues, or deployments found for component"
+      },
+      "expectedBehavior": "Returns Unknown status, defers to /local-repo-check",
+      "expectedOutput": {
+        "status": "Unknown",
+        "contains": [
+          "No GitHub evidence",
+          "local-repo-check"
+        ]
+      }
+    },
+    {
+      "id": "multi-component",
+      "name": "Multiple components query",
+      "input": "/github-repo-check auth dashboard payments",
+      "status": "pending",
+      "pendingReason": "Needs fixture with multiple component states",
+      "setup": {
+        "description": "auth=Complete, dashboard=In Progress, payments=Planned"
+      },
+      "expectedBehavior": "Returns summary table with all three components",
+      "expectedOutput": {
+        "contains": [
+          "Summary",
+          "auth",
+          "dashboard",
+          "payments",
+          "Component",
+          "Status"
+        ]
+      }
+    },
+    {
+      "id": "single-component-output",
+      "name": "Single component with details",
+      "input": "/github-repo-check clerk-auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with component details",
+      "setup": {
+        "description": "Component has PR merged with CI passing and deployment"
+      },
+      "expectedBehavior": "Returns formatted table with GitHub Details section",
+      "expectedOutput": {
+        "contains": [
+          "GitHub Scan:",
+          "clerk-auth",
+          "Repository",
+          "Evidence",
+          "GitHub Details"
+        ]
+      }
+    },
+    {
+      "id": "case-insensitive",
+      "name": "Case insensitive component search",
+      "input": "/github-repo-check Auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with case-variant component",
+      "setup": {
+        "description": "Component referenced as 'auth' in PRs/issues"
+      },
+      "expectedBehavior": "Finds component regardless of input case",
+      "expectedOutput": {
+        "contains": [
+          "auth"
+        ]
+      }
+    },
+    {
+      "id": "multiple-repos-same-component",
+      "name": "Component found in multiple repositories",
+      "input": "/github-repo-check auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with multi-repo setup",
+      "setup": {
+        "config": {
+          "repos": [
+            {
+              "name": "frontend",
+              "path": "~/code/frontend",
+              "github": "org/frontend"
+            },
+            {
+              "name": "backend",
+              "path": "~/code/backend",
+              "github": "org/backend"
+            }
+          ]
+        },
+        "description": "auth component has evidence in both frontend and backend repos"
+      },
+      "expectedBehavior": "Aggregates evidence from all repositories, shows each repo's status",
+      "expectedOutput": {
+        "contains": [
+          "org/frontend",
+          "org/backend"
+        ]
+      }
+    }
+  ]
+}

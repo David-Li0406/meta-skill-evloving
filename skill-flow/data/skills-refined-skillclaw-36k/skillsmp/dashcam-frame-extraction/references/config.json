@@ -1,0 +1,38 @@
+{
+  "skill_name": "dashcam-frame-extraction",
+  "version": "1.0",
+  "category": "Movie_F",
+  "description": "GPU-accelerated frame extraction for Movie_F dashcam videos",
+  "settings": {
+    "category": "Movie_F",
+    "num_workers": 4,
+    "batch_size": 50,
+    "min_free_gb": 25,
+    "timeout_seconds": 30,
+    "frames_per_video": 3
+  },
+  "paths": {
+    "desktop_source": "/mnt/sdcard/CARDV/Movie_F",
+    "frames_output": "/home/yousuf/GoogleDrive/PROJECTS/INVESTIGATION/DASHCAM/FRAMES_CLIPS/Movie_F&R_MotionSamples",
+    "work_dir": "/home/yousuf/PROJECTS/PeopleNet/FrameExtraction",
+    "staging_dir": "/home/yousuf/PROJECTS/PeopleNet/Staging",
+    "python_venv": "/home/yousuf/PROJECTS/ExtractedGPS/.venv/bin/python3"
+  },
+  "frame_positions": {
+    "BEGIN": "1 second into video",
+    "MIDDLE": "50% of video duration",
+    "END": "1 second before end"
+  },
+  "requirements": {
+    "gpu": "NVIDIA GPU with CUDA support",
+    "ffmpeg": "ffmpeg with CUDA hardware acceleration",
+    "python": "Python 3.7+",
+    "disk_space": "25GB minimum free space"
+  },
+  "critical_fixes": {
+    "hevc_cuda": "Use -hwaccel cuda ONLY (no output format)",
+    "error_handling": "Strict mode - exits on any failure",
+    "timeout": "30 seconds per frame extraction",
+    "filenames": "Handle A suffix variations"
+  }
+}

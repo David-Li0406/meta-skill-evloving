@@ -1,0 +1,244 @@
+{
+  "mcp_name": "browser-proxy",
+  "version": "1.0.0",
+  "description": "Reverse proxy with traffic logging and browser instrumentation",
+  "pattern": "CRUD + Aggregation",
+
+  "metadata": {
+    "tool_count": 10,
+    "progressive_discovery": true,
+    "has_info_tool": false,
+    "token_systems": ["proxy_id", "session_id", "request_id"],
+    "stateful": true,
+    "max_response_tokens": 1500
+  },
+
+  "tool_groups": [
+    {
+      "name": "proxy_lifecycle",
+      "pattern": "CRUD",
+      "tools": [
+        {
+          "name": "proxy_start",
+          "operation": "create",
+          "description": "Start reverse proxy server",
+          "generates": ["proxy_id"],
+          "consumes": [],
+          "input_schema": {
+            "target_url": "string",
+            "port": "optional_integer"
+          },
+          "output_schema": {
+            "proxy_id": "string",
+            "listen_addr": "string",
+            "target_url": "string",
+            "status": "running"
+          }
+        },
+        {
+          "name": "proxy_status",
+          "operation": "read",
+          "description": "Get proxy status",
+          "generates": [],
+          "consumes": ["proxy_id"],
+          "output_schema": {
+            "proxy_id": "string",
+            "uptime": "duration",
+            "requests_handled": "integer",
+            "active_sessions": "integer"
+          }
+        },
+        {
+          "name": "proxy_stop",
+          "operation": "delete",
+          "description": "Stop proxy server",
+          "generates": [],
+          "consumes": ["proxy_id"]
+        }
+      ]
+    },
+    {
+      "name": "traffic_analysis",
+      "pattern": "Aggregation",
+      "tools": [
+        {
+          "name": "proxylog",
+          "description": "Query traffic logs",
+          "generates": ["request_id"],
+          "consumes": ["proxy_id"],
+          "input_schema": {
+            "proxy_id": "string",
+            "types": "array_of_log_types",
+            "limit": "integer"
+          },
+          "output_schema": {
+            "logs": [
+              {
+                "id": "request_id",
+                "type": "http|error|performance",
+                "timestamp": "string",
+                "summary": "string"
+              }
+            ],
+            "has_more": "boolean",
+            "total": "integer"
+          }
+        },
+        {
+          "name": "currentpage",
+          "description": "Get current page state (aggregates errors, metrics, interactions)",
+          "generates": ["session_id"],
+          "consumes": ["proxy_id"],
+          "aggregates": ["js_errors", "performance_metrics", "user_interactions", "dom_mutations"],
+          "output_schema": {
+            "session_id": "string",
+            "url": "string",
+            "errors_count": "integer",
+            "interactions_count": "integer",
+            "mutations_count": "integer",
+            "performance": {
+              "page_load": "milliseconds",
+              "first_paint": "milliseconds"
+            }
+          },
+          "note": "Sparse aggregation - counts instead of full lists for token efficiency"
+        }
+      ]
+    },
+    {
+      "name": "browser_control",
+      "tools": [
+        {
+          "name": "proxy_exec",
+          "description": "Execute JavaScript in browser",
+          "generates": [],
+          "consumes": ["proxy_id"],
+          "input_schema": {
+            "proxy_id": "string",
+            "code": "javascript_string"
+          }
+        },
+        {
+          "name": "proxy_toast",
+          "description": "Send notification to browser",
+          "generates": [],
+          "consumes": ["proxy_id"],
+          "input_schema": {
+            "proxy_id": "string",
+            "message": "string",
+            "type": "success|error|warning|info"
+          }
+        }
+      ]
+    },
+    {
+      "name": "debugging",
+      "tools": [
+        {
+          "name": "snapshot",
+          "description": "Visual regression testing",
+          "generates": ["snapshot_id"],
+          "consumes": [],
+          "input_schema": {
+            "action": "baseline|compare",
+            "name": "string",
+            "pages": "array_of_page_screenshots"
+          }
+        }
+      ]
+    }
+  ],
+
+  "token_systems": {
+    "proxy_id": {
+      "generated_by": ["proxy_start"],
+      "consumed_by": ["proxy_status", "proxy_stop", "proxylog", "currentpage", "proxy_exec", "proxy_toast"],
+      "purpose": "Reference specific proxy instance across tools",
+      "format": "string (e.g., 'dev')"
+    },
+    "session_id": {
+      "generated_by": ["currentpage"],
+      "consumed_by": ["currentpage with detail"],
+      "purpose": "Reference browser page session for detailed queries"
+    },
+    "request_id": {
+      "generated_by": ["proxylog"],
+      "consumed_by": ["proxylog with detail"],
+      "purpose": "Reference specific HTTP request for replay/analysis"
+    }
+  },
+
+  "workflows": [
+    {
+      "name": "Setup and Debug",
+      "steps": [
+        "proxy_start(target_url) → proxy_id",
+        "currentpage(proxy_id) → errors_count, session_id",
+        "proxylog(proxy_id, types=['error']) → request_ids with error details"
+      ]
+    },
+    {
+      "name": "Performance Analysis",
+      "steps": [
+        "currentpage(proxy_id) → performance metrics",
+        "proxylog(proxy_id, types=['performance']) → detailed timing data"
+      ]
+    }
+  ],
+
+  "aggregation_strategy": {
+    "currentpage_aggregation": {
+      "aggregates": [
+        "JavaScript errors (count, not full stacks)",
+        "Performance metrics (page load, paint timing)",
+        "User interactions (count, not every event)",
+        "DOM mutations (count, not every change)"
+      ],
+      "rationale": "Token efficiency - provide counts for awareness, IDs for details",
+      "detail_access": "Use session_id with detail parameter for full data"
+    }
+  },
+
+  "progressive_detail_example": {
+    "overview": {
+      "tool": "currentpage(proxy_id)",
+      "tokens": "~100",
+      "shows": {
+        "errors_count": 3,
+        "interactions_count": 127,
+        "mutations_count": 45
+      }
+    },
+    "detail": {
+      "tool": "currentpage(proxy_id, action='summary', session_id='page-1', detail=['errors'])",
+      "tokens": "~400",
+      "shows": {
+        "errors": [
+          {"type": "ReferenceError", "message": "foo is not defined", "count": 2},
+          {"type": "TypeError", "message": "null.bar", "count": 1}
+        ]
+      }
+    },
+    "full": {
+      "tool": "currentpage(proxy_id, action='get', session_id='page-1')",
+      "tokens": "~1500",
+      "shows": "All errors, interactions, mutations with full details"
+    }
+  },
+
+  "token_efficiency_strategies": [
+    "Use proxy_id to reference proxy instead of repeating config",
+    "Aggregation: counts in overview, full data on request",
+    "Progressive detail: summary → errors only → full dump",
+    "Sparse format: currentpage returns counts, not arrays",
+    "Accept extra parameters with warnings (learned lesson)"
+  ],
+
+  "architecture_notes": {
+    "why_crud": "Proxy lifecycle (start/status/stop) fits CRUD pattern",
+    "why_aggregation": "currentpage combines multiple data sources for efficiency",
+    "why_multiple_ids": "Different granularities: proxy > session > request",
+    "stateful_design": "Proxy persists across tool calls, uses IDs for reference",
+    "learned_lesson": "Always accept extra/hallucinated parameters with warnings unless severe issue"
+  }
+}

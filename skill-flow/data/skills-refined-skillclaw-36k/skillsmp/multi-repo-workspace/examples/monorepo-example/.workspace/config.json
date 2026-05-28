@@ -1,0 +1,60 @@
+{
+  "workspace": {
+    "name": "monorepo-example",
+    "description": "Example monorepo with multiple packages",
+    "base_path": "./",
+    "type": "monorepo",
+    "created": "2026-01-20",
+    "version": "1.0.0"
+  },
+  "repositories": [
+    {
+      "name": "web-app",
+      "path": "./packages/web-app",
+      "type": "frontend",
+      "primary": true,
+      "tech_stack": ["react", "typescript", "vite"]
+    },
+    {
+      "name": "mobile-app",
+      "path": "./packages/mobile-app",
+      "type": "mobile",
+      "primary": true,
+      "tech_stack": ["react-native", "typescript", "expo"]
+    },
+    {
+      "name": "shared-ui",
+      "path": "./packages/shared-ui",
+      "type": "shared",
+      "primary": false,
+      "tech_stack": ["react", "typescript", "storybook"]
+    },
+    {
+      "name": "api-client",
+      "path": "./packages/api-client",
+      "type": "shared",
+      "primary": false,
+      "tech_stack": ["typescript", "axios"]
+    }
+  ],
+  "dependency_graph": {
+    "web-app": ["shared-ui", "api-client"],
+    "mobile-app": ["shared-ui", "api-client"],
+    "shared-ui": [],
+    "api-client": []
+  },
+  "global_conventions": {
+    "code_style": "airbnb",
+    "commit_message_format": "conventional-commits",
+    "branch_naming": "feature/*, bugfix/*, hotfix/*",
+    "package_manager": "npm",
+    "node_version": "18.x"
+  },
+  "scripts": {
+    "install_all": "npm install",
+    "dev_all": "npm run dev --workspaces",
+    "build_all": "npm run build --workspaces",
+    "test_all": "npm test --workspaces",
+    "lint_all": "npm run lint --workspaces"
+  }
+}

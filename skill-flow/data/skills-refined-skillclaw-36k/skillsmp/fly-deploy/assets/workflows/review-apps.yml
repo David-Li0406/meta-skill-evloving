@@ -1,0 +1,30 @@
+name: Review Apps
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+jobs:
+  review-app:
+    runs-on: ubuntu-latest
+
+    # Only run for PRs from the same repository (not forks)
+    if: github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy review app
+        uses: superfly/fly-pr-review-apps@1.2.0
+        with:
+          region: ord  # Change to your preferred region
+          org: personal  # Change to your fly.io organization
+          # Uncomment to use custom config:
+          # config: fly.review.toml
+          # Uncomment to pass secrets:
+          # secrets: |
+          #   DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}
+          #   API_KEY=${{ secrets.STAGING_API_KEY }}

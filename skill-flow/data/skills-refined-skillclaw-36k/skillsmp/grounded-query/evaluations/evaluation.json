@@ -1,0 +1,222 @@
+{
+  "name": "grounded-query",
+  "description": "Evaluations for the grounded-query skill",
+  "testCases": [
+    {
+      "id": "supported-claim",
+      "name": "Direct evidence found",
+      "input": "What database did the team choose?",
+      "status": "pending",
+      "pendingReason": "Skill looks for data in example paths from SKILL.md, not current directory - needs skill update",
+      "setup": {
+        "description": "Transcript contains explicit statement: 'We decided to use Supabase as the primary database'"
+      },
+      "expectedBehavior": "Returns SUPPORTED status with file reference",
+      "expectedOutput": {
+        "evidenceStatus": "SUPPORTED",
+        "contains": [
+          "Supabase",
+          "database"
+        ],
+        "hasSource": true
+      }
+    },
+    {
+      "id": "partial-evidence",
+      "name": "Related but inexact match",
+      "input": "Is the team using PostgreSQL?",
+      "status": "pending",
+      "pendingReason": "Needs fixture with Supabase mention but no explicit PostgreSQL",
+      "setup": {
+        "description": "Transcript mentions Supabase (which uses PostgreSQL) but doesn't explicitly say PostgreSQL"
+      },
+      "expectedBehavior": "Returns nuanced response about indirect evidence",
+      "expectedOutput": {
+        "evidenceStatus": "PARTIAL",
+        "contains": [
+          "Supabase",
+          "PostgreSQL",
+          "related"
+        ],
+        "hasSource": true
+      }
+    },
+    {
+      "id": "not-found",
+      "name": "No evidence in sources",
+      "input": "What CI/CD tool is the team using?",
+      "setup": {
+        "description": "No transcripts mention CI/CD tools"
+      },
+      "expectedBehavior": "Returns NOT FOUND status",
+      "expectedOutput": {
+        "evidenceStatus": "NOT FOUND",
+        "contains": [
+          "NOT FOUND",
+          "could not be verified",
+          "no evidence"
+        ]
+      }
+    },
+    {
+      "id": "multiple-claims",
+      "name": "Multiple claims verification",
+      "input": "Summarize the tech stack decisions",
+      "status": "pending",
+      "pendingReason": "Needs fixture with multiple tech stack decisions",
+      "setup": {
+        "description": "Response will contain multiple claims about database, frontend, hosting, etc."
+      },
+      "expectedBehavior": "Each claim verified independently in evidence table",
+      "expectedOutput": {
+        "tableRows": ">=3",
+        "columns": [
+          "Claim",
+          "Status",
+          "Source"
+        ]
+      }
+    },
+    {
+      "id": "mixed-evidence",
+      "name": "Claims with different statuses",
+      "input": "What decisions were made about auth, database, and deployment?",
+      "status": "pending",
+      "pendingReason": "Needs fixture with auth and database but no deployment",
+      "setup": {
+        "description": "Auth and database discussed in transcripts, deployment never mentioned"
+      },
+      "expectedBehavior": "Evidence table shows mix of SUPPORTED, PARTIAL, and NOT FOUND",
+      "expectedOutput": {
+        "hasStatus": [
+          "SUPPORTED",
+          "NOT FOUND"
+        ],
+        "format": "table"
+      }
+    },
+    {
+      "id": "date-verification",
+      "name": "Date claim verification",
+      "input": "When was the MVP deadline set?",
+      "status": "pending",
+      "pendingReason": "Needs fixture with MVP deadline mention",
+      "setup": {
+        "description": "Transcript from Dec 22 mentions 'MVP by end of January'"
+      },
+      "expectedBehavior": "Verifies date claim against source file timestamp and content",
+      "expectedOutput": {
+        "evidenceStatus": "SUPPORTED",
+        "contains": [
+          "January",
+          "Dec",
+          "2025-12-22"
+        ]
+      }
+    },
+    {
+      "id": "person-attribution",
+      "name": "Person said X",
+      "input": "Who suggested using Supabase?",
+      "status": "pending",
+      "pendingReason": "Needs fixture with person attribution",
+      "setup": {
+        "description": "Transcript shows specific person mentioning Supabase recommendation"
+      },
+      "expectedBehavior": "Verifies attribution against transcript content",
+      "expectedOutput": {
+        "evidenceStatus": "SUPPORTED",
+        "hasSource": true,
+        "contains": [
+          "mentioned",
+          "suggested"
+        ]
+      }
+    },
+    {
+      "id": "decision-claim",
+      "name": "Team decision verification",
+      "input": "Did the team decide to use Next.js?",
+      "status": "pending",
+      "pendingReason": "Needs fixture with Next.js decision",
+      "setup": {
+        "description": "Transcript contains decision statement about Next.js"
+      },
+      "expectedBehavior": "Confirms decision with SUPPORTED status and source reference",
+      "expectedOutput": {
+        "evidenceStatus": "SUPPORTED",
+        "contains": [
+          "decided",
+          "Next.js"
+        ],
+        "hasSource": true
+      }
+    },
+    {
+      "id": "status-inflation-prevention",
+      "name": "Prevents status inflation",
+      "input": "Is authentication complete?",
+      "setup": {
+        "description": "Transcript says 'we'll implement Clerk auth' but no code evidence"
+      },
+      "expectedBehavior": "Does NOT claim Complete status based only on discussion",
+      "expectedOutput": {
+        "notContains": [
+          "Complete",
+          "Done",
+          "Finished",
+          "Implemented",
+          "is complete",
+          "is done",
+          "is finished",
+          "has been implemented"
+        ],
+        "contains": [
+          "discussed",
+          "planned",
+          "will implement",
+          "not complete",
+          "planning"
+        ]
+      }
+    },
+    {
+      "id": "no-data-files",
+      "name": "No source files available",
+      "input": "What did the team decide?",
+      "status": "pending",
+      "pendingReason": "Needs fixture with empty data directory",
+      "setup": {
+        "description": "No data/ directory or empty transcripts folder"
+      },
+      "expectedBehavior": "Warns about inability to verify claims",
+      "expectedOutput": {
+        "contains": [
+          "no data files",
+          "cannot verify",
+          "no transcripts"
+        ]
+      }
+    },
+    {
+      "id": "evidence-table-format",
+      "name": "Correct output format",
+      "input": "What tech stack was chosen?",
+      "status": "pending",
+      "pendingReason": "Needs fixture with tech stack data",
+      "setup": {
+        "description": "Standard query with verifiable claims"
+      },
+      "expectedBehavior": "Response ends with properly formatted evidence table",
+      "expectedOutput": {
+        "endsWithTable": true,
+        "tableHeaders": [
+          "Claim",
+          "Status",
+          "Source"
+        ],
+        "format": "markdown"
+      }
+    }
+  ]
+}

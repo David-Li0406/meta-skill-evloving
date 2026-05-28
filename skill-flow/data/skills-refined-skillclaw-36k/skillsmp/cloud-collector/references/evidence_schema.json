@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Evidence Package",
+  "description": "Schema for compliance evidence output",
+  "type": "object",
+  "required": ["metadata", "evidence"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["collection_timestamp", "cloud_provider", "collector_version"],
+      "properties": {
+        "collection_timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of evidence collection"
+        },
+        "cloud_provider": {
+          "type": "string",
+          "enum": ["aws", "gcp", "azure"],
+          "description": "Cloud provider the evidence was collected from"
+        },
+        "collector_version": {
+          "type": "string",
+          "description": "Version of the evidence collector"
+        },
+        "account_id": {
+          "type": "string",
+          "description": "Cloud account/project/subscription identifier"
+        },
+        "region": {
+          "type": "string",
+          "description": "Region or location if applicable"
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/evidence_item"
+      }
+    },
+    "control_mappings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/control_mapping"
+      }
+    }
+  },
+  "definitions": {
+    "evidence_item": {
+      "type": "object",
+      "required": ["id", "category", "title", "data"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this evidence item"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["iam", "logging", "storage", "security", "encryption", "network"],
+          "description": "Evidence category"
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable title"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of what this evidence demonstrates"
+        },
+        "data": {
+          "type": "object",
+          "description": "The actual evidence data"
+        },
+        "controls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of control IDs this evidence supports"
+        }
+      }
+    },
+    "control_mapping": {
+      "type": "object",
+      "required": ["framework", "control_id", "evidence_ids"],
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["soc2", "iso27001", "nist800-53", "cis"],
+          "description": "Compliance framework"
+        },
+        "control_id": {
+          "type": "string",
+          "description": "Control identifier within the framework"
+        },
+        "control_name": {
+          "type": "string",
+          "description": "Human-readable control name"
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Evidence item IDs that support this control"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["collected", "partial", "missing"],
+          "description": "Evidence collection status for this control"
+        }
+      }
+    }
+  }
+}

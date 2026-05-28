@@ -1,0 +1,71 @@
+{
+  "file": "example.py",
+  "language": "python",
+  "fixes_applied": {
+    "format": {
+      "changes": 12,
+      "status": "success"
+    },
+    "syntax": {
+      "issues_found": 2,
+      "issues_fixed": 2,
+      "status": "success"
+    },
+    "bugs": {
+      "issues_found": 3,
+      "issues_fixed": 2,
+      "unfixable": 1,
+      "status": "partial"
+    },
+    "validation": {
+      "linter_passed": true,
+      "syntax_valid": true,
+      "status": "success"
+    }
+  },
+  "issues": [
+    {
+      "type": "syntax",
+      "severity": "error",
+      "line": 15,
+      "message": "Undefined variable 'result'",
+      "fix": "Added variable initialization",
+      "status": "fixed"
+    },
+    {
+      "type": "syntax",
+      "severity": "warning",
+      "line": 23,
+      "message": "Unused import 'sys'",
+      "fix": "Removed unused import",
+      "status": "fixed"
+    },
+    {
+      "type": "bug",
+      "severity": "warning",
+      "line": 42,
+      "message": "Potential division by zero",
+      "suggestion": "Add zero check or try/except",
+      "status": "detected"
+    },
+    {
+      "type": "bug",
+      "severity": "info",
+      "line": 58,
+      "message": "Use 'is None' instead of '== None'",
+      "fix": "Replace with 'is None'",
+      "status": "fixed"
+    },
+    {
+      "type": "bug",
+      "severity": "warning",
+      "line": 67,
+      "message": "Bare except clause catches all exceptions",
+      "suggestion": "Specify exception type",
+      "status": "fixed"
+    }
+  ],
+  "diff": "--- original\n+++ fixed\n@@ -15,3 +15,4 @@\n+result = []\n@@ -23,1 +23,0 @@\n-import sys\n@@ -58,1 +58,1 @@\n-if data == None:\n+if data is None:\n@@ -67,2 +67,2 @@\n-except:\n+except Exception as e:\n",
+  "summary": "Applied 12 formatting changes, fixed 2 syntax errors, fixed 2/3 bugs, validation passed",
+  "auto_applied": false
+}

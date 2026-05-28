@@ -1,0 +1,82 @@
+[
+  {
+    "ruleId": "",
+    "ruleTitle": "osConfig Access",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for osConfig Access"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "osConfig Access",
+    "type": "good",
+    "code": "{ osConfig ? {}, ... }:\n\n# Safely check if system-level sops is enabled\nmkIf (osConfig.aytordev.security.sops.enable or false) {\n  # ...\n}",
+    "language": "nix",
+    "description": "Correct example for osConfig Access"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Accessing User Context",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Accessing User Context"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Accessing User Context",
+    "type": "good",
+    "code": "let\n  user = config.aytordev.user;\nin\n{\n  programs.git.userName = user.fullName;\n  programs.git.userEmail = user.email;\n}",
+    "language": "nix",
+    "description": "Correct example for Accessing User Context"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Option Helpers",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Option Helpers"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Option Helpers",
+    "type": "good",
+    "code": "inherit (lib.aytordev) mkOpt enabled;\n\n# Quick enable\nprograms.git = enabled;\n\n# Custom option\nuserName = mkOpt types.str \"default\" \"User name\";",
+    "language": "nix",
+    "description": "Correct example for Option Helpers"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Standard Option Pattern",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Standard Option Pattern"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Standard Option Pattern",
+    "type": "good",
+    "code": "{ config, lib, ... }:\nlet\n  cfg = config.aytordev.programs.myApp;\nin\n{\n  options.aytordev.programs.myApp = {\n    enable = lib.mkEnableOption \"My App\";\n  };\n\n  config = lib.mkIf cfg.enable {\n    # implementation\n  };\n}",
+    "language": "nix",
+    "description": "Correct example for Standard Option Pattern"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Namespace Convention",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Namespace Convention"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Namespace Convention",
+    "type": "good",
+    "code": "options.aytordev.{category}.{module}.{option} = { ... };",
+    "language": "nix",
+    "description": "Correct example for Namespace Convention"
+  }
+]

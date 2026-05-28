@@ -1,0 +1,704 @@
+# Ralph Progress Log
+Started: 2026-01-11
+Project: comms — Unified Communications Cartographer
+
+## Codebase Patterns
+<!-- Add reusable patterns here as you discover them -->
+
+- SQLite: Use modernc.org/sqlite (pure Go, no CGO)
+- Config: YAML in ~/.config/comms/config.yaml (use internal/config package)
+- Data: SQLite in ~/Library/Application Support/Comms/comms.db
+- JSON output: All commands support --json flag via Result struct
+- Errors: Return structured errors with ok: false in JSON mode
+- Adapters: Each adapter implements Adapter interface (Name(), Sync(ctx, db, full))
+- Eve DB path: ~/Library/Application Support/Eve/eve.db
+- gogcli: Call via exec, parse JSON output
+- Schema: Use //go:embed to embed schema.sql into binary
+- XDG paths: config.GetConfigDir() and config.GetDataDir() handle platform differences
+- Foreign keys: Must enable PRAGMA foreign_keys = ON for each connection
+- Read-only DB access: `sql.Open("sqlite", "file:path?mode=ro")`
+- Upserts: Use `ON CONFLICT(...) DO UPDATE SET ...` for idempotent inserts
+- Sync watermarks: Track last_sync_at per adapter in sync_watermarks table for incremental sync
+- Identity resolution: Map external IDs via identities table (channel+identifier -> person_id)
+- Tags: Use 'type:value' format, validate type against enum (topic, entity, emotion, project, context)
+- Bulk operations: Reuse filter patterns across commands (EventFilter for both query and tag)
+- DB query: Default read-only (SELECT only), use --write flag for mutations (INSERT/UPDATE/DELETE)
+- Dynamic SQL results: Use []map[string]interface{} with rows.Columns() for flexible schema handling
+- External commands: Use exec.LookPath() to validate availability, exec.CommandContext() for execution
+- Gmail sync: Use 'after:YYYY/MM/DD' query format, timestamps in milliseconds (divide by 1000)
+- Email parsing: Handle "Name <email>" format by extracting text between < and >
+- Type assertions: Use two-value ok pattern when reading map[string]interface{}
+- Chunking: Chunker interface with Chunk(ctx, db, definitionID) method for pluggable strategies
+- TimeGapChunker: Split events by time gaps with configurable threshold and scope (thread/channel)
+- chunk.CreateDefinition: Idempotent - returns existing ID if definition name already exists
+- Conversations: Denormalized channel/thread_id fields enable efficient queries, NULL for cross-boundary
+- conversation_events.position: 1-indexed ordering within conversation for stable event retrieval
+
+## Key Files
+- cmd/comms/main.go — CLI entry point
+- internal/config/config.go — Config management (XDG-compliant)
+- internal/db/schema.sql — Database schema
+- internal/db/db.go — Database connection
+- internal/adapters/*.go — Channel adapters
+
+---
+
+## 2026-01-11 - US-001 Project scaffolding
+- Project was already complete with go.mod, Makefile, .goreleaser.yaml, and cobra CLI
+- Version command works with both text and JSON output
+- Build succeeds without errors
+- **Learnings:**
+  - Makefile uses ldflags to inject version, commit, and build date
+  - .goreleaser.yaml configured for darwin and linux on amd64/arm64
+  - Cobra provides clean command structure with persistent flags
+
+---
+
+## 2026-01-11 - US-002 Init command creates config and database
+- Created internal/config package with XDG-compliant path functions
+- Created internal/db package with schema.sql embedded via //go:embed
+- Added init command that creates directories and initializes database
+- Init command is idempotent (safe to run multiple times)
+- JSON output includes config_dir, data_dir, and db_path
+- **Files changed:**
+  - internal/config/config.go (new)
+  - internal/db/db.go (new)
+  - internal/db/schema.sql (new)
+  - cmd/comms/main.go (added init command)
+  - go.mod/go.sum (added modernc.org/sqlite, gopkg.in/yaml.v3)
+- **Learnings:**
+  - Use //go:embed directive to bundle schema.sql into binary
+  - XDG_CONFIG_HOME defaults to ~/.config on Unix-like systems
+  - macOS uses ~/Library/Application Support for data, not XDG paths
+  - SQLite PRAGMA foreign_keys must be explicitly enabled per connection
+  - modernc.org/sqlite is pure Go (no CGO), perfect for cross-platform builds
+  - Result structs with OK bool and optional fields work well for JSON output
+  - os.MkdirAll is idempotent (safe to create existing directories)
+
+---
+
+## 2026-01-11 - US-003 Database schema for events, persons, identities
+- Schema was already created as part of US-002 implementation
+- All tables present: events, persons, identities, event_participants, tags
+- Schema versioning supported via schema_version table
+- Indexes created on timestamp, channel, person_id, and other key fields
+- Foreign key constraints with ON DELETE CASCADE for referential integrity
+- **Files changed:**
+  - None (already complete from US-002)
+- **Learnings:**
+  - Schema design supports union-find identity resolution via persons/identities
+  - event_participants uses composite primary key for many-to-many relationships
+  - tags table supports both user-applied and AI-discovered tags with confidence scores
+  - sync_watermarks table enables incremental sync per adapter
+  - Using INTEGER for timestamps (Unix epoch) for efficiency
+
+---
+
+## 2026-01-11 - US-004 Me command to configure user identity
+- Created internal/me package with identity management functions
+- Implemented `comms me set` command with --name, --phone, --email flags
+- Implemented `comms me show` command to display current identity
+- Ensures only one person can have is_me=1 in the database
+- Supports JSON output via --json flag
+- **Files changed:**
+  - internal/me/me.go (new)
+  - cmd/comms/main.go (added me command with set/show subcommands)
+  - AGENTS.md (updated with transaction patterns and gotchas)
+- **Learnings:**
+  - Transaction pattern: Begin transaction, defer Rollback (safe even if committed), then Commit at end
+  - Use sql.NullString for nullable database fields (display_name, relationship_type)
+  - google/uuid package for generating unique IDs (already in go.mod as indirect dependency)
+  - Commands should validate input early (e.g., require at least one flag)
+  - When checking for existing rows, use sql.ErrNoRows to distinguish "not found" from other errors
+  - Identity conflicts should be detected and reported clearly (e.g., identifier already belongs to another person)
+  - SetMeName handles both create (if no me person exists) and update (if exists) cases
+  - AddIdentity creates me person with empty name if needed (name can be set later)
+  - Use time.Now().Unix() for storing timestamps as INTEGER in SQLite
+  - Result structs with OK bool and optional fields work well for both JSON and text output
+  - Text output uses ✓ checkmark for success messages (user-friendly)
+
+---
+## 2026-01-11 - US-005 Adapters command to list and manage adapters
+- Created internal/adapters package with Adapter interface (Name(), Sync())
+- Implemented `comms adapters` command to list configured adapters with status
+- Implemented `comms connect imessage` to configure iMessage adapter (via Eve)
+- Implemented `comms connect gmail --account <email>` to configure Gmail adapter (via gogcli)
+- Adapter status checks verify prerequisites (Eve db exists, gmail account configured)
+- Config.yaml stores adapter configuration (type, enabled, options)
+- All commands support --json flag for structured output
+- **Files changed:**
+  - internal/adapters/adapter.go (new)
+  - cmd/comms/main.go (added adapters, connect commands)
+  - AGENTS.md (updated with adapter patterns)
+- **Learnings:**
+  - Config package already had AdapterConfig struct with type, enabled, and options map
+  - Use config.Load() and cfg.Save() to read/write YAML config
+  - os.Stat() checks file existence; os.IsNotExist(err) distinguishes "not found" errors
+  - Provide helpful error messages with setup instructions when prerequisites missing
+  - checkAdapterStatus() function centralizes prerequisite validation logic
+  - Adapter interface defines contract: Name() and Sync(ctx, db, full) methods
+  - SyncResult struct tracks EventsCreated, EventsUpdated, PersonsCreated, Duration
+  - Eve database location: ~/Library/Application Support/Eve/eve.db
+  - Gmail adapter stores account email in Options map for later use by sync
+
+---
+
+
+---
+
+## 2026-01-11 - US-006 Eve adapter pulls events from Eve database
+- Created internal/adapters/eve.go implementing the Adapter interface
+- Syncs Eve contacts to comms persons and identities tables
+- Syncs Eve messages to comms events with proper threading via chat_identifier
+- Maps is_from_me boolean to direction field (sent/received)
+- Tracks sync watermark in sync_watermarks table for incremental sync
+- Handles attachments by checking attachment count and adding to content_types
+- Links event_participants via identity resolution (matching contact_identifiers to identities)
+- Opens Eve database in read-only mode using file:path?mode=ro
+- **Files changed:**
+  - internal/adapters/eve.go (new)
+  - AGENTS.md (added Eve adapter patterns)
+- **Learnings:**
+  - Eve schema: contacts/contact_identifiers for people, messages/chats/attachments for events
+  - Use `ON CONFLICT(source_adapter, source_id) DO UPDATE` for upsert operations
+  - Read-only database access: `sql.Open("sqlite", "file:path?mode=ro")`
+  - Sync watermarks enable incremental sync by storing last_sync_at timestamp per adapter
+  - Query Eve messages with timestamp filter for incremental sync: `WHERE m.timestamp > ?`
+  - Handle nullable fields with sql.NullString and sql.NullInt64
+  - Map Eve sender_id to comms person_id via contact_identifiers -> identities lookup
+  - Content types are JSON arrays: ["text"], ["text", "attachment"]
+  - Thread IDs map to Eve's chat_identifier for conversation grouping
+  - Event participants need role: sender, recipient, cc, observer
+  - When checking if insert vs update happened, query back the ID after ON CONFLICT
+  - NewEveAdapter() constructor validates Eve database exists before creating adapter
+  - Adapter returns SyncResult with counts: EventsCreated, EventsUpdated, PersonsCreated, Duration
+
+---
+
+## 2026-01-11 - US-007 Sync command orchestrates adapter sync
+- Created internal/sync package with SyncAll and SyncOne orchestration functions
+- Implemented `comms sync` command that runs all enabled adapters
+- Added `--adapter <name>` flag to sync specific adapter only
+- Added `--full` flag to force complete re-sync (ignores watermarks)
+- Sync operations handle errors gracefully - one adapter failing doesn't stop others
+- Results show events created/updated, persons created, and duration per adapter
+- JSON output support via --json flag for machine-readable results
+- **Files changed:**
+  - internal/sync/sync.go (new)
+  - cmd/comms/main.go (added sync command)
+  - AGENTS.md (added sync patterns)
+- **Learnings:**
+  - Sync orchestration should be separate from adapter implementations
+  - Use context.Background() for sync operations (can add timeouts later)
+  - When running multiple operations, collect results and report all at once
+  - One failing adapter shouldn't prevent others from running (graceful degradation)
+  - Switch statement in syncAdapter() maps adapter type to constructor
+  - AdapterResult struct tracks per-adapter success/failure with detailed stats
+  - Duration.String() provides human-readable time format (e.g., "2.5s", "100ms")
+  - Exit with error code if any adapter fails, but still show all results
+  - Config validation happens before sync (check adapter exists and is enabled)
+---
+
+## 2026-01-11 - US-008 Union-find identity resolution
+- Created internal/identify package with identity resolution logic
+- Implemented `comms identify` command to list all persons with identities and event counts
+- Implemented `comms identify --search <term>` for fuzzy searching by name or identifier
+- Implemented `comms identify merge <person1> <person2>` for union-find style merging
+- Implemented `comms identify add <person> --email/--phone/--identifier` to add identities
+- Merge operation transfers all identities and event_participants from person2 to person1
+- Duplicate detection prevents conflicting identity assignments
+- Cannot merge 'me' person into another person (must be the merge target)
+- All commands support JSON output via --json flag
+- **Files changed:**
+  - internal/identify/identify.go (new)
+  - cmd/comms/main.go (added identify command with merge and add subcommands)
+  - AGENTS.md (added identity resolution patterns)
+- **Learnings:**
+  - Union-find merging requires careful handling of duplicate event_participants
+  - Use `ON CONFLICT(event_id, person_id, role) DO NOTHING` when transferring event_participants
+  - Search with LIKE + LOWER() for case-insensitive fuzzy matching across names and identifiers
+  - GetPersonByName matches both canonical_name and display_name for flexibility
+  - Joining with event_participants and counting gives useful stats for merge prioritization
+  - Merge validation: check if either person is 'me' before allowing merge
+  - Custom identifiers use 'channel:identifier' format parsed with strings.SplitN
+  - List query orders by event_count DESC for most active contacts first
+  - Display event count and last_event_at timestamp to help users identify active contacts
+  - Merge is destructive - all person2 data transferred then person2 deleted
+  - Transaction pattern ensures atomicity: transfer identities, transfer participants, delete person
+
+---
+
+## 2026-01-11 - US-009 Events query command with filters
+- Created internal/query package with EventFilters struct and QueryEvents function
+- Implemented `comms events` command with multiple combinable filters
+- Added flags: --person, --channel, --since, --until, --direction, --limit
+- Dynamic SQL query building based on provided filters
+- Participants loaded per event in separate queries (avoid N+1)
+- JSON output support via --json flag
+- Text output truncates long content to 200 characters
+- Date parsing using time.Parse with "2006-01-02" layout
+- **Files changed:**
+  - internal/query/query.go (new)
+  - cmd/comms/main.go (added events command and parseDate helper)
+  - AGENTS.md (added query patterns)
+- **Learnings:**
+  - Dynamic SQL building: Build query string and args slice based on provided filters
+  - Use DISTINCT when joining with event_participants to avoid duplicate events in results
+  - All filters are ANDed together in WHERE clause for precise filtering
+  - Default limit of 100 prevents overwhelming output on large datasets
+  - time.Parse("2006-01-02", dateStr) parses YYYY-MM-DD dates to time.Time
+  - Load related data (participants) in separate query to keep main query simple
+  - COALESCE(display_name, canonical_name) prioritizes display name in output
+  - ORDER BY timestamp DESC shows most recent events first
+  - Separate getEventParticipants function allows reuse and cleaner code structure
+  - FormatTimestamp helper uses "2006-01-02 15:04:05" layout for human-readable dates
+  - Text output shows filter description when filters applied
+  - Validate direction enum (sent/received/observed) early before querying
+  - Result struct includes both Count and Events array for JSON consumers
+
+---
+
+## 2026-01-11 - US-010 People command lists contacts
+- Implemented `comms people` command with three modes: list all, search, and person detail
+- List mode: `comms people` shows all contacts sorted by event count (DESC)
+- Top N mode: `comms people --top 20` limits to top N contacts by event count
+- Search mode: `comms people --search 'term'` searches by name or identifier
+- Detail mode: `comms people 'Name'` shows full details for a specific person
+- All modes support JSON output via --json flag
+- Reuses identify package functions (ListAll, Search, GetPersonByName) for consistency
+- **Files changed:**
+  - cmd/comms/main.go (added people command with list/search/detail modes)
+  - AGENTS.md (added people command patterns)
+  - scripts/ralph/prd.json (marked US-010 as passing)
+- **Learnings:**
+  - Reusing existing packages reduces duplication - identify package already had all needed functions
+  - Cobra Args: cobra.MaximumNArgs(1) allows 0 or 1 positional argument
+  - Mode switching: check len(args) to distinguish list mode (no args) from detail mode (1 arg)
+  - --top N flag is simple to implement when results are already sorted by desired field
+  - Text output formatting: inline identities for list view (channel:identifier), detailed for detail view
+  - Display name formatting: show [display_name] if different from canonical_name
+  - Event statistics add context: show event count and last event timestamp in listings
+  - Consistent Result struct pattern works well across all commands
+
+---
+
+## 2026-01-11 - US-011 Timeline command for temporal view
+- Created internal/timeline package with QueryTimeline function
+- Implemented `comms timeline` command with flexible date parsing (YYYY, YYYY-MM, YYYY-MM-DD)
+- Added `--today` and `--week` convenience flags for common use cases
+- Timeline aggregates events by date with breakdowns by sender, channel, and direction
+- Both JSON and text output modes with emoji calendar icons for visual appeal
+- **Files changed:**
+  - internal/timeline/timeline.go (new)
+  - cmd/comms/main.go (added timeline command)
+  - AGENTS.md (added timeline patterns)
+  - scripts/ralph/prd.json (marked US-011 as passing)
+- **Learnings:**
+  - SQLite DATE() function with 'unixepoch' and 'localtime' modifiers groups timestamps by day
+  - Flexible date parsing: Try multiple time.Parse layouts in sequence (YYYY-MM-DD, YYYY-MM, YYYY)
+  - Time range boundaries: Use time.Date() with AddDate() for precise start/end (exclusive end)
+  - Week calculation: Convert Sunday from 0 to 7, then subtract (weekday-1) to find Monday
+  - Map-based aggregation: Use map[string]int for counting by sender/channel/direction
+  - Two-pass query pattern: First pass for detailed breakdown, second pass for accurate totals
+  - Avoid shadowing err variable in if statements - declare once at function level or use := each time
+  - cobra.MaximumNArgs(1) allows optional positional argument (0 or 1)
+  - Flag precedence: Check --today, then --week, then positional arg for flexible UX
+  - Empty results handling: Show helpful "No events found" message instead of empty output
+
+---
+
+## 2026-01-11 - US-012 Tags command for soft tagging
+- Created internal/tag package with ListAll, ListByType, ListByEvent, Add, AddBulk, Delete functions
+- Implemented `comms tag list` command with optional --type filter
+- Implemented `comms tag add` command with two modes:
+  - Single event mode: --event <id> --tag <type:value>
+  - Bulk mode: --person/--channel/--since/--until filters with --tag <type:value>
+- Tag types are validated against enum: topic, entity, emotion, project, context
+- Tags use 'type:value' format (e.g., 'project:htaa', 'context:business')
+- Duplicate tag detection prevents same tag being added twice to same event
+- Tags support confidence scores (0.0-1.0) for analysis-discovered tags via --confidence flag
+- Source field tracks origin: 'user' for manual tags, 'analysis' for AI-discovered tags
+- JSON output support via --json flag for all tag commands
+- **Files changed:**
+  - internal/tag/tag.go (new)
+  - cmd/comms/main.go (added tag command with list and add subcommands)
+  - AGENTS.md (added tag usage examples and patterns)
+  - scripts/ralph/prd.json (marked US-012 as passing)
+- **Learnings:**
+  - Tag validation should happen early - check tag type against valid enum before database operations
+  - Duplicate detection query: `SELECT EXISTS(SELECT 1 FROM tags WHERE event_id = ? AND tag_type = ? AND value = ?)`
+  - Bulk tagging reuses EventFilter pattern from query package for consistency
+  - buildEventFilterQuery() builds dynamic SQL based on provided filters (person, channel, time range)
+  - Skip duplicates silently in bulk mode - don't fail entire operation if one event already has the tag
+  - Tag list shows event preview (channel, content snippet) for context when viewing tags
+  - TagWithEvent struct joins tags with events table for richer display in list command
+  - Use sql.NullFloat64 for optional confidence field that can be NULL
+  - SplitN with limit 2 for parsing 'type:value' allows colons in value part
+  - Return count of events tagged in bulk mode for user feedback
+
+---
+
+## 2026-01-11 - US-013 DB query command for raw SQL access
+- Implemented `comms db query <sql>` command for direct SQL access to comms.db
+- Default behavior is read-only - only SELECT queries allowed without --write flag
+- Mutation detection checks for INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE keywords
+- Added --write flag to explicitly allow mutation queries for safety
+- Supports both text output (tab-separated table) and JSON output via --json flag
+- Dynamic column detection using rows.Columns() works with any query schema
+- Results returned as []map[string]interface{} for flexible handling
+- Text output formats as table with column headers, separator line, and row count
+- Handles NULL values by displaying "NULL" in text output
+- Converts []byte values to strings when appropriate for text fields
+- **Files changed:**
+  - cmd/comms/main.go (added db command with query subcommand)
+  - AGENTS.md (added raw SQL query examples and patterns)
+  - scripts/ralph/prd.json (marked US-013 as passing)
+- **Learnings:**
+  - Mutation detection pattern: Check uppercase SQL with strings.HasPrefix for safety keywords
+  - Dynamic query results: Use []interface{} for values and []interface{} for value pointers when scanning
+  - Type assertion for []byte to string conversion needed for text fields from SQLite
+  - rows.Columns() provides column names dynamically for any query
+  - cobra.ExactArgs(1) ensures exactly one positional argument (the SQL query)
+  - Text output uses strings.Join with tab separator for simple table formatting
+  - Result struct with Rows []map[string]interface{} allows flexible JSON output
+  - Safety-first approach: Require explicit --write flag for mutations prevents accidents
+  - Error handling at each step: db open, query execution, column retrieval, row scanning
+  - defer rows.Close() and defer database.Close() ensure cleanup even on errors
+
+---
+
+## 2026-01-11 - US-014 Gmail adapter pulls events from gogcli
+- Created internal/adapters/gmail.go implementing Adapter interface
+- Syncs Gmail threads and messages via gogcli command-line tool
+- Maps Gmail messages to comms events with proper threading via thread_id
+- Extracts participants from to/from/cc headers and creates persons/identities
+- Supports incremental sync using 'after:YYYY/MM/DD' query syntax
+- Determines message direction via SENT label in labelIds array
+- Added Gmail adapter to sync orchestration in internal/sync/sync.go
+- **Files changed:**
+  - internal/adapters/gmail.go (new)
+  - internal/sync/sync.go (added Gmail adapter case)
+  - AGENTS.md (added Gmail adapter patterns)
+  - scripts/ralph/prd.json (marked US-014 as passing)
+- **Learnings:**
+  - exec.LookPath() validates command availability before creating adapter
+  - gogcli called via exec.CommandContext with --json flag for structured output
+  - Gmail search query uses 'after:YYYY/MM/DD' format for date-based filtering
+  - Gmail API returns timestamps in milliseconds, must divide by 1000 for Unix seconds
+  - Email address parsing handles both "Name <email>" and plain "email" formats using string manipulation
+  - Gmail threads contain array of messages, each message becomes separate event
+  - Direction determined by checking if "SENT" exists in message.LabelIDs array
+  - Body extraction recursively searches payload.Parts for text/plain or text/html MIME types
+  - Attachments detected by checking payload.Filename field recursively through parts
+  - Email addresses stored as identities with channel='email' for person resolution
+  - Type assertions required when reading config.Options map[string]interface{} - use two-value ok pattern
+  - Headers stored in array format, converted to map[string]string for easy access
+  - Subject included in event content along with body text
+  - Participant roles: sender (from), recipient (to), cc (cc field)
+  - getOrCreatePersonByEmail handles identity lookup and person creation atomically
+  - Warning messages printed for individual thread failures, but sync continues for other threads
+  - content_types array includes "attachment" when hasAttachments returns true
+  - Email used as canonical_name for new persons (user can update with display name later)
+
+---
+
+## 2026-01-11 - US-015 SKILL.md for Nexus integration
+- SKILL.md was already complete and met all acceptance criteria
+- Frontmatter contains nexus metadata with emoji, OS requirements, binaries, and install methods
+- All commands documented across Setup, Sync, Query, Identity Management, and Tags sections
+- Bootstrap section provides step-by-step instructions for AI agents
+- Tips for Agents section includes example workflow patterns
+- **Files changed:**
+  - scripts/ralph/prd.json (marked US-015 as passing)
+  - scripts/ralph/progress.txt (added US-015 learnings)
+- **Learnings:**
+  - SKILL.md is user-facing documentation that doubles as machine-readable skill definition
+  - Nexus skill format uses YAML frontmatter with metadata object for integration
+  - metadata.nexus.emoji provides visual identifier in Nexus UI
+  - metadata.nexus.requires.bins declares binary dependencies for installation validation
+  - metadata.nexus.install array supports multiple installation methods (brew, go, etc.)
+  - Bootstrap section should be concrete and executable (not just conceptual)
+  - AI agent tips should include realistic example queries with expected workflows
+  - SKILL.md lives at project root for easy discovery by both humans and tooling
+
+---
+
+## 2026-01-13 - US-016 Add threads table to schema
+- Added threads table to schema.sql with all required fields (id, channel, name, source_adapter, source_id, parent_thread_id, created_at, updated_at)
+- Added UNIQUE constraint on (source_adapter, source_id) to prevent duplicate thread imports
+- Created three indexes: idx_threads_channel, idx_threads_parent, idx_threads_name
+- Incremented schema version from 1 to 2
+- Verified go build succeeds and comms init applies schema without error
+- **Files changed:**
+  - internal/db/schema.sql (added threads table and indexes, incremented version to 2)
+  - scripts/ralph/prd.json (marked US-016 as passing)
+- **Learnings:**
+  - Threads table is generic container for chats, email threads, channels, sessions across all adapters
+  - No is_group field - group status derived from event_participants (per design doc section 2)
+  - Parent thread support via self-referencing foreign key (for Slack/Discord thread-in-channel pattern)
+  - Schema version uses INSERT OR IGNORE which won't update existing databases, but CREATE TABLE IF NOT EXISTS allows safe schema evolution
+  - Fresh databases get version 2, existing databases get new table but keep version 1 (acceptable)
+  - Positioning threads table before sync_watermarks logically groups related tables
+  - UNIQUE(source_adapter, source_id) ensures each external thread imported exactly once
+
+---
+
+## 2026-01-13 - US-017 Add attachments table to schema
+- Added attachments table to schema.sql with all required fields from design document
+- Created table with: id (PK), event_id (FK CASCADE), filename, mime_type, size_bytes
+- Added type hints: media_type (image/video/audio/document/sticker/link)
+- Added storage fields: storage_uri, storage_type (local/s3/url/inline)
+- Added deduplication support: content_hash field
+- Added source tracking: source_id for original attachment ID from source system
+- Added metadata_json for extensible metadata (width/height, duration, etc.)
+- Created four indexes: event_id, mime_type, media_type, content_hash
+- Incremented schema version from 2 to 3
+- Verified go build succeeds and comms init applies schema without error
+- **Files changed:**
+  - internal/db/schema.sql (added attachments table and indexes, incremented version to 3)
+  - scripts/ralph/prd.json (marked US-017 as passing)
+  - scripts/ralph/progress.txt (added US-017 learnings)
+- **Learnings:**
+  - Attachments table matches schema design document section 4 exactly
+  - Foreign key with ON DELETE CASCADE ensures orphaned attachment records are cleaned up
+  - Positioned attachments table immediately after threads table for logical grouping
+  - media_type provides queryable categorization (image/video/audio/etc.)
+  - storage_uri supports multiple storage backends (file://, s3://, https://)
+  - content_hash enables deduplication across events with same attachment
+  - metadata_json allows flexible storage of format-specific metadata without schema changes
+  - source_id preserves original attachment ID from source system for idempotent imports
+  - Schema version incremented in INSERT OR IGNORE statement at end of schema.sql
+  - Table comments match design document for clarity
+
+---
+
+## 2026-01-13 - US-018 Add conversation abstraction tables to schema
+- Added conversation_definitions table to define chunking strategies (time_gap, thread, session, daily, persona_pair, custom)
+- Added conversations table to store chunked groups of events with time bounds and stats
+- Added conversation_events mapping table with position tracking for event ordering
+- Incremented schema version from 6 to 7
+- Verified go build succeeds and comms init applies schema without error
+- **Files changed:**
+  - internal/db/schema.sql (added three conversation tables, indexes, incremented version to 7)
+  - AGENTS.md (added conversation patterns to Gotchas and updated Schema Quick Reference)
+  - scripts/ralph/prd.json (marked US-018 as passing)
+  - scripts/ralph/progress.txt (added US-018 learnings)
+- **Learnings:**
+  - Conversation abstraction uses mapping table pattern - events remain immutable with no conversation_id FK
+  - conversation_definitions.config_json stores strategy-specific parameters (e.g., gap_seconds for time_gap)
+  - Conversations can span multiple threads/channels by setting channel=NULL and thread_id=NULL
+  - Same events can belong to multiple conversations with different chunking strategies
+  - conversation_events.position field (1-indexed) maintains order within conversation
+  - Foreign key CASCADE on conversation_events ensures cleanup when conversation deleted
+  - Indexes on definition_id, channel, thread_id, and time range support common query patterns
+  - Design follows schema document section 5 exactly - flexible, queryable, no event mutation required
+  - Three tables work together: definitions (how to chunk) → conversations (chunks) → conversation_events (membership)
+
+---
+
+## 2026-01-13 - US-019 Add analysis framework tables to schema
+- Added analysis_types table to define LLM-based analyses with prompt templates and output configuration
+- Added analysis_runs table to track execution per (analysis_type, conversation) pair
+- Added facets table to store extracted queryable values from structured analyses
+- Created comprehensive indexes for type, conversation, status, facet_type+value, person_id, and value
+- Incremented schema version from 7 to 8
+- Verified go build succeeds
+- **Files changed:**
+  - internal/db/schema.sql (added three analysis tables with indexes, incremented version to 8)
+  - scripts/ralph/prd.json (marked US-019 as passing)
+  - AGENTS.md (added analysis framework patterns to Gotchas and updated Schema Quick Reference)
+  - scripts/ralph/progress.txt (added US-019 learnings)
+- **Learnings:**
+  - Analysis framework supports two output modes: structured (extracts to facets) and freeform (stores in output_text)
+  - facets_config_json defines extraction rules using json_path for structured analyses (NULL for freeform)
+  - No raw LLM JSON completion storage - facets ARE the parsed output (saves storage, simplifies queries)
+  - UNIQUE(analysis_type_id, conversation_id) constraint ensures one analysis run per conversation per type
+  - Facets table has CASCADE delete on both analysis_run_id and conversation_id for automatic cleanup
+  - person_id on facets allows attribution: "who mentioned this entity/topic"
+  - confidence and metadata_json fields support nuanced extraction results
+  - Five indexes on facets table enable efficient queries by type+value, conversation, analysis run, person, and value
+  - Design follows schema document section 6 exactly - generic, extensible, queryable without schema migrations
+  - Adding new analysis types requires only INSERT into analysis_types, no schema changes
+  - analysis_runs.status tracks lifecycle: pending → running → completed/failed/blocked
+  - retry_count and error_message fields support robust error handling and retry logic
+
+---
+
+## 2026-01-13 - US-020 Add embeddings table to schema
+- Added embeddings table to schema.sql with all required fields from design document
+- Created table with: id (PK), entity_type, entity_id, model, embedding_blob (BLOB), dimension, source_text_hash, created_at
+- Added UNIQUE constraint on (entity_type, entity_id, model) to allow same entity with multiple models
+- Created two indexes: idx_embeddings_entity (entity_type+entity_id) and idx_embeddings_model
+- Incremented schema version from 8 to 9
+- Verified go build succeeds
+- **Files changed:**
+  - internal/db/schema.sql (added embeddings table and indexes, incremented version to 9)
+  - scripts/ralph/prd.json (marked US-020 as passing)
+  - AGENTS.md (added embeddings patterns to Gotchas and updated Schema Quick Reference)
+  - scripts/ralph/progress.txt (added US-020 learnings)
+- **Learnings:**
+  - Embeddings table matches schema design document section 7 exactly
+  - Positioned embeddings table after analysis framework tables for logical grouping
+  - entity_type enum supports: event, conversation, facet, person, thread (any entity can be embedded)
+  - embedding_blob stores binary vector as little-endian float64 array (BLOB type in SQLite)
+  - dimension field records vector dimensionality (768, 1024, etc.) for proper deserialization
+  - source_text_hash enables change detection - can check if source changed and re-embed if needed
+  - UNIQUE(entity_type, entity_id, model) allows same entity embedded with different models side-by-side
+  - Two indexes optimize common access patterns: lookup by entity and filter by model
+  - Embeddings are independent from entities - no foreign keys, enables embedding anything
+  - Schema version incremented in INSERT OR IGNORE statement at end of schema.sql
+
+---
+
+## 2026-01-13 - US-021 Eve adapter creates threads from chats
+- Modified Eve adapter to sync chats table to threads table before syncing messages
+- Added syncChats function that queries Eve chats and creates thread records
+- Thread ID format: adapter_name:source_id (e.g., "imessage:chat123")
+- Thread name prefers chat_name from Eve, falls back to chat_identifier
+- Added ThreadsCreated and ThreadsUpdated fields to SyncResult struct
+- Updated sync output display to show thread creation/update counts
+- Events already linked to threads via existing thread_id field (no event table changes needed)
+- Incremental sync maintains thread references through upsert pattern
+- Verified go build succeeds
+- **Files changed:**
+  - internal/adapters/eve.go (added syncChats function, integrated into Sync flow)
+  - internal/adapters/adapter.go (added ThreadsCreated/ThreadsUpdated to SyncResult)
+  - internal/sync/sync.go (added thread counts to AdapterResult and job progress)
+  - cmd/comms/main.go (added thread counts to sync output display)
+  - AGENTS.md (added thread sync patterns to Gotchas)
+  - scripts/ralph/progress.txt (added US-021 learnings)
+- **Learnings:**
+  - Thread sync happens before message sync to ensure thread metadata is available
+  - Use ON CONFLICT DO UPDATE for idempotent thread upserts (safe for repeated syncs)
+  - Thread creation is separate from message sync for clean separation of concerns
+  - Deterministic thread IDs (adapter:source_id) enable consistent references across syncs
+  - Thread name can be updated on subsequent syncs if chat_name changes in Eve
+  - No need to modify events table - thread_id already exists and is populated correctly
+  - Messages query already uses chat_identifier as thread_id via JOIN with chats table
+  - SyncResult struct extended without breaking existing adapter implementations
+  - Perf tracking includes separate timings for chats.query and chats.tx_commit
+  - Thread sync is a separate transaction from message sync for independent failure handling
+
+
+---
+
+---
+
+## 2026-01-13 - US-023 Eve adapter syncs reactions as events
+- Added syncReactions function to Eve adapter to sync reactions from Eve's reactions table
+- Created events with content_types=['reaction'] and emoji content (❤️, 👍, 👎, 😂, ‼️, ❓)
+- Used reply_to field to reference the original message that was reacted to
+- Mapped iMessage reaction_type integers to emojis via mapReactionType helper function
+- Added ReactionsCreated and ReactionsUpdated fields to SyncResult and AdapterResult structs
+- Updated sync output display to show reaction counts in CLI and JSON
+- Verified go build succeeds
+- **Files changed:**
+  - internal/adapters/eve.go (added syncReactions function and mapReactionType helper)
+  - internal/adapters/adapter.go (added ReactionsCreated/ReactionsUpdated to SyncResult)
+  - internal/sync/sync.go (added reaction counts to AdapterResult and job progress)
+  - cmd/comms/main.go (added reaction counts to sync output display)
+  - scripts/ralph/prd.json (marked US-023 as passing)
+- **Learnings:**
+  - Reactions follow same pattern as messages/attachments: query Eve, transaction, upsert
+  - Reactions are events with special content_type: ["reaction"]
+  - reply_to field creates reference chain from reaction to original message
+  - iMessage reaction_type enum: 2000=❤️, 2001=👍, 2002=👎, 2003=😂, 2004=‼️, 2005=❓
+  - Reactions use same incremental sync watermark as messages for consistency
+  - Reactions share contactMap and mePersonID for participant resolution
+  - Reaction sync happens after messages but uses message timestamps for watermark filtering
+  - Reaction direction determined by is_from_me flag (sent/received)
+  - Fallback for unknown reaction types uses "reaction:N" format for forward compatibility
+  - SyncResult and AdapterResult structs extended without breaking existing code
+
+## 2026-01-13 - US-022 Eve adapter imports attachment metadata
+- Added syncAttachments function to Eve adapter to sync attachment metadata
+- Queries Eve attachments table joined with messages for incremental sync timestamp filtering
+- Creates attachment records with filename, mime_type, size_bytes from Eve
+- Implemented deriveMediaType function to categorize mime_types into media_type enum (image/video/audio/document/sticker)
+- Uses eve:// URI scheme for storage_uri as placeholder (actual file paths not available in Eve)
+- Stores UTI and is_sticker flag in metadata_json for iMessage-specific metadata
+- Added AttachmentsCreated and AttachmentsUpdated fields to SyncResult and AdapterResult structs
+- Updated sync output display to show attachment counts
+- Verified go build succeeds
+- **Files changed:**
+  - internal/adapters/eve.go (added syncAttachments function and deriveMediaType helper)
+  - internal/adapters/adapter.go (added AttachmentsCreated/AttachmentsUpdated to SyncResult)
+  - internal/sync/sync.go (added attachment counts to AdapterResult and job progress)
+  - cmd/comms/main.go (added attachment counts to sync output display)
+  - AGENTS.md (added attachment sync patterns to Gotchas)
+  - scripts/ralph/prd.json (marked US-022 as passing)
+- **Learnings:**
+  - Attachment sync follows same pattern as threads/messages sync: query, transaction, upsert
+  - deriveMediaType uses mime_type prefix matching for categorization (image/, video/, audio/, etc.)
+  - Stickers detected via is_sticker flag from Eve, take precedence over mime_type
+  - Attachment ID format consistent with event ID format: adapter_name:guid
+  - storage_uri placeholder allows future enhancement without schema changes
+  - metadata_json stores source-specific fields (uti for iMessage) without polluting schema
+  - ON CONFLICT(id) DO UPDATE enables idempotent attachment sync
+  - Check for existing attachment ID before insert to distinguish created vs updated counts
+  - Attachment sync uses same incremental sync watermark as messages for consistency
+  - Deterministic attachment IDs (adapter:guid) enable consistent references across syncs
+
+---
+
+## 2026-01-13 - US-024 Time-gap conversation chunking for iMessage
+- Created internal/chunk package with Chunker interface for pluggable chunking strategies
+- Implemented TimeGapChunker with configurable gap threshold (seconds) and scope (thread/channel)
+- Added comms chunk command with three subcommands: list, seed, run
+- chunk seed creates default imessage_3hr definition (3-hour gap, thread-scoped)
+- chunk list displays all conversation definitions with strategy and config
+- chunk run executes chunking for a named definition, creating conversations and event mappings
+- Chunking splits events by time gaps, creates conversation records with time bounds and stats
+- conversation_events mapping uses 1-indexed position field for ordering
+- Events queried in timestamp order, grouped by thread_id (or globally if scope=channel)
+- Each conversation transaction inserts conversation + all event mappings atomically
+- Verified go build succeeds and comms chunk --help displays correctly
+- **Files changed:**
+  - internal/chunk/chunk.go (new - 373 lines)
+  - cmd/comms/main.go (added chunk command with list/seed/run subcommands)
+  - AGENTS.md (added chunking usage examples and patterns to Common Operations and Gotchas)
+  - scripts/ralph/prd.json (marked US-024 as passing)
+- **Learnings:**
+  - Chunker interface enables pluggable strategies: Chunk(ctx, db, definitionID) method
+  - TimeGapChunker supports two scopes: "thread" (per-thread chunking) or "channel" (global chunking)
+  - splitByTimeGap iterates events in timestamp order, starts new conversation when gap exceeds threshold
+  - conversation records include denormalized channel and thread_id for efficient querying
+  - NULL channel/thread_id values support cross-channel and cross-thread conversations
+  - CreateDefinition is idempotent - returns existing ID if definition name already exists
+  - GetChunkerForDefinition uses strategy field to instantiate appropriate chunker type
+  - config_json marshaled as JSON, unmarshaled into strategy-specific config structs
+  - Event struct in chunk package minimal - only id, timestamp, thread_id, channel needed
+  - Conversation.events slice accumulates events before bulk insert in transaction
+  - position field in conversation_events enables ordered retrieval without timestamp sorting
+  - Same events can belong to multiple conversations (different definitions chunk differently)
+  - chunk run accepts definition name as positional arg or --definition flag for flexibility
+  - ListDefinitions returns all definitions ordered by name for consistent display
+
+---
+
+## 2026-01-13 - US-025 Thread-based conversation chunking for Gmail
+- Implemented ThreadChunker in internal/chunk package following Chunker interface
+- ThreadChunker creates one conversation per unique thread_id (no time-gap logic)
+- Added ThreadConfig struct (empty - no additional config needed for thread-based chunking)
+- Updated chunk seed command to create gmail_thread definition alongside imessage_3hr
+- Added "thread" strategy case to GetChunkerForDefinition switch statement
+- Thread-based chunking queries events WHERE thread_id IS NOT NULL
+- Events grouped by thread_id in map, then one conversation created per group
+- Verified go build succeeds
+- **Files changed:**
+  - internal/chunk/chunk.go (added ThreadChunker, ThreadConfig, insertConversation method)
+  - cmd/comms/main.go (added gmail_thread definition to chunk seed command)
+  - AGENTS.md (added ThreadChunker patterns to Common Operations and Gotchas)
+  - scripts/ralph/prd.json (marked US-025 as passing)
+- **Learnings:**
+  - ThreadChunker is simpler than TimeGapChunker - no gap calculation, just group by thread_id
+  - Thread-based chunking perfect for Gmail since Google API provides native thread_id
+  - Empty config struct (ThreadConfig{}) is valid - marshals to "{}" in JSON
+  - Query filters WHERE thread_id IS NOT NULL to exclude events without thread metadata
+  - eventsByThread map accumulates events before creating conversations (same pattern as TimeGapChunker)
+  - insertConversation method for ThreadChunker is nearly identical to TimeGapChunker version
+  - conversation.thread_id field always populated for thread-based chunking (not NULL)
+  - GetChunkerForDefinition switch statement is the registry of available chunking strategies
+  - chunk seed command now creates 2 definitions: imessage_3hr (time_gap) and gmail_thread (thread)
+  - Strategy field in conversation_definitions table determines which chunker to instantiate
+

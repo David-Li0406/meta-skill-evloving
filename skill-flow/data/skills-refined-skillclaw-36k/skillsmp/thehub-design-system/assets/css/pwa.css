@@ -1,0 +1,380 @@
+/**
+ * TheHUB V3 - PWA Styles
+ * Styles for PWA-specific UI elements
+ */
+
+/* ========== SAFE AREA HANDLING (Notch, etc) ========== */
+/* NOTE: Header safe-area is now ONLY applied in standalone PWA mode (see below)
+   to prevent the header from becoming too tall in regular browser mode */
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  /* Bottom nav needs safe-area in all modes for home indicator */
+  .mobile-nav,
+  .nav-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Side padding for landscape notch devices */
+  .main-content {
+    padding-left: max(var(--container-padding), env(safe-area-inset-left));
+    padding-right: max(var(--container-padding), env(safe-area-inset-right));
+  }
+}
+
+/* ========== PWA INSTALLED STATE ========== */
+body.pwa-installed .header-install,
+body.pwa-installed .pwa-install-prompt {
+  display: none !important;
+}
+
+/* Hide browser-specific UI hints when installed */
+body.pwa-installed .browser-hint {
+  display: none;
+}
+
+/* ========== INSTALL BUTTON ========== */
+.pwa-install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.pwa-install-btn:hover {
+  background: var(--color-accent-hover);
+  transform: scale(1.02);
+}
+
+.pwa-install-btn.hidden {
+  display: none;
+}
+
+.pwa-install-icon {
+  font-size: var(--text-md);
+}
+
+.hide-mobile {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .hide-mobile {
+    display: inline;
+  }
+}
+
+/* ========== UPDATE NOTIFICATION ========== */
+.pwa-update-notification {
+  position: fixed;
+  bottom: calc(var(--mobile-nav-height) + var(--space-md) + env(safe-area-inset-bottom, 0px));
+  left: var(--space-md);
+  right: var(--space-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-toast);
+  transform: translateY(120%);
+  transition: transform var(--transition-base);
+}
+
+.pwa-update-notification.visible {
+  transform: translateY(0);
+}
+
+.pwa-update-notification span {
+  flex: 1;
+  font-size: var(--text-sm);
+}
+
+.pwa-update-notification button {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.pwa-update-notification button:first-of-type {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+.pwa-update-notification button:last-of-type {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 600px) {
+  .pwa-update-notification {
+    left: auto;
+    right: var(--space-lg);
+    max-width: 400px;
+  }
+}
+
+/* ========== iOS INSTALL MODAL ========== */
+.pwa-ios-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: var(--z-modal);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.pwa-ios-modal.visible {
+  opacity: 1;
+}
+
+.pwa-ios-modal-content {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--space-xl);
+  padding-bottom: calc(var(--space-xl) + env(safe-area-inset-bottom, 0px));
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform var(--transition-base);
+  position: relative;
+}
+
+.pwa-ios-modal.visible .pwa-ios-modal-content {
+  transform: translateY(0);
+}
+
+.pwa-ios-modal-close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-sunken);
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.pwa-ios-modal-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+}
+
+.pwa-ios-modal h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-sm);
+}
+
+.pwa-ios-modal p {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.pwa-ios-modal ol {
+  text-align: left;
+  padding-left: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.pwa-ios-modal li {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-sm);
+  line-height: 1.6;
+}
+
+.pwa-ios-share-icon {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--color-accent-light);
+  color: var(--color-accent-text);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+}
+
+.pwa-ios-modal-btn {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-radius: var(--radius-md);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+}
+
+/* ========== INSTALL PROMPT BANNER ========== */
+.pwa-install-prompt {
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+  color: white;
+  padding: var(--space-md) var(--space-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pwa-install-prompt-icon {
+  font-size: var(--text-2xl);
+}
+
+.pwa-install-prompt-text {
+  flex: 1;
+}
+
+.pwa-install-prompt-text strong {
+  display: block;
+  font-weight: var(--weight-semibold);
+}
+
+.pwa-install-prompt-text span {
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}
+
+.pwa-install-prompt-btn {
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-medium);
+  transition: background var(--transition-fast);
+}
+
+.pwa-install-prompt-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.pwa-install-prompt-close {
+  padding: var(--space-xs);
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.pwa-install-prompt-close:hover {
+  opacity: 1;
+}
+
+/* ========== STANDALONE MODE ADJUSTMENTS ========== */
+@media (display-mode: standalone) {
+  /* Header safe-area handling - only in PWA mode, not regular browser
+     This adds padding for notch/status bar AND increases height to match */
+  .header {
+    padding-top: env(safe-area-inset-top, 0px);
+    /* Height increases to account for safe-area padding */
+    height: calc(var(--header-height, 60px) + env(safe-area-inset-top, 0px));
+  }
+
+  /* Hide install prompts */
+  .pwa-install-prompt,
+  .pwa-install-btn,
+  .header-install {
+    display: none !important;
+  }
+}
+
+/* iOS standalone mode */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html {
+    height: 100%;
+    height: -webkit-fill-available;
+  }
+
+  body {
+    min-height: 100%;
+    min-height: -webkit-fill-available;
+    /* Push ALL content below fixed header */
+    padding-top: calc(var(--header-height, 60px) + env(safe-area-inset-top, 0px));
+  }
+
+  /* Main content fills viewport height minimum */
+  .main-content,
+  .gs-main-content,
+  .welcome-page,
+  main {
+    min-height: calc(100vh - var(--header-height, 60px) - var(--mobile-nav-height, 64px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100dvh - var(--header-height, 60px) - var(--mobile-nav-height, 64px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Ensure bottom nav stays fixed at bottom in standalone mode */
+  .nav-bottom {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    transform: translate3d(0, 0, 0); /* Force GPU layer */
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+
+  /* Header should also be fixed */
+  .header,
+  .gs-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9998 !important;
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+/* LANDSCAPE standalone mode - hide bottom nav, use sidebar instead */
+@media (display-mode: standalone) and (orientation: landscape) and (max-width: 1023px),
+       (display-mode: fullscreen) and (orientation: landscape) and (max-width: 1023px) {
+  /* Hide bottom nav in landscape - sidebar is used instead */
+  .nav-bottom,
+  .mobile-nav {
+    display: none !important;
+  }
+
+  /* Sidebar must be flush to left edge in landscape standalone
+     Position accounts for header height + safe-area */
+  .sidebar {
+    position: fixed !important;
+    top: calc(var(--header-height, 60px) + env(safe-area-inset-top, 0px)) !important;
+    left: 0 !important;
+    right: auto !important;
+    margin: 0 !important;
+    transform: none !important;
+    width: 64px !important;
+  }
+
+  /* App layout padding for sidebar */
+  .app-layout {
+    padding-left: 64px !important;
+    margin-left: 0 !important;
+  }
+
+  /* Recalculate height without mobile-nav-height */
+  .main-content,
+  .gs-main-content,
+  main {
+    min-height: calc(100vh - var(--header-height, 60px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100dvh - var(--header-height, 60px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-left: var(--landscape-sidebar-gap, 4px) !important;
+  }
+}

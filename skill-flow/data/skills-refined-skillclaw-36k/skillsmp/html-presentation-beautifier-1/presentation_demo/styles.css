@@ -1,0 +1,443 @@
+/* McKinsey/BCG Style Presentation CSS */
+
+/* Color Variables */
+:root {
+    --primary-bg: #FFFFFF;
+    --header-bg: #000000;
+    --primary-accent: #F85d42;
+    --secondary-accent: #74788d;
+    --deep-blue: #556EE6;
+    --green: #34c38f;
+    --blue: #50a5f1;
+    --yellow: #f1b44c;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    --text-light: #FFFFFF;
+}
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    overflow: hidden;
+}
+
+/* Navigation Bar */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--header-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    z-index: 1000;
+}
+
+.nav-btn {
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #e04a31;
+}
+
+.nav-btn:disabled {
+    background-color: var(--secondary-accent);
+    cursor: not-allowed;
+}
+
+.slide-counter {
+    color: var(--text-light);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Presentation Container */
+.presentation-container {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* Slide Styles */
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 60px 80px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    overflow-y: auto;
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+}
+
+/* Title Slide */
+.title-slide {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.title {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--primary-accent);
+    margin-bottom: 20px;
+}
+
+.date {
+    font-size: 20px;
+    color: var(--secondary-accent);
+    font-weight: 400;
+}
+
+/* Header Bar */
+.header-bar {
+    background-color: var(--header-bg);
+    padding: 20px 40px;
+    margin: -60px -80px 40px -80px;
+}
+
+.slide-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: -0.5px;
+}
+
+/* Slide Content */
+.slide-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Key Points */
+.key-points {
+    list-style: none;
+    padding: 0;
+}
+
+.key-point {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 20px 0;
+    border-bottom: 2px solid var(--secondary-accent);
+    margin-bottom: 10px;
+}
+
+.key-point::before {
+    content: "✓ ";
+    color: var(--primary-accent);
+    margin-right: 15px;
+    font-weight: 700;
+}
+
+/* Two-Column Layout */
+.two-column {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+.column {
+    flex: 1;
+}
+
+.chart-container {
+    min-height: 400px;
+}
+
+.chart-caption {
+    text-align: center;
+    font-size: 14px;
+    color: var(--secondary-accent);
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Section Header */
+.section-header {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.accent-text {
+    color: var(--primary-accent);
+}
+
+/* Body Text */
+.body-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+/* Bullet Points */
+.bullet-points {
+    list-style: none;
+    padding: 0;
+}
+
+.bullet-points li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 12px 0 12px 30px;
+    position: relative;
+}
+
+.bullet-points li::before {
+    content: "•";
+    color: var(--primary-accent);
+    font-size: 24px;
+    position: absolute;
+    left: 0;
+    top: 8px;
+}
+
+/* Data Table */
+.data-table-container {
+    margin: 40px 0;
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.data-table th {
+    background-color: var(--header-bg);
+    color: var(--text-light);
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.data-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.data-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.data-table .positive {
+    color: var(--green);
+    font-weight: 600;
+}
+
+.data-table .negative {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Conclusions Grid */
+.conclusions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.conclusion-card {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.card-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+/* Recommendations Box */
+.recommendations-box {
+    background-color: #fff3e0;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--yellow);
+    margin: 30px 0;
+}
+
+/* Numbered List */
+.numbered-list {
+    list-style: none;
+    counter-reset: recommendation-counter;
+    padding: 0;
+}
+
+.numbered-list li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 15px 0 15px 40px;
+    position: relative;
+    counter-increment: recommendation-counter;
+}
+
+.numbered-list li::before {
+    content: counter(recommendation-counter);
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Full-screen Button */
+.fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--header-bg);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: background-color 0.3s ease;
+}
+
+.fullscreen-btn:hover {
+    background-color: var(--secondary-accent);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .slide {
+        padding: 60px 40px;
+    }
+
+    .two-column {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .conclusions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .title {
+        font-size: 48px;
+    }
+
+    .slide-title {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 20px;
+    }
+
+    .slide {
+        padding: 40px 20px;
+    }
+
+    .title {
+        font-size: 36px;
+    }
+
+    .slide-title {
+        font-size: 28px;
+    }
+
+    .subtitle {
+        font-size: 24px;
+    }
+
+    .key-point {
+        font-size: 18px;
+    }
+}
+
+/* Scrollbar Styles */
+.slide::-webkit-scrollbar {
+    width: 8px;
+}
+
+.slide::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.slide::-webkit-scrollbar-thumb {
+    background: var(--secondary-accent);
+    border-radius: 4px;
+}
+
+.slide::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-accent);
+}

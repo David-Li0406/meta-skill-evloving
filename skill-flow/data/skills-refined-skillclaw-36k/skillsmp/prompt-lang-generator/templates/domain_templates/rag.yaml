@@ -1,0 +1,71 @@
+# RAG Domain Template
+# ===================
+# 検索拡張プロンプト、ドキュメントQA、知識ベース検索向け
+
+domain: "rag"
+applicable_tasks:
+  - document_qa
+  - knowledge_search
+  - citation_generation
+  - fact_checking
+  - multi_document_synthesis
+
+# --- ドメイン固有の制約 ---
+domain_constraints:
+  - "回答は必ず検索結果に基づくこと（ハルシネーション禁止）"
+  - "情報源を明示的に引用すること（文献番号、URL等）"
+  - "検索結果に回答がない場合は「情報なし」と明示"
+  - "複数ソースがある場合は信頼度順に整理"
+
+# --- ドメイン固有の評価軸 ---
+domain_rubric:
+  - name: "groundedness"
+    description: "回答が検索結果に基づいているか"
+    scale: "1-5"
+    criteria:
+      5: "全ての主張に引用あり"
+      3: "主要主張に引用あり、一部推測"
+      1: "検索結果と無関係な回答"
+      
+  - name: "relevance"
+    description: "質問への関連性"
+    scale: "1-5"
+    criteria:
+      5: "質問に直接回答"
+      3: "部分的に回答"
+      1: "質問と無関係"
+      
+  - name: "completeness"
+    description: "回答の網羅性"
+    scale: "1-5"
+
+# --- ドメイン固有のフォーマット ---
+domain_format: |
+  ```json
+  {
+    "answer": "回答本文",
+    "citations": [
+      {
+        "id": "[1]",
+        "source": "ドキュメント名/URL",
+        "excerpt": "引用箇所",
+        "relevance_score": 0.0-1.0
+      }
+    ],
+    "confidence": "high | medium | low",
+    "no_answer_reason": null | "検索結果に情報なし"
+  }
+  ```
+
+# --- @context 推奨設定 ---
+context_recommendations:
+  - type: "mcp"
+    tool: "gnosis.tool(\"search\")"
+    priority: "HIGH"
+    description: "Gnōsis 知識ベースから関連論文を検索"
+    
+  - type: "dir"
+    path: "docs/"
+    filter: "*.md"
+    priority: "MEDIUM"
+    description: "ローカルドキュメントを検索"

@@ -1,0 +1,51 @@
+{
+  "name": "string-replace",
+  "description": "Replace pattern in string at specified path using regex substitution",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'data.message')"
+    },
+    "pattern": {
+      "type": "string",
+      "required": true,
+      "description": "Regex pattern to replace (e.g., '\\d+' for digits, 'hello' for literal text)"
+    },
+    "replacement": {
+      "type": "string",
+      "required": true,
+      "description": "String to replace matches with (can be empty string to delete matches)"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Modified object with pattern replaced in string at path, or original object if path doesn't exist or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Replace all digits with X",
+      "input": {"data": "Phone: 123-456-7890"},
+      "args": {"path": "data", "pattern": "\\d", "replacement": "X"},
+      "output": {"data": "Phone: XXX-XXX-XXXX"}
+    },
+    {
+      "description": "Replace word in nested string",
+      "input": {"user": {"message": "Hello world!"}},
+      "args": {"path": "user.message", "pattern": "world", "replacement": "universe"},
+      "output": {"user": {"message": "Hello universe!"}}
+    },
+    {
+      "description": "Delete matches with empty replacement",
+      "input": {"text": "Remove123all456numbers789"},
+      "args": {"path": "text", "pattern": "\\d+", "replacement": ""},
+      "output": {"text": "Removeallnumbers"}
+    }
+  ],
+  "tags": ["string", "replace", "regex", "gsub", "substitution"]
+}

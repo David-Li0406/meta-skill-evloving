@@ -1,0 +1,123 @@
+{
+  "description": "Real-world example: Plugin hook for automatic Python code formatting with Black",
+  "plugin_structure": {
+    "name": "python-formatter-plugin",
+    "version": "1.0.0",
+    "path": "my-plugin/",
+    "files": [
+      ".claude-plugin/plugin.json",
+      "hooks/hooks.json",
+      "hooks/scripts/format-python.sh",
+      "README.md"
+    ]
+  },
+  "plugin_manifest_example": {
+    "path": ".claude-plugin/plugin.json",
+    "content": {
+      "name": "python-formatter-plugin",
+      "version": "1.0.0",
+      "description": "Automatically formats Python files with Black after writing/editing",
+      "author": "Your Name",
+      "hooks": "hooks/hooks.json"
+    }
+  },
+  "hook_configuration": {
+    "path": "hooks/hooks.json",
+    "content": {
+      "description": "Automatic Python formatting with Black. Runs after any Write or Edit operation on Python files.",
+      "hooks": {
+        "PostToolUse": [
+          {
+            "matcher": "Write|Edit",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/format-python.sh",
+                "timeout": 30
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "hook_script": {
+    "path": "hooks/scripts/format-python.sh",
+    "content": "#!/bin/bash\n# Plugin Hook: Python Code Formatter\n# Automatically formats Python files with Black after writing/editing\n# License: MIT\n\nset -e  # Exit on error\n\n# Color codes for output\nRED='\\033[0;31m'\nGREEN='\\033[0;32m'\nYELLOW='\\033[1;33m'\nNC='\\033[0m'  # No Color\n\n# Get plugin and project directories\nPLUGIN_HOME=\"${CLAUDE_PLUGIN_ROOT}\"\nPROJECT_HOME=\"${CLAUDE_PROJECT_DIR}\"\n\n# Setup logging\nLOG_DIR=\"${PROJECT_HOME}/.claude/logs\"\nmkdir -p \"${LOG_DIR}\"\nLOG_FILE=\"${LOG_DIR}/format-python.log\"\n\n# Function: Log message\nlog_message() {\n  echo \"[$(date +'%Y-%m-%d %H:%M:%S')] $1\" >> \"${LOG_FILE}\"\n}\n\n# Function: Check if file is Python\nis_python_file() {\n  local file=\"$1\"\n  [[ \"$file\" == *.py || \"$file\" == *.pyi ]]\n}\n\n# Function: Check if Black is installed\ncheck_black_installed() {\n  if ! command -v black &> /dev/null; then\n    echo \"${YELLOW}⚠️  Black formatter not installed${NC}\" >&2\n    echo \"   Install with: pip install black\" >&2\n    log_message \"Black not installed, skipping format\"\n    return 1\n  fi\n  return 0\nfi\n\n# Main execution\nmain() {\n  # Read hook input from stdin\n  local input\n  input=$(cat)\n\n  # Extract tool information\n  local tool_name\n  tool_name=$(echo \"$input\" | grep -o '\"tool_name\":\"[^\"]*\"' | cut -d'\"' -f4 || true)\n\n  local file_path\n  file_path=$(echo \"$input\" | grep -o '\"file_path\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4 || true)\n\n  # Validate we have required information\n  if [[ -z \"$file_path\" ]]; then\n    log_message \"No file_path in input, skipping\"\n    exit 0\n  fi\n\n  # Skip non-Python files\n  if ! is_python_file \"$file_path\"; then\n    log_message \"Not a Python file: $file_path\"\n    exit 0\n  fi\n\n  # Skip if file doesn't exist\n  if [[ ! -f \"$file_path\" ]]; then\n    log_message \"File not found: $file_path\"\n    exit 0\n  fi\n\n  # Check Black availability\n  if ! check_black_installed; then\n    exit 0  # Don't fail, just skip\n  fi\n\n  # Attempt formatting\n  local filename\n  filename=$(basename \"$file_path\")\n\n  log_message \"Formatting: $file_path\"\n\n  if black \"$file_path\" --quiet 2>/dev/null; then\n    echo \"${GREEN}✓ Formatted${NC}: $filename\" >&2\n    log_message \"Successfully formatted: $file_path\"\n    exit 0\n  else\n    echo \"${YELLOW}⚠️  Format check failed${NC}: $filename\" >&2\n    log_message \"Format check failed for: $file_path\"\n    exit 0  # Non-blocking error\n  fi\n}\n\n# Execute main function\nmain\n"
+  },
+  "behavior": {
+    "trigger": "After any Write or Edit operation on .py or .pyi files",
+    "action": "Automatically runs 'black' formatter on the file",
+    "output": "Formatted code, logged to .claude/logs/format-python.log",
+    "error_handling": "Non-blocking - if Black fails, doesn't interrupt workflow"
+  },
+  "environment_variables_used": {
+    "CLAUDE_PLUGIN_ROOT": "Path to plugin directory for script location",
+    "CLAUDE_PROJECT_DIR": "Path to project root for logging"
+  },
+  "installation": [
+    "1. Copy entire plugin directory to ~/.claude/plugins/python-formatter-plugin",
+    "2. Enable in Claude Code settings",
+    "3. Restart Claude Code",
+    "4. Verify with /hooks command"
+  ],
+  "testing": [
+    "Create a Python file with unformatted code in Claude Code",
+    "Write/Edit the file",
+    "Hook automatically triggers",
+    "Check .claude/logs/format-python.log for execution log",
+    "File should be formatted with Black"
+  ],
+  "customization": {
+    "add_black_options": "Modify black command with flags like --line-length, --target-version",
+    "support_other_formatters": "Copy script pattern for other Python formatters (autopep8, yapf)",
+    "add_configuration_file": "Read .claude/.python-formatter-config for Black options"
+  },
+  "multi_plugin_composition": {
+    "scenario": "Running with other plugins",
+    "examples": [
+      "Linter plugin: Validates code style BEFORE formatting (use PreToolUse)",
+      "Type checker plugin: Checks types AFTER formatting (use PostToolUse with different tool)",
+      "Documentation plugin: Generates docstrings (use on Write operations)"
+    ],
+    "execution_model": "All plugins' hooks execute in parallel, no guaranteed order",
+    "design_consideration": "This plugin is self-contained and doesn't depend on other hooks"
+  },
+  "advanced_features": [
+    {
+      "feature": "Configuration file",
+      "description": "Load .claude/.python-formatter-config to customize Black options per project",
+      "implementation": "Add to script: read config file and pass options to black"
+    },
+    {
+      "feature": "File pattern matching",
+      "description": "Only format files matching certain patterns (src/, tests/, etc.)",
+      "implementation": "Add path checking in hook script before formatting"
+    },
+    {
+      "feature": "Skip certain files",
+      "description": "Exclude files with .no-format suffix or in .formatignore",
+      "implementation": "Check file name/path before executing Black"
+    }
+  ],
+  "security_considerations": [
+    "Script uses ${CLAUDE_PLUGIN_ROOT} (safe) not hardcoded paths",
+    "No elevated privileges needed",
+    "Only reads/writes Python files",
+    "Logging goes to project-local logs (not system-wide)",
+    "Black is a trusted, well-known formatter"
+  ],
+  "benefits": [
+    "Automatic formatting without user action",
+    "Consistent code style across project",
+    "Works with Claude's file editing workflow",
+    "Enables multiple plugins working together",
+    "Non-blocking if Black unavailable"
+  ],
+  "limitations": [
+    "Only triggers on Write/Edit (not on Bash operations)",
+    "Depends on Black being installed",
+    "Adds slight latency after each file edit",
+    "Multiple plugins may format multiple times (acceptable overhead)"
+  ]
+}

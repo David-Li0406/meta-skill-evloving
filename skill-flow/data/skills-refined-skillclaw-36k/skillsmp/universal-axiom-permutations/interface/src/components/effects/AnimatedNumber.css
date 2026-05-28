@@ -1,0 +1,42 @@
+.animated-number {
+    display: inline-block;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.animated-number--increasing {
+    color: var(--color-positive);
+    animation: bump-up 0.3s ease-out;
+}
+
+.animated-number--decreasing {
+    color: var(--color-negative);
+    animation: bump-down 0.3s ease-out;
+}
+
+@keyframes bump-up {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes bump-down {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.95);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}

@@ -1,0 +1,187 @@
+# EKS Production Deployment Example
+# Complete pipeline for EKS deployments
+# Features: Blue-green deployment, health checks, rollback
+
+name: EKS Production Deploy
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  CLUSTER: production-cluster
+  REGION: us-east-1
+
+jobs:
+  # Build and push image
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ github.sha }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+
+  # Security scan
+  scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build.outputs.image-tag }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Deploy to staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, scan]
+    environment:
+      name: staging
+      url: https://staging.example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+      - uses: aws-actions/aws-kubectl-action@v2
+        with:
+          cluster-name: ${{ env.CLUSTER }}
+          cluster-region: ${{ env.REGION }}
+      - run: |
+          kubectl set image deployment/app \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=staging
+          kubectl rollout status deployment/app --namespace=staging --timeout=5m
+
+  # Integration tests
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+      - uses: aws-actions/aws-kubectl-action@v2
+        with:
+          cluster-name: ${{ env.CLUSTER }}
+          cluster-region: ${{ env.REGION }}
+      - name: Run integration tests
+        run: |
+          kubectl run integration-test --image=node:20 --rm -i --restart=Never -- \
+          sh -c "npm install && npm run test:integration"
+
+  # Blue-green deployment to production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, scan, integration-test]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+      - uses: aws-actions/aws-kubectl-action@v2
+        with:
+          cluster-name: ${{ env.CLUSTER }}
+          cluster-region: ${{ env.REGION }}
+      - name: Backup current deployment
+        run: |
+          kubectl get deployment app -n production -o yaml > deployment-backup.yaml
+      - name: Deploy new version
+        run: |
+          kubectl set image deployment/app \
+            app=${{ needs.build.outputs.image-tag }} \
+            --namespace=production
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/app --namespace=production --timeout=10m
+      - name: Health check
+        run: |
+          kubectl wait --for=condition=ready pod -l app=app --namespace=production --timeout=5m
+          kubectl run health-check --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          curl -f https://example.com/health || { kubectl apply -f deployment-backup.yaml; exit 1; }
+      - name: Canary traffic shift
+        run: |
+          # Gradual traffic shift (can use AWS ALB or service mesh)
+          kubectl apply -f k8s/production/canary.yaml
+
+  # Post-deployment monitoring
+  monitor:
+    name: Monitor Production
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+      - uses: aws-actions/aws-kubectl-action@v2
+        with:
+          cluster-name: ${{ env.CLUSTER }}
+          cluster-region: ${{ env.REGION }}
+      - name: Check pod health
+        run: |
+          kubectl get pods --namespace=production -l app=app
+          kubectl top pods --namespace=production -l app=app
+      - name: Check error rates
+        run: |
+          ERROR_COUNT=$(kubectl logs --namespace=production -l app=app --tail=1000 | grep -i error | wc -l)
+          if [ "$ERROR_COUNT" -gt 50 ]; then
+            echo "High error rate detected: $ERROR_COUNT"
+            exit 1
+          fi
+      - name: Create CloudWatch alert
+        run: |
+          aws cloudwatch put-metric-data \
+            --namespace Deployment \
+            --metric-name Success \
+            --value 1 \
+            --dimensions Service=app
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

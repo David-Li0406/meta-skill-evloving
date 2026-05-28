@@ -1,0 +1,323 @@
+{
+  "name": "project-status",
+  "description": "Evaluations for the project-status skill",
+  "testCases": [
+    {
+      "id": "no-config",
+      "name": "No repository configuration",
+      "input": "/project-status authentication",
+      "status": "pending",
+      "pendingReason": "Needs fixture with no repos.json",
+      "setup": {
+        "description": "No .entourage/repos.json file exists"
+      },
+      "expectedBehavior": "Returns transcript-only status with note about configuring repos",
+      "expectedOutput": {
+        "contains": [
+          "Repository verification not configured",
+          ".entourage/repos.json"
+        ],
+        "maxStatus": "Planned"
+      }
+    },
+    {
+      "id": "transcript-only",
+      "name": "Transcript evidence without repos",
+      "input": "/project-status database",
+      "status": "pending",
+      "pendingReason": "Needs fixture with transcripts but no repos.json",
+      "setup": {
+        "description": "Component mentioned in transcripts, no repos.json configured"
+      },
+      "expectedBehavior": "Returns Discussed or Planned status based on transcript evidence only",
+      "expectedOutput": {
+        "status": [
+          "Discussed",
+          "Planned"
+        ],
+        "source": "Transcripts",
+        "contains": [
+          "Maximum verifiable status is"
+        ]
+      }
+    },
+    {
+      "id": "local-only",
+      "name": "Local repo configured (no GitHub)",
+      "input": "/project-status auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with path but no github field",
+      "setup": {
+        "config": {
+          "repos": [
+            {
+              "name": "my-app",
+              "path": "~/code/my-app"
+            }
+          ]
+        },
+        "description": "repos.json has path but no github field"
+      },
+      "expectedBehavior": "Uses local-repo-check only, notes GitHub not configured",
+      "expectedOutput": {
+        "invokes": [
+          "/local-repo-check"
+        ],
+        "notInvokes": [
+          "/github-repo-check"
+        ],
+        "contains": [
+          "GitHub verification not configured"
+        ]
+      }
+    },
+    {
+      "id": "github-only",
+      "name": "GitHub repo configured (no local)",
+      "input": "/project-status auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with github but no path field",
+      "setup": {
+        "config": {
+          "repos": [
+            {
+              "name": "my-app",
+              "github": "org/my-app"
+            }
+          ]
+        },
+        "description": "repos.json has github but no path field"
+      },
+      "expectedBehavior": "Uses github-repo-check only, notes local not configured",
+      "expectedOutput": {
+        "invokes": [
+          "/github-repo-check"
+        ],
+        "notInvokes": [
+          "/local-repo-check"
+        ],
+        "contains": [
+          "Local repository not configured"
+        ]
+      }
+    },
+    {
+      "id": "both-sources",
+      "name": "Both local and GitHub configured",
+      "input": "/project-status auth dashboard",
+      "status": "pending",
+      "pendingReason": "Requires sub-skill orchestration with mocked GitHub API responses",
+      "setup": {
+        "config": {
+          "repos": [
+            {
+              "name": "my-app",
+              "path": "~/code/my-app",
+              "github": "org/my-app"
+            }
+          ]
+        },
+        "description": "Full configuration with both path and github fields"
+      },
+      "expectedBehavior": "Invokes both sub-skills and combines evidence",
+      "expectedOutput": {
+        "invokes": [
+          "/local-repo-check",
+          "/github-repo-check"
+        ],
+        "contains": [
+          "Evidence",
+          "Source"
+        ]
+      }
+    },
+    {
+      "id": "shipped-status",
+      "name": "Deployed to production",
+      "input": "/project-status website",
+      "status": "pending",
+      "pendingReason": "Needs fixture with production deployment",
+      "setup": {
+        "description": "GitHub shows production deployment for component"
+      },
+      "expectedBehavior": "Returns Shipped status with Very High confidence",
+      "expectedOutput": {
+        "status": "Shipped",
+        "confidence": "Very High",
+        "contains": [
+          "deployed",
+          "production"
+        ]
+      }
+    },
+    {
+      "id": "complete-pr-merged",
+      "name": "PR merged with CI passing",
+      "input": "/project-status feature",
+      "status": "pending",
+      "pendingReason": "Needs fixture with merged PR and CI",
+      "setup": {
+        "description": "GitHub shows merged PR with passing CI checks"
+      },
+      "expectedBehavior": "Returns Complete status with Very High confidence",
+      "expectedOutput": {
+        "status": "Complete",
+        "confidence": [
+          "Very High",
+          "High"
+        ],
+        "contains": [
+          "PR",
+          "merged",
+          "CI"
+        ]
+      }
+    },
+    {
+      "id": "complete-local-tests",
+      "name": "Local code with tests",
+      "input": "/project-status Auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with code and tests",
+      "setup": {
+        "description": "Local repo has Auth.tsx and Auth.test.tsx on main branch"
+      },
+      "expectedBehavior": "Returns Complete status with High confidence from local evidence",
+      "expectedOutput": {
+        "status": "Complete",
+        "confidence": "High",
+        "source": "Local"
+      }
+    },
+    {
+      "id": "in-progress-open-pr",
+      "name": "Open PR on GitHub",
+      "input": "/project-status feature",
+      "status": "pending",
+      "pendingReason": "Needs fixture with open PR",
+      "setup": {
+        "description": "GitHub shows open PR for the feature"
+      },
+      "expectedBehavior": "Returns In Progress status",
+      "expectedOutput": {
+        "status": "In Progress",
+        "contains": [
+          "PR",
+          "open"
+        ]
+      }
+    },
+    {
+      "id": "in-progress-code-no-tests",
+      "name": "Code without tests",
+      "input": "/project-status Dashboard",
+      "status": "pending",
+      "pendingReason": "Needs fixture with code but no tests",
+      "setup": {
+        "description": "Local repo has Dashboard.tsx but no test file"
+      },
+      "expectedBehavior": "Returns In Progress status with Medium confidence",
+      "expectedOutput": {
+        "status": "In Progress",
+        "confidence": "Medium",
+        "contains": [
+          "no tests",
+          "Code exists"
+        ]
+      }
+    },
+    {
+      "id": "planned-github-issue",
+      "name": "GitHub issue exists",
+      "input": "/project-status notifications",
+      "status": "pending",
+      "pendingReason": "Needs fixture with GitHub issue",
+      "setup": {
+        "description": "GitHub has open issue for notifications feature"
+      },
+      "expectedBehavior": "Returns Planned status with High confidence",
+      "expectedOutput": {
+        "status": "Planned",
+        "confidence": "High",
+        "contains": [
+          "Issue"
+        ]
+      }
+    },
+    {
+      "id": "discussed-only",
+      "name": "Only transcript mention",
+      "input": "/project-status analytics",
+      "setup": {
+        "description": "Component mentioned in meeting transcripts, no code or GitHub evidence"
+      },
+      "expectedBehavior": "Returns Discussed status from transcript evidence",
+      "expectedOutput": {
+        "status": "Discussed",
+        "source": "Transcripts",
+        "contains": [
+          "mentioned",
+          "meeting"
+        ]
+      }
+    },
+    {
+      "id": "unknown-component",
+      "name": "No evidence found",
+      "input": "/project-status nonexistent-feature",
+      "setup": {
+        "description": "No matching files, branches, commits, PRs, issues, or transcript mentions"
+      },
+      "expectedBehavior": "Returns Unknown status",
+      "expectedOutput": {
+        "status": "Unknown",
+        "contains": [
+          "Unknown",
+          "No evidence",
+          "not found"
+        ]
+      }
+    },
+    {
+      "id": "multi-component",
+      "name": "Multiple components query",
+      "input": "/project-status auth dashboard payments notifications",
+      "status": "pending",
+      "pendingReason": "Needs fixture with multiple component states",
+      "setup": {
+        "description": "Query for 4 components with different statuses: auth=Complete, dashboard=In Progress, payments=Discussed, notifications=Unknown"
+      },
+      "expectedBehavior": "Returns summary table with all components",
+      "expectedOutput": {
+        "contains": [
+          "auth",
+          "dashboard",
+          "payments",
+          "notifications",
+          "Component",
+          "Status"
+        ],
+        "format": "table"
+      }
+    },
+    {
+      "id": "conflict-resolution",
+      "name": "Local behind GitHub",
+      "input": "/project-status feature",
+      "status": "pending",
+      "pendingReason": "Needs fixture with local/GitHub sync conflict",
+      "setup": {
+        "description": "GitHub shows PR merged, but local repo doesn't have the changes (not pulled)"
+      },
+      "expectedBehavior": "Uses GitHub status (Complete), adds sync note",
+      "expectedOutput": {
+        "status": "Complete",
+        "source": "GitHub",
+        "contains": [
+          "Local repo may be behind remote",
+          "git pull"
+        ]
+      }
+    }
+  ]
+}

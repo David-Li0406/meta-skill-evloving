@@ -1,0 +1,68 @@
+[[workflows]]
+name = "specialist-team"
+description = "Architect, implementer, and QA working together in a pipeline"
+coordination = "pipeline"
+
+[[workflows.agents]]
+profile = "architect"
+role = "design"
+description = "Designs the architecture and creates implementation plan"
+
+[[workflows.agents]]
+profile = "implementer"
+role = "build"
+count = 2
+description = "Implements the design according to the plan"
+
+[[workflows.agents]]
+profile = "tester"
+role = "qa"
+description = "Tests the implementation and reports issues"
+
+[workflows.flow]
+stages = ["design", "build", "qa"]
+parallel_within_stage = true
+
+[[workflows.flow.transitions]]
+from = "design"
+to = "build"
+[workflows.flow.transitions.trigger]
+type = "manual"
+label = "Design approved"
+
+[[workflows.flow.transitions]]
+from = "build"
+to = "qa"
+[workflows.flow.transitions.trigger]
+type = "all_agents_idle"
+role = "build"
+idle_minutes = 5
+
+[[workflows.flow.transitions]]
+from = "qa"
+to = "build"
+[workflows.flow.transitions.trigger]
+type = "agent_says"
+pattern = "issues found|bugs found|test failures"
+role = "qa"
+
+[workflows.routing]
+design_tasks = "design"
+code_tasks = "build"
+test_tasks = "qa"
+
+[[workflows.prompts]]
+key = "project"
+question = "What project or feature are you building?"
+required = true
+
+[[workflows.prompts]]
+key = "approach"
+question = "Any specific architectural approach?"
+
+[workflows.error_handling]
+on_agent_crash = "restart_agent"
+on_agent_error = "pause"
+stage_timeout_minutes = 60
+on_timeout = "notify"
+max_retries_per_stage = 2

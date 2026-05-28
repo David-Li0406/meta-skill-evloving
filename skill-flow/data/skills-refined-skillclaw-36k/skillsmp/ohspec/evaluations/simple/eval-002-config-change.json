@@ -1,0 +1,41 @@
+{
+  "id": "eval-002",
+  "name": "配置项修改",
+  "complexity": "simple",
+  "description": "添加新的配置项",
+  "requirement": "在音频配置文件中添加 maxConcurrentStreams 配置项，限制同时播放的音频流数量，默认值为 8",
+  "context": {
+    "project_type": "音频服务",
+    "files_involved": 2,
+    "estimated_lines": 30,
+    "dependencies": ["配置管理模块"]
+  },
+  "expected_output": {
+    "rfc_sections": ["§1", "§2", "§3", "§4", "§5"],
+    "scenarios": {
+      "normal": 1,
+      "exception": 1,
+      "boundary": 1
+    },
+    "dfx_dimensions": 8
+  },
+  "acceptance_criteria": {
+    "execution_time_max": 480,
+    "token_budget_max": 10000,
+    "user_interactions_max": 2,
+    "first_pass_rate": 0.85,
+    "quality_score_min": 85
+  },
+  "validation": {
+    "must_have": [
+      "配置项名称和类型",
+      "默认值和取值范围",
+      "配置加载时机",
+      "配置验证规则"
+    ],
+    "should_have": [
+      "配置变更的影响分析",
+      "迁移方案"
+    ]
+  }
+}

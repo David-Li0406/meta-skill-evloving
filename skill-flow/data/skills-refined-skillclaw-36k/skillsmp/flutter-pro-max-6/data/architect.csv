@@ -1,0 +1,18 @@
+path_pattern,layer,responsibility_description,allowed_dependencies,tech_stack_note
+lib/main.dart,Root,"Điểm khởi đầu (Entry point), khởi tạo DI, cấu hình Environment, chạy App","lib/app.dart; lib/core/di; lib/core/config",All
+lib/app.dart,Root,"Widget gốc (MaterialApp), cấu hình Theme, Route, Localization","lib/features/**; lib/core/**",All
+lib/core,Core,"Chứa các thành phần dùng chung, tiện ích, hằng số toàn cục (Shared Kernel)","External Packages; Dart SDK",All
+lib/core/errors,Core,"Định nghĩa các Failure gốc và logic xử lý Exception","Dart SDK",All
+lib/core/network,Infrastructure,"Cấu hình HTTP Client (Dio/Retrofit), Interceptors","Package: Dio; Package: Retrofit",All
+lib/core/services,Application,"Các dịch vụ hạ tầng (Navigation, Storage, Notification)","External Packages",All
+lib/features/{feature}/domain/entities,Domain,"Đối tượng nghiệp vụ cốt lõi (Business Objects), Pure Dart, không logic JSON","Dart SDK; Package: Equatable",All
+lib/features/{feature}/domain/repositories,Domain,"Interfaces (Contracts) cho việc truy xuất dữ liệu, tuân thủ DIP","domain/entities",All
+lib/features/{feature}/domain/usecases,Domain,"Logic nghiệp vụ ứng dụng, từng hành động cụ thể (Single Responsibility)","domain/repositories; domain/entities; core/errors",All
+lib/features/{feature}/data/models,Data,"Data Transfer Objects (DTOs), chịu trách nhiệm parse JSON/XML","domain/entities; Package: json_annotation",All
+lib/features/{feature}/data/datasources,Data,"Giao tiếp cấp thấp với API (Remote) hoặc DB (Local)","data/models; core/network; core/errors",All
+lib/features/{feature}/data/repositories,Data,"Triển khai (Implement) Repository Interface của Domain, xử lý Data Orchestration","data/datasources; data/models; domain/repositories; core/network",All
+lib/features/{feature}/presentation/blocs,Presentation,"Quản lý trạng thái UI theo mô hình BLoC (Event-Driven)","domain/usecases; presentation/states; Package: flutter_bloc",BLoC Only
+lib/features/{feature}/presentation/providers,Presentation,"Quản lý trạng thái UI & Dependency Injection theo mô hình Riverpod","domain/usecases; data/repositories; Package: flutter_riverpod",Riverpod Only
+lib/features/{feature}/presentation/pages,Presentation,"Màn hình UI chính (Full Screens), kết nối với State Management","presentation/widgets; presentation/blocs; presentation/providers",All
+lib/features/{feature}/presentation/widgets,Presentation,"UI Components nhỏ, tái sử dụng nội bộ (Dumb Widgets)","Flutter SDK",All
+packages/{package_name}/lib,Package,"Module tách biệt (Very Good Ventures Style) - Auth, UI Kit, API Client","External Packages",Multi-Package Arch

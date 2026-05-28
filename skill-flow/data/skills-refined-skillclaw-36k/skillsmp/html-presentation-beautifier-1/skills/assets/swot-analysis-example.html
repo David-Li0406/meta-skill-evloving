@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWOT分析示例 - McKinsey Style</title>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .swot-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 20px;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 16px;
+            margin: 30px 0;
+            min-height: 500px;
+        }
+
+        .swot-quadrant {
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .swot-quadrant:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .swot-quadrant.strengths {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-left: 6px solid var(--accent-green);
+        }
+
+        .swot-quadrant.weaknesses {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 6px solid var(--accent-primary);
+        }
+
+        .swot-quadrant.opportunities {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 6px solid var(--accent-blue);
+        }
+
+        .swot-quadrant.threats {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border-left: 6px solid var(--accent-primary);
+        }
+
+        .swot-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .swot-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .swot-icon.strengths {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .swot-icon.weaknesses {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .swot-icon.opportunities {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .swot-icon.threats {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .swot-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .swot-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .swot-list li {
+            padding: 12px 0 12px 30px;
+            position: relative;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .swot-list li:last-child {
+            border-bottom: none;
+        }
+
+        .swot-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .swot-list.strengths li::before {
+            color: var(--accent-green);
+        }
+
+        .swot-list.weaknesses li::before {
+            color: var(--accent-primary);
+        }
+
+        .swot-list.opportunities li::before {
+            color: var(--accent-blue);
+        }
+
+        .swot-list.threats li::before {
+            color: var(--accent-primary);
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+        }
+
+        @media (max-width: 768px) {
+            .swot-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 SWOT分析示例</h1>
+        <p class="description">
+            McKinsey 风格战略分析工具 | 四象限结构化分析<br>
+            适用于战略规划、竞争分析、项目评估等场景
+        </p>
+
+        <div class="swot-container">
+            <div class="swot-quadrant strengths">
+                <div class="swot-header">
+                    <div class="swot-icon strengths">💪</div>
+                    <div class="swot-title">优势</div>
+                </div>
+                <ul class="swot-list strengths">
+                    <li>强大的技术团队，研发能力强</li>
+                    <li>产品创新速度快，市场响应敏捷</li>
+                    <li>品牌知名度高，客户基础稳固</li>
+                    <li>成本控制优秀，盈利能力强</li>
+                </ul>
+            </div>
+
+            <div class="swot-quadrant weaknesses">
+                <div class="swot-header">
+                    <div class="swot-icon weaknesses">⚠️</div>
+                    <div class="swot-title">劣势</div>
+                </div>
+                <ul class="swot-list weaknesses">
+                    <li>资金储备有限，扩张能力受限</li>
+                    <li>市场份额较小，品牌影响力有限</li>
+                    <li>国际化经验不足，海外拓展困难</li>
+                    <li>供应链管理不够完善</li>
+                </ul>
+            </div>
+
+            <div class="swot-quadrant opportunities">
+                <div class="swot-header">
+                    <div class="swot-icon opportunities">🚀</div>
+                    <div class="swot-title">机会</div>
+                </div>
+                <ul class="swot-list opportunities">
+                    <li>市场快速增长，需求旺盛</li>
+                    <li>数字化转型带来新业务机会</li>
+                    <li>政策支持，行业发展环境好</li>
+                    <li>新兴市场潜力巨大</li>
+                </ul>
+            </div>
+
+            <div class="swot-quadrant threats">
+                <div class="swot-header">
+                    <div class="swot-icon threats">⚡</div>
+                    <div class="swot-title">威胁</div>
+                </div>
+                <ul class="swot-list threats">
+                    <li>竞争对手快速崛起，价格战激烈</li>
+                    <li>技术更新迭代快，淘汰风险高</li>
+                    <li>原材料价格上涨，成本压力增大</li>
+                    <li>监管政策变化，合规成本增加</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h4>💡 战略建议</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>发挥优势</strong>：利用技术优势快速创新，占领市场</li>
+                <li><strong>改善劣势</strong>：积极融资，扩大资金储备；加强供应链管理</li>
+                <li><strong>抓住机会</strong>：快速进入新兴市场，抢占先机</li>
+                <li><strong>应对威胁</strong>：建立竞争壁垒，差异化竞争；多元化产品降低风险</li>
+            </ul>
+        </div>
+
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>战略规划</h4>
+                <p>企业战略、业务方向、发展路径</p>
+            </div>
+            <div class="use-case-card">
+                <h4>竞争分析</h4>
+                <p>竞争对手、市场格局、竞争策略</p>
+            </div>
+            <div class="use-case-card">
+                <h4>项目评估</h4>
+                <p>项目可行性、风险分析、收益预期</p>
+            </div>
+            <div class="use-case-card">
+                <h4>产品分析</h4>
+                <p>产品优势、市场机会、竞争威胁</p>
+            </div>
+            <div class="use-case-card">
+                <h4>团队分析</h4>
+                <p>团队能力、改进空间、发展机会</p>
+            </div>
+            <div class="use-case-card">
+                <h4>投资分析</h4>
+                <p>投资价值、风险收益、退出策略</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>HTML Presentation Beautifier - McKinsey Style SWOT Analysis Example</p>
+            <p>四象限战略分析可视化</p>
+        </footer>
+    </div>
+</body>
+</html>

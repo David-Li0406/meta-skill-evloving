@@ -1,0 +1,288 @@
+{
+  "name": "linear-sync",
+  "description": "Evaluations for the linear-sync skill",
+  "testCases": [
+    {
+      "id": "no-linear-config",
+      "name": "No Linear configuration",
+      "input": "/linear-sync auth",
+      "setup": {
+        "description": "No Linear MCP available and no linear section in .entourage/repos.json"
+      },
+      "expectedBehavior": "Returns error about missing Linear configuration",
+      "expectedOutput": {
+        "contains": ["Linear MCP not available", "linear", ".entourage/repos.json"]
+      }
+    },
+    {
+      "id": "exact-match-upgrade",
+      "name": "Exact match with status upgrade",
+      "input": "/linear-sync auth",
+      "setup": {
+        "description": "Component 'auth' matches Linear issue ENT-123 title exactly. Linear at Backlog, project-status shows In Progress.",
+        "linearIssue": {
+          "identifier": "ENT-123",
+          "title": "auth",
+          "status": "Backlog"
+        },
+        "projectStatus": {
+          "component": "auth",
+          "status": "In Progress",
+          "evidence": "Feature branch exists"
+        }
+      },
+      "expectedBehavior": "Shows preview with upgrade from Backlog to In Progress, requests confirmation",
+      "expectedOutput": {
+        "contains": ["ENT-123", "Backlog", "In Progress", "Proceed with updates"]
+      }
+    },
+    {
+      "id": "partial-title-match",
+      "name": "Component name in issue title",
+      "input": "/linear-sync dashboard",
+      "setup": {
+        "description": "Component 'dashboard' matches issue titled 'Implement user dashboard'. Linear at Todo, evidence shows Done.",
+        "linearIssue": {
+          "identifier": "ENT-456",
+          "title": "Implement user dashboard",
+          "status": "Todo"
+        },
+        "projectStatus": {
+          "component": "dashboard",
+          "status": "Done",
+          "evidence": "PR #78 merged, CI passing"
+        }
+      },
+      "expectedBehavior": "Matches by partial title, shows upgrade preview",
+      "expectedOutput": {
+        "contains": ["ENT-456", "dashboard", "Todo", "Done"]
+      }
+    },
+    {
+      "id": "identifier-direct-lookup",
+      "name": "Direct identifier lookup",
+      "input": "/linear-sync ENT-789",
+      "setup": {
+        "description": "Component is an identifier format, query directly by ID"
+      },
+      "expectedBehavior": "Uses get_issue with identifier, shows current vs proposed status",
+      "expectedOutput": {
+        "contains": ["ENT-789"]
+      }
+    },
+    {
+      "id": "no-downgrade",
+      "name": "Linear status higher than evidence",
+      "input": "/linear-sync payments",
+      "setup": {
+        "description": "Linear shows Done, but project-status evidence only shows In Progress",
+        "linearIssue": {
+          "identifier": "ENT-111",
+          "title": "payments",
+          "status": "Done"
+        },
+        "projectStatus": {
+          "component": "payments",
+          "status": "In Progress",
+          "evidence": "Code exists, no tests"
+        }
+      },
+      "expectedBehavior": "Skips update, notes Linear status is already higher",
+      "expectedOutput": {
+        "contains": ["Skipped", "Linear status", "already higher", "Done", "In Progress"]
+      }
+    },
+    {
+      "id": "already-correct",
+      "name": "Status already matches",
+      "input": "/linear-sync notifications",
+      "setup": {
+        "description": "Linear and project-status both show In Progress",
+        "linearIssue": {
+          "identifier": "ENT-222",
+          "title": "notifications",
+          "status": "In Progress"
+        },
+        "projectStatus": {
+          "component": "notifications",
+          "status": "In Progress",
+          "evidence": "Feature branch exists"
+        }
+      },
+      "expectedBehavior": "Reports no change needed, status matches",
+      "expectedOutput": {
+        "contains": ["No Change Needed", "already", "In Progress"]
+      }
+    },
+    {
+      "id": "no-match",
+      "name": "No matching Linear issue",
+      "input": "/linear-sync analytics",
+      "setup": {
+        "description": "Component 'analytics' has no matching Linear issue",
+        "projectStatus": {
+          "component": "analytics",
+          "status": "Triage",
+          "evidence": "Mentioned in Dec 21 meeting"
+        }
+      },
+      "expectedBehavior": "Reports no matching Linear issue found",
+      "expectedOutput": {
+        "contains": ["No Linear Issue Found", "analytics", "No matching issue"]
+      }
+    },
+    {
+      "id": "bulk-confirmation",
+      "name": "Bulk update requires confirmation",
+      "input": "/linear-sync auth dashboard payments notifications settings",
+      "setup": {
+        "description": "5 components with 4+ needing updates (more than bulk threshold of 3)"
+      },
+      "expectedBehavior": "Shows preview table, requires explicit 'yes' confirmation for bulk",
+      "expectedOutput": {
+        "contains": ["Proceed with updates", "4", "issues"]
+      }
+    },
+    {
+      "id": "shipped-to-done",
+      "name": "Shipped maps to Done",
+      "input": "/linear-sync website",
+      "setup": {
+        "description": "Project-status shows Shipped (deployed to prod), Linear at In Progress",
+        "linearIssue": {
+          "identifier": "ENT-333",
+          "title": "website",
+          "status": "In Progress"
+        },
+        "projectStatus": {
+          "component": "website",
+          "status": "Shipped",
+          "evidence": "Deployed to prod-v1.2.0"
+        }
+      },
+      "expectedBehavior": "Maps Shipped to Done since Linear doesn't have Shipped state",
+      "expectedOutput": {
+        "contains": ["ENT-333", "In Progress", "Done", "Deployed"]
+      }
+    },
+    {
+      "id": "comment-added",
+      "name": "Explanatory comment added after update",
+      "input": "/linear-sync auth",
+      "setup": {
+        "description": "After user confirms update, comment is added to issue"
+      },
+      "expectedBehavior": "Calls create_comment with evidence explanation after update_issue",
+      "expectedOutput": {
+        "calls": ["update_issue", "create_comment"],
+        "contains": ["Status updated", "based on code evidence"]
+      }
+    },
+    {
+      "id": "in-review-fallback",
+      "name": "In Review falls back to In Progress",
+      "input": "/linear-sync api",
+      "setup": {
+        "description": "Project-status shows In Review, but team's Linear doesn't have 'In Review' state",
+        "teamStates": ["Triage", "Backlog", "Todo", "In Progress", "Done", "Canceled"]
+      },
+      "expectedBehavior": "Uses In Progress as fallback when In Review state not available",
+      "expectedOutput": {
+        "contains": ["In Progress", "In Review state not available"]
+      }
+    },
+    {
+      "id": "multiple-matches-select-best",
+      "name": "Multiple issues match component",
+      "input": "/linear-sync auth",
+      "setup": {
+        "description": "Multiple Linear issues contain 'auth' in title",
+        "linearIssues": [
+          {"identifier": "ENT-100", "title": "auth flow", "status": "Done"},
+          {"identifier": "ENT-200", "title": "auth integration", "status": "In Progress"}
+        ]
+      },
+      "expectedBehavior": "Selects most relevant match (prefers not-completed issues)",
+      "expectedOutput": {
+        "contains": ["ENT-200", "auth integration"]
+      }
+    },
+    {
+      "id": "update-results-summary",
+      "name": "Results summary after updates",
+      "input": "/linear-sync",
+      "setup": {
+        "description": "After confirmation, multiple issues updated"
+      },
+      "expectedBehavior": "Shows summary of Updated, Skipped, and No Match categories",
+      "expectedOutput": {
+        "contains": ["Updated", "Skipped", "No Match", "Previous", "New", "Evidence"]
+      }
+    },
+    {
+      "id": "write-create-issue",
+      "name": "Creates new issue when no match found",
+      "input": "Create a [TEST] issue titled '[TEST] Linear Sync Evaluation - Create' in Triage status, then cancel it",
+      "fixture": "local-entourage",
+      "status": "pending",
+      "pendingReason": "Requires local-* fixture with real Linear workspace config",
+      "expectedBehavior": "Creates [TEST] prefixed issue in Triage, then cancels it for cleanup",
+      "expectedOutput": {
+        "contains": ["Created", "Triage", "[TEST]"],
+        "calls": ["create_issue"]
+      }
+    },
+    {
+      "id": "write-update-status",
+      "name": "Updates issue status based on evidence",
+      "input": "Create a [TEST] issue in Backlog, update its status to In Progress, then cancel it",
+      "fixture": "local-entourage",
+      "status": "pending",
+      "pendingReason": "Requires local-* fixture with real Linear workspace config",
+      "expectedBehavior": "Creates issue, updates status from Backlog to In Progress, then cancels",
+      "expectedOutput": {
+        "contains": ["Updated", "In Progress", "[TEST]"],
+        "calls": ["create_issue", "update_issue"]
+      }
+    },
+    {
+      "id": "write-add-comment",
+      "name": "Adds explanatory comment after update",
+      "input": "Create a [TEST] issue, add a comment 'Test comment from linear-sync evaluation', then cancel the issue",
+      "fixture": "local-entourage",
+      "status": "pending",
+      "pendingReason": "Requires local-* fixture with real Linear workspace config",
+      "expectedBehavior": "Creates issue, adds comment with evidence explanation, then cancels",
+      "expectedOutput": {
+        "contains": ["comment", "[TEST]"],
+        "calls": ["create_issue", "create_comment"]
+      }
+    },
+    {
+      "id": "write-assign-member",
+      "name": "Can assign team member during sync",
+      "input": "Create a [TEST] issue and assign it to me, then cancel it",
+      "fixture": "local-entourage",
+      "status": "pending",
+      "pendingReason": "Requires local-* fixture with real Linear workspace config",
+      "expectedBehavior": "Creates issue and sets assignee, then cancels",
+      "expectedOutput": {
+        "contains": ["Assigned", "[TEST]"],
+        "calls": ["create_issue", "update_issue"]
+      }
+    },
+    {
+      "id": "write-set-due-date",
+      "name": "Can set due date during sync",
+      "input": "Create a [TEST] issue with due date set to tomorrow, then cancel it",
+      "fixture": "local-entourage",
+      "status": "pending",
+      "pendingReason": "Requires local-* fixture with real Linear workspace config",
+      "expectedBehavior": "Creates issue with due date, then cancels",
+      "expectedOutput": {
+        "contains": ["due", "[TEST]"],
+        "calls": ["create_issue"]
+      }
+    }
+  ]
+}

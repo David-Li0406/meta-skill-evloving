@@ -1,0 +1,77 @@
+# Summarization Domain Template
+# =============================
+# 要約、抽出、圧縮タスク向け
+
+domain: "summarization"
+applicable_tasks:
+  - text_summarization
+  - key_point_extraction
+  - meeting_notes
+  - report_generation
+  - content_compression
+
+# --- ドメイン固有の制約 ---
+domain_constraints:
+  - "原文にない情報を追加しないこと"
+  - "要約率を明示（例: 元文の20%以下）"
+  - "重要度に基づき情報を取捨選択"
+  - "固有名詞、数値、日付は正確に保持"
+
+# --- ドメイン固有の評価軸 ---
+domain_rubric:
+  - name: "faithfulness"
+    description: "原文に忠実か"
+    scale: "1-5"
+    criteria:
+      5: "原文の内容のみ、歪曲なし"
+      3: "一部解釈あり"
+      1: "原文にない情報を含む"
+      
+  - name: "coverage"
+    description: "重要情報の網羅度"
+    scale: "1-5"
+    criteria:
+      5: "主要ポイント全て含む"
+      3: "主要ポイントの半分程度"
+      1: "重要情報が欠落"
+      
+  - name: "conciseness"
+    description: "簡潔さ"
+    scale: "1-5"
+    criteria:
+      5: "冗長性なし、最適な長さ"
+      3: "やや冗長"
+      1: "不必要に長い"
+
+# --- ドメイン固有のフォーマット ---
+domain_format: |
+  ```json
+  {
+    "summary": "要約本文",
+    "key_points": [
+      "ポイント1",
+      "ポイント2"
+    ],
+    "metadata": {
+      "original_length": 1000,
+      "summary_length": 200,
+      "compression_ratio": 0.2
+    }
+  }
+  ```
+
+# --- 要約タイプ別テンプレート ---
+subtypes:
+  extractive:
+    description: "原文から重要文を抽出"
+    constraints:
+      - "原文の文をそのまま使用"
+      
+  abstractive:
+    description: "内容を再構成して要約"
+    constraints:
+      - "意味を保ちつつ言い換え可"
+      
+  bullet_points:
+    description: "箇条書き形式"
+    format: "- ポイント1\n- ポイント2\n..."

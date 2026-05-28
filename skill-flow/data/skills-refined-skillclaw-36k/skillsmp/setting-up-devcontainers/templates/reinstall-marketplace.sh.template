@@ -1,0 +1,70 @@
+#!/bin/bash
+# =============================================================================
+# WORKAROUND: Reinstall marketplace and plugins for local development
+# =============================================================================
+# This script is a workaround for Claude Code not automatically detecting
+# changes to local plugin/skill files. Until Claude Code supports file watching
+# for local marketplaces, this script must be run manually after editing skills.
+#
+# Usage:
+#   bash reinstall-marketplace.sh [--quiet]
+#
+# Can be configured in devcontainer.json as postStartCommand for auto-sync,
+# but this adds ~5-10 seconds delay on every container start.
+# =============================================================================
+
+# Ensure Claude Code and Volta are in PATH
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$HOME/.local/bin:$PATH"
+
+QUIET="${1:-}"
+SRC="/workspaces/{{PROJECT_DIR}}"
+CONFIG_DIR="$HOME/.claude"
+
+# Ensure shell aliases are sourced in .zshrc (runs on every container start)
+ALIASES_FILE="$CONFIG_DIR/.shell-aliases"
+if [ -f "$ALIASES_FILE" ] && ! grep -q "source.*\.shell-aliases" "$HOME/.zshrc" 2>/dev/null; then
+    echo "" >> "$HOME/.zshrc"
+    echo "# Source Claude Code aliases from volume" >> "$HOME/.zshrc"
+    echo "source \"$ALIASES_FILE\" 2>/dev/null || true" >> "$HOME/.zshrc"
+    [[ "$QUIET" != "--quiet" ]] && echo "Shell aliases configured in .zshrc"
+fi
+
+reinstall_marketplace() {
+  local src="$1"
+  local repo=$(echo "$src" | sed -E 's#^https?://github\.com/##; s#^git@github\.com:##; s#\.git$##')
+
+  # Find marketplace name from known_marketplaces.json
+  local market=""
+  if [ -f "$CONFIG_DIR/plugins/known_marketplaces.json" ]; then
+    market=$(jq -r --arg repo "$repo" --arg src "$src" \
+      'to_entries[] | select(.value.source.repo == $repo or .value.source.path == $src or .value.source.url == $src) | .key' \
+      "$CONFIG_DIR/plugins/known_marketplaces.json" 2>/dev/null)
+  fi
+
+  # Get enabled plugins for this marketplace
+  local plugins_list=""
+  if [ -f "$CONFIG_DIR/settings.json" ]; then
+    plugins_list=$(jq -r --arg market "$market" --arg repo "$repo" \
+      '.enabledPlugins // {} | keys[] | select(endswith("@" + $market) or endswith("@" + $repo))' \
+      "$CONFIG_DIR/settings.json" 2>/dev/null)
+  fi
+
+  # Remove and re-add marketplace
+  [[ -n "$market" ]] && claude plugin marketplace remove "$market" 2>/dev/null || true
+  claude plugin marketplace add "$src"
+
+  # Reinstall plugins
+  while IFS= read -r p; do
+    [[ -z "$p" ]] && continue
+    claude plugin uninstall "$p" 2>/dev/null || true
+    claude plugin install "$p" --scope user
+  done <<< "$plugins_list"
+}
+
+[[ "$QUIET" != "--quiet" ]] && echo "Reinstalling marketplace from $SRC..."
+reinstall_marketplace "$SRC"
+
+{{CODEX_SYNC_BLOCK}}
+
+[[ "$QUIET" != "--quiet" ]] && echo "Done."

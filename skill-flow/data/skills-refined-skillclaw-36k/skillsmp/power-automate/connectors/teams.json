@@ -1,0 +1,298 @@
+{
+  "connector": "Microsoft Teams",
+  "id": "shared_teams",
+  "docsUrl": "https://learn.microsoft.com/en-us/connectors/teams/",
+  "throttling": {
+    "calls": 100,
+    "seconds": 60,
+    "flowBotOps": { "calls": 25, "seconds": 300 }
+  },
+  "triggers": {
+    "OnNewChannelMessage": {
+      "name": "When a new channel message is added",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "path": "/v2/trigger/teams/@{encodeURIComponent(groupId)}/channels/@{encodeURIComponent(channelId)}/messages"
+      },
+      "parameters": {
+        "groupId": { "type": "string", "required": true, "description": "Team ID" },
+        "channelId": { "type": "string", "required": true, "description": "Channel ID" }
+      },
+      "notes": "Only fires for root messages, not replies. 3-minute polling interval."
+    },
+    "WebhookChatMessageTrigger": {
+      "name": "When a new chat message is added",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "path": "/v2/trigger/chats/messages"
+      }
+    },
+    "WebhookNewMessageTrigger": {
+      "name": "When a new message is added to a chat or channel",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "path": "/v2/trigger/messages"
+      },
+      "parameters": {
+        "threadType": { "type": "string", "required": true, "enum": ["channel", "chat", "all"] }
+      }
+    },
+    "OnNewChannelMessageMentioningMe": {
+      "name": "When I am mentioned in a channel message",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "path": "/v2/trigger/teams/@{encodeURIComponent(groupId)}/channels/@{encodeURIComponent(channelId)}/messages/mentioningMe"
+      }
+    },
+    "WebhookKeywordTrigger": {
+      "name": "When keywords are mentioned",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "path": "/v2/trigger/messages/keywords"
+      },
+      "parameters": {
+        "threadType": { "type": "string", "required": true },
+        "$search": { "type": "string", "required": true, "description": "Keywords to monitor" }
+      }
+    },
+    "OnGroupMembershipAdd": {
+      "name": "When a new team member is added",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "path": "/trigger/teams/@{encodeURIComponent(groupId)}/membershipAdd"
+      },
+      "notes": "5-minute polling interval"
+    },
+    "TeamsCardTrigger": {
+      "name": "When someone responds to an adaptive card",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "path": "/v2/trigger/card/response"
+      }
+    }
+  },
+  "actions": {
+    "PostMessageToConversation": {
+      "name": "Post message in a chat or channel",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/beta/teams/conversation/message/poster/@{encodeURIComponent(poster)}/location/@{encodeURIComponent(location)}",
+        "body": {
+          "messageBody": "required|string|HTML supported",
+          "recipient": "required for chat|object|{groupId, channelId} or {chatId}",
+          "isAlert": "optional|boolean|Send as important"
+        }
+      },
+      "parameters": {
+        "poster": { "type": "string", "required": true, "enum": ["User", "Flow bot"] },
+        "location": { "type": "string", "required": true, "enum": ["Channel", "Chat with Flow bot", "Group chat"] }
+      }
+    },
+    "PostCardToConversation": {
+      "name": "Post adaptive card in a chat or channel",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/beta/teams/conversation/card/poster/@{encodeURIComponent(poster)}/location/@{encodeURIComponent(location)}",
+        "body": {
+          "card": "required|object|Adaptive Card JSON",
+          "recipient": "required|object"
+        }
+      }
+    },
+    "PostCardAndWaitForResponse": {
+      "name": "Post adaptive card and wait for a response",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "path": "/v2/beta/teams/conversation/card/poster/@{encodeURIComponent(poster)}/location/@{encodeURIComponent(location)}/wait",
+        "body": {
+          "card": "required|object|Adaptive Card with Action.Submit",
+          "recipient": "required|object",
+          "updateMessage": "optional|string|Message after response",
+          "shouldUpdateCard": "optional|boolean"
+        }
+      }
+    },
+    "ReplyWithMessageToConversation": {
+      "name": "Reply with a message in a channel",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/beta/teams/conversation/reply/poster/@{encodeURIComponent(poster)}/location/@{encodeURIComponent(location)}",
+        "body": {
+          "messageBody": "required|string",
+          "parentMessageId": "required|string|Message ID to reply to"
+        }
+      }
+    },
+    "CreateATeam": {
+      "name": "Create a team",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v3/teams",
+        "body": {
+          "displayName": "required|string",
+          "description": "optional|string",
+          "visibility": "optional|string|public,private"
+        }
+      }
+    },
+    "CreateChannel": {
+      "name": "Create a channel",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v3/teams/@{encodeURIComponent(groupId)}/channels",
+        "body": {
+          "displayName": "required|string",
+          "description": "optional|string",
+          "membershipType": "optional|string|standard,private,shared"
+        }
+      }
+    },
+    "CreateChat": {
+      "name": "Create a chat",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/beta/chats",
+        "body": {
+          "topic": "optional|string|Chat name (group chats only)",
+          "members": "required|array|[{\"user\": \"user@domain.com\"}]"
+        }
+      },
+      "limitations": "Max 20 members, no guests"
+    },
+    "AddMemberToTeam": {
+      "name": "Add a member to a team",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v3/teams/@{encodeURIComponent(groupId)}/members",
+        "body": {
+          "userId": "required|string|User ID or UPN",
+          "owner": "optional|boolean|Add as owner"
+        }
+      }
+    },
+    "GetAllTeams": {
+      "name": "List joined teams",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "get",
+        "path": "/v3/teams"
+      }
+    },
+    "GetChannelsForGroup": {
+      "name": "List channels",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "get",
+        "path": "/v3/teams/@{encodeURIComponent(groupId)}/channels"
+      }
+    },
+    "AtMentionUser": {
+      "name": "Get an @mention token for a user",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/beta/teams/users/@{encodeURIComponent(userId)}/atMention"
+      },
+      "usage": "Insert returned token into message body for @mention"
+    },
+    "CreateTeamsMeeting": {
+      "name": "Create a Teams meeting",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/tables/@{encodeURIComponent(calendarId)}/items",
+        "body": {
+          "subject": "required|string",
+          "start": "required|datetime",
+          "end": "required|datetime",
+          "timeZone": "required|string",
+          "body": "optional|string",
+          "requiredAttendees": "optional|string|Semicolon-separated",
+          "importance": "optional|string|low,normal,high"
+        }
+      }
+    },
+    "HttpRequest": {
+      "name": "Send a Microsoft Graph HTTP request",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_teams']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/httprequest",
+        "body": {
+          "Uri": "required|string|Graph API path (e.g., /teams/{id}/channels)",
+          "Method": "required|string|GET,POST,PUT,PATCH,DELETE",
+          "Body": "optional|string|JSON body",
+          "ContentType": "optional|string|application/json"
+        }
+      }
+    }
+  },
+  "connectionReference": {
+    "shared_teams": {
+      "connectionName": "",
+      "source": "Invoker",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_teams",
+      "tier": "NotSpecified"
+    }
+  },
+  "adaptiveCardSchema": {
+    "type": "message",
+    "attachments": [{
+      "contentType": "application/vnd.microsoft.card.adaptive",
+      "content": {
+        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+        "type": "AdaptiveCard",
+        "version": "1.4",
+        "body": [],
+        "actions": []
+      }
+    }]
+  },
+  "limitations": {
+    "messageSize": "~28 KB including HTML, images, mentions",
+    "maxMentions": "20 users + 20 tags per message",
+    "chatMembers": "Max 20 members, no guests"
+  },
+  "outputSchemas": {
+    "message": {
+      "id": "string",
+      "body": { "content": "string", "contentType": "text|html" },
+      "from": { "user": { "displayName": "string", "id": "string" } },
+      "createdDateTime": "datetime",
+      "importance": "normal|high|urgent",
+      "mentions": "array"
+    },
+    "team": {
+      "id": "string",
+      "displayName": "string",
+      "description": "string"
+    }
+  }
+}

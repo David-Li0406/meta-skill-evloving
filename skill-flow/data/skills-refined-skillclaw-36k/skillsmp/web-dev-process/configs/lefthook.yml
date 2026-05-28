@@ -1,0 +1,150 @@
+# Lefthook - Git Hooks Configuration
+#
+# Lefthook est un gestionnaire de hooks Git rapide et flexible.
+# @see https://github.com/evilmartians/lefthook
+#
+# Installation:
+#   pnpm add -D lefthook
+#   pnpm lefthook install
+#
+# Ce fichier définit les hooks standard pour le process de développement.
+
+# =============================================================================
+# PRE-COMMIT: Vérifications avant chaque commit
+# =============================================================================
+pre-commit:
+  parallel: true
+  commands:
+    # Lint du code modifié
+    lint:
+      glob: "*.{js,jsx,ts,tsx,vue}"
+      run: pnpm eslint --fix {staged_files}
+      stage_fixed: true
+
+    # Formatage du code
+    prettier:
+      glob: "*.{js,jsx,ts,tsx,vue,json,md,css,scss,yaml,yml}"
+      run: pnpm prettier --write {staged_files}
+      stage_fixed: true
+
+    # Vérification des types TypeScript
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: pnpm tsc --noEmit
+      skip:
+        - merge
+        - rebase
+
+    # Détection de secrets
+    secrets:
+      run: |
+        if command -v gitleaks &> /dev/null; then
+          gitleaks protect --staged --verbose
+        fi
+      skip:
+        - merge
+
+# =============================================================================
+# COMMIT-MSG: Validation du message de commit
+# =============================================================================
+commit-msg:
+  commands:
+    # Validation Conventional Commits
+    commitlint:
+      run: pnpm commitlint --edit {1}
+
+# =============================================================================
+# PRE-PUSH: Vérifications avant push
+# =============================================================================
+pre-push:
+  parallel: true
+  commands:
+    # Tests unitaires
+    test:
+      run: pnpm test --passWithNoTests
+      skip:
+        - merge
+        - rebase
+
+    # Build de vérification
+    build:
+      run: pnpm build
+      skip:
+        - merge
+        - rebase
+
+    # Audit de sécurité
+    audit:
+      run: pnpm audit --audit-level=high
+      skip:
+        - merge
+
+# =============================================================================
+# POST-CHECKOUT: Actions après checkout
+# =============================================================================
+post-checkout:
+  commands:
+    # Installation des dépendances si lockfile a changé
+    install-deps:
+      run: |
+        PREV_HEAD=$1
+        NEW_HEAD=$2
+        LOCKFILES="package.json\|pnpm-lock.yaml\|package-lock.json\|yarn.lock\|bun.lockb"
+        if git diff --name-only $PREV_HEAD $NEW_HEAD | grep -q "$LOCKFILES"; then
+          echo "📦 Dependencies changed, installing..."
+          if [ -f "pnpm-lock.yaml" ]; then
+            pnpm install
+          elif [ -f "yarn.lock" ]; then
+            yarn install
+          elif [ -f "bun.lockb" ]; then
+            bun install
+          else
+            npm install
+          fi
+        fi
+      interactive: true
+
+# =============================================================================
+# POST-MERGE: Actions après merge
+# =============================================================================
+post-merge:
+  commands:
+    # Installation des dépendances après merge
+    install-deps:
+      run: |
+        LOCKFILES="package.json\|pnpm-lock.yaml\|package-lock.json\|yarn.lock\|bun.lockb"
+        if git diff --name-only HEAD@{1} HEAD | grep -q "$LOCKFILES"; then
+          echo "📦 Dependencies changed, installing..."
+          if [ -f "pnpm-lock.yaml" ]; then
+            pnpm install
+          elif [ -f "yarn.lock" ]; then
+            yarn install
+          elif [ -f "bun.lockb" ]; then
+            bun install
+          else
+            npm install
+          fi
+        fi
+      interactive: true
+
+# =============================================================================
+# CONFIGURATION GLOBALE
+# =============================================================================
+# Couleurs et formatage
+colors: true
+
+# Exécution en parallèle par défaut
+parallel: true
+
+# Ne pas échouer si une commande n'existe pas
+skip_output:
+  - meta
+  - empty_summary
+
+# Ignorer certains fichiers globalement
+exclude_tags:
+  - slow
+
+# Variables d'environnement
+env:
+  FORCE_COLOR: "1"

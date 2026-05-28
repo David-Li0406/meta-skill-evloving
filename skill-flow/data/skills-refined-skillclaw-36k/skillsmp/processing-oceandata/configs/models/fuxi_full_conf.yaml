@@ -1,0 +1,47 @@
+# OceanFuxi Model Configuration
+# Adapted Fuxi model with 2D/3D dual path processing for ocean velocity prediction
+
+# Temporal configuration
+input_len: 7          # Number of input frames
+output_len: 1         # Number of output frames
+in_channels: 2        # Number of channels (u, v velocity components)
+
+# Spatial configuration
+img_size: [240, 240]  # Input image size (H, W)
+patch_size: [4, 4]    # Patch size for embedding (should divide img_size evenly)
+                      # 240/4 = 60, which works well for the architecture
+
+# Model architecture parameters
+embed_dim: 512        # Embedding dimension (can be adjusted based on GPU memory)
+num_groups: 32        # Number of groups for GroupNorm
+num_heads: 8          # Number of attention heads
+window_size: 7        # Window size for local attention (same as reference_models/fuxi.py)
+
+depth: 48             # Number of transformer blocks (deep model for complex patterns)
+                      # Can be reduced to 24 or 36 if memory is limited
+
+# Dual path configuration
+use_3d_path: true     # Enable 3D processing path for richer feature extraction
+pseudo_depth: 4       # Depth dimension for pseudo-3D processing
+                      # Creates a 4-layer depth from 2D data
+
+# Training optimization suggestions (not used by model, but for reference)
+# For faster training with good performance:
+# - Start with embed_dim: 384, depth: 24
+# - Use gradient accumulation if batch size is limited
+# - Consider mixed precision training (fp16) to reduce memory usage
+
+# Alternative configurations for different compute resources:
+
+# Lightweight version (for testing or limited GPU):
+# embed_dim: 256
+# depth: 12
+# window_size: 8
+# use_3d_path: false
+
+# High-performance version (for better accuracy):
+# embed_dim: 768
+# depth: 72
+# window_size: 12
+# use_3d_path: true
+# pseudo_depth: 8

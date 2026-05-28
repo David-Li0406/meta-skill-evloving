@@ -1,0 +1,43 @@
+# Ralph TUI Configuration
+# Config version 2.1+ format for json tracker
+configVersion = "2.1"
+
+# Agent and Tracker settings
+agent = "claude"
+tracker = "json"
+maxIterations = 70
+iterationDelay = 2000
+autoCommit = true
+
+# Custom prompt template path (relative to project root)
+# IMPORTANT: This must point to the actual template file you want to use
+prompt_template = ".ralph-tui/templates/prompt.hbs"
+
+# Subagent tracing for debugging (off, minimal, moderate, full)
+subagentTracingDetail = "moderate"
+
+[agentOptions]
+# Claude Opus 4.5 - the most capable model for complex reasoning
+model = "opus"
+printMode = "text"
+
+[trackerOptions]
+# Path to prd.json when using json tracker
+prdPath = "docs/prds/[name]/prd.json"
+
+[errorHandling]
+# Strategy: "retry", "skip", or "abort"
+strategy = "retry"
+maxRetries = 3
+retryDelayMs = 5000
+continueOnNonZeroExit = false
+
+[rateLimitHandling]
+enabled = true
+maxRetries = 3
+baseBackoffMs = 5000
+recoverPrimaryBetweenIterations = true
+
+[notifications]
+enabled = true
+sound = "off"

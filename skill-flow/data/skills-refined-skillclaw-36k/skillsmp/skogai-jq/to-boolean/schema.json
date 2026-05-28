@@ -1,0 +1,65 @@
+{
+  "name": "to-boolean",
+  "description": "Convert value at path to boolean using truthy/falsy rules (null/false/0/\"\"/[]/{}→false, everything else→true)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a value to convert at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to field to convert to boolean (e.g., 'user.enabled')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with boolean value at specified path. Falsy values (null, false, 0, \"\", [], {}) become false. Everything else becomes true."
+  },
+  "examples": [
+    {
+      "description": "Convert null to false",
+      "input": {"user": {"enabled": null}},
+      "args": {"path": "user.enabled"},
+      "output": {"user": {"enabled": false}}
+    },
+    {
+      "description": "Convert non-zero number to true",
+      "input": {"count": 42},
+      "args": {"path": "count"},
+      "output": {"count": true}
+    },
+    {
+      "description": "Convert zero to false",
+      "input": {"count": 0},
+      "args": {"path": "count"},
+      "output": {"count": false}
+    },
+    {
+      "description": "Convert non-empty string to true",
+      "input": {"name": "skogix"},
+      "args": {"path": "name"},
+      "output": {"name": true}
+    },
+    {
+      "description": "Convert empty string to false",
+      "input": {"name": ""},
+      "args": {"path": "name"},
+      "output": {"name": false}
+    },
+    {
+      "description": "Convert non-empty array to true",
+      "input": {"items": [1, 2, 3]},
+      "args": {"path": "items"},
+      "output": {"items": true}
+    },
+    {
+      "description": "Convert empty array to false",
+      "input": {"items": []},
+      "args": {"path": "items"},
+      "output": {"items": false}
+    }
+  ],
+  "tags": ["conversion", "boolean", "truthy", "falsy", "type-conversion"]
+}

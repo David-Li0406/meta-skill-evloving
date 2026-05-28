@@ -1,0 +1,1512 @@
+// =============================================================================
+// SOCIOPULSE V2 - Database Schema
+// Optimized for Scalability & B2B/B2C Social interactionsfort, Catalogue
+// =============================================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+
+enum UserRole {
+  CLIENT       // Établissement ou Particulier
+  TALENT       // Freelance professionnel
+  ADMIN        // Administrateur plateforme
+}
+
+enum ClientType {
+  PARTICULAR     // Particulier
+  ESTABLISHMENT  // Établissement (B2B)
+}
+
+enum UserStatus {
+  PENDING      // En attente de vérification
+  VERIFIED     // Vérifié et actif
+  SUSPENDED    // Suspendu temporairement
+  BANNED       // Banni définitivement
+  PENDING_INVITE // En attente d'envoi de l'invitation
+  INVITED        // Invité mais n'a pas encore activé son compte
+}
+
+enum ServiceType {
+  WORKSHOP       // Atelier présentiel (Catalogue)
+  COACHING_VIDEO // Coaching vidéo en ligne
+}
+
+enum MissionStatus {
+  OPEN         // Mission ouverte aux candidatures
+  ASSIGNED     // Mission attribuée à un Extra
+  IN_PROGRESS  // Mission en cours
+  COMPLETED    // Mission terminée
+  CANCELLED    // Mission annulée
+}
+
+enum MissionUrgency {
+  LOW          // Sous 1 semaine
+  MEDIUM       // Sous 48h
+  HIGH         // Sous 24h
+  CRITICAL     // Immédiat
+}
+
+enum ComplianceStatus {
+  PENDING      // Documents en attente de soumission
+  SUBMITTED    // Documents soumis, en cours de vérification
+  VALIDATED    // Profil validé (ADELI vérifié, diplômes OK)
+  REJECTED     // Documents rejetés
+  EXPIRED      // Validation expirée (renouvellement requis)
+}
+
+enum BookingStatus {
+  PENDING      // En attente de confirmation
+  CONFIRMED    // Confirmée par l'Extra
+  PAID         // Payée via Stripe
+  IN_PROGRESS  // En cours (session vidéo active)
+  COMPLETED    // Terminée
+  CANCELLED    // Annulée
+  REFUNDED     // Remboursée
+}
+
+enum PostType {
+  OFFER        // Offre de service (Extra → Établissement)
+  NEED         // Besoin exprimé (Établissement → Extras)
+  SOCIAL       // Post social (expérience / actu)
+}
+
+enum PostCategory {
+  EXPERIENCE
+  NEWS
+}
+
+enum TagCategory {
+  JOB
+  STRUCTURE
+  SKILL
+}
+
+enum PointLogStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum TransactionType {
+  BOOKING_PAYMENT   // Paiement d'une réservation
+  MISSION_PAYMENT   // Paiement d'une mission SOS
+  WITHDRAWAL        // Retrait vers compte bancaire
+  REFUND            // Remboursement
+  PLATFORM_FEE      // Commission plateforme
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum ContractStatus {
+  PENDING
+  SIGNED
+  DRAFT           // Brouillon
+  PENDING_CLIENT  // En attente signature client
+  PENDING_TALENT  // En attente signature talent
+  IN_PROGRESS     // En cours d'exécution
+  COMPLETED       // Terminé
+  DISPUTED        // Litige en cours
+  CANCELLED       // Annulé
+}
+
+enum QuoteStatus {
+  DRAFT          // Brouillon
+  SENT           // Envoyé au client
+  VIEWED         // Lu par le client
+  ACCEPTED       // Accepté → génère un contrat
+  REJECTED       // Refusé
+  EXPIRED        // Expiré
+  REVISED        // Révisé (nouvelle version)
+}
+
+// =============================================================================
+// MISSION HUB ENUMS
+// =============================================================================
+
+enum MissionMessageType {
+  TEXT    // Message utilisateur
+  SYSTEM  // Message système automatique
+}
+
+enum MissionTimelineEventType {
+  BRIEFING_READ       // Consignes lues et validées
+  MISSION_STARTED     // Mission démarrée manuellement
+  CHAT_MESSAGE        // Message envoyé dans le chat mission
+  REPORT_SUBMITTED    // Rapport de fin de mission soumis
+}
+
+enum ContractType {
+  MISSION_SOS     // Mission ponctuelle urgente
+  SERVICE_BOOKING // Réservation de service/atelier
+  FRAMEWORK       // Contrat cadre (missions récurrentes)
+}
+
+enum ServiceDeliveryType {
+  ONE_TO_ONE      // Session individuelle (coaching vidéo)
+  GROUP           // Session de groupe (atelier)
+}
+
+enum OrganizationType {
+  PUBLIC
+  PRIVATE
+  ASSOCIATION
+}
+
+enum PaymentMode {
+  STRIPE
+  CHORUS_DEFERRED
+}
+
+enum ChorusStatus {
+  PENDING
+  SENT
+  PAID
+  REJECTED
+}
+
+enum ResourceStatus {
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum ResourceType {
+  DOCUMENT
+  IMAGE
+  VIDEO
+  LINK
+}
+
+enum StructureType {
+  MECS
+  EHPAD
+  ITEP
+  CHRS
+  OTHER
+}
+
+enum AppMode {
+  SOCIAL   // SocioPulse
+  MEDICAL  // MedicoPulse
+}
+
+// =============================================================================
+// USER & AUTHENTICATION
+// =============================================================================
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String?
+  phone         String?    @unique
+
+  // Growth Engine
+  referralCode  String?    @unique
+  referrerId    String?
+  referrer      User?      @relation("UserReferrals", fields: [referrerId], references: [id])
+  referrals     User[]     @relation("UserReferrals")
+  points        Int        @default(0)
+  
+  // Cross-Brand Access
+  allowedBrands AppMode[]  @default([])
+  
+  // Rôle et statut
+  role          UserRole   @default(CLIENT)
+  status        UserStatus @default(PENDING)
+  clientType    ClientType?  // PARTICULAR ou ESTABLISHMENT
+  
+  // Vérification et onboarding
+  isVerified    Boolean    @default(false)
+  isMarketplaceVisible Boolean @default(false) // Visible sur la marketplace (si false = visible uniquement par ses TalentPools)
+  onboardingStep Int       @default(1)
+  
+  // CRM - Tags internes pour filtrage admin
+  internalTags  String[]   @default([])
+  
+  // Scarcity Feed - Seed/Demo account flag (Pre-launch FOMO strategy)
+  isSeed        Boolean    @default(false)
+  
+  // Wallet (solde disponible en centimes pour éviter les erreurs de float)
+  walletBalance Int        @default(0)
+  
+  // Stripe Connect (pour les Sociopulse)
+  stripeCustomerId  String?   @unique
+  stripeAccountId   String?   @unique  // Stripe Connect Account
+  stripeOnboarded   Boolean   @default(false)
+  
+  // Métadonnées
+  emailVerified DateTime?
+  lastLoginAt   DateTime?
+  
+  // Relations
+  profile       Profile?
+  establishment Establishment?
+  bookingsAsClient    Booking[]         @relation("ClientBookings")
+  bookingsAsProvider  Booking[]         @relation("ProviderBookings")
+  missionsAsClient    ReliefMission[]   @relation("ClientMissions")
+  missionsAsTalent    ReliefMission[]   @relation("TalentMissions")
+  applications        MissionApplication[]
+  posts               Post[]
+  transactions        Transaction[]
+  notifications       Notification[]
+  sentMessages        Message[]         @relation("SentMessages")
+  receivedMessages    Message[]         @relation("ReceivedMessages")
+  contractsAsTalent   Contract[]        @relation("ContractTalent")
+  contractsAsClient   Contract[]        @relation("ContractClient")
+  quotesAsTalent      Quote[]           @relation("QuoteTalent")
+  quotesAsClient      Quote[]           @relation("QuoteClient")
+  documents           UserDocument[]
+  tags                Tag[]
+  pointLogs           PointLog[]
+  adminNotesWritten   AdminNote[]       @relation("AdminAuthor")
+  adminNotesReceived  AdminNote[]       @relation("AdminTarget")
+  auditLogsPerformed  AuditLog[]        @relation("AuditAdmin")
+  auditLogsReceived   AuditLog[]        @relation("AuditTarget")
+  resources           Resource[]        @relation("AuthorResources")
+  
+  // Mission Hub Relations
+  missionMessages       MissionMessage[]
+  missionReports        MissionReport[]          @relation("TalentMissionReports")
+  missionTimelineEvents MissionTimelineEvent[]
+  
+  // Timestamps
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@index([stripeAccountId])
+  @@index([clientType])
+  @@index([isVerified])
+  @@index([referralCode])
+  @@index([referrerId])
+  @@index([isSeed])  // Scarcity Feed - fast seed filtering
+  @@index([allowedBrands])  // Cross-brand access filtering
+  
+  // Composite indexes for optimized queries
+  @@index([role, status])  // Find verified Talents quickly
+}
+
+// =============================================================================
+// TAG (GROWTH) - Tags onboarding (métier / structure / skills)
+// =============================================================================
+
+model Tag {
+  id        String      @id @default(cuid())
+  name      String
+  category  TagCategory
+
+  users     User[]
+
+  createdAt DateTime    @default(now())
+
+  @@unique([name, category])
+  @@index([category])
+}
+
+// =============================================================================
+// POINT LOG (GROWTH) - Historique points + idempotence
+// =============================================================================
+
+model PointLog {
+  id          String        @id @default(cuid())
+
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action      String
+  referenceId String        @default("")
+  amount      Int
+  status      PointLogStatus @default(CONFIRMED)
+
+  createdAt   DateTime      @default(now())
+  confirmedAt DateTime?
+
+  @@unique([userId, action, referenceId])
+  @@index([userId])
+  @@index([action])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// PROFILE (EXTRA) - Profil professionnel du freelance
+// =============================================================================
+
+model Profile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations personnelles
+  firstName     String
+  lastName      String
+  avatarUrl     String?
+  bio           String?  @db.Text
+  headline      String?  // Ex: "Éducateur spécialisé - 10 ans d'expérience"
+  
+  // ==========================================================================
+  // SOS RENFORT - Job & Compliance Fields
+  // ==========================================================================
+  
+  // Job Identifier (from sos-config.ts)
+  // Ex: "IDE", "ES", "AS", "ME", "IBODE"
+  jobId         String?
+  
+  // Compliance Status for regulated professions
+  complianceStatus ComplianceStatus @default(PENDING)
+  
+  // ADELI Number (required for medical professions)
+  adeliNumber   String?
+  adeliVerifiedAt DateTime?
+  
+  // Driver License
+  hasDriverLicense Boolean @default(false)
+  driverLicenseVerifiedAt DateTime?
+  
+  // Night Shift Availability
+  canDoNightShift Boolean @default(false)
+  
+  // ==========================================================================
+  
+  // Spécialités et compétences (JSON array de tags)
+  // Ex: ["autisme", "petite enfance", "art-thérapie", "EHPAD"]
+  specialties   Json     @default("[]")
+  
+  // Diplômes et certifications (JSON array d'objets)
+  // Ex: [{ "name": "DEES", "url": "https://...", "year": 2015 }]
+  diplomas      Json     @default("[]")
+  
+  // Tarification
+  hourlyRate    Float?   // Taux horaire par défaut
+  
+  // Localisation
+  address       String?
+  city          String?
+  postalCode    String?
+  latitude      Float?
+  longitude     Float?
+  radiusKm      Int      @default(30)  // Rayon d'intervention
+  
+  // Coaching vidéo
+  isVideoEnabled Boolean @default(false)
+  videoIntroUrl  String? // Vidéo de présentation
+  
+  // Statistiques
+  totalMissions   Int    @default(0)
+  totalBookings   Int    @default(0)
+  averageRating   Float  @default(0)
+  totalReviews    Int    @default(0)
+  
+
+  // Relations
+  availabilitySlots AvailabilitySlot[]
+  services          Service[]
+  talentPoolMembers TalentPoolMember[]
+  reviews           Review[]
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([city])
+  @@index([postalCode])
+  @@index([latitude, longitude])
+  @@index([averageRating])
+  @@index([isVideoEnabled])
+  @@index([jobId])
+  @@index([complianceStatus])
+  @@index([hasDriverLicense])
+  @@index([canDoNightShift])
+}
+
+// =============================================================================
+// ESTABLISHMENT - Profil de l'établissement (CLIENT)
+// =============================================================================
+
+model Establishment {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations établissement
+  name          String
+  type          String?  // Ex: "EHPAD", "IME", "Crèche", "Hôpital"
+  organizationType OrganizationType? // PUBLIC / PRIVATE / ASSOCIATION (pour Chorus Pro)
+  creditLimit   Int      @default(0) // En centimes. 0 = Pas de crédit (paiement immédiat)
+  currentOutstanding Int @default(0) // En centimes. Dette actuelle
+  billingDetails Json    @default("{}") // { "serviceCode": "...", "ejNumber": "...", "siretPayer": "..." }
+  siret         String?  @unique
+  logoUrl       String?
+  description   String?  @db.Text
+  website       String?
+  
+  // Contact principal
+  contactName   String?
+  contactRole   String?
+  
+  // Localisation
+  address       String
+  city          String
+  postalCode    String
+  latitude      Float?
+  longitude     Float?
+  
+  // Cross-Brand Activation Flags
+  isSocialActive  Boolean @default(false)
+  isMedicalActive Boolean @default(false)
+  
+  // Relations
+  talentPools   TalentPool[]
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([city])
+  @@index([postalCode])
+  @@index([siret])
+  @@index([latitude, longitude])
+}
+
+// =============================================================================
+// TALENT POOL - Favoris Établissement ↔ Extras (Many-to-Many)
+// =============================================================================
+
+model TalentPool {
+  id              String   @id @default(cuid())
+  name            String   // Ex: "Mes éducateurs préférés", "Équipe weekend"
+  
+  establishmentId String
+  establishment   Establishment @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  
+  members         TalentPoolMember[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([establishmentId])
+}
+
+model TalentPoolMember {
+  id           String     @id @default(cuid())
+  
+  talentPoolId String
+  talentPool   TalentPool @relation(fields: [talentPoolId], references: [id], onDelete: Cascade)
+  
+  profileId    String
+  profile      Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  tags         Json       @default("[]") // Tags spécifiques à l'établissement (ex: "Équipe nuit")
+  note         String?    // Note privée de l'établissement
+  addedAt      DateTime   @default(now())
+  
+  @@unique([talentPoolId, profileId])
+  @@index([talentPoolId])
+  @@index([profileId])
+}
+
+// =============================================================================
+// AVAILABILITY SLOTS - Créneaux pour coaching vidéo
+// =============================================================================
+
+model AvailabilitySlot {
+  id          String   @id @default(cuid())
+  
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // Jour de la semaine (0 = Dimanche, 1 = Lundi, ..., 6 = Samedi)
+  dayOfWeek   Int
+  
+  // Heures (format 24h, ex: "09:00", "14:30")
+  startTime   String
+  endTime     String
+  
+  // Durée du créneau en minutes
+  duration    Int      @default(60)
+  
+  // Actif ou non
+  isActive    Boolean  @default(true)
+  
+  // Récurrence ou date spécifique
+  isRecurring Boolean  @default(true)
+  specificDate DateTime? // Si non récurrent
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([profileId])
+  @@index([dayOfWeek])
+  @@index([isActive])
+}
+
+// =============================================================================
+// SERVICE (CATALOGUE) - Marketplace Catalogue
+// =============================================================================
+
+model Service {
+  id            String      @id @default(cuid())
+  
+  // Propriétaire du service (Extra)
+  profileId     String
+  profile       Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // Informations service
+  name          String
+  slug          String      @unique
+  description   String?     @db.Text
+  shortDescription String?  // Pour les cartes
+  
+  // Type de service
+  type          ServiceType @default(WORKSHOP)
+  deliveryType  ServiceDeliveryType @default(GROUP)  // ONE_TO_ONE or GROUP
+  category      String?     // Ex: "Bien-être", "Art-thérapie", "Sport adapté"
+  
+  // 1-to-1 Booking fields
+  duration      Int         @default(60)  // Duration in minutes
+  price         Float       @default(0)   // Price for 1-to-1 session
+  
+  // Formules de tarification (JSON array)
+  // Ex: [{ "id": "half", "name": "Demi-journée", "price": 150, "duration": "4h", "description": "..." }]
+  pricingOptions Json       @default("[]")
+  
+  // Prix de base (si pas de formules)
+  basePrice     Float?
+  
+  // Options du service
+  minParticipants Int       @default(1)
+  maxParticipants Int       @default(20)
+  
+  // Tranches d'âge acceptées (JSON array)
+  // Ex: ["0-3 ans", "3-6 ans", "6-12 ans", "Adultes", "Séniors"]
+  ageGroups     Json        @default("[]")
+  
+  // Média
+  imageUrl      String?
+  galleryUrls   Json        @default("[]")  // Array d'URLs
+  videoUrl      String?     // Vidéo de présentation
+  
+  // SEO & Recherche
+  tags          Json        @default("[]")
+  
+  // Statut
+  isActive      Boolean     @default(true)
+  isFeatured    Boolean     @default(false)
+  
+  // Statistiques
+  totalBookings Int         @default(0)
+  averageRating Float       @default(0)
+  
+  // Relations
+  bookings      Booking[]
+  reviews       Review[]
+  
+  // Timestamps
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@index([slug])
+  @@index([profileId])
+  @@index([type])
+  @@index([category])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([averageRating])
+}
+
+// =============================================================================
+// RELIEF MISSION (SOS RENFORT) - Missions urgentes
+// =============================================================================
+
+model ReliefMission {
+  id              String        @id @default(cuid())
+  
+  // Client qui poste la mission
+  clientId        String
+  client          User          @relation("ClientMissions", fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Talent assigné (null si pas encore assigné)
+  assignedTalentId String?
+  assignedTalent   User?         @relation("TalentMissions", fields: [assignedTalentId], references: [id])
+  
+  // Informations mission
+  title           String
+  description     String        @db.Text
+  jobTitle        String        // Ex: "Aide-soignant(e)", "Éducateur spécialisé"
+  
+  // ==========================================================================
+  // SOS RENFORT - Granular Job Data (from sos-config.ts)
+  // ==========================================================================
+  
+  // Job Identifier (from sos-config.ts) - Ex: "IDE", "ES", "AS", "IBODE"
+  jobId           String?
+  
+  // Specialties tags - Ex: ["GERIATRIE", "URGENCES", "NUIT"]
+  specialtiesTags String[]      @default([])
+  
+  // Hard Constraints
+  requiresCar     Boolean       @default(false)  // Permis B obligatoire
+  requiresNight   Boolean       @default(false)  // Poste de nuit
+  requiresDiploma Boolean       @default(true)   // Diplôme/ADELI requis
+  
+  // Context Fields
+  serviceName     String?       // For Medical: "Unit 2B", "Cardiologie"
+  targetPublic    String?       // For Social: "Adolescents 14-18", "Adultes handicapés"
+  
+  // ==========================================================================
+  
+  // Urgence et timing
+  urgencyLevel    MissionUrgency @default(MEDIUM)
+  startDate       DateTime
+  endDate         DateTime
+  isNightShift    Boolean       @default(false)
+  
+  // Tarification
+  hourlyRate      Float
+  estimatedHours  Float?
+  totalBudget     Float?
+  
+  // Localisation
+  address         String
+  city            String
+  postalCode      String
+  latitude        Float?
+  longitude       Float?
+  radiusKm        Int           @default(20)  // Rayon de recherche
+  
+  // Exigences (legacy - use specialtiesTags instead)
+  requiredSkills  Json          @default("[]")  // Array de compétences requises
+  requiredDiplomas Json         @default("[]")  // Array de diplômes requis
+  
+  // Statut
+  status          MissionStatus @default(OPEN)
+  
+  // Scarcity Feed - Seed/Demo mission flag (Pre-launch FOMO strategy)
+  isSeed          Boolean       @default(false)
+  
+  // Relations
+  applications    MissionApplication[]
+  bookings        Booking[]
+  contract        Contract?
+  quotes          Quote[]
+  
+  // Mission Hub Relations (Tracking)
+  messages          MissionMessage[]
+  instructions      MissionInstruction?
+  report            MissionReport?
+  timelineEvents    MissionTimelineEvent[]
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  assignedAt      DateTime?
+  completedAt     DateTime?
+  
+  @@index([clientId])
+  @@index([assignedTalentId])
+  @@index([status])
+  @@index([urgencyLevel])
+  @@index([startDate])
+  @@index([city])
+  @@index([postalCode])
+  @@index([latitude, longitude])
+  @@index([jobTitle])
+  @@index([jobId])
+  @@index([requiresCar])
+  @@index([requiresNight])
+  
+  // Composite indexes for SOS Renfort
+  @@index([status, urgencyLevel])  // Filter urgent open missions
+  @@index([city, status])          // Geo + status filter
+  @@index([jobId, status])         // Job + status filter
+}
+
+// =============================================================================
+// QUOTE (DEVIS) - Propositions commerciales
+// =============================================================================
+
+model Quote {
+  id              String      @id @default(cuid())
+  reference       String      @unique  // Ex: "DEV-2024-001"
+  version         Int         @default(1)
+  
+  // Émetteur (Talent)
+  talentId        String
+  talent          User        @relation("QuoteTalent", fields: [talentId], references: [id])
+  
+  // Destinataire (Client)
+  clientId        String
+  client          User        @relation("QuoteClient", fields: [clientId], references: [id])
+  
+  // Lié à une mission (optionnel)
+  reliefMissionId String?
+  reliefMission   ReliefMission? @relation(fields: [reliefMissionId], references: [id])
+  
+  // Contenu du devis
+  title           String
+  description     String?     @db.Text
+  
+  // Lignes de devis (JSON array)
+  lines           Json        @default("[]")
+  
+  // Totaux (en centimes)
+  subtotal        Int         // Sous-total HT
+  taxRate         Float       @default(0)
+  taxAmount       Int         @default(0)
+  discount        Int         @default(0)
+  total           Int         // Total TTC
+  
+  // Conditions
+  validUntil      DateTime    // Date de validité
+  paymentTerms    String?     // Ex: "Paiement à réception"
+  conditions      String?     @db.Text
+  
+  // Statut
+  status          QuoteStatus @default(DRAFT)
+  
+  // Historique
+  sentAt          DateTime?
+  viewedAt        DateTime?
+  respondedAt     DateTime?
+  rejectionReason String?
+  
+  // Relation avec contrat généré
+  contract        Contract?   @relation("QuoteContract")
+  
+  // Révisions
+  previousVersionId String?
+  previousVersion   Quote?    @relation("QuoteRevisions", fields: [previousVersionId], references: [id])
+  revisions         Quote[]   @relation("QuoteRevisions")
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@index([talentId])
+  @@index([clientId])
+  @@index([status])
+  @@index([validUntil])
+  @@index([reference])
+}
+
+// =============================================================================
+// CONTRACT - Contrats (enrichi)
+// =============================================================================
+
+model Contract {
+  id              String          @id @default(cuid())
+  reference       String?         @unique  // Ex: "CTR-2024-001"
+  
+  // Type de contrat
+  type            ContractType    @default(MISSION_SOS)
+  
+  // Parties
+  talentId        String
+  talent          User            @relation("ContractTalent", fields: [talentId], references: [id], onDelete: Cascade)
+  clientId        String?
+  client          User?           @relation("ContractClient", fields: [clientId], references: [id])
+  
+  // Lié à un devis (optionnel)
+  quoteId         String?         @unique
+  quote           Quote?          @relation("QuoteContract", fields: [quoteId], references: [id])
+  
+  // Lié à une mission
+  missionId       String?         @unique
+  mission         ReliefMission?  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  // Contenu
+  title           String?
+  content         String          @db.Text
+  
+  // Montants
+  totalAmount     Int?            // Montant total en centimes
+  platformFee     Int?            // Commission plateforme
+  
+  // Délais & Dates
+  startDate       DateTime?
+  endDate         DateTime?
+  deadlines       Json            @default("[]")
+  
+  // Signatures Extra
+  signatureUrl        String?     // Data URL de la signature
+  extraSignedAt       DateTime?
+  extraSignedIp       String?
+  
+  // Signatures Client
+  clientSignature     String?
+  clientSignedAt      DateTime?
+  clientSignedIp      String?
+  
+  // Statut
+  status          ContractStatus  @default(PENDING)
+  signedAt        DateTime?       // Compat ancien code
+  
+  // Litige
+  disputeReason   String?         @db.Text
+  disputeOpenedAt DateTime?
+  disputeResolvedAt DateTime?
+  
+  // PDF généré
+  pdfUrl          String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  completedAt     DateTime?
+  
+  @@index([missionId])
+  @@index([talentId])
+  @@index([clientId])
+  @@index([status])
+  @@index([type])
+  @@index([reference])
+}
+
+// =============================================================================
+// MISSION APPLICATION - Candidatures aux missions SOS
+// =============================================================================
+
+model MissionApplication {
+  id            String        @id @default(cuid())
+  
+  missionId     String
+  mission       ReliefMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  talentId      String
+  talent        User          @relation(fields: [talentId], references: [id], onDelete: Cascade)
+  
+  // Candidature
+  coverLetter   String?       @db.Text
+  proposedRate  Float?        // Taux horaire proposé (peut différer)
+  
+  // Statut
+  status        String        @default("PENDING")  // PENDING, ACCEPTED, REJECTED
+  
+  // Timestamps
+  createdAt     DateTime      @default(now())
+  respondedAt   DateTime?
+  
+  @@unique([missionId, talentId])
+  @@index([missionId])
+  @@index([talentId])
+  @@index([status])
+}
+
+// =============================================================================
+// BOOKING - Réservations (Services + Missions)
+// =============================================================================
+
+model Booking {
+  id                String        @id @default(cuid())
+  
+  // Client qui réserve
+  clientId          String
+  client            User          @relation("ClientBookings", fields: [clientId], references: [id], onDelete: Cascade)
+  
+  // Prestataire (Extra)
+  providerId        String
+  provider          User          @relation("ProviderBookings", fields: [providerId], references: [id], onDelete: Cascade)
+  
+  // Relation polymorphique : Service OU ReliefMission
+  serviceId         String?
+  service           Service?      @relation(fields: [serviceId], references: [id])
+  
+  reliefMissionId   String?
+  reliefMission     ReliefMission? @relation(fields: [reliefMissionId], references: [id])
+  
+  // ===== Informations Atelier/Coaching =====
+  selectedOption    String?       // Formule choisie
+  ageGroup          String?       // Tranche d'âge
+  objectives        String?       @db.Text  // Objectifs et descriptif
+  participantCount  Int?
+  
+  // Date et heure de la session
+  sessionDate       DateTime?
+  sessionTime       String?       // Format "HH:MM"
+  
+  // 1-to-1 Booking specific times
+  startTime         DateTime?     // Exact start time for 1-to-1
+  endTime           DateTime?     // Exact end time for 1-to-1
+  
+  // ===== Informations Coaching Vidéo =====
+  isVideoSession    Boolean       @default(false)
+  videoRoomId       String?       @unique  // ID LiveKit
+  videoRoomToken    String?       // Token d'accès
+  meetingUrl        String?       // URL de la visio
+  recordingUrl      String?       // URL de l'enregistrement
+  
+  // ===== Paiement =====
+  totalPrice        Float
+  platformFee       Float?        // Commission plateforme
+  providerPayout    Float?        // Montant reversé au prestataire
+  
+  stripePaymentIntentId String?   @unique
+  stripeTransferId  String?       // Transfer ID vers le compte Connect
+  paymentMode       PaymentMode?  // STRIPE ou CHORUS_DEFERRED
+  chorusStatus      ChorusStatus? // Statut pour Chorus Pro
+  paidAt            DateTime?
+  
+  // ===== Statut =====
+  status            BookingStatus @default(PENDING)
+  
+  // Notes et commentaires
+  clientNotes       String?       @db.Text
+  providerNotes     String?       @db.Text
+  cancellationReason String?      @db.Text
+  
+  // Relations
+  review            Review?
+  transaction       Transaction?
+  
+  // Timestamps
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  confirmedAt       DateTime?
+  completedAt       DateTime?
+  cancelledAt       DateTime?
+  
+  @@index([clientId])
+  @@index([providerId])
+  @@index([serviceId])
+  @@index([reliefMissionId])
+  @@index([status])
+  @@index([sessionDate])
+  @@index([isVideoSession])
+  @@index([stripePaymentIntentId])
+}
+
+// =============================================================================
+// POST (LE WALL) - Annonces Offres/Besoins
+// =============================================================================
+
+model Post {
+  id            String    @id @default(cuid())
+  
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  // Type et contenu
+  type          PostType
+  title         String
+  content       String    @db.Text
+  
+  // Localisation
+  city          String?
+  postalCode    String?
+  latitude      Float?
+  longitude     Float?
+  radiusKm      Int?
+  
+  // Catégorisation
+  tags          Json      @default("[]")  // Array de tags
+  category      PostCategory?
+  
+  // Média
+  mediaUrls     Json      @default("[]") @map("imageUrls")  // Array d'URLs
+  
+  // Date de validité (pour les besoins urgents)
+  validUntil    DateTime?
+  
+  // Statut
+  isActive      Boolean   @default(true)
+  isPinned      Boolean   @default(false)
+  viewCount     Int       @default(0)
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([authorId])
+  @@index([type])
+  @@index([city])
+  @@index([postalCode])
+  @@index([latitude, longitude])
+  @@index([isActive])
+  @@index([validUntil])
+  
+  // Composite indexes for Wall feed
+  @@index([type, isActive])        // Filter by type + active
+  @@index([city, isActive])        // Geo filter + active
+  @@index([createdAt(sort: Desc)], map: "Post_createdAt_desc_idx") // Chronological sort
+}
+
+// =============================================================================
+// REVIEW - Avis et notations
+// =============================================================================
+
+model Review {
+  id          String   @id @default(cuid())
+  
+  // Booking associé
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  // Profil noté
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  
+  // Service noté (optionnel)
+  serviceId   String?
+  service     Service? @relation(fields: [serviceId], references: [id])
+  
+  // Notation
+  rating      Int      // 1-5
+  title       String?
+  comment     String?  @db.Text
+  
+  // Réponse du prestataire
+  response    String?  @db.Text
+  respondedAt DateTime?
+  
+  // Modération
+  isVisible   Boolean  @default(true)
+  isVerified  Boolean  @default(true)  // Vérifié = booking réel
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([profileId])
+  @@index([serviceId])
+  @@index([rating])
+  @@index([isVisible])
+}
+
+// =============================================================================
+// TRANSACTION - Historique financier
+// =============================================================================
+
+model Transaction {
+  id              String            @id @default(cuid())
+  
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Booking associé (optionnel)
+  bookingId       String?           @unique
+  booking         Booking?          @relation(fields: [bookingId], references: [id])
+  
+  // Type et montant (en centimes)
+  type            TransactionType
+  amount          Int               // En centimes
+  currency        String            @default("EUR")
+  
+  // Stripe
+  stripePaymentId String?
+  stripeTransferId String?
+  stripePayoutId  String?
+  
+  // Statut
+  status          TransactionStatus @default(PENDING)
+  
+  // Description
+  description     String?
+  metadata        Json?
+  
+  // Timestamps
+  createdAt       DateTime          @default(now())
+  completedAt     DateTime?
+  
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// NOTIFICATION
+// =============================================================================
+
+model Notification {
+  id          String   @id @default(cuid())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Contenu
+  type        String   // Ex: "BOOKING_CONFIRMED", "MISSION_ASSIGNED", "NEW_MESSAGE"
+  title       String
+  message     String
+  link        String?  // URL de redirection
+  
+  // Statut
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  
+  // Métadonnées
+  metadata    Json?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// MESSAGE - Messagerie interne
+// =============================================================================
+
+model Message {
+  id          String   @id @default(cuid())
+  
+  senderId    String
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId  String
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  // Contenu
+  content     String   @db.Text
+  
+  // Fichiers attachés
+  attachments Json     @default("[]")  // Array d'URLs
+  
+  // Statut
+  isRead      Boolean  @default(false)
+  readAt      DateTime?
+  
+  // Référence (optionnel)
+  referenceType String?  // "BOOKING", "MISSION", "SERVICE"
+  referenceId   String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([referenceType, referenceId])
+}
+
+// =============================================================================
+// USER DOCUMENT - Documents utilisateur (diplômes, pièces justificatives)
+// =============================================================================
+
+model UserDocument {
+  id          String   @id @default(cuid())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations document
+  name        String           // Ex: "Diplôme DEES", "Carte d'identité"
+  type        String           // Ex: "DIPLOMA", "ID_CARD", "INSURANCE", "CERTIFICATE"
+  fileUrl     String           // URL du fichier uploadé
+  
+  // Validation
+  status      String   @default("PENDING")  // PENDING, APPROVED, REJECTED
+  comment     String?  @db.Text             // Commentaire admin (ex: raison du rejet)
+  validatedAt DateTime?
+  validatedBy String?          // ID de l'admin qui a validé
+  
+  // Métadonnées
+  expiresAt   DateTime?        // Date d'expiration du document
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+}
+
+// =============================================================================
+// ADMIN NOTE (CRM) - Notes internes des admins sur les utilisateurs
+// =============================================================================
+
+model AdminNote {
+  id            String   @id @default(cuid())
+  
+  // Admin auteur de la note
+  adminId       String
+  admin         User     @relation("AdminAuthor", fields: [adminId], references: [id], onDelete: Cascade)
+  
+  // Utilisateur concerné
+  targetUserId  String
+  targetUser    User     @relation("AdminTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  
+  // Contenu
+  content       String   @db.Text
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  
+  @@index([adminId])
+  @@index([targetUserId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// EXTERNAL NEWS - Veille sectorielle (ASH, Légifrance, Santé.gouv)
+// =============================================================================
+
+model ExternalNews {
+  id          String   @id @default(cuid())
+  
+  title       String
+  source      String   // Ex: "ASH", "Ministère", "Légifrance", "Santé.gouv"
+  url         String   // Lien externe
+  imageUrl    String?  // Image optionnelle
+  excerpt     String?  @db.Text  // Résumé court
+  
+  // Catégorie
+  category    String?  // Ex: "Réglementation", "Actualités", "Formation"
+  
+  // Statut
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  
+  // Timestamps
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([source])
+  @@index([isActive])
+  @@index([publishedAt])
+  @@index([category])
+}
+
+// =============================================================================
+// AUDIT LOG (CRM) - Traçabilité des actions admin
+// =============================================================================
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  
+  // Admin qui a effectué l'action
+  adminId       String
+  admin         User     @relation("AuditAdmin", fields: [adminId], references: [id], onDelete: Cascade)
+  
+  // Action effectuée
+  action        String   // Ex: "VALIDATE_USER", "REJECT_DOCUMENT", "BAN_USER", "ADD_NOTE"
+  
+  // Cible de l'action (optionnel)
+  targetUserId  String?
+  targetUser    User?    @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  
+  // ID de ressource secondaire (ex: documentId)
+  resourceId    String?
+  resourceType  String?  // Ex: "UserDocument", "AdminNote"
+  
+  // Détails supplémentaires
+  metadata      Json?    // Données contextuelles
+  ipAddress     String?
+  userAgent     String?
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  
+  @@index([adminId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([resourceType, resourceId])
+}
+
+// =============================================================================
+// MISSION HUB - Chat dédié à une mission spécifique
+// =============================================================================
+
+model MissionMessage {
+  id          String             @id @default(cuid())
+  
+  missionId   String
+  mission     ReliefMission      @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  senderId    String
+  sender      User               @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  // Contenu
+  content     String             @db.Text
+  type        MissionMessageType @default(TEXT)
+  
+  // Timestamps
+  createdAt   DateTime           @default(now())
+  
+  @@index([missionId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// MISSION HUB - Consignes client pour le talent
+// =============================================================================
+
+model MissionInstruction {
+  id             String        @id @default(cuid())
+  
+  missionId      String        @unique
+  mission        ReliefMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  // Contenu des consignes
+  content        String        @db.Text
+  checklist      Json          @default("[]")  // [{id, text, completed}]
+  
+  // Validation par le talent
+  isAcknowledged Boolean       @default(false)
+  acknowledgedAt DateTime?
+  
+  // Timestamps
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+// =============================================================================
+// MISSION HUB - Bilan de fin de mission
+// =============================================================================
+
+model MissionReport {
+  id          String        @id @default(cuid())
+  
+  missionId   String        @unique
+  mission     ReliefMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  talentId    String
+  talent      User          @relation("TalentMissionReports", fields: [talentId], references: [id], onDelete: Cascade)
+  
+  // Contenu du rapport
+  content     String        @db.Text
+  incidents   String?       @db.Text
+  hoursWorked Float?
+  
+  // Timestamps
+  createdAt   DateTime      @default(now())
+  
+  @@index([talentId])
+}
+
+// =============================================================================
+// MISSION HUB - Historique détaillé de la mission (Timeline)
+// =============================================================================
+
+model MissionTimelineEvent {
+  id          String                    @id @default(cuid())
+  
+  missionId   String
+  mission     ReliefMission             @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  // Utilisateur ayant déclenché l'événement (optionnel pour events système)
+  userId      String?
+  user        User?                     @relation(fields: [userId], references: [id])
+  
+  // Type d'événement
+  type        MissionTimelineEventType
+  
+  // Métadonnées additionnelles
+  metadata    Json?
+  
+  // Timestamps
+  createdAt   DateTime                  @default(now())
+  
+  @@index([missionId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// RESOURCE HUB (TOOLBOX) - Bibliothèque de contenus gamifiée
+// =============================================================================
+
+model Resource {
+  id          String   @id @default(cuid())
+  
+  title       String
+  description String?  @db.Text
+  
+  fileUrl     String
+  fileSize    Int?     // In bytes
+  fileType    String?  // MIME type
+  
+  type        ResourceType @default(DOCUMENT)
+  structureType StructureType?
+  
+  tags        Json     @default("[]")
+  
+  authorId    String
+  author      User     @relation("AuthorResources", fields: [authorId], references: [id], onDelete: Cascade)
+  
+  status      ResourceStatus @default(PENDING_REVIEW)
+  
+  viewCount     Int    @default(0)
+  downloadCount Int    @default(0)
+  
+  moderatedBy   String?
+  // moderatedByUser User? @relation("ModeratorResources", fields: [moderatedBy], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([status])
+  @@index([structureType])
+  @@index([authorId])
+}
+
+// =============================================================================
+// ANALYTICS EVENT - Pre-Launch Metrics & Investor Dashboard
+// =============================================================================
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  
+  // Event Classification
+  eventType   String   // FAKE_DOOR_HIT, PAGE_VIEW, SIGNUP_ATTEMPT, etc.
+  eventAction String   // CONTACT_TALENT, APPLY_MISSION, BOOK_SERVICE
+  
+  // Actor (who triggered the event)
+  userId      String?  // Null for anonymous visitors
+  userRole    String?  // CLIENT, TALENT, ADMIN
+  userEmail   String?  // For quick investor demos
+  
+  // Target (what they tried to interact with)
+  targetType  String?  // SEED_TALENT, SEED_MISSION, SEED_SERVICE
+  targetId    String?
+  targetName  String?  // "Jean Dupont", "EHPAD Les Jardins" - for readability
+  
+  // Context
+  city        String?
+  postalCode  String?
+  jobTitle    String?  // For missions: what job they wanted
+  
+  // Request metadata
+  userAgent   String?
+  ipAddress   String?
+  referer     String?
+  
+  // Business value indicators
+  estimatedValue Float?   // Estimated €€ if this was a real conversion
+  fomoMessage    String?  // The message shown to user
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  
+  // Indexes for analytics queries
+  @@index([eventType])
+  @@index([eventAction])
+  @@index([userId])
+  @@index([targetType])
+  @@index([createdAt])
+  @@index([city])
+  @@index([eventType, createdAt])  // Time-series queries
+}

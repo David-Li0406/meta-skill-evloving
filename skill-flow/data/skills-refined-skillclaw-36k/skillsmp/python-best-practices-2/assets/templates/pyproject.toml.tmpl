@@ -1,0 +1,79 @@
+[project]
+name = "__SERVICE_NAME__"
+version = "1.0.0"
+description = "__APP_TITLE__"
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+
+dependencies = [
+]
+
+[dependency-groups]
+dev = [
+  "ruff",
+  "taskipy",
+  "mypy",
+  "black",
+  "pytest",
+  "pytest-asyncio",
+  "coverage",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+target-version = "py314"
+exclude = ["__pycache__", "migrations/*"]
+line-length = 121
+
+[tool.ruff.lint]
+extend-select = ["E", "F", "W", "I", "UP", "B", "A", "C4", "T20", "SIM", "ASYNC"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+order-by-type = true
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.black]
+line-length = 121
+target-version = ["py314"]
+
+[tool.taskipy.tasks]
+lint = "task format_black && task lint_ruff && task lint_mypy"
+lint_ruff = "ruff check ."
+lint_mypy = "mypy ."
+lint_fix = "task format_black && ruff check --fix . && ruff format ."
+format = "task format_ruff"
+format_ruff = "ruff format ."
+format_black = "black ."
+test = "coverage run -m pytest"
+coverage = "coverage report"
+coverage_html = "coverage html"
+
+[tool.mypy]
+python_version = "3.14"
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 0

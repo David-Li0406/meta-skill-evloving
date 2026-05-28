@@ -1,0 +1,260 @@
+<!--
+  ============================================================
+  VISUAL CARD LAYERS - Granular Components for PPTX Export
+  ============================================================
+  Use this pattern for right-column content with MULTIPLE elements
+  that should be independently movable in PowerPoint.
+
+  THIS IS A "COMPLEX PATTERN" - COPY AND MODIFY, DON'T FILL PLACEHOLDERS
+
+  PROBLEM SOLVED:
+  When a right-column has multiple elements (table + equation card +
+  comparison arrows, etc.), they get rendered as ONE image. Teachers
+  can't adjust individual pieces.
+
+  SOLUTION:
+  Break the content into SEPARATE regions, each with its own
+  data-pptx-region and coordinates. Each becomes a separate PPTX object.
+
+  WHEN TO USE THIS PATTERN:
+  - Right column has 2+ distinct visual elements
+  - Elements might need repositioning in final presentation
+  - Content includes: table + card, equation + comparison, etc.
+
+  WHEN NOT TO USE:
+  - Single card or table (use simple-patterns/content-box.html)
+  - SVG graphs (use graph-snippet.html with data-pptx-layer)
+  - Simple text content
+
+  ============================================================
+  LAYER STRATEGY - Each element is its own pptx-region
+  ============================================================
+  Instead of ONE right-column region containing everything,
+  create MULTIPLE regions positioned within the right column area.
+
+  RIGHT COLUMN BOUNDS (standard two-column layout):
+    x: 408-940  (width: 532)
+    y: 140-510  (height: 370)
+
+  NAMING CONVENTION for regions:
+    data-pptx-region="visual-[N]" where N = 1, 2, 3...
+    Or use descriptive names: "visual-table", "visual-equation", etc.
+
+  EACH REGION NEEDS:
+    - data-pptx-region="visual-N"
+    - data-pptx-x, y, w, h (calculated within right column bounds)
+    - Proper background color (will be preserved in screenshot)
+  ============================================================
+-->
+
+<!-- ============================================================
+     EXAMPLE: Table + Equation Card + Comparison Note
+     Three separate elements, each independently movable in PPTX
+     ============================================================ -->
+
+<!-- WRAPPER: No pptx-region on wrapper - it's just for layout -->
+<div class="col center" style="width: 60%; padding: 12px; gap: 16px;">
+
+  <!-- LAYER 1: Table (top of right column) -->
+  <!-- Position: x=420, y=150, w=500, h=160 -->
+  <div data-pptx-region="visual-table"
+       data-pptx-x="420" data-pptx-y="150"
+       data-pptx-w="500" data-pptx-h="160"
+       style="background: #ffffff; border-radius: 8px; padding: 12px; width: 100%;">
+    <h4 style="font-size: 13px; font-weight: bold; margin: 0 0 8px 0; color: #1d1d1d;">Game A: XP Earned</h4>
+    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+      <thead>
+        <tr style="background: #1791e8; color: #ffffff;">
+          <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: center;">Level</th>
+          <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: center;">1</th>
+          <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: center;">2</th>
+          <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: center; background: #22c55e;">3</th>
+          <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: center;">4</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background: #ffffff;">
+          <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: center; font-weight: bold;">XP</td>
+          <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: center;">100</td>
+          <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: center;">400</td>
+          <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: center; background: #dcfce7; font-weight: bold;">900</td>
+          <td style="border: 1px solid #e5e7eb; padding: 8px; text-align: center;">1600</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- LAYER 2: Equation Card (middle of right column) -->
+  <!-- Position: x=420, y=320, w=500, h=100 -->
+  <div data-pptx-region="visual-equation"
+       data-pptx-x="420" data-pptx-y="320"
+       data-pptx-w="500" data-pptx-h="100"
+       style="background: #e8f4fd; border-radius: 8px; padding: 16px; border-left: 4px solid #1791e8; width: 100%;">
+    <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: bold; color: #1d1d1d;">Game B Equation:</p>
+    <p style="margin: 0; font-size: 18px; color: #1d1d1d; text-align: center; font-family: Georgia, serif;">XP = 250 &middot; L</p>
+    <p style="margin: 8px 0 0 0; font-size: 11px; color: #737373; text-align: center;">where L = level number</p>
+  </div>
+
+  <!-- LAYER 3: Comparison Note (bottom of right column) -->
+  <!-- Position: x=420, y=430, w=500, h=70 -->
+  <div data-pptx-region="visual-comparison"
+       data-pptx-x="420" data-pptx-y="430"
+       data-pptx-w="500" data-pptx-h="70"
+       style="background: #fff9e6; border-radius: 8px; padding: 12px; border-left: 4px solid #f59e0b; width: 100%;">
+    <p style="margin: 0; font-size: 13px; color: #92400e;">
+      <strong>Compare:</strong> At Level 3, Game A gives 900 XP. What about Game B?
+    </p>
+  </div>
+
+</div>
+
+
+<!--
+  ============================================================
+  POSITION CALCULATION GUIDE
+  ============================================================
+
+  RIGHT COLUMN STANDARD AREA:
+    Left edge:   x = 408
+    Top edge:    y = 140
+    Width:       532px (ends at x = 940)
+    Height:      370px (ends at y = 510)
+
+  SPACING RECOMMENDATIONS:
+    - Horizontal margin from edge: 12px (so content x starts at 420)
+    - Vertical gap between elements: 10-16px
+    - Content width: ~500px (leaves 16px margins on each side)
+
+  VERTICAL STACKING EXAMPLE (3 elements):
+    Element 1: y=150, h=160 (bottom at y=310)
+    Gap: 10px
+    Element 2: y=320, h=100 (bottom at y=420)
+    Gap: 10px
+    Element 3: y=430, h=70  (bottom at y=500)
+
+  SIDE-BY-SIDE EXAMPLE (2 elements):
+    Element 1: x=420, w=240 (right edge at x=660)
+    Gap: 20px
+    Element 2: x=680, w=240 (right edge at x=920)
+
+  ============================================================
+  CRITICAL RULES
+  ============================================================
+
+  1. EACH ELEMENT needs its own data-pptx-region
+     - Don't put multiple tables in one region
+     - Don't combine equation + table in one region
+
+  2. WRAPPER DIV has NO data-pptx-region
+     - The wrapper is just for HTML/CSS layout
+     - Only the individual elements get regions
+
+  3. BACKGROUNDS ARE PRESERVED
+     - Set background color on each element
+     - These become the screenshot backgrounds
+
+  4. COORDINATES MUST NOT OVERLAP
+     - Calculate y positions to stack without overlap
+     - Include gaps for visual breathing room
+
+  5. KEEP ELEMENTS SIMPLE
+     - Each layer should have ONE logical piece of content
+     - Complex nested structures can still be screenshotted
+     - But simpler = better quality
+
+  ============================================================
+  REGION NAMING CONVENTION
+  ============================================================
+
+  Use descriptive names when possible:
+    data-pptx-region="visual-table"
+    data-pptx-region="visual-equation"
+    data-pptx-region="visual-graph"
+    data-pptx-region="visual-comparison"
+    data-pptx-region="visual-result"
+
+  Or use numbers if order matters:
+    data-pptx-region="visual-1"
+    data-pptx-region="visual-2"
+    data-pptx-region="visual-3"
+
+  ============================================================
+-->
+
+
+<!-- ============================================================
+     ALTERNATIVE EXAMPLE: Side-by-Side Comparison
+     Two elements positioned horizontally
+     ============================================================ -->
+
+<!--
+<div class="row" style="width: 60%; padding: 12px; gap: 16px;">
+
+  <div data-pptx-region="visual-option-a"
+       data-pptx-x="420" data-pptx-y="150"
+       data-pptx-w="240" data-pptx-h="200"
+       style="background: #ffffff; border-radius: 8px; padding: 12px; flex: 1;">
+    <h4 style="font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Option A</h4>
+    <table>...</table>
+  </div>
+
+  <div data-pptx-region="visual-option-b"
+       data-pptx-x="680" data-pptx-y="150"
+       data-pptx-w="240" data-pptx-h="200"
+       style="background: #e8f4fd; border-radius: 8px; padding: 12px; flex: 1;">
+    <h4 style="font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Option B</h4>
+    <p style="font-family: Georgia, serif;">y = 3x + 5</p>
+  </div>
+
+</div>
+-->
+
+
+<!-- ============================================================
+     ELEMENT TYPE EXAMPLES
+     ============================================================ -->
+
+<!-- TABLE ELEMENT -->
+<!--
+<div data-pptx-region="visual-table"
+     data-pptx-x="420" data-pptx-y="150"
+     data-pptx-w="500" data-pptx-h="140"
+     style="background: #ffffff; border-radius: 8px; padding: 12px;">
+  <table style="width: 100%; border-collapse: collapse;">
+    ...
+  </table>
+</div>
+-->
+
+<!-- EQUATION CARD ELEMENT -->
+<!--
+<div data-pptx-region="visual-equation"
+     data-pptx-x="420" data-pptx-y="300"
+     data-pptx-w="500" data-pptx-h="90"
+     style="background: #e8f4fd; border-radius: 8px; padding: 16px; border-left: 4px solid #1791e8;">
+  <p style="font-family: Georgia, serif; font-size: 18px; text-align: center;">y = mx + b</p>
+</div>
+-->
+
+<!-- HIGHLIGHT/RESULT BOX ELEMENT -->
+<!--
+<div data-pptx-region="visual-result"
+     data-pptx-x="420" data-pptx-y="400"
+     data-pptx-w="500" data-pptx-h="80"
+     style="background: #dcfce7; border-radius: 8px; padding: 12px; border-left: 4px solid #22c55e;">
+  <p style="font-weight: bold; color: #166534;">Result: 900 XP</p>
+</div>
+-->
+
+<!-- COMPARISON ARROW (using SVG inside a region) -->
+<!--
+<div data-pptx-region="visual-arrow"
+     data-pptx-x="560" data-pptx-y="280"
+     data-pptx-w="80" data-pptx-h="40"
+     style="background: transparent;">
+  <svg viewBox="0 0 80 40" style="width: 80px; height: 40px;">
+    <text x="40" y="18" text-anchor="middle" font-size="24" fill="#ef4444">&gt;</text>
+    <text x="40" y="36" text-anchor="middle" font-size="11" fill="#ef4444">greater</text>
+  </svg>
+</div>
+-->

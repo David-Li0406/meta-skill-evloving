@@ -1,0 +1,50 @@
+---
+name: managing-ssltls-certificates
+description: Use this skill when you need to manage and monitor SSL/TLS certificates, including checking expiry dates, renewing certificates, or listing installed certificates.
+---
+
+# Skill body
+
+## Overview
+
+This skill empowers Claude to seamlessly interact with the ssl-certificate-manager plugin, facilitating efficient management and monitoring of SSL/TLS certificates. It allows for quick checks of certificate expiry dates, automated renewal processes, and comprehensive listings of installed certificates.
+
+## How It Works
+
+1. **Identify Intent**: Claude analyzes the user's request for keywords related to SSL/TLS certificate management.
+2. **Plugin Activation**: The ssl-certificate-manager plugin is automatically activated.
+3. **Command Execution**: Based on the user's request, Claude executes the appropriate command within the plugin (e.g., checking expiry, renewing certificate, listing certificates).
+4. **Result Presentation**: Claude presents the results of the command execution to the user in a clear and concise format.
+
+## When to Use This Skill
+
+This skill activates when you need to:
+- Check the expiry date of an SSL/TLS certificate.
+- Renew an SSL/TLS certificate.
+- List all installed SSL/TLS certificates.
+- Investigate SSL/TLS certificate issues.
+
+## Examples
+
+### Example 1: Checking Certificate Expiry
+
+User request: "Check the expiry date of my SSL certificate for example.com"
+
+The skill will:
+1. Activate the ssl-certificate-manager plugin.
+2. Execute the command to check the expiry date for the specified domain.
+3. Display the expiry date to the user.
+
+### Example 2: Renewing a Certificate
+
+User request: "Renew my SSL certificate for api.example.org"
+
+The skill will:
+1. Activate the ssl-certificate-manager plugin.
+2. Execute the command to renew the SSL certificate for the specified domain.
+3. Confirm the renewal process to the user.
+
+## Best Practices
+
+- **Specificity**: Provide the full domain name when requesting certificate checks or renewals.
+- **Context**: If encountering errors, provide the full error message for better troubleshooting.

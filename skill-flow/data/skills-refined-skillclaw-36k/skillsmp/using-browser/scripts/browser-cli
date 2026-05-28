@@ -1,0 +1,9 @@
+#!/bin/bash
+# Wrapper for browser-cli.py
+# Uses uv run and passes all arguments
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+
+cd "$SKILL_DIR"
+exec uv run scripts/browser-cli.py "$@"

@@ -1,0 +1,150 @@
+<!--
+  ============================================================
+  CONTENT BOX - Flexible container for text content
+  ============================================================
+  The universal container for ALL text-based content types.
+  Mix and match paragraphs, lists, equations, tables inside.
+
+  ⚠️ SIZE CONFIGURATION (for ~380px column width):
+  Choose size based on content role. Use LARGE when element is the focus.
+
+  | Element      | Small | Default | Large |
+  |--------------|-------|---------|-------|
+  | Header       | 14px  | 18px    | 24px  |
+  | Body         | 13px  | 16px    | 18px  |
+  | Main content | 24px  | 36px    | 48px  |
+
+  Data attributes for PPTX export:
+  - data-pptx-region: "content-box" | "left-column" | "problem-statement"
+  - data-pptx-x, y, w, h: Position in pixels (960x540 coordinate system)
+  - data-pptx-bg: Optional background color override
+
+  POSITION VALUES: See reference/region-defaults.md for current values.
+  Run `npm run sync-skill-content` to propagate changes to TypeScript.
+  ============================================================
+-->
+
+<!-- PATTERN: Basic container with background -->
+<div data-pptx-region="content-box"
+     data-pptx-x="{{x}}" data-pptx-y="{{y}}" data-pptx-w="{{w}}" data-pptx-h="{{h}}"
+     style="background: #f5f5f5; border-radius: 8px; padding: 16px;">
+  <!-- Content goes here: paragraphs, lists, equations, tables -->
+</div>
+
+<!-- PATTERN: Container without background (for left/right columns) -->
+<!-- Left column position FIXED: 20, 150, 368, 360 -->
+<div data-pptx-region="left-column"
+     data-pptx-x="20" data-pptx-y="150"
+     data-pptx-w="368" data-pptx-h="360"
+     class="col" style="padding: 0;">
+  <!-- Column content -->
+</div>
+
+
+<!--
+  ============================================================
+  CONTENT TYPES (use inside content box)
+  ============================================================
+-->
+
+<!-- PROSE: Simple paragraph (16px default) -->
+<p style="margin: 0; font-size: 16px; line-height: 1.5; color: #1d1d1d;">
+  Prose content here...
+</p>
+
+<!-- PROSE with header (18px header, 16px body) -->
+<h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1d1d1d;">Section Header</h3>
+<p style="margin: 0; font-size: 16px; line-height: 1.5; color: #1d1d1d;">
+  Content after header...
+</p>
+
+<!-- PROSE with inline formatting -->
+<p style="margin: 0; font-size: 16px; line-height: 1.5; color: #1d1d1d;">
+  <strong style="color: #1791e8;">Think:</strong> What operation does this describe?
+</p>
+
+<!-- BULLET LIST (16px) -->
+<ul style="margin: 0; padding-left: 20px; font-size: 16px; line-height: 1.5; color: #1d1d1d;">
+  <li>First point</li>
+  <li>Second point</li>
+  <li style="color: #1791e8; font-weight: bold;">Highlighted point</li>
+</ul>
+
+<!-- NUMBERED LIST (16px) -->
+<ol style="margin: 0; padding-left: 24px; font-size: 16px; line-height: 1.5; color: #1d1d1d;">
+  <li>Step one</li>
+  <li>Step two</li>
+  <li>Step three</li>
+</ol>
+
+<!-- MAIN CONTENT - Default (36px) - equation, key phrase, or focus text -->
+<p style="margin: 16px 0; font-family: Georgia, serif; font-size: 36px; font-style: italic; color: #1d1d1d; text-align: center;">
+  y = mx + b
+</p>
+
+<!-- MAIN CONTENT - Large (48px) - Use when this is THE focus of the slide -->
+<p style="margin: 16px 0; font-family: Georgia, serif; font-size: 48px; font-style: italic; color: #1d1d1d; text-align: center;">
+  30 ÷ 6 = ?
+</p>
+
+<!-- EQUATION with work shown -->
+<div style="text-align: center; margin: 12px 0;">
+  <p style="margin: 0 0 8px 0; font-family: Georgia, serif; font-size: 24px; color: #737373;">
+    36 ÷ 4 = ?
+  </p>
+  <p style="margin: 0; font-family: Georgia, serif; font-size: 32px; font-weight: bold; color: #1791e8;">
+    Answer: 9
+  </p>
+</div>
+
+<!-- TABLE -->
+<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+  <thead>
+    <tr style="background: #f5f5f5;">
+      <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: left; font-weight: bold;">Hours</th>
+      <th style="border: 1px solid #e5e7eb; padding: 8px; text-align: left; font-weight: bold;">Cost</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border: 1px solid #e5e7eb; padding: 8px;">1</td>
+      <td style="border: 1px solid #e5e7eb; padding: 8px;">$25</td>
+    </tr>
+    <tr style="background: #fef3c7;">
+      <td style="border: 1px solid #e5e7eb; padding: 8px; font-weight: bold; color: #92400e;">2</td>
+      <td style="border: 1px solid #e5e7eb; padding: 8px; font-weight: bold; color: #92400e;">$30</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!--
+  ============================================================
+  COMPOSING CONTENT TYPES
+  ============================================================
+  Mix and match content types in a single box.
+  Use margin/spacing between elements.
+-->
+
+<!-- Example: Composed content box (values from reference/region-defaults.md) -->
+<div data-pptx-region="content-box"
+     data-pptx-x="{{left-column.x}}" data-pptx-y="{{left-column.y}}"
+     data-pptx-w="{{left-column.w}}" data-pptx-h="{{left-column.h}}"
+     style="background: #f5f5f5; border-radius: 8px; padding: 16px;">
+
+  <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold; color: #1d1d1d;">Problem</h3>
+
+  <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5; color: #1d1d1d;">
+    A phone plan charges $20 base plus $5 per hour of usage.
+  </p>
+
+  <p style="margin: 0 0 8px 0; font-family: Georgia, serif; font-size: 36px; text-align: center; color: #1d1d1d;">
+    C = $20 + $5 × h
+  </p>
+
+  <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.5; color: #1d1d1d;">
+    <li>C = total cost</li>
+    <li>h = hours used</li>
+  </ul>
+
+</div>

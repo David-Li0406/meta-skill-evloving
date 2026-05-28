@@ -1,0 +1,63 @@
+{
+  "name": "extract-role-content",
+  "description": "Extract content from messages array filtered by role (user/assistant/system)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing a messages array with role and content fields"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the field containing the messages array (e.g., 'messages')"
+    },
+    "role": {
+      "type": "string",
+      "required": true,
+      "description": "Role to filter by (e.g., 'user', 'assistant', 'system')"
+    }
+  },
+  "output": {
+    "type": "array",
+    "description": "Array of content strings from messages matching the specified role"
+  },
+  "examples": [
+    {
+      "description": "Extract user messages",
+      "input": {
+        "messages": [
+          {"role": "user", "content": "Hello"},
+          {"role": "assistant", "content": "Hi there"},
+          {"role": "user", "content": "How are you?"}
+        ]
+      },
+      "args": {"array_path": "messages", "role": "user"},
+      "output": ["Hello", "How are you?"]
+    },
+    {
+      "description": "Extract assistant messages",
+      "input": {
+        "messages": [
+          {"role": "user", "content": "Hello"},
+          {"role": "assistant", "content": "Hi there"},
+          {"role": "assistant", "content": "I'm doing well"}
+        ]
+      },
+      "args": {"array_path": "messages", "role": "assistant"},
+      "output": ["Hi there", "I'm doing well"]
+    },
+    {
+      "description": "Extract system messages",
+      "input": {
+        "messages": [
+          {"role": "system", "content": "You are a helpful assistant"},
+          {"role": "user", "content": "Hello"}
+        ]
+      },
+      "args": {"array_path": "messages", "role": "system"},
+      "output": ["You are a helpful assistant"]
+    }
+  ],
+  "tags": ["array", "filter", "extract", "messages", "role", "content"]
+}

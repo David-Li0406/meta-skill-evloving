@@ -1,0 +1,161 @@
+---
+name: writing-plans
+description: Use when you have a spec or requirements for a multi-step task, before touching code
+---
+
+# Writing Plans
+
+## Overview
+
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+
+Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+
+**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+
+**Save plans to:** `.plans/YYYY-MM-DD-<feature-name>.md`
+
+## Bite-Sized Task Granularity
+
+**Each step is one action (2-5 minutes):**
+- "Write the failing test" - step
+- "Run it to make sure it fails" - step
+- "Implement the minimal code to make the test pass" - step
+- "Run the tests and make sure they pass" - step
+- "Commit" - step
+
+## Plan Document Header
+
+**Every plan MUST start with this header:**
+
+<header>
+# [Feature Name] Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use Skill(executing-plans) to implement this plan task-by-task.
+
+**Goal:** [One sentence describing what this builds]
+
+**Architecture:** [2-3 sentences about approach]
+
+**Tech Stack:** [Key technologies/libraries]
+
+---
+</header>
+
+## Task Structure
+
+**Each task must following this structure:**
+
+<task>
+### Task N: [Component Name]
+
+**Files:**
+- Create: `exact/path/to/file.py`
+- Modify: `exact/path/to/existing.py:123-145`
+- Test: `tests/exact/path/to/test.py`
+
+**Step 1: Write the failing test**
+
+```python
+def test_specific_behavior():
+    result = function(input)
+    assert result == expected
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: FAIL with "function not defined"
+
+**Step 3: Write minimal implementation**
+
+```python
+def function(input):
+    return expected
+```
+
+**Step 4: Run test to verify it passes**
+
+Run: `pytest tests/path/test.py::test_name -v`
+Expected: PASS
+
+**Step 5: Commit**
+
+```bash
+git add tests/path/test.py src/path/file.py
+git commit -m "feat: add specific feature"
+```
+</task>
+
+## Remember
+- Exact file paths always
+- Complete code in plan (not "add validation")
+- Exact commands with expected output
+- Reference relevant skills with @ syntax
+- DRY, YAGNI, TDD, frequent commits
+
+## Execution Handoff
+
+After saving the plan, ask the user if they want to execute:
+
+**"Plan complete and saved to `.plans/<filename>.md`. Ready to execute?"**
+
+**If yes:**
+- **REQUIRED SUB-SKILL:** Use Skill(executing-plans)
+- Implements tasks inline with subagent review gates
+- Spec compliance review after each task
+- Code quality review after each task
+
+**If no:**
+- Plan is saved for later execution
+- User can run `Skill(executing-plans)` in any session
+
+---
+
+## Native Task Integration
+
+**REQUIRED:** Use Claude Code's native task tools to create structured tasks alongside the plan document.
+
+### Creating Native Tasks
+
+As each task is written in the plan, create a corresponding native task:
+
+```
+TaskCreate:
+  subject: "Task N: [Component Name]"
+  description: |
+    **Files:**
+    - Create: `exact/path/to/file.py`
+    - Test: `tests/path/test.py`
+
+    **Steps:**
+    1. Write failing test
+    2. Run test to verify failure
+    3. Implement minimal code
+    4. Run test to verify pass
+    5. Commit
+
+    **Acceptance Criteria:**
+    - Test exists and fails initially
+    - Implementation passes test
+    - Committed with descriptive message
+  activeForm: "Implementing [Component Name]"
+```
+
+### Setting Dependencies
+
+After all tasks are created, set `blockedBy` relationships based on task order:
+
+```
+TaskUpdate:
+  taskId: [task-id]
+  addBlockedBy: [prerequisite-task-ids]
+```
+
+Task 2 is blocked by Task 1, Task 3 is blocked by Task 2, etc., unless the plan specifies otherwise.
+
+### Notes
+
+- Plan document remains the permanent record (persists across sessions)
+- Native tasks provide CLI-visible progress tracking
+- Tasks are session-scoped; executing-plans will re-create from plan if needed

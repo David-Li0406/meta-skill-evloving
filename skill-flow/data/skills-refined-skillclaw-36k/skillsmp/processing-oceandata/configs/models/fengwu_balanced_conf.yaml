@@ -1,0 +1,37 @@
+# Fengwu Model Configuration - Balanced Version (Default)
+# Balanced performance and training speed
+
+# Temporal configuration
+input_len: 7
+output_len: 1
+in_channels: 2  # u and v velocity components
+
+# Spatial configuration
+img_size: [240, 240]  # H, W
+
+# Patch size
+patch_size: [4, 4]         # 2D patch size (240/4 = 60 patches)
+patch_size_3d: [2, 4, 4]   # 3D patch size
+
+# Window size
+window_size: [6, 12]       # 2D window (适配60x60 patches)
+window_size_3d: [2, 6, 12] # 3D window
+
+# Pseudo-3D depth
+pseudo_3d_depth: 4
+
+# Model architecture - BALANCED
+embed_dim: 128             # Between Light(96) and Full(192)
+num_heads: [4, 8, 8, 4]    # Between Light and Full
+mlp_ratio: 4.0
+
+# Regularization
+drop_rate: 0.0
+attn_drop_rate: 0.0
+drop_path_rate: 0.15       # Between Light(0.1) and Full(0.2)
+
+# Training hints
+# - Good balance of speed and accuracy
+# - ~20-30M parameters
+# - Recommended for production use
+

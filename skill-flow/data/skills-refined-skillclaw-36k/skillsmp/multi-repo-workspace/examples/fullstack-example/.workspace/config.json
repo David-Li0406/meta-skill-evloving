@@ -1,0 +1,64 @@
+{
+  "workspace": {
+    "name": "fullstack-example",
+    "description": "Example fullstack application",
+    "base_path": "./",
+    "type": "fullstack",
+    "created": "2026-01-20",
+    "version": "1.0.0"
+  },
+  "repositories": [
+    {
+      "name": "client",
+      "path": "./client",
+      "type": "frontend",
+      "primary": true,
+      "tech_stack": ["react", "typescript", "vite", "tailwindcss"],
+      "port": 3000
+    },
+    {
+      "name": "server",
+      "path": "./server",
+      "type": "backend",
+      "primary": true,
+      "tech_stack": ["node", "express", "typescript", "postgresql", "prisma"],
+      "port": 3001
+    },
+    {
+      "name": "shared",
+      "path": "./shared",
+      "type": "shared",
+      "primary": false,
+      "tech_stack": ["typescript", "zod"]
+    }
+  ],
+  "dependency_graph": {
+    "client": ["shared"],
+    "server": ["shared"],
+    "shared": []
+  },
+  "global_conventions": {
+    "code_style": "prettier",
+    "commit_message_format": "conventional-commits",
+    "branch_naming": "feature/*, bugfix/*, hotfix/*",
+    "package_manager": "npm",
+    "node_version": "18.x",
+    "typescript_version": "5.x"
+  },
+  "development": {
+    "proxy": {
+      "from": "http://localhost:3000/api",
+      "to": "http://localhost:3001/api"
+    },
+    "env_files": {
+      "client": ".env.local",
+      "server": ".env"
+    }
+  },
+  "scripts": {
+    "install_all": "npm install && cd client && npm install && cd ../server && npm install && cd ../shared && npm install",
+    "dev_all": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "build_all": "npm run build:shared && npm run build:client && npm run build:server",
+    "test_all": "npm run test:client && npm run test:server && npm run test:shared"
+  }
+}

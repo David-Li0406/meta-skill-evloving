@@ -1,0 +1,152 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'prerelease'
+        type: choice
+        options:
+          - prerelease   # 0.0.1-beta.7 -> 0.0.1-beta.8 (npm tag: beta)
+          - prepatch     # 0.0.1-beta.8 -> 0.0.2-beta.0 (npm tag: beta)
+          - preminor     # 0.0.1-beta.8 -> 0.1.0-beta.0 (npm tag: beta)
+          - premajor     # 0.0.1-beta.8 -> 1.0.0-beta.0 (npm tag: beta)
+          - patch        # 0.0.1 -> 0.0.2 (npm tag: latest)
+          - minor        # 0.0.1 -> 0.1.0 (npm tag: latest)
+          - major        # 0.0.1 -> 1.0.0 (npm tag: latest)
+      dry_run:
+        description: 'Dry run (skip actual publish)'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Need write to push version bump and tag
+      id-token: write  # Required for npm trusted publishing with OIDC
+
+    steps:
+      - name: Generate app token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          repositories: east,east-node
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure git
+        run: |
+          git config user.name "elara-ci[bot]"
+          git config user.email "elara-ci[bot]@users.noreply.github.com"
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Determine npm tag
+        id: npm_tag
+        run: |
+          if [[ "${{ inputs.release_type }}" == pre* ]]; then
+            echo "tag=beta" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump version
+        id: version
+        run: |
+          if [[ "${{ inputs.release_type }}" == pre* ]]; then
+            npm version ${{ inputs.release_type }} --preid=beta --no-git-tag-version
+          else
+            npm version ${{ inputs.release_type }} --no-git-tag-version
+          fi
+          echo "new_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Commit and tag
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
+          git tag ${{ steps.version.outputs.new_version }}
+          git push origin HEAD --tags
+
+      - name: Publish to npm (dry run)
+        if: ${{ inputs.dry_run }}
+        run: npm publish --access public --provenance --tag ${{ steps.npm_tag.outputs.tag }} --dry-run
+
+      - name: Publish to npm
+        if: ${{ !inputs.dry_run }}
+        run: npm publish --access public --provenance --tag ${{ steps.npm_tag.outputs.tag }}
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.new_version }}
+          name: ${{ steps.version.outputs.new_version }}
+          generate_release_notes: true
+          prerelease: ${{ steps.npm_tag.outputs.prerelease == 'true' }}
+
+      - name: Wait for npm propagation
+        if: ${{ !inputs.dry_run }}
+        uses: nick-invision/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 20
+          retry_wait_seconds: 15
+          command: npm view "@elaraai/east@${{ steps.version.outputs.new_version }}" version
+
+      - name: Trigger update-deps in dependent repos
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Only trigger direct dependents - they cascade to their dependents
+          # east -> east-node -> east-py, e3 -> east-ui
+          REPOS="elaraai/east-node"
+          FAILED=""
+
+          for repo in $REPOS; do
+            echo "Triggering update-deps in $repo..."
+            if gh workflow run update-deps.yml --repo "$repo"; then
+              echo "Successfully triggered $repo"
+            else
+              echo "Failed to trigger $repo"
+              FAILED="$FAILED $repo"
+            fi
+          done
+
+          if [[ -n "$FAILED" ]]; then
+            echo "Failed to trigger update-deps in:$FAILED"
+            exit 1
+          fi
+
+          echo "Successfully triggered update-deps in east-node (cascade continues to east-py, e3, east-ui)"

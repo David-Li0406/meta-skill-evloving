@@ -1,0 +1,28 @@
+{
+	"beadId": "bd-abc123",
+	"prdName": "user-authentication",
+	"tasks": [
+		{
+			"id": "functional-1",
+			"category": "functional",
+			"description": "User can register with email and password",
+			"steps": [
+				"POST /api/auth/register with valid email/password",
+				"Verify 201 response with user object",
+				"Verify password is not in response",
+				"Attempt duplicate email, verify 409 response",
+				"Attempt invalid email, verify 400 response"
+			],
+			"passes": false
+		}
+	],
+	"context": {
+		"patterns": [
+			"API routes: src/routes/items.ts",
+			"Validation: src/lib/validate.ts",
+			"DB queries: src/db/queries/"
+		],
+		"keyFiles": ["src/db/schema.ts", "src/routes/index.ts"],
+		"nonGoals": ["OAuth/social login", "Password reset", "Email verification"]
+	}
+}

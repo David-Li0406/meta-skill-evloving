@@ -1,0 +1,40 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "openshift-cluster-health-mcp.fullname" . }}-reader
+  labels:
+    {{- include "openshift-cluster-health-mcp.labels" . | nindent 4 }}
+rules:
+  # Core Kubernetes resources (read-only)
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/status
+      - pods
+      - pods/status
+      - pods/log
+      - events
+      - namespaces
+      - services
+      - configmaps
+    verbs: ["get", "list", "watch"]
+
+  # Deployments and workloads (read-only)
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - deployments/status
+      - statefulsets
+      - statefulsets/status
+      - replicasets
+      - replicasets/status
+    verbs: ["get", "list", "watch"]
+
+  # Metrics (for resource calculations)
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - nodes
+      - pods
+    verbs: ["get", "list"]
+{{- end }}

@@ -1,0 +1,74 @@
+# Example BMAD Planning Configuration for Non-Interactive Mode
+#
+# Usage:
+#   python .claude/skills/bmad-planner/scripts/create_planning.py \
+#     my-feature stharrold --config planning_config.yaml
+#
+# Copy this file and customize for your feature.
+
+# Top-level settings
+overwrite_existing: false  # Set to true to overwrite existing planning directory
+
+# 🧠 BMAD Analyst - Requirements Gathering
+analyst:
+  # Business context
+  problem_statement: "Brief description of the problem this feature solves"
+  primary_users: "Developers, DevOps engineers, CI/CD pipelines"
+  success_criteria: "Users can run commands non-interactively via config files"
+
+  # Functional requirements (list of requirements)
+  functional_requirements:
+    - name: "Non-interactive mode"
+      description: "Scripts accept --config flag for YAML/JSON configuration"
+      priority: "High"  # High, Medium, or Low
+      acceptance_criteria:
+        - "Script accepts --config flag with path to config file"
+        - "Config values override interactive prompts"
+        - "Defaults used for missing config values"
+
+    - name: "Config file validation"
+      description: "Validate config file format and required fields"
+      priority: "Medium"
+      acceptance_criteria:
+        - "Error on invalid YAML/JSON syntax"
+        - "Error on missing required fields"
+        - "Warning on unknown fields"
+
+  # Non-functional requirements
+  performance_requirements: "Standard performance expectations"
+  security_requirements: "none"  # or "authentication", "encryption", etc.
+  scalability_requirements: "Standard scalability"
+
+  # Constraints and assumptions
+  constraints: "Must remain backward compatible with interactive mode"
+  assumptions: "Standard development environment and tooling"
+
+# 🏗️ BMAD Architect - Technical Architecture
+architect:
+  # Technology stack
+  web_framework: "None"  # FastAPI, Flask, Django, or None
+  database: "None"  # SQLite (dev), PostgreSQL, MySQL, or None
+  database_migration: "None"  # Alembic, Manual SQL, or None
+  testing_framework: "pytest (recommended)"  # pytest (recommended), unittest, other
+
+  # Container strategy
+  use_containers: true
+  container_strategy: "Single container"  # Single container, Multi-container (podman-compose), Custom
+
+  # Architecture patterns
+  architecture_pattern: "Modular"  # Layered (data/service/API), Modular, Monolithic, Other
+
+  # API design (only needed if web_framework != None)
+  api_style: "Not applicable"
+  api_versioning: false
+
+  # Security (only needed if security_requirements != none)
+  authentication_method: "None"  # JWT, OAuth2, API Key, Session-based, Other, None
+  authorization_method: "None"  # RBAC (Role-based), ABAC (Attribute-based), Simple permissions, None
+
+  # Error handling and logging
+  error_handling: "Structured exceptions"  # Structured exceptions, Error codes, Standard Python exceptions, Custom
+  logging_level: "Standard Python logging"  # Standard Python logging, Structured logging (JSON), Custom, Minimal
+
+  # Deployment
+  deployment_target: "Local development only"  # Local development only, Server deployment, Cloud (AWS/GCP/Azure), Other

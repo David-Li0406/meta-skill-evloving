@@ -1,0 +1,158 @@
+{
+  "name": "analyze-investment-clock-rotation",
+  "version": "0.1.0",
+  "displayName": "投資時鐘輪動分析",
+  "description": "把「獲利成長 × 財務狀況（金融環境）」映射成「投資時鐘」，判斷目前落在哪個象限、近期是順時針還是逆時針旋轉、以及相對於上一輪循環的位置差異",
+  "author": "Ricky Wang",
+  "license": "MIT",
+  "category": "business-cycles",
+  "tags": [
+    "投資時鐘",
+    "景氣循環",
+    "獲利成長",
+    "金融環境",
+    "資產配置",
+    "象限分析",
+    "FRED",
+    "宏觀經濟"
+  ],
+  "dataLevel": "free-nolimit",
+  "dependencies": {
+    "python": ">=3.8",
+    "packages": [
+      "pandas>=1.5.0",
+      "numpy>=1.20.0",
+      "requests>=2.28.0"
+    ],
+    "optional": [
+      "matplotlib>=3.5.0",
+      "plotly>=5.0.0"
+    ]
+  },
+  "entryPoints": {
+    "skill": "SKILL.md",
+    "mainScript": "scripts/investment_clock.py"
+  },
+  "workflows": [
+    {
+      "id": "analyze",
+      "name": "分析當前位置",
+      "description": "分析當前投資時鐘的象限與時鐘點位",
+      "file": "workflows/analyze.md"
+    },
+    {
+      "id": "compare-cycle",
+      "name": "循環比較",
+      "description": "與前一輪循環比較旋轉方向與幅度",
+      "file": "workflows/compare-cycle.md"
+    },
+    {
+      "id": "visualize",
+      "name": "視覺化",
+      "description": "生成投資時鐘視覺化圖表",
+      "file": "workflows/visualize.md"
+    }
+  ],
+  "references": [
+    "references/methodology.md",
+    "references/data-sources.md",
+    "references/input-schema.md"
+  ],
+  "templates": [
+    "templates/output-json.md",
+    "templates/output-markdown.md"
+  ],
+  "examples": [],
+  "dataSources": [
+    {
+      "name": "FRED",
+      "type": "primary",
+      "url": "https://fred.stlouisfed.org",
+      "api": "CSV endpoint (no API key required)",
+      "series": {
+        "earnings_proxy": [
+          "CP",
+          "A261RX1Q020SBEA",
+          "NFCI"
+        ],
+        "financial_conditions": [
+          "NFCI",
+          "STLFSI4",
+          "ANFCI"
+        ]
+      }
+    }
+  ],
+  "modelConfig": {
+    "defaultParams": {
+      "freq": "weekly",
+      "z_window": 52,
+      "smoothing_method": "moving_average",
+      "smoothing_window": 4,
+      "axis_x": "financial_conditions",
+      "axis_y": "earnings_growth",
+      "financial_loose_is_left": true,
+      "supportive_is_up": true
+    },
+    "earningsSeries": [
+      {
+        "id": "CP",
+        "name": "Corporate Profits",
+        "transform": "yoy",
+        "description": "美國企業利潤同比"
+      },
+      {
+        "id": "A261RX1Q020SBEA",
+        "name": "Real Gross Domestic Product",
+        "transform": "yoy",
+        "description": "實質GDP同比（獲利代理）"
+      }
+    ],
+    "financialConditionsSeries": [
+      {
+        "id": "NFCI",
+        "name": "Chicago Fed NFCI",
+        "transform": "level",
+        "invert": true,
+        "description": "芝加哥聯儲國家金融狀況指數（負值=寬鬆）"
+      },
+      {
+        "id": "STLFSI4",
+        "name": "St. Louis Fed FSI",
+        "transform": "level",
+        "invert": true,
+        "description": "聖路易聯儲金融壓力指數"
+      }
+    ],
+    "quadrantDefinitions": {
+      "Q1": {
+        "name": "理想象限",
+        "earnings": "positive",
+        "conditions": "supportive",
+        "description": "獲利↑ & 金融環境支持↑：風險資產友善",
+        "asset_implication": "偏多風險資產、順風配置"
+      },
+      "Q2": {
+        "name": "好壞混合",
+        "earnings": "positive",
+        "conditions": "not_supportive",
+        "description": "獲利↑ & 金融環境不支持↓：估值壓力、波動風險",
+        "asset_implication": "配置波動管理、估值敏感度提高"
+      },
+      "Q3": {
+        "name": "修復過渡",
+        "earnings": "negative",
+        "conditions": "supportive",
+        "description": "獲利↓ & 金融環境支持↑：寬鬆救市但基本面未回",
+        "asset_implication": "避免誤判為全面牛市"
+      },
+      "Q4": {
+        "name": "最差象限",
+        "earnings": "negative",
+        "conditions": "not_supportive",
+        "description": "獲利↓ & 金融環境不支持↓：風險資產易受傷",
+        "asset_implication": "優先風險控管、降低槓桿"
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+---
+name: detecting-database-deadlocks
+description: Use this skill when you need to detect, analyze, and prevent database deadlocks in production systems, especially when recurring deadlock issues arise.
+---
+
+# Skill body
+
+## Overview
+
+This skill enables Claude to automatically detect, analyze, and prevent database deadlocks in database systems. It provides insights into transaction patterns, lock contention, and suggests optimization strategies to minimize deadlock occurrences.
+
+## How It Works
+
+1. **Initiate Deadlock Detection**: Claude recognizes the user's request related to database deadlocks and activates the database-deadlock-detector plugin.
+2. **Execute Deadlock Analysis**: The plugin executes the `/deadlock` command to analyze the database for current and potential deadlocks.
+3. **Report Findings**: The plugin generates a report summarizing detected deadlocks, their causes, and potential resolution strategies.
+
+## When to Use This Skill
+
+This skill activates when you need to:
+- Investigate recurring deadlock issues in production.
+- Implement proactive deadlock detection and alerting.
+- Analyze transaction patterns causing deadlocks.
+
+## Examples
+
+### Example 1: Investigating Production Deadlocks
+
+User request: "Investigate recent deadlocks in the production database."
+
+The skill will:
+1. Activate the database-deadlock-detector plugin and run the `/deadlock` command.
+2. Generate a report detailing recent deadlock events, involved transactions, and potential root causes.
+
+### Example 2: Implementing Proactive Deadlock Monitoring
+
+User request: "Set up deadlock monitoring for the database."
+
+The skill will:
+1. Activate the database-deadlock-detector plugin and run the `/deadlock` command with monitoring configurations.
+2. Configure alerts to notify when deadlocks are detected, including details on the involved transactions.
+
+## Best Practices
+
+- **Database Access**: Ensure the plugin has the necessary database access and permissions to perform deadlock detection.
+- **Configuration**: Properly configure the plugin with the correct database connection settings to ensure effective monitoring and analysis.

@@ -1,0 +1,146 @@
+# =============================================================================
+# Docker Compose for Local Development
+# =============================================================================
+# This file sets up the .NET application with local dependencies.
+# Run with: docker-compose up -d
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # Main Application
+  # ===========================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build  # Use build stage for development (includes SDK)
+    container_name: projectname-app
+    ports:
+      - "8080:8080"    # HTTP
+      - "8081:8081"    # HTTPS (if configured)
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=db;Database=ProjectNameDb;User Id=sa;Password=YourStrong!Password123;TrustServerCertificate=True
+      - Redis__ConnectionString=redis:6379
+    volumes:
+      - .:/src                           # Mount source for hot reload
+      - ~/.aspnet/https:/https:ro        # HTTPS certificates
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - projectname-network
+    # For development with hot reload:
+    command: dotnet watch run --project src/ProjectName.Web/ProjectName.Web.csproj
+
+  # ===========================================================================
+  # SQL Server Database (replaces MySQL from PHP)
+  # ===========================================================================
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: projectname-db
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrong!Password123
+      - MSSQL_PID=Developer
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrong!Password123" -Q "SELECT 1" -C || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - projectname-network
+
+  # ===========================================================================
+  # Redis Cache (replaces PHP file/array cache)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: projectname-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - projectname-network
+
+  # ===========================================================================
+  # Azure Storage Emulator (Azurite) - replaces local file storage
+  # ===========================================================================
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: projectname-azurite
+    ports:
+      - "10000:10000"  # Blob
+      - "10001:10001"  # Queue
+      - "10002:10002"  # Table
+    volumes:
+      - azurite-data:/data
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
+    networks:
+      - projectname-network
+
+  # ===========================================================================
+  # Seq - Log aggregation (optional, for viewing structured logs)
+  # ===========================================================================
+  seq:
+    image: datalust/seq:latest
+    container_name: projectname-seq
+    ports:
+      - "5341:5341"    # Ingestion API
+      - "8082:80"      # Web UI
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - seq-data:/data
+    networks:
+      - projectname-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  sqlserver-data:
+  redis-data:
+  azurite-data:
+  seq-data:
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  projectname-network:
+    driver: bridge
+
+# =============================================================================
+# Usage:
+# =============================================================================
+# Start all services:
+#   docker-compose up -d
+#
+# Start with build:
+#   docker-compose up -d --build
+#
+# View logs:
+#   docker-compose logs -f app
+#
+# Stop all services:
+#   docker-compose down
+#
+# Stop and remove volumes:
+#   docker-compose down -v
+#
+# Run migrations:
+#   docker-compose exec app dotnet ef database update
+#
+# Access SQL Server:
+#   docker-compose exec db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrong!Password123" -C
+# =============================================================================

@@ -1,0 +1,271 @@
+# =============================================================================
+# GitLab CI/CD Pipeline
+# =============================================================================
+# Pipeline complet: validate → test → build → security → deploy
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Variables globales
+# -----------------------------------------------------------------------------
+variables:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9"
+  # Cache
+  PNPM_STORE_PATH: ".pnpm-store"
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  # Options
+  FF_USE_FASTZIP: "true"
+  ARTIFACT_COMPRESSION_LEVEL: "fast"
+  CACHE_COMPRESSION_LEVEL: "fast"
+
+# -----------------------------------------------------------------------------
+# Image par défaut
+# -----------------------------------------------------------------------------
+default:
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@${PNPM_VERSION} --activate
+    - pnpm config set store-dir ${PNPM_STORE_PATH}
+
+# -----------------------------------------------------------------------------
+# Cache global
+# -----------------------------------------------------------------------------
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - ${PNPM_STORE_PATH}
+    - node_modules/
+  policy: pull-push
+
+# -----------------------------------------------------------------------------
+# Stages
+# -----------------------------------------------------------------------------
+stages:
+  - validate
+  - test
+  - build
+  - security
+  - deploy
+
+# =============================================================================
+# STAGE: VALIDATE
+# =============================================================================
+
+lint:
+  stage: validate
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+typecheck:
+  stage: validate
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm typecheck
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+commitlint:
+  stage: validate
+  script:
+    - pnpm install --frozen-lockfile
+    - |
+      if [ -n "$CI_MERGE_REQUEST_IID" ]; then
+        pnpm commitlint --from $CI_MERGE_REQUEST_DIFF_BASE_SHA --to HEAD
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# =============================================================================
+# STAGE: TEST
+# =============================================================================
+
+test:unit:
+  stage: test
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm test --coverage
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+test:e2e:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.40.0-focal
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm exec playwright install --with-deps
+    - pnpm test:e2e
+  artifacts:
+    when: always
+    paths:
+      - playwright-report/
+      - test-results/
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  allow_failure: true
+
+# =============================================================================
+# STAGE: BUILD
+# =============================================================================
+
+build:
+  stage: build
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# =============================================================================
+# STAGE: SECURITY
+# =============================================================================
+
+audit:
+  stage: security
+  script:
+    - pnpm install --frozen-lockfile
+    - pnpm audit --audit-level=high
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+sast:
+  stage: security
+  image: returntocorp/semgrep
+  variables:
+    SEMGREP_RULES: "auto"
+  script:
+    - semgrep ci --json --output semgrep-results.json || true
+  artifacts:
+    reports:
+      sast: semgrep-results.json
+    paths:
+      - semgrep-results.json
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+secret_detection:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  script:
+    - gitleaks detect --source . --verbose --report-format json --report-path gitleaks-report.json
+  artifacts:
+    paths:
+      - gitleaks-report.json
+    expire_in: 7 days
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# =============================================================================
+# STAGE: DEPLOY
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Deploy Review (MR)
+# -----------------------------------------------------------------------------
+deploy:review:
+  stage: deploy
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://$CI_COMMIT_REF_SLUG.review.example.com
+    on_stop: stop:review
+    auto_stop_in: 1 week
+  script:
+    - echo "Deploying review environment..."
+    # Ajouter votre logique de déploiement review ici
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+stop:review:
+  stage: deploy
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop
+  script:
+    - echo "Stopping review environment..."
+  when: manual
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+
+# -----------------------------------------------------------------------------
+# Deploy Staging
+# -----------------------------------------------------------------------------
+deploy:staging:
+  stage: deploy
+  environment:
+    name: staging
+    url: https://staging.example.com
+  script:
+    - echo "Deploying to staging..."
+    # Ajouter votre logique de déploiement staging ici
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# -----------------------------------------------------------------------------
+# Deploy Production
+# -----------------------------------------------------------------------------
+deploy:production:
+  stage: deploy
+  environment:
+    name: production
+    url: https://www.example.com
+  script:
+    - echo "Deploying to production..."
+    # Ajouter votre logique de déploiement production ici
+  rules:
+    - if: $CI_COMMIT_TAG
+  when: manual
+
+# =============================================================================
+# TEMPLATES RÉUTILISABLES
+# =============================================================================
+
+# Template pour les jobs Node.js
+.node_job:
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@${PNPM_VERSION} --activate
+    - pnpm config set store-dir ${PNPM_STORE_PATH}
+    - pnpm install --frozen-lockfile
+
+# Template pour les déploiements
+.deploy_job:
+  before_script:
+    - echo "Preparing deployment..."
+  after_script:
+    - echo "Deployment complete"

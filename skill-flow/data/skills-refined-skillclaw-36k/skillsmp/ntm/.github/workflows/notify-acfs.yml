@@ -1,0 +1,68 @@
+# Notifies ACFS (Agentic Coding Flywheel Setup) when installer scripts change,
+# triggering checksum updates for secure installation verification.
+#
+# Triggers:
+#   - Push to main/master affecting install.sh or scripts/install.sh
+#   - New releases published
+#   - Manual workflow dispatch
+#
+# Setup:
+#   1. Create a PAT with 'contents:read' on agentic_coding_flywheel_setup
+#   2. Add it as a secret named ACFS_REPO_DISPATCH_TOKEN in this repo
+#
+# Related: agentic_coding_flywheel_setup-b04c
+
+name: Notify ACFS
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'install.sh'
+      - 'scripts/install.sh'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  notify-acfs:
+    name: Dispatch to ACFS
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check for dispatch token
+        id: check-token
+        run: |
+          if [ -z "${{ secrets.ACFS_REPO_DISPATCH_TOKEN }}" ]; then
+            echo "has_token=false" >> $GITHUB_OUTPUT
+            echo "::warning::Missing secret ACFS_REPO_DISPATCH_TOKEN. Add a PAT with repo access for Dicklesworthstone/agentic_coding_flywheel_setup."
+          else
+            echo "has_token=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger ACFS checksum update
+        if: steps.check-token.outputs.has_token == 'true'
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.ACFS_REPO_DISPATCH_TOKEN }}
+          repository: Dicklesworthstone/agentic_coding_flywheel_setup
+          event-type: upstream-changed
+          client-payload: |
+            {
+              "repo": "${{ github.repository }}",
+              "tool": "${{ github.event.repository.name }}",
+              "ref": "${{ github.ref }}",
+              "sha": "${{ github.sha }}",
+              "event": "${{ github.event_name }}",
+              "actor": "${{ github.actor }}",
+              "timestamp": "${{ github.event.head_commit.timestamp || github.event.release.published_at }}"
+            }
+
+      - name: Log dispatch result
+        if: steps.check-token.outputs.has_token == 'true'
+        run: |
+          echo "Dispatched upstream-changed event to ACFS"
+          echo "  Repository: ${{ github.repository }}"
+          echo "  Event: ${{ github.event_name }}"
+          echo "  SHA: ${{ github.sha }}"
+          echo "  Actor: ${{ github.actor }}"

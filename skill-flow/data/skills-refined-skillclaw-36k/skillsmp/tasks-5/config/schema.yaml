@@ -1,0 +1,339 @@
+# tasks.yaml Schema Definition
+# Version: 1.0.0
+#
+# 此 schema 定義 TASKS skill 的主要輸出格式
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Tasks Definition Schema"
+description: "TASKS skill 輸出的任務定義格式"
+type: object
+
+required:
+  - version
+  - metadata
+  - tasks
+  - execution_plan
+
+properties:
+  version:
+    type: string
+    description: "Schema 版本號"
+    enum: ["1.0.0"]
+
+  metadata:
+    type: object
+    description: "任務集元數據"
+    required:
+      - feature_id
+      - source_plan
+      - generated_at
+      - total_tasks
+    properties:
+      feature_id:
+        type: string
+        description: "功能識別碼"
+      source_plan:
+        type: string
+        description: "來源計劃路徑"
+      generated_at:
+        type: string
+        format: date-time
+        description: "生成時間"
+      total_tasks:
+        type: integer
+        minimum: 1
+        description: "任務總數"
+      estimated_duration:
+        type: string
+        description: "預估總時長"
+        pattern: "^\\d+[hmd]$"
+
+  config:
+    type: object
+    description: "執行配置"
+    properties:
+      parallel_execution:
+        type: boolean
+        default: true
+        description: "是否啟用並行執行"
+      max_concurrent:
+        type: integer
+        minimum: 1
+        maximum: 8
+        default: 4
+        description: "最大並行數"
+      pass_at_k:
+        type: integer
+        minimum: 1
+        default: 3
+        description: "pass@k 重試次數"
+      retry_on_failure:
+        type: boolean
+        default: true
+        description: "失敗時是否重試"
+
+  milestones:
+    type: array
+    description: "里程碑定義"
+    items:
+      type: object
+      required:
+        - id
+        - name
+        - tasks
+      properties:
+        id:
+          type: string
+          pattern: "^M\\d+$"
+          description: "里程碑 ID"
+        name:
+          type: string
+          description: "里程碑名稱"
+        depends_on:
+          type: array
+          items:
+            type: string
+          description: "依賴的里程碑"
+        tasks:
+          type: array
+          items:
+            type: string
+          description: "包含的任務 ID"
+
+  tasks:
+    type: array
+    description: "任務定義列表"
+    items:
+      $ref: "#/definitions/task"
+
+  execution_plan:
+    type: object
+    description: "執行計劃"
+    required:
+      - waves
+    properties:
+      waves:
+        type: array
+        items:
+          type: object
+          required:
+            - id
+            - tasks
+          properties:
+            id:
+              type: string
+              pattern: "^wave-\\d+$"
+            tasks:
+              type: array
+              items:
+                type: string
+            depends_on:
+              type: array
+              items:
+                type: string
+            sync_point:
+              type: string
+      critical_path:
+        type: array
+        items:
+          type: string
+        description: "關鍵路徑任務 ID 序列"
+      estimated_total:
+        type: string
+        description: "預估總時長"
+
+  summary:
+    type: object
+    description: "統計摘要"
+    properties:
+      by_type:
+        type: object
+        additionalProperties:
+          type: integer
+      by_priority:
+        type: object
+        additionalProperties:
+          type: integer
+      by_milestone:
+        type: object
+        additionalProperties:
+          type: integer
+
+definitions:
+  task:
+    type: object
+    required:
+      - id
+      - type
+      - name
+      - priority
+      - status
+    properties:
+      id:
+        type: string
+        description: "任務 ID"
+        pattern: "^(T-F-|T-R-|TEST-|RISK-)\\d{3}$"
+
+      type:
+        type: string
+        description: "任務類型"
+        enum:
+          - feature
+          - refactor
+          - test
+          - prevention
+          - rollback
+          - monitoring
+
+      milestone:
+        type: string
+        description: "所屬里程碑"
+        pattern: "^M\\d+$"
+
+      name:
+        type: string
+        description: "任務名稱"
+        maxLength: 100
+
+      description:
+        type: string
+        description: "詳細描述"
+
+      estimate:
+        type: object
+        properties:
+          duration:
+            type: string
+            pattern: "^\\d+[mh]$"
+            description: "預估時長"
+          complexity:
+            type: string
+            enum: [XS, S, M, L, XL]
+            description: "複雜度"
+
+      priority:
+        type: string
+        description: "優先級"
+        enum: [P0, P1, P2]
+
+      dependencies:
+        type: object
+        properties:
+          blocked_by:
+            type: array
+            items:
+              type: string
+            description: "阻塞此任務的任務 ID"
+          blocks:
+            type: array
+            items:
+              type: string
+            description: "被此任務阻塞的任務 ID"
+
+      acceptance_criteria:
+        type: array
+        items:
+          type: string
+        description: "驗收標準列表"
+
+      files:
+        type: object
+        properties:
+          create:
+            type: array
+            items:
+              type: string
+          modify:
+            type: array
+            items:
+              type: string
+
+      supervision_hints:
+        type: object
+        description: "監督提示（供 IMPLEMENT 使用）"
+        properties:
+          tdd:
+            type: string
+          security:
+            type: string
+          performance:
+            type: string
+
+      related_task:
+        type: string
+        description: "相關任務 ID（用於 TEST/RISK 任務）"
+
+      related_risk:
+        type: string
+        description: "相關風險 ID（用於 RISK 任務）"
+
+      test_cases:
+        type: array
+        description: "測試案例（用於 TEST 任務）"
+        items:
+          type: object
+          properties:
+            scenario:
+              type: string
+            expected:
+              type: string
+
+      trigger:
+        type: string
+        description: "觸發條件（用於 RISK 任務）"
+
+      steps:
+        type: array
+        items:
+          type: string
+        description: "執行步驟（用於 RISK 任務）"
+
+      status:
+        type: string
+        description: "任務狀態"
+        enum:
+          - pending
+          - in_progress
+          - completed
+          - failed
+          - skipped
+        default: pending
+
+# 優先級定義
+priority_definitions:
+  P0:
+    name: "必做"
+    description: "核心功能，不可跳過"
+  P1:
+    name: "應做"
+    description: "重要功能，強烈建議完成"
+  P2:
+    name: "可延"
+    description: "優化功能，可延後處理"
+
+# 任務類型定義
+task_type_definitions:
+  feature:
+    prefix: "T-F-"
+    source: "task-decomposer"
+    description: "功能實作任務"
+  refactor:
+    prefix: "T-R-"
+    source: "task-decomposer"
+    description: "重構任務"
+  test:
+    prefix: "TEST-"
+    source: "test-planner"
+    description: "測試任務"
+  prevention:
+    prefix: "RISK-"
+    source: "risk-preventor"
+    description: "風險預防任務"
+  rollback:
+    prefix: "RISK-"
+    source: "risk-preventor"
+    description: "回退任務"
+  monitoring:
+    prefix: "RISK-"
+    source: "risk-preventor"
+    description: "監控任務"

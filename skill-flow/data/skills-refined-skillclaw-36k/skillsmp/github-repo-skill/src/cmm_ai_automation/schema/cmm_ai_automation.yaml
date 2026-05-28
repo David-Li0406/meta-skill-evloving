@@ -1,0 +1,1266 @@
+---
+id: https://w3id.org/turbomam/cmm-ai-automation
+name: cmm-ai-automation
+title: CMM AI Automation Schema
+description: |-
+  Schema for Critical Mineral Metabolism (CMM) data curation.
+
+  Models microbial strains, growth media, ingredients, and their relationships
+  for knowledge graph generation.
+
+license: MIT
+see_also:
+  - https://turbomam.github.io/cmm-ai-automation
+
+prefixes:
+  cmm: https://w3id.org/turbomam/cmm-ai-automation/
+  linkml: https://w3id.org/linkml/
+  biolink: https://w3id.org/biolink/vocab/
+  schema: http://schema.org/
+  CHEBI: http://purl.obolibrary.org/obo/CHEBI_
+  PUBCHEM.COMPOUND: http://identifiers.org/pubchem.compound/
+  CAS: http://identifiers.org/cas/
+  KEGG.COMPOUND: http://identifiers.org/kegg.compound/
+  MESH: http://identifiers.org/mesh/
+  DRUGBANK: http://identifiers.org/drugbank/
+  OBI: http://purl.obolibrary.org/obo/OBI_
+  UO: http://purl.obolibrary.org/obo/UO_
+  RO: http://purl.obolibrary.org/obo/RO_
+  NCIT: http://purl.obolibrary.org/obo/NCIT_
+  NCBITaxon: http://purl.obolibrary.org/obo/NCBITaxon_
+  TAXRANK: http://purl.obolibrary.org/obo/TAXRANK_
+  ENVO: http://purl.obolibrary.org/obo/ENVO_
+  # Culture collection prefixes
+  DSMZ: https://www.dsmz.de/collection/catalogue/details/culture/DSM-
+  ATCC: https://www.atcc.org/products/
+  CIP: https://catalogue-crbip.pasteur.fr/fiche.xhtml?crbip=
+  NBRC: https://www.nite.go.jp/nbrc/catalogue/NBRCCatalogueDetailServlet?ID=NBRC&CAT=
+  JCM: https://jcm.brc.riken.jp/cgi-bin/jcm/jcm_number?JCM=
+  NCIMB: https://www.ncimb.com/product/NCIMB
+  LMG: https://bccm.belspo.be/catalogues/lmg-strain-details?NUM=
+  # BacDive strain database
+  bacdive_strain: https://bacdive.dsmz.de/strain/
+  # NCBI Assembly accessions
+  GCA: http://identifiers.org/insdc.gca/
+  GCF: http://identifiers.org/insdc.gcf/
+  # Ontology prefixes
+  METPO: http://purl.obolibrary.org/obo/METPO_
+  # Literature reference prefixes
+  doi: https://doi.org/
+  PMID: http://identifiers.org/pubmed/
+  # Media database prefixes
+  mediadive.medium: https://mediadive.dsmz.de/medium/
+  mediadive.solution: https://mediadive.dsmz.de/solution/
+  mediadive.ingredient: https://mediadive.dsmz.de/ingredient/
+  togomedium: http://togomedium.org/medium/
+
+default_prefix: cmm
+default_range: string
+
+imports:
+  - linkml:types
+
+# =============================================================================
+# CLASSES
+# =============================================================================
+
+classes:
+
+  # ---------------------------------------------------------------------------
+  # Base classes
+  # ---------------------------------------------------------------------------
+
+  NamedThing:
+    abstract: true
+    description: A generic grouping for any identifiable entity
+    slots:
+      - id
+      - name
+      - description
+      - synonyms
+    class_uri: schema:Thing
+
+  # ---------------------------------------------------------------------------
+  # Chemical entities
+  # ---------------------------------------------------------------------------
+
+  Ingredient:
+    is_a: NamedThing
+    description: >-
+      A chemical entity that can be a component of solutions or media.
+      Represents the abstract ingredient, not a specific instance with concentration.
+    slots:
+      - chemical_formula
+      - chebi_id
+      - cas_rn
+      - inchikey
+      - pubchem_cid
+      - xrefs
+    id_prefixes:
+      - cmm
+      - CHEBI
+
+  # ---------------------------------------------------------------------------
+  # Mixtures (Solutions and Media)
+  # ---------------------------------------------------------------------------
+
+  Mixture:
+    abstract: true
+    is_a: NamedThing
+    description: >-
+      Abstract base class for things composed of ingredients.
+      Both Solution and GrowthMedium are mixtures.
+    slots:
+      - has_ingredient_component
+
+  Solution:
+    is_a: Mixture
+    description: >-
+      A pre-made concentrated mixture of ingredients, typically diluted into media.
+      Examples: Trace element solution SL-6, Vitamin solution, Phosphate buffer stock.
+    slots:
+      - solution_type
+    id_prefixes:
+      - cmm
+
+  GrowthMedium:
+    is_a: Mixture
+    description: >-
+      A complete formulation for cultivating microorganisms.
+      Contains ingredients directly and/or pre-made solutions.
+      Lab-specific or modified media should use derived_from to link
+      to their parent medium and list modifications.
+    slots:
+      - medium_type
+      - ph
+      - sterilization_method
+      - has_solution_component
+      - target_organisms
+      - source_reference
+      - derived_from
+      - modifications
+    slot_usage:
+      source_reference:
+        required: true
+    id_prefixes:
+      - cmm
+      - mediadive.medium
+      - togomedium
+      - DSMZ
+      - ATCC
+      - JCM
+
+  # ---------------------------------------------------------------------------
+  # Composition relationships (reified)
+  # ---------------------------------------------------------------------------
+
+  IngredientComponent:
+    description: >-
+      Reified relationship: an ingredient as used in a mixture, with concentration and role.
+      This captures the context-dependent properties of ingredient usage.
+    slots:
+      - ingredient
+      - concentration_value
+      - concentration_unit
+      - roles
+      - notes
+    slot_usage:
+      ingredient:
+        required: true
+
+  SolutionComponent:
+    description: >-
+      Reified relationship: a solution as used in a medium, with volume/dilution.
+    slots:
+      - solution
+      - volume_per_liter
+      - volume_unit
+      - notes
+    slot_usage:
+      solution:
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Growth relationships (reified edges with properties)
+  # ---------------------------------------------------------------------------
+
+  GrowthPreference:
+    description: >-
+      Reified relationship: a strain's growth in a specific medium.
+      Captures observation-specific properties like growth rate and temperature.
+      Predicate: METPO:2000517 (grows in) or METPO:2000518 (does not grow in).
+    slots:
+      - subject_strain  # The strain (subject of edge)
+      - object_medium   # The medium (object of edge)
+      - grows           # true = grows in, false = does not grow in
+      - growth_rate     # qualitative: poor, moderate, good, excellent
+      - doubling_time   # quantitative: hours
+      - temperature     # observation temperature (°C)
+      - incubation_time
+      - notes
+      - source_records
+    slot_usage:
+      subject_strain:
+        required: true
+      object_medium:
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Enriched Ingredient (for multi-source data integration)
+  # ---------------------------------------------------------------------------
+
+  EnrichedIngredient:
+    description: >-
+      A chemical entity enriched with data from multiple sources.
+      Uses (inchikey, cas_rn) tuple as the primary key for entity resolution.
+      Each primary API is authoritative for its own ID type:
+      - PubChem is authoritative for pubchem_cid
+      - ChEBI is authoritative for chebi_id and biological/chemical roles
+      - CAS is authoritative for cas_rn
+      - MediaDive is authoritative for mediadive_id
+    class_uri: biolink:SmallMolecule
+    slots:
+      - id  # Composite key: {inchikey}|{cas_rn} or generated UUID
+      - inchikey  # Part of primary key tuple
+      - cas_rn    # Part of primary key tuple
+      - name
+      - synonyms
+      - description
+      - chemical_formula
+      # Source-specific authoritative IDs
+      - chebi_id
+      - pubchem_cid
+      - mediadive_id
+      - kegg_id
+      - mesh_id
+      - drugbank_id
+      # Chemical structure
+      - inchi
+      - smiles
+      # Mass/charge
+      - molecular_mass
+      - monoisotopic_mass
+      - charge
+      # Biological annotations from ChEBI (authoritative)
+      - biological_roles
+      - chemical_roles
+      - application_roles
+      # Cross-references from all sources
+      - xrefs
+      # Provenance tracking
+      - source_records
+      - conflicts
+      - last_enriched
+    unique_keys:
+      inchikey_cas_key:
+        unique_key_slots:
+          - inchikey
+          - cas_rn
+    id_prefixes:
+      - cmm
+      - CHEBI
+
+  SourceRecord:
+    description: >-
+      Tracks the provenance of data from a specific source.
+      Each field value can be traced back to its authoritative source.
+    slots:
+      - source_name
+      - source_id
+      - source_timestamp
+      - source_query
+      - source_fields
+
+  DataConflict:
+    description: >-
+      Records conflicts between data sources for reconciliation review.
+      Primary APIs are considered authoritative for their own ID types.
+    slots:
+      - field_name
+      - primary_source
+      - primary_value
+      - conflicting_source
+      - conflicting_value
+      - resolution
+      - resolution_notes
+
+  # ---------------------------------------------------------------------------
+  # Taxa and Genomes
+  # ---------------------------------------------------------------------------
+
+  Taxon:
+    description: >-
+      A taxonomic entity from NCBI Taxonomy.
+      Represents species or strain-level taxonomy entries.
+      Used for linking strains and genomes to their taxonomic classification.
+    class_uri: biolink:OrganismTaxon
+    slots:
+      - id  # NCBITaxon:{taxon_id}
+      - name  # Scientific name (e.g., "Methylobacterium extorquens AM1")
+      - synonyms
+      - description
+      # Taxonomic hierarchy
+      - ncbi_taxon_id  # The NCBITaxon ID (self-reference for clarity)
+      - parent_taxon_id  # Parent taxon in hierarchy
+      - has_taxonomic_rank  # taxonomic rank (species, strain, subspecies)
+      - scientific_name  # Canonical binomial/trinomial
+      # Links
+      - genome_accessions  # Associated genome assemblies
+      # CMM-specific
+      - has_xox_genes
+      - has_lanmodulin
+      # KG integration
+      - kg_node_ids
+      # Provenance
+      - source_records
+      - last_enriched
+    id_prefixes:
+      - NCBITaxon
+
+  Genome:
+    description: >-
+      A genome assembly from NCBI GenBank/RefSeq or other sources.
+      Represents a sequenced and assembled genome.
+    class_uri: biolink:Genome
+    slots:
+      - id  # GCA:GCA_NNNNNNNN.N or GCF:GCF_NNNNNNNN.N
+      - name  # Assembly name
+      - description
+      # Assembly identifiers
+      - genbank_accession  # GCA_* accession
+      - refseq_accession  # GCF_* accession (if available)
+      - assembly_name
+      - assembly_level  # Complete, Chromosome, Scaffold, Contig
+      # Taxonomic link
+      - ncbi_taxon_id  # Taxon this genome belongs to
+      - scientific_name
+      # Data access
+      - annotation_url  # URL to download GFF annotations
+      - ftp_path  # Base FTP path for genome files
+      # CMM-specific annotations
+      - has_xox_genes
+      - has_lanmodulin
+      # KG integration
+      - kg_node_ids
+      # Provenance
+      - source_records
+      - last_enriched
+    id_prefixes:
+      - GCA
+      - GCF
+
+  # ---------------------------------------------------------------------------
+  # Microbial Strains
+  # ---------------------------------------------------------------------------
+
+  Strain:
+    description: >-
+      A microbial strain enriched with data from multiple sources.
+      Uses NCBITaxon (strain-level) as the primary identifier when available,
+      with culture collection IDs as authoritative cross-references.
+      Each culture collection is authoritative for its own ID type:
+      - DSMZ is authoritative for dsm_id
+      - ATCC is authoritative for atcc_id
+      - BacDive is authoritative for bacdive_id and strain metadata
+      - NCBI is authoritative for ncbi_taxon_id
+    class_uri: biolink:OrganismTaxon
+    slots:
+      - id  # Primary: NCBITaxon:{strain_taxon_id} or bacdive.strain:{id}
+      - name  # Full scientific name with strain designation
+      - synonyms
+      - description
+      # Taxonomic identity
+      - ncbi_taxon_id  # Strain-level NCBITaxon ID when available
+      - species_taxon_id  # Species-level NCBITaxon ID
+      - has_taxonomic_rank  # Taxonomic rank from NCBI (species, strain, subspecies, no rank)
+      - scientific_name  # Binomial name (genus species)
+      - strain_designation  # Strain name (e.g., AM1, KT2440, 2011)
+      # Culture collection IDs (each collection is authoritative for its own)
+      - dsm_id
+      - atcc_id
+      - cip_id
+      - nbrc_id
+      - jcm_id
+      - ncimb_id
+      - lmg_id
+      # BacDive (authoritative for strain metadata)
+      - bacdive_id
+      # Strain properties
+      - type_strain  # Is this the type strain for the species?
+      - biosafety_level
+      - isolation_source
+      - isolation_country
+      - isolation_date
+      # Phenotypic properties (from BacDive)
+      - oxygen_tolerance
+      - temperature_range
+      - ph_range
+      - gram_stain
+      - cell_shape
+      - motility
+      # Genomic links
+      - genome_accessions
+      # CMM-specific annotations
+      - has_xox_genes  # Has lanthanide-dependent alcohol dehydrogenase genes
+      - has_lanmodulin  # Has lanmodulin (lanM) gene
+      # Relationships
+      - belongs_to_taxon  # Link to Taxon
+      - has_genome  # Link to Genome(s)
+      - grows_in_medium  # Media where strain grows (METPO:2000517)
+      - does_not_grow_in_medium  # Media where strain doesn't grow (METPO:2000518)
+      # Cross-references from all sources
+      - xrefs
+      # Provenance tracking
+      - source_records
+      - conflicts
+      - last_enriched
+    id_prefixes:
+      - NCBITaxon
+      - bacdive_strain
+      - DSMZ
+      - ATCC
+
+  # ---------------------------------------------------------------------------
+  # Cross-references
+  # ---------------------------------------------------------------------------
+
+  CrossReference:
+    description: A cross-reference to an external database or identifier
+    slots:
+      - xref_type
+      - xref_id
+      - xref_label
+    slot_usage:
+      xref_type:
+        required: true
+      xref_id:
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # Container for data
+  # ---------------------------------------------------------------------------
+
+  CMMDatabase:
+    tree_root: true
+    description: Container for all CMM entities
+    attributes:
+      ingredients:
+        description: Collection of all chemical ingredients in the database
+        range: Ingredient
+        multivalued: true
+        inlined_as_list: true
+      solutions:
+        description: Collection of all solution recipes (pre-made mixtures)
+        range: Solution
+        multivalued: true
+        inlined_as_list: true
+      media:
+        description: Collection of all growth medium recipes
+        range: GrowthMedium
+        multivalued: true
+        inlined_as_list: true
+      strains:
+        description: Collection of all microbial strains
+        range: Strain
+        multivalued: true
+        inlined_as_list: true
+      taxa:
+        description: Collection of all taxonomic entities
+        range: Taxon
+        multivalued: true
+        inlined_as_list: true
+      genomes:
+        description: Collection of all genome assemblies
+        range: Genome
+        multivalued: true
+        inlined_as_list: true
+      growth_preferences:
+        description: Collection of strain-medium growth relationships with properties
+        range: GrowthPreference
+        multivalued: true
+        inlined_as_list: true
+
+# =============================================================================
+# SLOTS
+# =============================================================================
+
+slots:
+
+  # Identity slots
+  id:
+    identifier: true
+    slot_uri: schema:identifier
+    range: uriorcurie
+    description: A unique identifier for a thing
+
+  name:
+    slot_uri: schema:name
+    description: A human-readable name for a thing
+
+  description:
+    slot_uri: schema:description
+    description: A human-readable description for a thing
+
+  synonyms:
+    multivalued: true
+    description: Alternative names for this entity
+
+  # Chemical identity slots
+  chemical_formula:
+    description: Chemical formula (e.g., NaCl, MgSO4·7H2O)
+
+  chebi_id:
+    range: uriorcurie
+    description: ChEBI identifier
+    id_prefixes:
+      - CHEBI
+
+  cas_rn:
+    description: CAS Registry Number
+    pattern: "^\\d{2,7}-\\d{2}-\\d$"
+
+  inchikey:
+    description: InChIKey for structural identification
+    pattern: "^[A-Z]{14}-[A-Z]{10}-[A-Z]$"
+
+  pubchem_cid:
+    range: integer
+    description: PubChem Compound ID
+
+  # Cross-reference slots
+  xrefs:
+    range: CrossReference
+    multivalued: true
+    inlined_as_list: true
+    description: Cross-references to external databases
+
+  xref_type:
+    description: Type of cross-reference (e.g., CHEBI, CAS-RN, kg-microbe-ingredient)
+
+  xref_id:
+    description: The identifier value
+
+  xref_label:
+    description: Human-readable label from the external source
+
+  # Composition slots
+  has_ingredient_component:
+    range: IngredientComponent
+    multivalued: true
+    inlined_as_list: true
+    description: Ingredients contained in this mixture with their concentrations
+
+  has_solution_component:
+    range: SolutionComponent
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Solutions contained in this medium.
+      Note: Not populated for MediaDive data due to complex nested structure
+      (up to 5 levels deep, 42% of solutions reference other solutions).
+      MediaDive composition uses has_ingredient_component with flattened
+      ingredients from medium_compositions instead. See GitHub issue #111.
+
+  ingredient:
+    range: Ingredient
+    description: Reference to the ingredient entity
+
+  solution:
+    range: Solution
+    description: Reference to the solution entity
+
+  # Concentration slots
+  concentration_value:
+    range: float
+    description: Numeric concentration value
+
+  concentration_unit:
+    range: ConcentrationUnit
+    description: Unit of concentration
+
+  volume_per_liter:
+    range: float
+    description: Volume of solution added per liter of medium
+
+  volume_unit:
+    range: VolumeUnit
+    description: Unit of volume (typically mL)
+
+  # Role slots
+  roles:
+    range: IngredientRole
+    multivalued: true
+    description: >-
+      Functional roles of this ingredient in this specific mixture.
+      An ingredient can have multiple roles, and roles are context-dependent.
+
+  # Medium-specific slots
+  medium_type:
+    range: MediumType
+    description: Classification of the medium
+
+  solution_type:
+    range: SolutionType
+    description: Classification of the solution
+
+  ph:
+    range: float
+    description: Target pH of the medium
+    minimum_value: 0
+    maximum_value: 14
+
+  sterilization_method:
+    description: How the medium is sterilized (e.g., autoclave, filter)
+
+  target_organisms:
+    multivalued: true
+    description: Taxa or organism types this medium is designed for
+
+  source_reference:
+    range: uriorcurie
+    description: >-
+      Authoritative reference for this medium formulation.
+      Must be a resolvable CURIE from an allowed prefix.
+      For database media: mediadive.medium:381, togomedium:M1871, DSMZ:576, ATCC:1306, JCM:M89
+      For literature-defined media: doi:10.1371/journal.pone.0062957, PMID:23658750
+    pattern: "^(doi|PMID|mediadive\\.medium|togomedium|DSMZ|ATCC|JCM):\\S+$"
+
+  derived_from:
+    range: GrowthMedium
+    description: >-
+      Parent medium this formulation is based on.
+      Used for lab-specific modifications of standard media.
+      Creates a provenance chain back to database entries.
+
+  modifications:
+    multivalued: true
+    description: >-
+      List of modifications from the parent medium (derived_from).
+      Each entry describes one change: added ingredient, removed ingredient,
+      concentration change, or buffer substitution.
+      Examples:
+        - "Added PIPES buffer 30mM pH 6.8"
+        - "Replaced methanol with succinate 15mM"
+        - "Removed agar for liquid culture"
+
+  notes:
+    description: Free-text notes about this component
+
+  # EnrichedIngredient-specific slots
+  mediadive_id:
+    range: integer
+    description: MediaDive ingredient ID (MediaDive is authoritative)
+
+  kegg_id:
+    description: KEGG Compound ID (e.g., C00031)
+
+  mesh_id:
+    description: MeSH identifier
+
+  drugbank_id:
+    description: DrugBank identifier
+
+  inchi:
+    description: InChI string for structural identification
+
+  smiles:
+    description: SMILES string for structural representation
+
+  molecular_mass:
+    range: float
+    description: Average molecular mass in Daltons
+
+  monoisotopic_mass:
+    range: float
+    description: Monoisotopic mass in Daltons
+
+  charge:
+    range: integer
+    description: Formal charge of the molecule
+
+  biological_roles:
+    multivalued: true
+    description: >-
+      Biological roles from ChEBI (ChEBI is authoritative).
+      Examples: nutrient, metabolite, cofactor.
+
+  chemical_roles:
+    multivalued: true
+    description: >-
+      Chemical roles from ChEBI (ChEBI is authoritative).
+      Examples: acid, base, reducing agent.
+
+  application_roles:
+    multivalued: true
+    description: >-
+      Application roles from ChEBI.
+      Examples: drug, pesticide, food additive.
+
+  # Provenance tracking slots
+  source_records:
+    range: SourceRecord
+    multivalued: true
+    inlined_as_list: true
+    description: Records tracking which source provided which data
+
+  conflicts:
+    range: DataConflict
+    multivalued: true
+    inlined_as_list: true
+    description: Recorded conflicts between data sources
+
+  last_enriched:
+    range: datetime
+    description: Timestamp of last enrichment run
+
+  source_name:
+    description: >-
+      Name of the data source (e.g., pubchem, chebi, cas, mediadive, node_normalization)
+
+  source_id:
+    description: Identifier returned by this source
+
+  source_timestamp:
+    range: datetime
+    description: When this data was retrieved from the source
+
+  source_query:
+    description: The query used to retrieve data from this source
+
+  source_fields:
+    multivalued: true
+    description: List of field names populated by this source
+
+  # Conflict tracking slots
+  field_name:
+    description: Name of the field with conflicting values
+
+  primary_source:
+    description: The authoritative source for this field
+
+  primary_value:
+    description: Value from the authoritative source
+
+  conflicting_source:
+    description: The source with a different value
+
+  conflicting_value:
+    description: Value that conflicts with the authoritative source
+
+  resolution:
+    range: ConflictResolution
+    description: How the conflict was resolved
+
+  resolution_notes:
+    description: Notes about the conflict resolution
+
+  # ---------------------------------------------------------------------------
+  # Strain-specific slots
+  # ---------------------------------------------------------------------------
+
+  # Taxonomic identity slots
+  ncbi_taxon_id:
+    range: uriorcurie
+    description: >-
+      NCBITaxon ID at strain level when available.
+      NCBI is authoritative for this ID.
+    id_prefixes:
+      - NCBITaxon
+
+  species_taxon_id:
+    range: uriorcurie
+    description: >-
+      NCBITaxon ID at species level.
+      Links strain to its parent species.
+    id_prefixes:
+      - NCBITaxon
+
+  scientific_name:
+    description: >-
+      Binomial scientific name (genus species).
+      Does not include strain designation.
+
+  strain_designation:
+    description: >-
+      Strain name or identifier (e.g., AM1, KT2440, DSM 1337).
+      Combined with scientific_name gives full strain name.
+
+  # Culture collection ID slots (each authoritative for its own)
+  dsm_id:
+    range: integer
+    description: >-
+      DSMZ strain number (DSMZ is authoritative).
+      Use as DSM:{id} CURIE.
+
+  atcc_id:
+    description: >-
+      ATCC catalog number (ATCC is authoritative).
+      May include letters (e.g., BAA-1234).
+
+  cip_id:
+    description: >-
+      CIP (Collection de l'Institut Pasteur) number.
+
+  nbrc_id:
+    range: integer
+    description: >-
+      NBRC (NITE Biological Resource Center, Japan) number.
+
+  jcm_id:
+    range: integer
+    description: >-
+      JCM (Japan Collection of Microorganisms) number.
+
+  ncimb_id:
+    range: integer
+    description: >-
+      NCIMB (National Collection of Industrial, Food and Marine Bacteria) number.
+
+  lmg_id:
+    range: integer
+    description: >-
+      LMG (Belgian Coordinated Collections of Microorganisms) number.
+
+  bacdive_id:
+    range: integer
+    description: >-
+      BacDive strain ID (BacDive is authoritative for strain metadata).
+
+  # Strain property slots
+  type_strain:
+    range: boolean
+    description: >-
+      Whether this is the type strain for its species.
+      Type strains are reference specimens for species definitions.
+
+  biosafety_level:
+    range: integer
+    description: >-
+      Biosafety level (1-4). Most environmental bacteria are BSL-1.
+    minimum_value: 1
+    maximum_value: 4
+
+  isolation_source:
+    description: >-
+      Sample type or environment from which strain was isolated.
+      Examples: soil, rhizosphere, activated sludge, human gut.
+
+  isolation_country:
+    description: Country where the strain was isolated.
+
+  isolation_date:
+    description: Date or year of isolation.
+
+  # Phenotypic property slots
+  oxygen_tolerance:
+    range: OxygenTolerance
+    description: >-
+      Oxygen requirement/tolerance category.
+
+  temperature_range:
+    description: >-
+      Growth temperature range or optimum (e.g., "25-37°C", "mesophilic").
+
+  ph_range:
+    description: >-
+      Growth pH range or optimum (e.g., "6.5-8.0", "neutrophilic").
+
+  gram_stain:
+    range: GramStain
+    description: Gram staining result.
+
+  cell_shape:
+    description: >-
+      Cell morphology (e.g., rod, coccus, spiral).
+
+  motility:
+    range: boolean
+    description: Whether the organism is motile.
+
+  # Genomic slots
+  genome_accessions:
+    multivalued: true
+    description: >-
+      Genome assembly accessions (e.g., GCA_000005845.2).
+      Links to NCBI Assembly or other genome databases.
+
+  # CMM-specific annotation slots
+  has_xox_genes:
+    range: boolean
+    description: >-
+      Whether strain has XoxF, ExaF, or other lanthanide-dependent
+      alcohol dehydrogenase genes.
+
+  has_lanmodulin:
+    range: boolean
+    description: >-
+      Whether strain has lanmodulin (lanM) gene for lanthanide binding.
+
+  # ---------------------------------------------------------------------------
+  # Taxon-specific slots
+  # ---------------------------------------------------------------------------
+
+  parent_taxon_id:
+    range: uriorcurie
+    description: >-
+      Parent taxon in the NCBI Taxonomy hierarchy.
+      For strains, this is typically the species.
+    id_prefixes:
+      - NCBITaxon
+
+  has_taxonomic_rank:
+    range: TaxonomicRank
+    slot_uri: biolink:has_taxonomic_rank
+    description: >-
+      Taxonomic rank (species, strain, subspecies, etc.)
+      Aligns with biolink:has_taxonomic_rank.
+
+  kg_node_ids:
+    multivalued: true
+    description: >-
+      Node IDs in external knowledge graphs (e.g., kg-microbe).
+      Format: "NCBITaxon:12345|kg-microbe"
+
+  # ---------------------------------------------------------------------------
+  # Genome-specific slots
+  # ---------------------------------------------------------------------------
+
+  genbank_accession:
+    description: >-
+      GenBank assembly accession (GCA_NNNNNNNN.N format).
+      These are the primary genome assembly identifiers.
+    pattern: "^GCA_\\d{9}\\.\\d+$"
+
+  refseq_accession:
+    description: >-
+      RefSeq assembly accession (GCF_NNNNNNNN.N format).
+      Reference genomes have both GenBank and RefSeq accessions.
+    pattern: "^GCF_\\d{9}\\.\\d+$"
+
+  assembly_name:
+    description: >-
+      Human-readable assembly name assigned by submitter.
+
+  assembly_level:
+    range: AssemblyLevel
+    description: >-
+      Level of assembly completeness.
+
+  annotation_url:
+    description: >-
+      URL to download genome annotation file (GFF format).
+
+  ftp_path:
+    description: >-
+      Base FTP path for genome files at NCBI.
+
+  # ---------------------------------------------------------------------------
+  # Relationship slots
+  # ---------------------------------------------------------------------------
+
+  belongs_to_taxon:
+    range: Taxon
+    description: >-
+      Links a strain to its taxonomic classification.
+      Predicate: RO:0002162 (in taxon) or similar.
+    slot_uri: RO:0002162
+
+  has_genome:
+    range: Genome
+    multivalued: true
+    description: >-
+      Links a strain or taxon to its genome assembly(ies).
+      A strain/taxon may have multiple genome assemblies.
+
+  grows_in_medium:
+    range: GrowthMedium
+    multivalued: true
+    description: >-
+      Media in which this strain can grow.
+      Predicate: METPO:2000517 (grows in).
+    slot_uri: METPO:2000517
+
+  does_not_grow_in_medium:
+    range: GrowthMedium
+    multivalued: true
+    description: >-
+      Media in which this strain cannot grow (negative results).
+      Predicate: METPO:2000518 (does not grow in).
+    slot_uri: METPO:2000518
+
+  # ---------------------------------------------------------------------------
+  # GrowthPreference edge slots
+  # ---------------------------------------------------------------------------
+
+  subject_strain:
+    range: Strain
+    description: >-
+      The strain that is the subject of the growth relationship.
+
+  object_medium:
+    range: GrowthMedium
+    description: >-
+      The medium that is the object of the growth relationship.
+
+  grows:
+    range: boolean
+    description: >-
+      True if strain grows in medium, false if it does not grow.
+      Determines predicate: true → METPO:2000517, false → METPO:2000518.
+
+  growth_rate:
+    range: GrowthRate
+    description: >-
+      Qualitative growth rate in this medium.
+
+  temperature:
+    range: float
+    description: >-
+      Growth temperature in degrees Celsius for this observation.
+    unit:
+      ucum_code: Cel
+
+  incubation_time:
+    description: >-
+      Duration of incubation (e.g., "48 hours", "7 days").
+
+  doubling_time:
+    range: float
+    description: >-
+      Quantitative growth rate measured as doubling time in hours.
+      Also known as generation time.
+    unit:
+      ucum_code: h
+    minimum_value: 0
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+enums:
+
+  MediumType:
+    description: >-
+      Classification of growth media by composition.
+      Note: Functional properties like selective/differential are orthogonal
+      and should be captured separately if needed.
+    permissible_values:
+      minimal:
+        description: Defined medium with minimal components
+      complex:
+        description: Contains undefined components like yeast extract
+      defined:
+        description: All components are chemically defined
+      semi_defined:
+        description: Mostly defined but contains some complex components
+
+  SolutionType:
+    description: Classification of stock solutions
+    permissible_values:
+      trace_elements:
+        description: Concentrated trace element mixture
+      vitamin:
+        description: Vitamin mixture
+      buffer:
+        description: pH buffer stock
+      carbon_source:
+        description: Concentrated carbon source
+      other:
+        description: Other type of stock solution
+
+  IngredientRole:
+    description: >-
+      Functional role of an ingredient in a growth medium.
+      TODO: Map to grounded ontology terms (METPO, OBI, or custom).
+      See issue #11.
+    permissible_values:
+      carbon_source:
+        description: Provides carbon for biosynthesis and/or energy
+        todos:
+          - Map to appropriate ontology term
+      nitrogen_source:
+        description: Provides nitrogen for biosynthesis
+      phosphorus_source:
+        description: Provides phosphorus
+      sulfur_source:
+        description: Provides sulfur
+      trace_element:
+        description: Micronutrient required in small amounts
+      mineral:
+        description: Macro-mineral component
+      buffer:
+        description: pH buffering agent
+        meaning: CHEBI:35225
+      vitamin:
+        description: Essential vitamin or growth factor
+        meaning: CHEBI:33229
+      solidifying_agent:
+        description: Agent for solid media (e.g., agar)
+      selective_agent:
+        description: Antibiotic or other selective compound
+      osmotic_stabilizer:
+        description: Maintains osmotic balance
+
+  ConcentrationUnit:
+    description: Units for concentration
+    permissible_values:
+      g_per_L:
+        description: Grams per liter
+        meaning: UO:0000175
+      mg_per_L:
+        description: Milligrams per liter
+        meaning: UO:0000176
+      ug_per_L:
+        description: Micrograms per liter
+        meaning: UO:0000301
+      M:
+        description: Molar
+        meaning: UO:0000062
+      mM:
+        description: Millimolar
+        meaning: UO:0000063
+      uM:
+        description: Micromolar
+        meaning: UO:0000064
+      percent_w_v:
+        description: "Weight/volume percentage: % (w/v)"
+      percent_v_v:
+        description: "Volume/volume percentage: % (v/v)"
+
+  VolumeUnit:
+    description: Units for volume
+    permissible_values:
+      mL:
+        description: Milliliters
+        meaning: UO:0000098
+      L:
+        description: Liters
+        meaning: UO:0000099
+      uL:
+        description: Microliters
+        meaning: UO:0000101
+
+  ConflictResolution:
+    description: >-
+      How a data conflict between sources was resolved.
+      Primary APIs are considered authoritative for their own ID types.
+    permissible_values:
+      primary_source_wins:
+        description: Primary/authoritative source value was used
+      manual_review:
+        description: Conflict flagged for manual review
+      merged:
+        description: Values were merged (e.g., for lists)
+      unresolved:
+        description: Conflict not yet resolved
+
+  DataSource:
+    description: >-
+      Names of data sources used for enrichment.
+      Each source is authoritative for its own ID type.
+    permissible_values:
+      pubchem:
+        description: PubChem (authoritative for pubchem_cid)
+      chebi:
+        description: ChEBI 2.0 (authoritative for chebi_id, biological/chemical roles)
+      cas:
+        description: CAS Common Chemistry (authoritative for cas_rn)
+      mediadive:
+        description: MediaDive (authoritative for mediadive_id)
+      node_normalization:
+        description: NCATS Translator NodeNormalization API (identifier bridging)
+      kg_microbe:
+        description: KG-Microbe knowledge graph
+      bacdive:
+        description: BacDive (authoritative for bacdive_id and strain metadata)
+      ncbi_taxonomy:
+        description: NCBI Taxonomy (authoritative for ncbi_taxon_id)
+
+  # ---------------------------------------------------------------------------
+  # Strain-related enums
+  # ---------------------------------------------------------------------------
+
+  OxygenTolerance:
+    description: Oxygen requirement categories for microorganisms.
+    permissible_values:
+      aerobe:
+        description: Requires oxygen for growth.
+      anaerobe:
+        description: Cannot tolerate oxygen; grows only anaerobically.
+      facultative_anaerobe:
+        description: Can grow with or without oxygen.
+      microaerophile:
+        description: Requires low oxygen concentrations.
+      aerotolerant_anaerobe:
+        description: Anaerobic metabolism but tolerates oxygen.
+
+  GramStain:
+    description: Gram staining classification.
+    permissible_values:
+      positive:
+        description: Gram-positive (retains crystal violet).
+      negative:
+        description: Gram-negative (does not retain crystal violet).
+      variable:
+        description: Variable or indeterminate staining.
+
+  TaxonomicRank:
+    description: >-
+      NCBI Taxonomy ranks relevant to microbial classification.
+      Mapped to TAXRANK ontology (http://purl.obolibrary.org/obo/taxrank.owl).
+    permissible_values:
+      domain:
+        description: Highest rank (Bacteria, Archaea, Eukarya).
+        meaning: TAXRANK:0000037
+      phylum:
+        description: Major evolutionary lineage.
+        meaning: TAXRANK:0000003
+      class:
+        description: Taxonomic class.
+        meaning: TAXRANK:0000002
+      order:
+        description: Taxonomic order.
+        meaning: TAXRANK:0000017
+      family:
+        description: Taxonomic family.
+        meaning: TAXRANK:0000004
+      genus:
+        description: Taxonomic genus.
+        meaning: TAXRANK:0000005
+      species:
+        description: Species level (binomial name).
+        meaning: TAXRANK:0000006
+      subspecies:
+        description: Subspecies or variety.
+        meaning: TAXRANK:0000023
+      strain:
+        description: Strain level (most specific for cultured isolates).
+        meaning: TAXRANK:0000060
+      no_rank:
+        description: NCBI entries without assigned rank (e.g., clades).
+
+  AssemblyLevel:
+    description: Level of genome assembly completeness.
+    permissible_values:
+      complete_genome:
+        description: Fully assembled, single contiguous sequence per replicon.
+      chromosome:
+        description: Assembled to chromosome level with some gaps.
+      scaffold:
+        description: Scaffolds assembled but not to chromosome level.
+      contig:
+        description: Contigs only, not scaffolded.
+
+  GrowthRate:
+    description: Qualitative growth rate categories.
+    permissible_values:
+      none:
+        description: No growth observed.
+      poor:
+        description: Minimal or slow growth.
+      moderate:
+        description: Moderate growth rate.
+      good:
+        description: Good/normal growth rate.
+      excellent:
+        description: Excellent/rapid growth.

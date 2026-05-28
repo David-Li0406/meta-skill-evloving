@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="sv" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Offline – TheHUB</title>
+  <style>
+    :root {
+      --bg: #0A0C14;
+      --surface: #12141C;
+      --text: #F9FAFB;
+      --text-secondary: #9CA3AF;
+      --accent: #3B9EFF;
+      --border: #2D3139;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .offline-icon {
+      font-size: 4rem;
+      margin-bottom: 24px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      max-width: 300px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .retry-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .retry-btn:hover {
+      opacity: 0.9;
+    }
+
+    .retry-btn:active {
+      transform: scale(0.97);
+    }
+
+    .cached-pages {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .cached-pages h2 {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .cached-pages a {
+      display: block;
+      color: var(--accent);
+      padding: 8px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-icon">📡</div>
+  <h1>Du är offline</h1>
+  <p>Ingen internetanslutning. Kontrollera din uppkoppling och försök igen.</p>
+  <button class="retry-btn" onclick="location.reload()">Försök igen</button>
+
+  <div class="cached-pages" id="cached-pages" style="display: none;">
+    <h2>Cachade sidor</h2>
+    <div id="cached-links"></div>
+  </div>
+
+  <script>
+    // Show cached pages if available
+    if ('caches' in window) {
+      caches.open('thehub-cache-v1').then(cache => {
+        cache.keys().then(requests => {
+          const pages = requests
+            .filter(r => !r.url.match(/\.(css|js|png|jpg|svg|json)$/))
+            .map(r => new URL(r.url).pathname);
+
+          if (pages.length > 1) {
+            const container = document.getElementById('cached-links');
+            const uniquePages = [...new Set(pages)];
+            uniquePages.forEach(page => {
+              const link = document.createElement('a');
+              link.href = page;
+              link.textContent = page.replace(/\/$/, '') || 'Dashboard';
+              container.appendChild(link);
+            });
+            document.getElementById('cached-pages').style.display = 'block';
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>

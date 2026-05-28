@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          # Get latest tag or default to v0.0.0
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG"
+
+      - name: Determine version bump
+        id: version
+        run: |
+          LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
+
+          # Remove 'v' prefix for version parsing
+          VERSION=${LATEST_TAG#v}
+
+          # Parse current version
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          # Get commits since last tag
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            COMMITS=$(git log --oneline)
+          else
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --oneline)
+          fi
+
+          echo "Commits since $LATEST_TAG:"
+          echo "$COMMITS"
+
+          # Determine bump type based on conventional commits
+          BUMP="patch"
+
+          if echo "$COMMITS" | grep -qE "^[a-f0-9]+ (feat|feature)(\(.+\))?!?:"; then
+            BUMP="minor"
+          fi
+
+          if echo "$COMMITS" | grep -qE "BREAKING CHANGE|^[a-f0-9]+ [a-z]+(\(.+\))?!:"; then
+            BUMP="major"
+          fi
+
+          # Calculate new version
+          case $BUMP in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION (bump: $BUMP)"
+
+      - name: Check if release needed
+        id: check_release
+        run: |
+          LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
+          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+
+          if [ "$LATEST_TAG" = "$NEW_VERSION" ]; then
+            echo "No new commits to release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          else
+            echo "Will create release $NEW_VERSION"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate release notes
+        id: release_notes
+        if: steps.check_release.outputs.should_release == 'true'
+        run: |
+          LATEST_TAG="${{ steps.get_latest_tag.outputs.latest_tag }}"
+
+          # Generate changelog from commits
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --reverse)
+          else
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse)
+          fi
+
+          # Categorize commits
+          FEATURES=$(echo "$COMMITS" | grep -E "^- feat(\(.+\))?:" || true)
+          FIXES=$(echo "$COMMITS" | grep -E "^- fix(\(.+\))?:" || true)
+          DOCS=$(echo "$COMMITS" | grep -E "^- docs(\(.+\))?:" || true)
+          CHORES=$(echo "$COMMITS" | grep -E "^- (chore|refactor|style|test|ci)(\(.+\))?:" || true)
+          OTHER=$(echo "$COMMITS" | grep -vE "^- (feat|fix|docs|chore|refactor|style|test|ci)(\(.+\))?:" || true)
+
+          # Build release notes
+          NOTES=""
+
+          if [ -n "$FEATURES" ]; then
+            NOTES="${NOTES}## Features\n\n${FEATURES}\n\n"
+          fi
+
+          if [ -n "$FIXES" ]; then
+            NOTES="${NOTES}## Bug Fixes\n\n${FIXES}\n\n"
+          fi
+
+          if [ -n "$DOCS" ]; then
+            NOTES="${NOTES}## Documentation\n\n${DOCS}\n\n"
+          fi
+
+          if [ -n "$CHORES" ]; then
+            NOTES="${NOTES}## Maintenance\n\n${CHORES}\n\n"
+          fi
+
+          if [ -n "$OTHER" ]; then
+            NOTES="${NOTES}## Other Changes\n\n${OTHER}\n\n"
+          fi
+
+          # Save to file for multiline output
+          echo -e "$NOTES" > /tmp/release_notes.md
+          cat /tmp/release_notes.md
+
+      - name: Create Release
+        if: steps.check_release.outputs.should_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.new_version }}
+          name: Release ${{ steps.version.outputs.new_version }}
+          body_path: /tmp/release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: false

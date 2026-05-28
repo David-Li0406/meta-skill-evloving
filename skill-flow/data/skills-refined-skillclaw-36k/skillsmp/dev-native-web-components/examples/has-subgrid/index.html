@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>:has() + Subgrid Spec Table</title>
+    <meta
+      name="description"
+      content="Specs list using :has() and CSS subgrid in a DSD component."
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#f8f7f4, #0c0d11);
+        --fg: light-dark(#1f2023, #f1f2f5);
+        --surface: light-dark(#ffffff, #15161b);
+        --border: light-dark(#dedbd5, #2c2f36);
+        --ok: light-dark(#2c7a4b, #9be3b8);
+        --warn: light-dark(#c15d21, #ffb07a);
+        --radius: 0.9rem;
+        --space-xs: clamp(0.3rem, 0.8cqi, 0.6rem);
+        --space-sm: clamp(0.6rem, 1.3cqi, 0.9rem);
+        --space-md: clamp(0.9rem, 2cqi, 1.4rem);
+        --text-sm: clamp(0.9rem, 2cqi, 1rem);
+        --text-md: clamp(1.05rem, 2.6cqi, 1.2rem);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: var(--space-md);
+        background: var(--bg);
+        color: var(--fg);
+        font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+        line-height: 1.5;
+      }
+
+      main {
+        max-inline-size: 50rem;
+        margin-inline: auto;
+        display: grid;
+        gap: var(--space-md);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: var(--text-md);
+      }
+
+      p {
+        margin: 0;
+        color: color-mix(in oklab, var(--fg) 70%, var(--bg));
+        font-size: var(--text-sm);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>:has() + Subgrid Spec Table</h1>
+        <p>Rows inherit the parent grid columns and react to status badges.</p>
+      </header>
+
+      <spec-grid>
+        <template shadowrootmode="open">
+          <style>
+            :host {
+              display: block;
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: var(--radius);
+              padding: var(--space-md);
+            }
+
+            .grid {
+              display: grid;
+              gap: var(--space-sm);
+              grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 2fr)
+                minmax(6rem, 1fr);
+            }
+
+            .row {
+              display: grid;
+              gap: var(--space-sm);
+              padding: var(--space-sm);
+              border: 1px solid var(--border);
+              border-radius: 0.7rem;
+              align-items: center;
+            }
+
+            @supports (grid-template-columns: subgrid) {
+              .row {
+                grid-column: 1 / -1;
+                grid-template-columns: subgrid;
+              }
+            }
+
+            @supports not (grid-template-columns: subgrid) {
+              .row {
+                grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 2fr)
+                  minmax(6rem, 1fr);
+              }
+            }
+
+            .row:has(.status--warn) {
+              border-color: var(--warn);
+              background: color-mix(in oklab, var(--warn) 15%, transparent);
+            }
+
+            .row:has(.status--ok) {
+              border-color: color-mix(in oklab, var(--ok) 60%, var(--border));
+            }
+
+            .label {
+              font-weight: 600;
+            }
+
+            .value {
+              color: color-mix(in oklab, var(--fg) 75%, var(--bg));
+            }
+
+            .status {
+              justify-self: start;
+              padding: var(--space-xs) var(--space-sm);
+              border-radius: 999rem;
+              font-size: var(--text-sm);
+              border: 1px solid currentColor;
+            }
+
+            .status--ok {
+              color: var(--ok);
+            }
+
+            .status--warn {
+              color: var(--warn);
+            }
+          </style>
+
+          <section class="grid" aria-label="Device specs">
+            <div class="row">
+              <div class="label">CPU</div>
+              <div class="value">8-core efficiency tuned</div>
+              <div class="status status--ok">Ready</div>
+            </div>
+            <div class="row">
+              <div class="label">Memory</div>
+              <div class="value">32 GB unified</div>
+              <div class="status status--ok">Ready</div>
+            </div>
+            <div class="row">
+              <div class="label">Storage</div>
+              <div class="value">512 GB NVMe</div>
+              <div class="status status--warn">Monitor</div>
+            </div>
+          </section>
+        </template>
+      </spec-grid>
+    </main>
+  </body>
+</html>

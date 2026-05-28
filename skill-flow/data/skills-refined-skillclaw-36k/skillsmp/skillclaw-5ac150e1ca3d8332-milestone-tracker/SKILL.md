@@ -1,0 +1,87 @@
+---
+name: milestone-tracker
+description: Use this skill to track GitHub milestone progress and issue completion when you need to know the status of milestones, remaining issues, or sprint metrics.
+---
+
+# Milestone Tracker Skill
+
+## Purpose
+
+Automatically fetch and summarize milestone progress when the user asks about completion status, remaining work, or sprint metrics. This is a read-only skill.
+
+## When to Use This
+
+- User asks "milestone progress?"
+- User asks "how many issues left?"
+- User asks "completion percentage?"
+- User asks "what's left in the sprint?"
+- User mentions milestone tracking
+
+## Instructions
+
+### List All Milestones
+
+```bash
+gh api repos/<owner>/<repo>/milestones --jq '.[] | {number, title, open_issues, closed_issues, due_on, state}'
+```
+
+### Get Specific Milestone
+
+```bash
+gh api repos/<owner>/<repo>/milestones/<number>
+```
+
+### Get Issues in Milestone
+
+```bash
+gh issue list --milestone "<milestone-name>" --state all --json number,title,state,labels
+```
+
+### Calculate Progress
+
+```
+Completion % = (closed_issues / (open_issues + closed_issues)) * 100
+```
+
+## Output Format
+
+```markdown
+## Milestone: <name>
+
+**Progress:** X/Y issues (Z%)
+**Due:** <date or "No due date">
+
+### Progress Bar
+[████████░░░░░░░░░░░░] 40% (8/20)
+
+### By Status
+- Done: <count>
+- In Progress: <count>
+- Not Started: <count>
+
+### Recently Completed
+- #X: <title>
+- #Y: <title>
+
+### Up Next (Open)
+- #A: <title>
+- #B: <title>
+```
+
+## Progress Bar Generation
+
+Generate visual progress:
+
+```bash
+# Calculate percentage
+OPEN=$(gh api repos/<owner>/<repo>/milestones/<n> --jq '.open_issues')
+CLOSED=$(gh api repos/<owner>/<repo>/milestones/<n> --jq '.closed_issues')
+TOTAL=$((OPEN + CLOSED))
+PCT=$((CLOSED * 100 / TOTAL))
+
+# Generate bar (20 chars)
+FILLED=$((PCT / 5))
+EMPTY=$((20 - FILLED))
+BAR=$(printf '█%.0s' $(seq 1 $FILLED))$(printf '░%.0s' $(seq 1 $EMPTY))
+echo "[$BAR] $PCT% ($CLOSED/$TOTAL)"
+```

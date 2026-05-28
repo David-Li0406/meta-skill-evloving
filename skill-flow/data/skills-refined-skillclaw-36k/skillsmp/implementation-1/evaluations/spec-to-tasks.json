@@ -1,0 +1,25 @@
+{
+  "name": "Criar Tarefas a partir da Especificação",
+  "skills": ["implementation"],
+  "query": "Leia a spec de Integração de Pagamentos e crie tarefas de implementação",
+  "expected_behavior": [
+    "Etapa 1: Usa Glob para encontrar a spec de Integração de Pagamentos ou pede o caminho",
+    "Etapa 2: Lê o arquivo de spec usando Read para obter o conteúdo completo",
+    "Etapa 3: Analisa a spec usando padrões de reference/spec-parsing.md para identificar itens de trabalho",
+    "Etapa 4: Quebra em tarefas com tamanho adequado usando padrões de reference/task-creation.md",
+    "Etapa 5: Opcionalmente cria primeiro o arquivo do plano de implementação usando Write",
+    "Etapa 6: Para cada tarefa - define content (forma imperativa) e activeForm (forma contínua)",
+    "Etapa 7: Cria todas as tarefas usando TodoWrite com status 'pending'",
+    "Etapa 8: Sequencia tarefas adequadamente (setup → implementação → testes)",
+    "Etapa 9: Reporta resumo: 'Criadas X tarefas para Integração de Pagamentos'"
+  ],
+  "success_criteria": [
+    "A spec é encontrada usando Glob antes de tentar ler",
+    "Múltiplas tarefas criadas (pelo menos 3-5) cobrindo o escopo da spec",
+    "Tarefas têm tamanho adequado conforme reference/task-creation.md (concluíveis em uma sessão)",
+    "Cada tarefa tem content (imperativo) e activeForm (gerúndio)",
+    "Tarefas são devidamente sequenciadas no array do TodoWrite",
+    "Status inicial de todas as tarefas é 'pending'",
+    "Usa sequência correta das ferramentas: Glob → Read → (Write) → TodoWrite"
+  ]
+}

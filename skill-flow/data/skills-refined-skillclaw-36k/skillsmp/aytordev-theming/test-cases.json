@@ -1,0 +1,82 @@
+[
+  {
+    "ruleId": "",
+    "ruleTitle": "Library Helpers",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Library Helpers"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Library Helpers",
+    "type": "good",
+    "code": "let\n  themeLib = config.aytordev.theme.lib;\n  accent = config.aytordev.theme.palette.accent.hex;\nin\n{\n  # Correctly formats as 0xffRRGGBB\n  color = themeLib.hexToSketchybar accent;\n}",
+    "language": "nix",
+    "description": "Correct example for Library Helpers"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Polarity Logic",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Polarity Logic"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Polarity Logic",
+    "type": "good",
+    "code": "programs.bat.config = {\n  # Some apps need a boolean flag for light mode\n  \"--light\" = lib.mkIf config.aytordev.theme.isLight;\n};",
+    "language": "nix",
+    "description": "Correct example for Polarity Logic"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Centralized SOT (Source Of Truth)",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Centralized SOT (Source Of Truth)"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Centralized SOT (Source Of Truth)",
+    "type": "good",
+    "code": "{ config, lib, ... }:\nlet\n  cfg = config.aytordev.theme;\nin\n{\n  # Access palette through the central config\n  programs.foo.color = cfg.palette.accent.hex;\n}",
+    "language": "nix",
+    "description": "Correct example for Centralized SOT (Source Of Truth)"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Using the Palette",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for Using the Palette"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "Using the Palette",
+    "type": "good",
+    "code": "# BAD\ncolor = if config.aytordev.theme.variant == \"lotus\" then \"#...\" else \"#...\";\n\n# GOOD\ncolor = config.aytordev.theme.palette.bg.main.hex;",
+    "language": "nix",
+    "description": "Correct example for Using the Palette"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "App Themes & Variants",
+    "type": "bad",
+    "code": "",
+    "language": "typescript",
+    "description": "Incorrect example for App Themes & Variants"
+  },
+  {
+    "ruleId": "",
+    "ruleTitle": "App Themes & Variants",
+    "type": "good",
+    "code": "# Returns \"Kanagawa Wave\" or \"Kanagawa Lotus\"\ntheme = config.aytordev.theme.appTheme.capitalized;\n\n# Returns \"kanagawa-wave\" or \"kanagawa-lotus\"\ntheme = config.aytordev.theme.appTheme.kebab;",
+    "language": "nix",
+    "description": "Correct example for App Themes & Variants"
+  }
+]

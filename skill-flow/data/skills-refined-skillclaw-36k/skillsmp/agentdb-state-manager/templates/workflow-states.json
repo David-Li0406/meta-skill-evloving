@@ -1,0 +1,483 @@
+{
+  "version": "5.2.0",
+  "description": "Canonical state definitions for workflow v5.2 AgentDB integration",
+  "object_types": {
+    "feature": "Feature-level workflow tracking (Phase 1-4)",
+    "epic": "Epic from BMAD planning (Phase 1)",
+    "story": "User story from SpecKit planning (Phase 2)",
+    "task": "Individual implementation task (Phase 2-3)",
+    "workflow": "Overall workflow progress tracking (all phases)",
+    "spec_md": "SpecKit specification document (Phase 2)",
+    "plan_md": "SpecKit implementation plan (Phase 2)",
+    "git_branch": "Git branch lifecycle (all phases)",
+    "pull_request": "Pull request workflow (Phase 4)",
+    "test_suite": "Test suite execution (Phase 3)",
+    "quality_gate": "Quality gate validation (Phase 3)",
+    "checkpoint": "Context checkpoint at 100K tokens (all phases)",
+    "planning_doc": "BMAD planning document (Phase 1)"
+  },
+  "states": {
+    "task": {
+      "00_pending": {
+        "description": "Task defined, not started",
+        "transitions": ["10_ready", "E02_cancelled"]
+      },
+      "10_ready": {
+        "description": "Dependencies met, ready to start",
+        "transitions": ["20_in-progress", "30_blocked", "E02_cancelled"]
+      },
+      "20_in-progress": {
+        "description": "Actively being worked on",
+        "transitions": ["60_implementing", "30_blocked", "E02_cancelled"]
+      },
+      "30_blocked": {
+        "description": "Blocked by external dependency",
+        "transitions": ["10_ready", "E02_cancelled"]
+      },
+      "60_implementing": {
+        "description": "Code being written",
+        "transitions": ["70_testing", "30_blocked", "E01_failed"]
+      },
+      "70_testing": {
+        "description": "Tests being written/run",
+        "transitions": ["80_reviewing", "60_implementing", "E01_failed"]
+      },
+      "80_reviewing": {
+        "description": "In code review",
+        "transitions": ["90_merged", "60_implementing"]
+      },
+      "90_merged": {
+        "description": "Merged to branch",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Complete and verified",
+        "transitions": []
+      },
+      "E01_failed": {
+        "description": "Failed quality gates",
+        "transitions": ["60_implementing", "E02_cancelled"]
+      },
+      "E02_cancelled": {
+        "description": "Task cancelled",
+        "transitions": []
+      }
+    },
+    "feature": {
+      "00_pending": {
+        "description": "Planning not started",
+        "transitions": ["10_planning", "E02_cancelled"]
+      },
+      "10_planning": {
+        "description": "BMAD planning in progress",
+        "transitions": ["20_specification", "E02_cancelled"]
+      },
+      "20_specification": {
+        "description": "SpecKit specs being written",
+        "transitions": ["30_implementing", "E02_cancelled"]
+      },
+      "30_implementing": {
+        "description": "Code implementation",
+        "transitions": ["40_testing", "E02_cancelled"]
+      },
+      "40_testing": {
+        "description": "Test development",
+        "transitions": ["50_quality", "30_implementing", "E01_failed-quality"]
+      },
+      "50_quality": {
+        "description": "Quality gates validation",
+        "transitions": ["60_integration", "40_testing", "E01_failed-quality"]
+      },
+      "60_integration": {
+        "description": "PR created, awaiting merge",
+        "transitions": ["70_as-built", "40_testing"]
+      },
+      "70_as-built": {
+        "description": "As-built updates to planning",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Feature complete",
+        "transitions": []
+      },
+      "E01_failed-quality": {
+        "description": "Failed quality gates",
+        "transitions": ["40_testing", "E02_cancelled"]
+      },
+      "E02_cancelled": {
+        "description": "Feature cancelled",
+        "transitions": []
+      }
+    },
+    "workflow": {
+      "00_initialized": {
+        "description": "Workflow created, TODO file exists",
+        "transitions": ["01_phase-1"]
+      },
+      "01_phase-1": {
+        "description": "Phase 1: Planning (BMAD)",
+        "transitions": ["02_phase-2", "E01_failed"]
+      },
+      "02_phase-2": {
+        "description": "Phase 2: Specification + Implementation",
+        "transitions": ["03_phase-3", "80_checkpoint", "E01_failed"]
+      },
+      "03_phase-3": {
+        "description": "Phase 3: Quality Assurance",
+        "transitions": ["04_phase-4", "80_checkpoint", "E01_failed"]
+      },
+      "04_phase-4": {
+        "description": "Phase 4: Integration + Feedback",
+        "transitions": ["05_phase-5", "80_checkpoint", "E01_failed"]
+      },
+      "05_phase-5": {
+        "description": "Phase 5: Release",
+        "transitions": ["99_archived", "E01_failed"]
+      },
+      "06_phase-6": {
+        "description": "Phase 6: Hotfix (separate from main flow)",
+        "transitions": ["99_archived", "E01_failed"]
+      },
+      "80_checkpoint": {
+        "description": "Context checkpoint at 100K tokens",
+        "transitions": ["02_phase-2", "03_phase-3", "04_phase-4"]
+      },
+      "99_archived": {
+        "description": "Workflow completed and archived",
+        "transitions": []
+      },
+      "E01_failed": {
+        "description": "Workflow failed",
+        "transitions": []
+      }
+    },
+    "epic": {
+      "00_pending": {
+        "description": "Epic defined in BMAD planning",
+        "transitions": ["10_ready", "E02_cancelled"]
+      },
+      "10_ready": {
+        "description": "Ready to break down into features",
+        "transitions": ["20_active", "E02_cancelled"]
+      },
+      "20_active": {
+        "description": "Features being implemented",
+        "transitions": ["99_done", "E02_cancelled"]
+      },
+      "99_done": {
+        "description": "All features complete",
+        "transitions": []
+      },
+      "E02_cancelled": {
+        "description": "Epic cancelled",
+        "transitions": []
+      }
+    },
+    "story": {
+      "00_pending": {
+        "description": "Story defined in SpecKit",
+        "transitions": ["10_ready", "E02_cancelled"]
+      },
+      "10_ready": {
+        "description": "Ready for implementation",
+        "transitions": ["20_in-progress", "E02_cancelled"]
+      },
+      "20_in-progress": {
+        "description": "Tasks being worked on",
+        "transitions": ["99_done", "E02_cancelled"]
+      },
+      "99_done": {
+        "description": "Story complete",
+        "transitions": []
+      },
+      "E02_cancelled": {
+        "description": "Story cancelled",
+        "transitions": []
+      }
+    },
+    "spec_md": {
+      "00_pending": {
+        "description": "Spec not yet created",
+        "transitions": ["10_draft"]
+      },
+      "10_draft": {
+        "description": "SpecKit spec being written",
+        "transitions": ["20_review", "E02_cancelled"]
+      },
+      "20_review": {
+        "description": "Spec under review",
+        "transitions": ["30_approved", "10_draft"]
+      },
+      "30_approved": {
+        "description": "Spec approved",
+        "transitions": ["40_implementation"]
+      },
+      "40_implementation": {
+        "description": "Being implemented",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Implementation complete",
+        "transitions": []
+      },
+      "E02_cancelled": {
+        "description": "Spec cancelled",
+        "transitions": []
+      }
+    },
+    "plan_md": {
+      "00_pending": {
+        "description": "Plan not yet created",
+        "transitions": ["10_draft"]
+      },
+      "10_draft": {
+        "description": "SpecKit plan being written",
+        "transitions": ["20_review", "E02_cancelled"]
+      },
+      "20_review": {
+        "description": "Plan under review",
+        "transitions": ["30_approved", "10_draft"]
+      },
+      "30_approved": {
+        "description": "Plan approved",
+        "transitions": ["40_executing"]
+      },
+      "40_executing": {
+        "description": "Tasks being executed",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "All tasks complete",
+        "transitions": []
+      },
+      "E02_cancelled": {
+        "description": "Plan cancelled",
+        "transitions": []
+      }
+    },
+    "git_branch": {
+      "00_pending": {
+        "description": "Branch to be created",
+        "transitions": ["10_created"]
+      },
+      "10_created": {
+        "description": "Branch created",
+        "transitions": ["20_active", "E02_deleted"]
+      },
+      "20_active": {
+        "description": "Commits being made",
+        "transitions": ["30_ready-for-pr", "E02_deleted"]
+      },
+      "30_ready-for-pr": {
+        "description": "Ready to create PR",
+        "transitions": ["40_pr-created", "20_active"]
+      },
+      "40_pr-created": {
+        "description": "PR exists for branch",
+        "transitions": ["50_merged", "20_active"]
+      },
+      "50_merged": {
+        "description": "Branch merged",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Branch cleanup complete",
+        "transitions": []
+      },
+      "E02_deleted": {
+        "description": "Branch deleted without merge",
+        "transitions": []
+      }
+    },
+    "pull_request": {
+      "00_pending": {
+        "description": "PR to be created",
+        "transitions": ["10_created"]
+      },
+      "10_created": {
+        "description": "PR created",
+        "transitions": ["20_review", "E02_closed"]
+      },
+      "20_review": {
+        "description": "Under review",
+        "transitions": ["30_approved", "40_changes-requested", "E02_closed"]
+      },
+      "30_approved": {
+        "description": "Approved for merge",
+        "transitions": ["50_merged", "40_changes-requested"]
+      },
+      "40_changes-requested": {
+        "description": "Changes needed",
+        "transitions": ["20_review", "E02_closed"]
+      },
+      "50_merged": {
+        "description": "PR merged",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Post-merge tasks complete",
+        "transitions": []
+      },
+      "E02_closed": {
+        "description": "PR closed without merge",
+        "transitions": []
+      }
+    },
+    "test_suite": {
+      "00_pending": {
+        "description": "Tests not yet run",
+        "transitions": ["10_running"]
+      },
+      "10_running": {
+        "description": "Tests executing",
+        "transitions": ["20_passed", "E01_failed"]
+      },
+      "20_passed": {
+        "description": "All tests passed",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Results recorded",
+        "transitions": []
+      },
+      "E01_failed": {
+        "description": "Tests failed",
+        "transitions": ["10_running"]
+      }
+    },
+    "quality_gate": {
+      "00_pending": {
+        "description": "Quality gate not yet checked",
+        "transitions": ["10_checking"]
+      },
+      "10_checking": {
+        "description": "Running quality checks",
+        "transitions": ["20_passed", "E01_failed"]
+      },
+      "20_passed": {
+        "description": "Quality gate passed",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Gate validation complete",
+        "transitions": []
+      },
+      "E01_failed": {
+        "description": "Quality gate failed",
+        "transitions": ["10_checking"]
+      }
+    },
+    "checkpoint": {
+      "00_pending": {
+        "description": "Checkpoint needed",
+        "transitions": ["10_saving"]
+      },
+      "10_saving": {
+        "description": "Saving checkpoint state",
+        "transitions": ["20_saved", "E01_failed"]
+      },
+      "20_saved": {
+        "description": "Checkpoint saved to TODO + AgentDB",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Checkpoint complete",
+        "transitions": []
+      },
+      "E01_failed": {
+        "description": "Checkpoint save failed",
+        "transitions": ["10_saving"]
+      }
+    },
+    "planning_doc": {
+      "00_pending": {
+        "description": "Planning doc not started",
+        "transitions": ["10_draft"]
+      },
+      "10_draft": {
+        "description": "BMAD planning in progress",
+        "transitions": ["20_review", "E02_cancelled"]
+      },
+      "20_review": {
+        "description": "Planning under review",
+        "transitions": ["30_approved", "10_draft"]
+      },
+      "30_approved": {
+        "description": "Planning approved",
+        "transitions": ["40_implementation"]
+      },
+      "40_implementation": {
+        "description": "Features being implemented",
+        "transitions": ["50_as-built"]
+      },
+      "50_as-built": {
+        "description": "As-built updates applied",
+        "transitions": ["99_done"]
+      },
+      "99_done": {
+        "description": "Planning complete with as-built",
+        "transitions": []
+      },
+      "E02_cancelled": {
+        "description": "Planning cancelled",
+        "transitions": []
+      }
+    }
+  },
+  "frameworks": {
+    "speckit": "SpecKit specification-driven development",
+    "bmad": "BMAD agent-based planning (Analyst, Architect, PM)",
+    "unified": "Combined BMAD + SpecKit approach",
+    "quality-enforcer": "Quality gates enforcement",
+    "git-workflow": "Git operations and branching"
+  },
+  "metadata_schema": {
+    "feature": {
+      "framework": "speckit|bmad|unified",
+      "slug": "string",
+      "branch": "string",
+      "bmad_context": "boolean",
+      "worktree_path": "string",
+      "depends_on": "array<feature_id>",
+      "risk_score": "low|medium|high"
+    },
+    "task": {
+      "framework": "speckit",
+      "task_id": "string",
+      "description": "string",
+      "files": "array<file_path>",
+      "depends_on": "array<task_id>",
+      "parallel_ok": "boolean",
+      "estimate_tokens": "integer"
+    },
+    "workflow": {
+      "workflow_type": "feature|release|hotfix",
+      "slug": "string",
+      "github_user": "string",
+      "timestamp": "ISO8601",
+      "current_phase": "1-6",
+      "current_step": "string",
+      "token_usage": "integer"
+    },
+    "quality_gate": {
+      "gate_type": "coverage|tests|lint|type-check|build|container",
+      "threshold": "number",
+      "actual": "number",
+      "passed": "boolean"
+    },
+    "checkpoint": {
+      "token_count": "integer",
+      "phase": "1-6",
+      "step": "string",
+      "last_task": "string",
+      "resume_instructions": "string"
+    }
+  },
+  "usage_notes": {
+    "immutable_records": "NEVER UPDATE or DELETE records - always INSERT new records with new timestamps",
+    "current_state_query": "Use DISTINCT ON (object_id) ... ORDER BY record_datetimestamp DESC",
+    "state_transitions": "Validate transitions using states.transitions array before inserting",
+    "dependency_resolution": "Check object_metadata.depends_on for task ordering",
+    "session_lifetime": "AgentDB persists for 24 hours, then auto-deleted"
+  }
+}

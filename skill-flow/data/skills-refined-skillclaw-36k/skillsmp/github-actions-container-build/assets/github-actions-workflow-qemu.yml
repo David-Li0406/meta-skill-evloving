@@ -1,0 +1,170 @@
+name: Build multi-arch container images (QEMU)
+
+# This workflow uses QEMU emulation for multi-arch builds (private repos or free tier):
+# - Single runner builds both architectures via emulation
+# - 10-50x slower than native ARM64 runners
+# - No artifacts needed (single-machine build)
+# - Debug: podman pull --platform linux/arm64 IMAGE:latest
+#
+# For public repos with free native ARM64 runners, use matrix-build workflow instead.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: build-images-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PLATFORMS: linux/amd64,linux/arm64
+
+permissions:
+  contents: read
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build multi-arch image (QEMU)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Install podman-static for heredoc support
+        run: |
+          echo "=== Installing podman-static v5.6.2 ==="
+          # Why podman-static?
+          # - Containerfile uses RUN <<EOT heredoc syntax (requires buildah >= 1.35.0)
+          # - Ubuntu 24.04 podman (4.9.3) uses buildah 1.33.7 (too old, no heredoc)
+
+          curl -fsSL -o /tmp/podman-linux-amd64.tar.gz \
+            https://github.com/mgoltzsche/podman-static/releases/latest/download/podman-linux-amd64.tar.gz
+          cd /tmp && tar -xzf podman-linux-amd64.tar.gz
+
+          # Install binaries to /usr/bin (not /usr/local/bin) to avoid AppArmor issues
+          # Ref: https://github.com/mgoltzsche/podman-static#apparmor-profile
+          sudo cp -f podman-linux-amd64/usr/local/bin/* /usr/bin/
+          sudo cp -r podman-linux-amd64/etc/* /etc/ 2>/dev/null || true
+
+          # Initialize rootless podman
+          podman system migrate
+
+          echo "Podman installed to: $(which podman)"
+          podman --version
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login "${{ env.REGISTRY }}" \
+            -u "${{ github.actor }}" \
+            --password-stdin
+
+      # Optional: Login to Docker Hub
+      # - name: Login to Docker Hub
+      #   run: |
+      #     echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login docker.io \
+      #       -u "${{ secrets.DOCKERHUB_USERNAME }}" \
+      #       --password-stdin
+
+      - name: Determine tags
+        id: tags
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+
+          # Always include SHA tag
+          TAGS="$IMAGE:${{ github.sha }}"
+
+          # Add :latest for main branch
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            TAGS="$TAGS,$IMAGE:latest"
+          fi
+
+          # Add version tag for releases
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            TAGS="$TAGS,$IMAGE:$VERSION"
+          fi
+
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+          echo "Tags to build: $TAGS"
+
+      - name: Build multi-arch image
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 60
+          max_attempts: 3
+          retry_wait_seconds: 10
+          command: |
+            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+
+            # Build multi-arch manifest (QEMU handles cross-arch)
+            podman build \
+              --network=host \
+              --platform "${{ env.PLATFORMS }}" \
+              --format docker \
+              --manifest "$IMAGE:${{ github.sha }}" \
+              --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+              --label "org.opencontainers.image.revision=${{ github.sha }}" \
+              -f ./Containerfile \
+              .
+
+      - name: Push manifest
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+
+          # Parse and push to all tags
+          IFS=',' read -ra TAG_ARRAY <<< "${{ steps.tags.outputs.tags }}"
+          for TAG in "${TAG_ARRAY[@]}"; do
+            echo "Pushing to: $TAG"
+
+            if [[ "$TAG" != "$IMAGE:${{ github.sha }}" ]]; then
+              # Create additional tag by copying the manifest
+              podman tag "$IMAGE:${{ github.sha }}" "$TAG"
+            fi
+
+            podman manifest push --all "$TAG" "docker://${TAG}"
+          done
+
+      - name: Verify
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "=== Manifest contents ==="
+          podman manifest inspect "$IMAGE:${{ github.sha }}"
+
+# ==========================================================================
+# USAGE NOTES
+# ==========================================================================
+#
+# 1. Update Containerfile path: -f ./Containerfile.python-uv
+#
+# 2. Debug specific architecture:
+#    podman pull --platform linux/arm64 ghcr.io/OWNER/REPO:latest
+#
+# 3. For public repos, use matrix-build workflow instead (10-50x faster)
+#
+# 4. Adjust timeout for large images:
+#    timeout_minutes: 90  # For very large images
+#
+# 5. Optional: Add Docker Hub support by uncommenting the login step
+#    and adding a push step:
+#    podman manifest push --all "$IMAGE:latest" \
+#      "docker://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/app:latest"
+#
+# 6. --network=host flag:
+#    - Required for ubuntu-24.04 runners >= 20251208.163.1
+#    - Fixes SSL certificate errors during package installation
+#    - See: https://github.com/actions/runner-images/issues/13422

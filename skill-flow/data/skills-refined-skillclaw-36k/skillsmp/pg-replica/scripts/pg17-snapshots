@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# List ZFS snapshots for PostgreSQL 17 replica data on hal9000
+set -euo pipefail
+
+ssh hal9000 "sudo zfs list -t snapshot storage-fast/pg_base"

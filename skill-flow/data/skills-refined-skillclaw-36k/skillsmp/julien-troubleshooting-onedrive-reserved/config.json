@@ -1,0 +1,108 @@
+{
+  "name": "delete-reserved-names",
+  "version": "3.0.0",
+  "description": "Delete Windows reserved filenames (NUL, CON, PRN, etc.) that block OneDrive sync",
+  "author": "Claude Code",
+  "created": "2025-10-29",
+  "updated": "2025-11-09",
+  "tags": [
+    "windows",
+    "onedrive",
+    "files",
+    "troubleshooting",
+    "git-bash",
+    "reserved-names",
+    "automation"
+  ],
+  "triggers": [
+    "onedrive sync error",
+    "delete nul file",
+    "null files",
+    "fichiers nul",
+    "reserved filename",
+    "cannot delete file",
+    "onedrive reserved names",
+    "Renommer 1 élément",
+    "caractères qui empêchent la synchronisation"
+  ],
+  "requirements": {
+    "gitBash": {
+      "required": true,
+      "reason": "Git Bash is required to execute Unix 'rm' command that bypasses Windows restrictions",
+      "download": "https://git-scm.com/download/win"
+    },
+    "permissions": {
+      "required": true,
+      "reason": "Write permissions needed to delete files"
+    }
+  },
+  "tools": [
+    "Bash",
+    "TodoWrite"
+  ],
+  "workflow": [
+    {
+      "step": 1,
+      "action": "Search for reserved filenames",
+      "command": "find \"C:/Users/JulienFernandez/OneDrive/Coding/_Projets de code\" -type f \\( -iname \"nul\" -o -iname \"nul.*\" -o -iname \"con\" -o -iname \"con.*\" -o -iname \"prn\" -o -iname \"prn.*\" -o -iname \"aux\" -o -iname \"aux.*\" -o -iname \"com[1-9]\" -o -iname \"com[1-9].*\" -o -iname \"lpt[1-9]\" -o -iname \"lpt[1-9].*\" \\) 2>/dev/null",
+      "notes": "Search takes 1-2 minutes on large directories. Be patient."
+    },
+    {
+      "step": 2,
+      "action": "Display list of files found",
+      "format": "Show count and full path of each file"
+    },
+    {
+      "step": 3,
+      "action": "Ask for user confirmation before deletion",
+      "required": true
+    },
+    {
+      "step": 4,
+      "action": "Delete each file individually",
+      "command": "rm -f \"{full_path}\"",
+      "notes": "Use forward slashes, quote paths with spaces"
+    },
+    {
+      "step": 5,
+      "action": "Verify deletion",
+      "command": "ls \"{directory_path}\"",
+      "notes": "Confirm file no longer exists"
+    },
+    {
+      "step": 6,
+      "action": "Restart OneDrive",
+      "command": "powershell.exe -Command \"Stop-Process -Name OneDrive -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Start-Process 'C:\\Program Files\\Microsoft OneDrive\\OneDrive.exe'\"",
+      "notes": "Always restart OneDrive after deletion"
+    },
+    {
+      "step": 7,
+      "action": "Report success",
+      "message": "Files deleted, OneDrive restarted. Wait 2-5 minutes for sync."
+    }
+  ],
+  "successCriteria": [
+    "Files with reserved names are deleted",
+    "Deletion verified with ls command",
+    "OneDrive restarted",
+    "User informed of completion"
+  ],
+  "performance": {
+    "searchTime": "1-2 minutes for large directories",
+    "deletionTime": "<1 second per file",
+    "totalTime": "2-3 minutes typically"
+  },
+  "bestPractices": [
+    "Always use forward slashes in paths (even on Windows)",
+    "Always quote paths that contain spaces",
+    "Use direct rm -f instead of interactive script",
+    "Verify each deletion before moving to next",
+    "Always restart OneDrive after deletion"
+  ],
+  "fallback": {
+    "method": "Use interactive script",
+    "command": "bash \"C:/Users/JulienFernandez/OneDrive/Coding/_Projets de code/2025.10 Delete null files/delete-nul-gitbash.sh\"",
+    "note": "Script requires stdin for confirmation, prefer direct commands",
+    "documentation": "../../README.md"
+  }
+}

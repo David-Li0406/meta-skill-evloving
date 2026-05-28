@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="compare" noun="SampleOrderIds" type="script" location="component://darpan/src/reconciliation/sample/compareSampleOrderIds.groovy">
+        <description>Compare OMS vs Shopify bulk JSON files and return order IDs missing from either side.</description>
+        <in-parameters>
+            <parameter name="omsLocation" default-value="component://darpan/data/sample/omsBulkData.json"/>
+            <parameter name="shopifyLocation" default-value="component://darpan/data/sample/shopifyBulkData.json"/>
+            <parameter name="omsOrderIdField" default-value="EXTERNAL_ID"/>
+            <parameter name="shopifyOrderIdField" default-value="legacyResourceId"/>
+            <parameter name="orderIdField" default-value="shopify_order_id"/>
+            <parameter name="logInputCounts" type="Boolean" default-value="true"/>
+            <parameter name="logShopifySampleRows" type="Boolean" default-value="false"/>
+            <parameter name="logShopifyExplodedRows" type="Boolean" default-value="false"/>
+            <parameter name="shopifyExplodedRowLimit" type="Integer" default-value="5"/>
+            <parameter name="logShopifyNodeRows" type="Boolean" default-value="false"/>
+            <parameter name="shopifyNodeRowLimit" type="Integer" default-value="5"/>
+            <parameter name="logShopifyPriceSetRows" type="Boolean" default-value="false"/>
+            <parameter name="shopifyPriceSetRowLimit" type="Integer" default-value="5"/>
+            <parameter name="sparkMaster" default-value="local[*]"/>
+            <parameter name="sparkAppName" default-value="ReconciliationSampleOrderCompare"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="onlyInOms">
+                <parameter name="orderId"/>
+            </parameter>
+            <parameter name="onlyInShopify">
+                <parameter name="orderId"/>
+            </parameter>
+            <parameter name="onlyInOmsCount" type="Integer"/>
+            <parameter name="onlyInShopifyCount" type="Integer"/>
+        </out-parameters>
+    </service>
+
+    <service verb="test" noun="SampleOrderIdsDb" type="script" location="component://darpan/src/reconciliation/sample/testSampleOrderIdsDb.groovy">
+        <description>Test Spark JDBC connectivity using SystemMessageRemote and list order IDs from order_header.</description>
+        <in-parameters>
+            <parameter name="systemMessageRemoteId" required="true"/>
+            <parameter name="dbTable" default-value="order_header"/>
+            <parameter name="orderIdColumn" default-value="order_id"/>
+            <parameter name="limit" type="Integer" default-value="10"/>
+            <parameter name="dbDriver" default-value="com.mysql.cj.jdbc.Driver"/>
+            <parameter name="sparkMaster" default-value="local[*]"/>
+            <parameter name="sparkAppName" default-value="ReconciliationSampleOrderDbRead"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="orderIds">
+                <parameter name="orderId"/>
+            </parameter>
+            <parameter name="orderIdCount" type="Integer"/>
+        </out-parameters>
+    </service>
+
+    <!-- Rule Engine Services -->
+    <service verb="compile" noun="RuleSet" type="script" location="component://darpan/src/reconciliation/sample/RuleServices.groovy" method="compileRuleSet">
+        <description>Compiles rules for a RuleSet into a KieContainer.</description>
+        <in-parameters>
+            <parameter name="ruleSetId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="kieContainer" type="org.kie.api.runtime.KieContainer"/>
+            <parameter name="error"/>
+        </out-parameters>
+    </service>
+
+    <service verb="execute" noun="Rules" type="script" location="component://darpan/src/reconciliation/sample/RuleServices.groovy" method="executeRules">
+        <description>Executes rules against a list of data maps.</description>
+        <in-parameters>
+            <parameter name="ruleSetId" required="true"/>
+            <parameter name="dataList" type="List" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="results" type="List"/>
+            <parameter name="error"/>
+        </out-parameters>
+    </service>
+
+    <service verb="execute" noun="RuleSetJson" type="script" location="component://darpan/src/reconciliation/sample/RuleServices.groovy" method="executeRuleSetJson">
+        <description>Executes rules accepting JSON string.</description>
+        <in-parameters>
+            <parameter name="ruleSetId" required="true"/>
+            <parameter name="jsonData" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="results" type="List"/>
+            <parameter name="error"/>
+        </out-parameters>
+    </service>
+
+    <service verb="test" noun="RuleEngine" type="script" location="component://darpan/src/reconciliation/sample/testRuleEngine.groovy" allow-remote="true" authenticate="false">
+        <description>Test script to verify Rule Engine services.</description>
+        <out-parameters>
+            <parameter name="totalProcessed" type="Integer"/>
+            <parameter name="matchedCount" type="Integer"/>
+            <parameter name="omsMapSize" type="Integer"/>
+            <parameter name="syncIssuesFound" type="Integer"/>
+            <parameter name="sampleIssues" type="List"/>
+            <parameter name="allResults" type="List"/>
+            <parameter name="compilation"/>
+            <parameter name="results" type="List"/>
+            <parameter name="error"/>
+        </out-parameters>
+    </service>
+
+    <service verb="test" noun="RuleParser" type="script" location="component://darpan/src/reconciliation/sample/testRuleParser.groovy">
+        <description>Test Rule Logic Parser</description>
+    </service>
+
+</services>

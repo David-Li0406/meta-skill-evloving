@@ -1,0 +1,54 @@
+{
+  "name": "@elaraai/e3-cli",
+  "version": "0.0.2-beta.19",
+  "type": "module",
+  "description": "East Execution Engine CLI - Command-line tool for managing e3 repositories and tasks",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "e3": "./dist/src/cli.js"
+  },
+  "files": [
+    "dist/src",
+    "!dist/src/**/*.spec.*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "test": "npm run build && node --enable-source-maps --test 'dist/src/**/*.spec.js'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "dev": "npm run build && node --enable-source-maps dist/src/cli.js"
+  },
+  "keywords": [
+    "east",
+    "e3",
+    "cli",
+    "execution-engine"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elaraai/e3",
+    "directory": "packages/e3-cli"
+  },
+  "dependencies": {
+    "@elaraai/e3": "^0.0.2-beta.19",
+    "@elaraai/e3-api-client": "^0.0.2-beta.19",
+    "@elaraai/e3-core": "^0.0.2-beta.19",
+    "@elaraai/e3-types": "^0.0.2-beta.19",
+    "commander": "^12.0.0",
+    "esbuild": "^0.27.2"
+  },
+  "peerDependencies": {
+    "@elaraai/east": "^0.0.1-beta.31"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-headers": "^1.3.3"
+  }
+}

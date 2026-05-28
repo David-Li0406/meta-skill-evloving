@@ -1,0 +1,48 @@
+---
+name: checking-owasp-compliance
+description: Use this skill when you need to audit your code for OWASP compliance, identify and fix vulnerabilities, or generate a compliance report based on the OWASP Top 10 (2021) guidelines.
+---
+
+# Skill body
+
+## Overview
+
+This skill empowers you to assess your project's adherence to the OWASP Top 10 (2021) security guidelines. It automates the process of identifying potential vulnerabilities related to common web application security risks, providing actionable insights to improve your application's security posture.
+
+## How It Works
+
+1. **Initiate Scan**: The skill activates the owasp-compliance-checker plugin upon request.
+2. **Analyze Codebase**: The plugin scans the codebase for potential vulnerabilities related to each OWASP Top 10 category.
+3. **Generate Report**: A detailed report is generated, highlighting compliance gaps and providing specific remediation guidance for each identified issue.
+
+## When to Use This Skill
+
+This skill activates when you need to:
+- Evaluate your application's security posture against the OWASP Top 10 (2021).
+- Identify potential vulnerabilities related to common web application security risks.
+- Obtain actionable remediation guidance to address identified vulnerabilities.
+- Generate a compliance report for auditing or reporting purposes.
+
+## Examples
+
+### Example 1: Identifying SQL Injection Vulnerabilities
+
+User request: "Check OWASP compliance for SQL injection vulnerabilities."
+
+The skill will:
+1. Activate the owasp-compliance-checker plugin.
+2. Scan the codebase for potential SQL injection vulnerabilities.
+3. Generate a report highlighting any identified SQL injection vulnerabilities and providing remediation guidance.
+
+### Example 2: Assessing Overall OWASP Compliance
+
+User request: "/owasp"
+
+The skill will:
+1. Activate the owasp-compliance-checker plugin.
+2. Scan the entire codebase for vulnerabilities across all OWASP Top 10 categories.
+3. Generate a comprehensive report detailing compliance gaps and remediation steps for each category.
+
+## Best Practices
+
+- **Regular Scanning**: Integrate regular scans into your development workflow to maintain compliance and address vulnerabilities promptly.

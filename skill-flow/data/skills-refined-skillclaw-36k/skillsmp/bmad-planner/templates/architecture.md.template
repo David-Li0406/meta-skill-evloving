@@ -1,0 +1,417 @@
+# Architecture: {{TITLE}}
+
+**Date:** {{DATE}}
+**Author:** {{GH_USER}}
+**Status:** Draft
+
+## System Overview
+
+### High-Level Architecture
+
+```
+┌─────────────┐         ┌──────────────┐
+│   Client    │────────>│   Service    │
+│             │         │   (Python)   │
+└─────────────┘         └──────┬───────┘
+                               │
+                               ▼
+                        ┌──────────────┐
+                        │   Database   │
+                        │              │
+                        └──────────────┘
+```
+
+[Describe the major components and how they interact]
+
+### Components
+
+1. **Component Name**
+   - Purpose: [What does this do?]
+   - Technology: [What's it built with?]
+   - Interfaces: [How does it communicate?]
+
+2. **Component Name**
+   - Purpose: [What does this do?]
+   - Technology: [What's it built with?]
+   - Interfaces: [How does it communicate?]
+
+## Technology Stack
+
+- **Language:** Python 3.11+
+- **Framework:** [FastAPI / Flask / Django]
+- **Package Manager:** uv
+- **Database:** [SQLite / PostgreSQL]
+- **ORM:** SQLAlchemy
+- **Testing:** pytest, pytest-cov
+- **Linting:** ruff
+- **Type Checking:** mypy
+- **Containers:** Podman + podman-compose
+- **CI/CD:** [GitHub Actions / GitLab CI]
+
+### Technology Justification
+
+**Why Python?**
+[Reasoning for language choice]
+
+**Why [chosen framework]?**
+[Reasoning for framework choice]
+
+**Why [chosen database]?**
+[Reasoning for database choice]
+
+## Data Model
+
+### Database Schema
+
+```
+Table: example_table
+- id: INTEGER PRIMARY KEY
+- name: VARCHAR(100) NOT NULL
+- created_at: TIMESTAMP DEFAULT NOW()
+
+Table: related_table
+- id: INTEGER PRIMARY KEY
+- example_id: INTEGER FOREIGN KEY REFERENCES example_table(id)
+- data: JSON
+```
+
+### Entity Relationships
+
+[Describe relationships between entities]
+
+### Data Flow
+
+```
+1. User Request
+   ↓
+2. API Endpoint
+   ↓
+3. Business Logic
+   ↓
+4. Database Query
+   ↓
+5. Response Formatting
+   ↓
+6. User Response
+```
+
+## API Design
+
+### Endpoints
+
+#### POST /endpoint
+
+Brief description of what this endpoint does.
+
+**Request:**
+```json
+{
+  "field1": "value",
+  "field2": 123
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "status": "success",
+  "data": {}
+}
+```
+
+**Response (400 Bad Request):**
+```json
+{
+  "error": "Error message",
+  "details": ["Validation error 1"]
+}
+```
+
+**Response (500 Internal Server Error):**
+```json
+{
+  "error": "Internal server error"
+}
+```
+
+#### GET /endpoint/{id}
+
+Brief description.
+
+**Parameters:**
+- `id` (path): Resource ID
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "data": {}
+}
+```
+
+**Response (404 Not Found):**
+```json
+{
+  "error": "Resource not found"
+}
+```
+
+## Container Architecture
+
+### Containerfile (Application)
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+# Copy application code
+COPY src/ src/
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+
+CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### podman-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Containerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      LOG_LEVEL: info
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres-data:
+```
+
+## Security Considerations
+
+### Authentication & Authorization
+
+[How users are authenticated and authorized]
+
+### Input Validation
+
+[How user input is validated and sanitized]
+
+### SQL Injection Prevention
+
+[Use parameterized queries, ORM best practices]
+
+### Secrets Management
+
+[How API keys, passwords, tokens are managed]
+
+### Rate Limiting
+
+[Strategy for preventing abuse]
+
+### CORS Policy
+
+[Cross-origin resource sharing configuration]
+
+## Error Handling Strategy
+
+### Error Categories
+
+1. **Client Errors (4xx)**
+   - Bad request (400): Invalid input
+   - Unauthorized (401): Authentication required
+   - Forbidden (403): Insufficient permissions
+   - Not found (404): Resource doesn't exist
+
+2. **Server Errors (5xx)**
+   - Internal error (500): Unexpected server error
+   - Service unavailable (503): Temporary outage
+
+### Logging
+
+- **Level:** INFO for normal operations, ERROR for failures
+- **Format:** Structured JSON logs
+- **Fields:** timestamp, level, message, user_id, request_id, trace_id
+
+### Monitoring
+
+- Health check endpoint: `GET /health`
+- Metrics endpoint: `GET /metrics` (Prometheus format)
+- Key metrics: request rate, error rate, latency, database connections
+
+## Testing Strategy
+
+### Unit Tests
+
+- Test individual functions and classes
+- Mock external dependencies
+- Target: 80%+ code coverage
+
+### Integration Tests
+
+- Test API endpoints with real database (test instance)
+- Test component interactions
+- Use test fixtures for consistent state
+
+### Performance Tests
+
+- Load testing with [locust / k6]
+- Target: [X requests/second at Y latency]
+
+### Container Tests
+
+- Health checks
+- Container build validation
+- Multi-container orchestration
+
+## Deployment Strategy
+
+### Environments
+
+1. **Development:** Local Podman containers
+2. **Staging:** [Describe staging environment]
+3. **Production:** [Describe production environment]
+
+### CI/CD Pipeline
+
+```
+1. Push to branch
+   ↓
+2. Run linting (ruff)
+   ↓
+3. Run type checking (mypy)
+   ↓
+4. Run tests (pytest)
+   ↓
+5. Build containers
+   ↓
+6. Deploy to staging
+   ↓
+7. Run integration tests
+   ↓
+8. Manual approval
+   ↓
+9. Deploy to production
+```
+
+### Database Migrations
+
+- Use Alembic for schema changes
+- Test migrations in staging first
+- Backward-compatible changes only
+- Rollback plan for each migration
+
+## Observability
+
+### Logging
+
+- Application logs: JSON format to stdout
+- Access logs: HTTP requests and responses
+- Error logs: Stack traces and context
+
+### Metrics
+
+- Request count by endpoint
+- Response time percentiles (p50, p95, p99)
+- Error rate by type
+- Database connection pool usage
+
+### Tracing
+
+[Distributed tracing strategy if applicable]
+
+## Scalability Plan
+
+### Current Scale
+
+- Expected users: [Number]
+- Expected requests: [Rate]
+- Expected data: [Volume]
+
+### Scaling Strategy
+
+**Vertical Scaling:**
+[How to scale up single instances]
+
+**Horizontal Scaling:**
+[How to scale out with multiple instances]
+
+**Database Scaling:**
+[Read replicas, sharding, etc.]
+
+**Caching:**
+[What to cache, cache invalidation strategy]
+
+## Disaster Recovery
+
+### Backup Strategy
+
+- Database backups: [Frequency, retention]
+- Configuration backups: [Version control]
+- Data exports: [Format, location]
+
+### Recovery Procedures
+
+1. Identify failure type
+2. Restore from backup
+3. Verify data integrity
+4. Resume operations
+5. Post-mortem analysis
+
+## Open Technical Questions
+
+- [ ] Question 1: [Technical decision needed]
+- [ ] Question 2: [Trade-off to resolve]
+- [ ] Question 3: [Clarification required]
+
+## Design Trade-offs
+
+### Decision: [Choice A vs Choice B]
+
+**Chosen:** [Choice A]
+
+**Reasoning:**
+- Pro: [Advantage]
+- Pro: [Advantage]
+- Con: [Disadvantage]
+
+**Alternative Considered:** [Choice B]
+- Why not chosen: [Reasoning]
+
+## References
+
+- [External API documentation]
+- [Library documentation]
+- [Design patterns or best practices]

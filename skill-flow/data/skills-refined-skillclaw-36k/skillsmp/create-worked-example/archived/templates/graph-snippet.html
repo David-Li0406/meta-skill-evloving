@@ -1,0 +1,257 @@
+<!--
+  ============================================================
+  GRAPH SNIPPET - Complete Coordinate Plane Template
+  ============================================================
+  Use this as the starting point for ALL SVG coordinate planes.
+
+  HOW TO USE:
+  1. Copy the entire <svg>...</svg> block below
+  2. Adjust X_MAX and Y_MAX for your data range
+  3. Recalculate grid line and label positions using formulas
+  4. Add your data lines and points
+
+  FORMULAS:
+    pixelX = 40 + (dataX / X_MAX) * 220
+    pixelY = 170 - (dataY / Y_MAX) * 150
+
+  QUICK CALC for any scale:
+    - Per-unit spacing = 220 / X_MAX (for X) or 150 / Y_MAX (for Y)
+    - Example: X_MAX=6 → 220/6 = 36.67px per unit
+    - Then: x=1 → 40 + 36.67 = 76.67
+            x=2 → 40 + 73.33 = 113.33
+            etc.
+
+  CONSTANTS:
+    ORIGIN = (40, 170)
+    PLOT_WIDTH = 220px
+    PLOT_HEIGHT = 150px
+    viewBox = "0 0 280 200"
+
+  AXIS REQUIREMENTS (all mandatory):
+    - Arrowheads on both axes
+    - Single "0" at origin (NOT two separate zeros)
+    - Complete scale labels to last tick before arrow
+    - Lines extend to plot edges with arrows
+  ============================================================
+-->
+
+<svg viewBox="0 0 280 200" style="width: 100%; height: 340px;">
+    <!--
+    ============================================================
+    PPTX LAYER STRUCTURE - For multi-layer export
+    ============================================================
+    Each layer becomes a SEPARATE IMAGE in the exported PPTX/Google Slides,
+    tightly cropped to its bounding box. Use granular layers for elements
+    that should be independently movable:
+
+    REQUIRED LAYERS:
+      data-pptx-layer="base-graph"   → Grid, axes, ticks, axis labels (usually one)
+
+    PER-ELEMENT LAYERS (for manipulable export):
+      data-pptx-layer="line-1"       → First data line + its point(s)
+      data-pptx-layer="line-2"       → Second data line + its point(s)
+      data-pptx-layer="label-b0"     → Y-intercept label for line 1
+      data-pptx-layer="label-b20"    → Y-intercept label for line 2
+      data-pptx-layer="arrow-shift"  → Shift arrow annotation
+      data-pptx-layer="eq-line-1"    → Equation label for line 1
+      data-pptx-layer="eq-line-2"    → Equation label for line 2
+
+    NAMING CONVENTION:
+      - "line-N" for data lines and their associated points
+      - "label-X" for text annotations (X = descriptive suffix)
+      - "arrow-X" for arrow annotations
+      - "eq-N" for equation labels
+
+    Export automatically crops each layer to its tight bounding box.
+    ============================================================
+
+    This example uses X_MAX=6, Y_MAX=18 (counting by 1s on X, by 2s on Y)
+
+    FORMULAS:
+      pixelX = 40 + (dataX / X_MAX) * 220
+      pixelY = 170 - (dataY / Y_MAX) * 150
+
+    X tick positions (X_MAX=6, counting by 1s = 7 ticks):
+      x=0: 40, x=1: 76.67, x=2: 113.33, x=3: 150, x=4: 186.67, x=5: 223.33, x=6: 260
+
+    Y tick positions (Y_MAX=18, counting by 2s = 10 ticks):
+      y=0: 170, y=2: 153.33, y=4: 136.67, y=6: 120, y=8: 103.33,
+      y=10: 86.67, y=12: 70, y=14: 53.33, y=16: 36.67, y=18: 20
+    -->
+
+    <!-- ===== MARKER DEFINITIONS (required) ===== -->
+    <defs>
+        <!-- Axis arrows (dark, matches axis color) -->
+        <marker id="axis-arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#1e293b"/>
+        </marker>
+
+        <!-- Line arrows (colored, inherits from stroke) -->
+        <marker id="line-arrow-blue" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+            <polygon points="0 0, 6 2, 0 4" fill="#60a5fa"/>
+        </marker>
+        <marker id="line-arrow-green" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+            <polygon points="0 0, 6 2, 0 4" fill="#22c55e"/>
+        </marker>
+        <marker id="line-arrow-red" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+            <polygon points="0 0, 6 2, 0 4" fill="#ef4444"/>
+        </marker>
+    </defs>
+
+    <!-- ===== BASE GRAPH LAYER: Grid, Axes, Labels ===== -->
+    <g data-pptx-layer="base-graph">
+        <!-- Grid at EVERY tick position (consistent spacing, no gaps) -->
+        <g stroke="#e2e8f0" stroke-width="0.5">
+            <!-- Vertical grid lines (at every X tick, excluding origin) -->
+            <line x1="76.67" y1="20" x2="76.67" y2="170"/>   <!-- x=1 -->
+            <line x1="113.33" y1="20" x2="113.33" y2="170"/> <!-- x=2 -->
+            <line x1="150" y1="20" x2="150" y2="170"/>       <!-- x=3 -->
+            <line x1="186.67" y1="20" x2="186.67" y2="170"/> <!-- x=4 -->
+            <line x1="223.33" y1="20" x2="223.33" y2="170"/> <!-- x=5 -->
+            <line x1="260" y1="20" x2="260" y2="170"/>       <!-- x=6 -->
+
+            <!-- Horizontal grid lines (at every Y tick, excluding origin) -->
+            <line x1="40" y1="153.33" x2="260" y2="153.33"/> <!-- y=2 -->
+            <line x1="40" y1="136.67" x2="260" y2="136.67"/> <!-- y=4 -->
+            <line x1="40" y1="120" x2="260" y2="120"/>       <!-- y=6 -->
+            <line x1="40" y1="103.33" x2="260" y2="103.33"/> <!-- y=8 -->
+            <line x1="40" y1="86.67" x2="260" y2="86.67"/>   <!-- y=10 -->
+            <line x1="40" y1="70" x2="260" y2="70"/>         <!-- y=12 -->
+            <line x1="40" y1="53.33" x2="260" y2="53.33"/>   <!-- y=14 -->
+            <line x1="40" y1="36.67" x2="260" y2="36.67"/>   <!-- y=16 -->
+            <line x1="40" y1="20" x2="260" y2="20"/>         <!-- y=18 -->
+        </g>
+
+        <!-- Axes with arrowheads (extend 15px past last label position) -->
+        <line x1="40" y1="170" x2="275" y2="170" stroke="#1e293b" stroke-width="2" marker-end="url(#axis-arrow)"/>
+        <line x1="40" y1="180" x2="40" y2="5" stroke="#1e293b" stroke-width="2" marker-end="url(#axis-arrow)"/>
+
+        <!-- X-axis ticks (at every integer from 0-6) -->
+        <g stroke="#1e293b" stroke-width="1.5">
+            <line x1="40" y1="170" x2="40" y2="175"/>        <!-- x=0 -->
+            <line x1="76.67" y1="170" x2="76.67" y2="175"/> <!-- x=1 -->
+            <line x1="113.33" y1="170" x2="113.33" y2="175"/> <!-- x=2 -->
+            <line x1="150" y1="170" x2="150" y2="175"/>      <!-- x=3 -->
+            <line x1="186.67" y1="170" x2="186.67" y2="175"/> <!-- x=4 -->
+            <line x1="223.33" y1="170" x2="223.33" y2="175"/> <!-- x=5 -->
+            <line x1="260" y1="170" x2="260" y2="175"/>      <!-- x=6 -->
+        </g>
+        <!-- Y-axis ticks (at every even number from 0-18) -->
+        <g stroke="#1e293b" stroke-width="1.5">
+            <line x1="35" y1="170" x2="40" y2="170"/>        <!-- y=0 -->
+            <line x1="35" y1="153.33" x2="40" y2="153.33"/> <!-- y=2 -->
+            <line x1="35" y1="136.67" x2="40" y2="136.67"/> <!-- y=4 -->
+            <line x1="35" y1="120" x2="40" y2="120"/>        <!-- y=6 -->
+            <line x1="35" y1="103.33" x2="40" y2="103.33"/> <!-- y=8 -->
+            <line x1="35" y1="86.67" x2="40" y2="86.67"/>   <!-- y=10 -->
+            <line x1="35" y1="70" x2="40" y2="70"/>          <!-- y=12 -->
+            <line x1="35" y1="53.33" x2="40" y2="53.33"/>   <!-- y=14 -->
+            <line x1="35" y1="36.67" x2="40" y2="36.67"/>   <!-- y=16 -->
+            <line x1="35" y1="20" x2="40" y2="20"/>          <!-- y=18 -->
+        </g>
+
+        <!-- Axis labels -->
+        <!-- SINGLE "0" at origin (serves both axes) -->
+        <text x="33" y="182" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">0</text>
+
+        <!-- X-axis labels (counting by 1s: 0,1,2,3,4,5,6) -->
+        <text x="76.67" y="185" fill="#64748b" font-family="Arial" font-size="11" text-anchor="middle">1</text>
+        <text x="113.33" y="185" fill="#64748b" font-family="Arial" font-size="11" text-anchor="middle">2</text>
+        <text x="150" y="185" fill="#64748b" font-family="Arial" font-size="11" text-anchor="middle">3</text>
+        <text x="186.67" y="185" fill="#64748b" font-family="Arial" font-size="11" text-anchor="middle">4</text>
+        <text x="223.33" y="185" fill="#64748b" font-family="Arial" font-size="11" text-anchor="middle">5</text>
+        <text x="260" y="185" fill="#64748b" font-family="Arial" font-size="11" text-anchor="middle">6</text>
+
+        <!-- Y-axis labels (counting by 2s: 0,2,4,6,8,10,12,14,16,18) -->
+        <text x="35" y="157" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">2</text>
+        <text x="35" y="140" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">4</text>
+        <text x="35" y="124" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">6</text>
+        <text x="35" y="107" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">8</text>
+        <text x="35" y="90" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">10</text>
+        <text x="35" y="74" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">12</text>
+        <text x="35" y="57" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">14</text>
+        <text x="35" y="40" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">16</text>
+        <text x="35" y="24" fill="#64748b" font-family="Arial" font-size="11" text-anchor="end">18</text>
+    </g>
+
+    <!-- ===== DATA LAYERS: One layer per line for independent manipulation ===== -->
+
+    <!-- Line 1: y = 3x (blue) - SEPARATE LAYER -->
+    <g data-pptx-layer="line-1">
+        <!-- Line from origin to (6,18): pixelY at x=6: 170 - (18/18)*150 = 20 -->
+        <line x1="40" y1="170" x2="260" y2="20" stroke="#60a5fa" stroke-width="3" marker-end="url(#line-arrow-blue)"/>
+        <!-- Y-intercept point at origin -->
+        <circle cx="40" cy="170" r="5" fill="#60a5fa"/>
+    </g>
+
+    <!-- Line 2: y = 2x + 3 (green) - SEPARATE LAYER -->
+    <g data-pptx-layer="line-2">
+        <!-- Entry: pixelY = 170 - (3/18)*150 = 145 -->
+        <!-- Exit: pixelY = 170 - (15/18)*150 = 45 -->
+        <line x1="40" y1="145" x2="260" y2="45" stroke="#22c55e" stroke-width="3" marker-end="url(#line-arrow-green)"/>
+        <!-- Y-intercept point at (0,3) -->
+        <circle cx="40" cy="145" r="5" fill="#22c55e"/>
+    </g>
+
+    <!-- ===== ANNOTATION LAYERS: One layer per annotation element ===== -->
+    <!-- Each annotation becomes a separate, tightly-cropped image -->
+
+    <!-- Y-intercept label for line 1 -->
+    <g data-pptx-layer="label-b0">
+        <text x="5" y="170" fill="#60a5fa" font-family="Arial" font-size="9" font-weight="normal">b = 0</text>
+    </g>
+
+    <!-- Y-intercept label for line 2 -->
+    <g data-pptx-layer="label-b3">
+        <text x="5" y="145" fill="#22c55e" font-family="Arial" font-size="9" font-weight="normal">b = 3</text>
+    </g>
+
+    <!-- Equation label for line 1 (optional) -->
+    <g data-pptx-layer="eq-line-1">
+        <text x="265" y="30" fill="#60a5fa" font-family="Arial" font-size="9" font-weight="normal">y = 3x</text>
+    </g>
+
+    <!-- Equation label for line 2 (optional) -->
+    <g data-pptx-layer="eq-line-2">
+        <text x="265" y="55" fill="#22c55e" font-family="Arial" font-size="9" font-weight="normal">y = 2x + 3</text>
+    </g>
+</svg>
+
+
+<!--
+  ============================================================
+  QUICK REFERENCE: Scale Selection (≤10 ticks target)
+  ============================================================
+
+  X-AXIS (ORIGIN_X=40, PLOT_WIDTH=220):
+  | X_MAX | Increment | Ticks | Formula: pixelX = 40 + (dataX/X_MAX)*220 |
+  |-------|-----------|-------|------------------------------------------|
+  | 4     | 1         | 5     | 0→40, 1→95, 2→150, 3→205, 4→260         |
+  | 5     | 1         | 6     | 0→40, 1→84, 2→128, 3→172, 4→216, 5→260  |
+  | 6     | 1         | 7     | 0→40, 1→77, 2→113, 3→150, 4→187, 5→223, 6→260 |
+  | 8     | 2         | 5     | 0→40, 2→95, 4→150, 6→205, 8→260         |
+  | 10    | 2         | 6     | 0→40, 2→84, 4→128, 6→172, 8→216, 10→260 |
+
+  Y-AXIS (ORIGIN_Y=170, PLOT_HEIGHT=150):
+  | Y_MAX | Increment | Ticks | Formula: pixelY = 170 - (dataY/Y_MAX)*150 |
+  |-------|-----------|-------|-------------------------------------------|
+  | 9     | 1         | 10    | Count by 1s (max for counting by 1s)     |
+  | 18    | 2         | 10    | Count by 2s (max for counting by 2s)     |
+  | 36    | 4         | 10    | Count by 4s                              |
+  | 45    | 5         | 10    | Count by 5s                              |
+  | 72    | 8         | 10    | Count by 8s                              |
+  | 90    | 10        | 10    | Count by 10s                             |
+
+  RULE: Grid lines at EVERY tick position. Never skip values!
+
+  COLORS:
+  | Use          | Color   | Hex     |
+  |--------------|---------|---------|
+  | Line 1       | Blue    | #60a5fa |
+  | Line 2       | Green   | #22c55e |
+  | Line 3       | Red     | #ef4444 |
+  | Axis/Grid    | Slate   | #1e293b |
+  | Labels       | Gray    | #64748b |
+  | Light grid   | Slate   | #e2e8f0 |
+  ============================================================
+-->

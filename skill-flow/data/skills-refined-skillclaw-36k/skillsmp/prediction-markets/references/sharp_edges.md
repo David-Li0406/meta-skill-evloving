@@ -1,0 +1,331 @@
+# Prediction Markets - Sharp Edges
+
+## Ambiguous Resolution
+
+### **Id**
+ambiguous-resolution
+### **Summary**
+Ambiguous market question leads to disputes
+### **Severity**
+high
+### **Situation**
+  Market asks "Will Bitcoin hit $100k in 2025?" Bitcoin briefly
+  touches $100k for 1 second on one exchange. Disputes erupt
+  over whether this counts.
+  
+### **Why**
+  Real-world events are nuanced. Without precise resolution
+  criteria, edge cases create disputes and undermine trust.
+  
+### **Solution**
+  # DEFINE PRECISE RESOLUTION CRITERIA
+  
+  Good Question Format:
+  ┌─────────────────────────────────────────────────────────┐
+  │ Question: Will Bitcoin's price exceed $100,000?         │
+  │                                                         │
+  │ Resolution Source: CoinGecko BTC/USD price              │
+  │ Resolution Time: 2025-12-31 23:59:59 UTC                │
+  │ Resolution Criteria:                                    │
+  │   - YES if CoinGecko shows BTC >= $100,000 at           │
+  │     resolution time                                      │
+  │   - NO otherwise                                        │
+  │   - Uses 5-minute TWAP to prevent manipulation          │
+  └─────────────────────────────────────────────────────────┘
+  
+  struct MarketMetadata {
+      string question;
+      string resolutionSource;     // Primary data source
+      string backupSource;         // If primary unavailable
+      uint256 resolutionTime;
+      string resolutionCriteria;   // Detailed rules
+      string edgeCases;            // How to handle ambiguity
+  }
+  
+  Edge Case Documentation:
+  - What if source is unavailable?
+  - What if data is delayed?
+  - What counts as "reaching" a price?
+  - Time zone and daylight savings?
+  - Market close vs 24/7 trading?
+  
+### **Symptoms**
+  - Multiple valid interpretations
+  - Oracle disputes
+  - Community disagreement on outcome
+### **Detection Pattern**
+
+
+## Oracle Front Running
+
+### **Id**
+oracle-front-running
+### **Summary**
+Resolution data leaked before on-chain settlement
+### **Severity**
+high
+### **Situation**
+  Market resolves based on API data. Someone sees the result
+  off-chain before the oracle posts on-chain. They front-run
+  the resolution transaction, buying winning tokens cheap.
+  
+### **Why**
+  There's always latency between real-world events and on-chain
+  resolution. This window enables profitable front-running.
+  
+### **Solution**
+  # COMMIT-REVEAL OR TRADING PAUSE
+  
+  // Option 1: Pause trading before resolution
+  uint256 public tradingCutoff;
+  uint256 public resolutionTime;
+  
+  modifier tradingOpen() {
+      require(block.timestamp < tradingCutoff, "Trading closed");
+      _;
+  }
+  
+  function trade(...) external tradingOpen {
+      // ... trading logic
+  }
+  
+  constructor() {
+      resolutionTime = 1735689599;  // When event happens
+      tradingCutoff = resolutionTime - 1 hours;  // Stop 1hr before
+  }
+  
+  // Option 2: Commit-reveal resolution
+  bytes32 public resolutionCommit;
+  bytes32 public resolutionReveal;
+  
+  function commitResolution(bytes32 commitment) external onlyOracle {
+      require(block.timestamp >= resolutionTime);
+      resolutionCommit = commitment;
+      // Trading pauses when commit is made
+  }
+  
+  function revealResolution(bool outcome, bytes32 salt) external onlyOracle {
+      require(resolutionCommit != bytes32(0));
+      require(
+          keccak256(abi.encode(outcome, salt)) == resolutionCommit,
+          "Invalid reveal"
+      );
+      _resolve(outcome);
+  }
+  
+### **Symptoms**
+  - Suspicious trades just before resolution
+  - Large volume as event approaches
+  - MEV bots targeting resolution txs
+### **Detection Pattern**
+
+
+## Liquidity Drain Resolution
+
+### **Id**
+liquidity-drain-resolution
+### **Summary**
+LPs drained when outcome becomes certain
+### **Severity**
+high
+### **Situation**
+  Market has $1M liquidity. Outcome becomes obvious (e.g.,
+  election called). Everyone buys winning tokens from pool.
+  LPs left holding only losing tokens worth $0.
+  
+### **Why**
+  AMM liquidity providers take the other side of trades.
+  When outcome is certain, everyone trades one direction,
+  leaving LPs with the worthless losing tokens.
+  
+### **Solution**
+  # LP PROTECTION MECHANISMS
+  
+  // Option 1: Dynamic fees based on probability
+  function getSwapFee(uint256 yesReserve, uint256 noReserve)
+      public pure returns (uint256)
+  {
+      uint256 imbalance = yesReserve > noReserve
+          ? (yesReserve - noReserve) * 1e18 / (yesReserve + noReserve)
+          : (noReserve - yesReserve) * 1e18 / (yesReserve + noReserve);
+  
+      // Fee increases as imbalance grows
+      // Base 0.5%, up to 5% at max imbalance
+      return 50 + (imbalance * 450) / 1e18; // basis points
+  }
+  
+  // Option 2: Trading halt at extreme probabilities
+  uint256 public constant MAX_PROBABILITY = 0.95e18;
+  uint256 public constant MIN_PROBABILITY = 0.05e18;
+  
+  function trade(...) external {
+      uint256 impliedProb = getYesPrice();
+      require(
+          impliedProb >= MIN_PROBABILITY && impliedProb <= MAX_PROBABILITY,
+          "Market too imbalanced"
+      );
+      // ...
+  }
+  
+  // Option 3: LP withdraw restrictions near resolution
+  function withdrawLiquidity() external {
+      require(
+          block.timestamp < resolutionTime - 24 hours,
+          "Withdrawals locked"
+      );
+      // ...
+  }
+  
+### **Symptoms**
+  - LPs lose significantly more than expected
+  - One-sided trading volume
+  - Pool heavily imbalanced
+### **Detection Pattern**
+
+
+## Wash Trading
+
+### **Id**
+wash-trading
+### **Summary**
+Fake volume to manipulate implied probability
+### **Severity**
+medium
+### **Situation**
+  Attacker repeatedly buys and sells to themselves, creating
+  false volume. Other traders use volume as signal and follow.
+  Attacker profits on their real position.
+  
+### **Why**
+  Volume is often seen as information signal. Fake volume
+  can create momentum that real traders follow.
+  
+### **Solution**
+  # DETECT AND DISCOURAGE WASH TRADING
+  
+  // Fee structure that makes wash trading costly
+  uint256 public constant SWAP_FEE = 30; // 0.3%
+  // Round-trip costs 0.6%, making wash trading expensive
+  
+  // Time-weighted average price for large impacts
+  function getExecutionPrice(
+      uint256 amount,
+      bool buying
+  ) public view returns (uint256) {
+      // TWAP over last N blocks for large orders
+      if (amount > TWAP_THRESHOLD) {
+          return _calculateTWAP(buying);
+      }
+      return _spotPrice(buying);
+  }
+  
+  // Track trading patterns (off-chain)
+  // - Same address on both sides
+  // - Addresses that always trade together
+  // - Unnatural volume patterns
+  
+### **Symptoms**
+  - High volume with little price movement
+  - Same addresses trading repeatedly
+  - Volume spikes before news
+### **Detection Pattern**
+
+
+## Resolution Timing Attack
+
+### **Id**
+resolution-timing-attack
+### **Summary**
+Oracle waits until favorable price to resolve
+### **Severity**
+critical
+### **Situation**
+  Oracle can resolve market anytime after deadline. They wait
+  until their preferred outcome is true (even temporarily)
+  and resolve at that moment.
+  
+### **Why**
+  If resolution can happen anytime in a window, the oracle
+  can choose the most favorable moment.
+  
+### **Solution**
+  # FIX RESOLUTION TO SPECIFIC TIME
+  
+  uint256 public immutable exactResolutionTime;
+  
+  function resolve(bool outcome, bytes calldata proof) external {
+      require(block.timestamp >= exactResolutionTime);
+      require(block.timestamp <= exactResolutionTime + 1 hours);
+  
+      // Proof must show state at EXACTLY resolution time
+      // Not "within the window"
+      require(
+          _verifyProofTimestamp(proof, exactResolutionTime),
+          "Proof not at resolution time"
+      );
+  
+      _resolve(outcome);
+  }
+  
+  // Use Chainlink Automation for trustless resolution timing
+  // Keepers trigger resolution at exact time, not oracle choice
+  
+### **Symptoms**
+  - Resolution delayed until favorable
+  - Oracle has position in market
+  - Timing correlates with price
+### **Detection Pattern**
+
+
+## Early Resolution
+
+### **Id**
+early-resolution
+### **Summary**
+Market resolved before expected, trapping traders
+### **Severity**
+high
+### **Situation**
+  Market supposed to run until December 31. Event happens
+  November 1. Market resolves immediately. Traders expecting
+  time value are caught off guard.
+  
+### **Why**
+  Some events can occur early. If market resolves on event
+  occurrence rather than end date, traders may be trapped.
+  
+### **Solution**
+  # CLEAR EARLY RESOLUTION POLICY
+  
+  enum ResolutionType {
+      AtDeadline,     // Resolves only at deadline, even if known early
+      OnOccurrence,   // Resolves when event occurs
+      Hybrid          // Resolves on occurrence OR deadline
+  }
+  
+  struct Market {
+      uint256 deadline;
+      ResolutionType resType;
+      bool canResolveEarly;
+  }
+  
+  function resolve(bytes32 marketId, bool outcome) external {
+      Market storage m = markets[marketId];
+  
+      if (m.resType == ResolutionType.AtDeadline) {
+          require(block.timestamp >= m.deadline, "Not at deadline");
+      } else if (m.resType == ResolutionType.OnOccurrence) {
+          // Can resolve anytime with valid proof
+      }
+      // ...
+  }
+  
+  // Document clearly in market description:
+  // "This market resolves YES immediately upon the candidate
+  //  winning, or NO at 2025-01-20 if no winner declared."
+  
+### **Symptoms**
+  - Unexpected early resolution
+  - Traders couldn't exit positions
+  - Time value assumptions broken
+### **Detection Pattern**

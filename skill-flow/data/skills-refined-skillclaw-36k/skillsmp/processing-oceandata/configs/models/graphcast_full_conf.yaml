@@ -1,0 +1,33 @@
+# GraphCast Model Configuration - Heavy/Advanced Version
+# High-capacity version for best performance
+# Requires significant GPU memory (16GB+ recommended)
+
+# Temporal configuration
+input_len: 7        # Number of input frames
+output_len: 1       # Number of output frames
+in_channels: 2      # Ocean velocity components (u, v)
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration (enhanced)
+mesh_level: 5       # Higher mesh refinement for better spatial resolution
+multimesh: true     # Multi-resolution mesh hierarchy
+
+# Model architecture parameters (enhanced)
+hidden_dim: 256     # Larger hidden dimension for more capacity
+processor_layers: 16 # More processor layers for complex patterns
+mlp_layers: 2       # Deeper MLPs for better feature extraction
+aggregation: "sum"  # Sum aggregation for gradient flow
+
+# Processing options
+add_3d_dim: true         # Enable pseudo-3D processing
+temporal_encoding: "rnn"  # RNN-based temporal encoding for better temporal modeling
+
+# Training recommendations
+# - Batch size: 1-2 (limited by memory)
+# - Learning rate: 1e-4 with warm-up
+# - Gradient accumulation: 2-4 steps recommended
+# - Mixed precision training recommended
+# - This configuration uses ~12-16 GB VRAM
+# - Best for final production models

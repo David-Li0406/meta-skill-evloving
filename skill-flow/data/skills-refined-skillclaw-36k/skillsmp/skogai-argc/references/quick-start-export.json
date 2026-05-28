@@ -1,0 +1,137 @@
+{
+  "name": "quick-start",
+  "describe": "Example CLI tool",
+  "version": null,
+  "aliases": [],
+  "flag_options": [
+    {
+      "id": "verbose",
+      "long_name": "--verbose",
+      "short_name": "-v",
+      "describe": "Enable verbose output",
+      "flag": true,
+      "notations": [],
+      "required": false,
+      "multiple_values": false,
+      "multiple_occurs": false,
+      "num_args": [
+        0,
+        0
+      ],
+      "delimiter": null,
+      "terminated": false,
+      "prefixed": false,
+      "assigned": false,
+      "default": null,
+      "choice": null,
+      "env": null,
+      "inherited": false
+    },
+    {
+      "id": "file",
+      "long_name": "--file",
+      "short_name": "-f",
+      "describe": "Input file",
+      "flag": false,
+      "notations": [
+        "FILE"
+      ],
+      "required": false,
+      "multiple_values": false,
+      "multiple_occurs": false,
+      "num_args": [
+        1,
+        1
+      ],
+      "delimiter": null,
+      "terminated": false,
+      "prefixed": false,
+      "assigned": false,
+      "default": null,
+      "choice": null,
+      "env": null,
+      "inherited": false
+    },
+    {
+      "id": "help",
+      "long_name": "--help",
+      "short_name": "-h",
+      "describe": "Print help",
+      "flag": true,
+      "notations": [],
+      "required": false,
+      "multiple_values": false,
+      "multiple_occurs": false,
+      "num_args": [
+        0,
+        0
+      ],
+      "delimiter": null,
+      "terminated": false,
+      "prefixed": false,
+      "assigned": false,
+      "default": null,
+      "choice": null,
+      "env": null,
+      "inherited": false
+    },
+    {
+      "id": "version",
+      "long_name": "--version",
+      "short_name": "-V",
+      "describe": "Print version",
+      "flag": true,
+      "notations": [],
+      "required": false,
+      "multiple_values": false,
+      "multiple_occurs": false,
+      "num_args": [
+        0,
+        0
+      ],
+      "delimiter": null,
+      "terminated": false,
+      "prefixed": false,
+      "assigned": false,
+      "default": null,
+      "choice": null,
+      "env": null,
+      "inherited": false
+    }
+  ],
+  "positionals": [
+    {
+      "id": "file",
+      "describe": "Required name argument from the ./examples/ folder",
+      "notation": "FILE",
+      "required": true,
+      "multiple": false,
+      "delimiter": null,
+      "terminated": false,
+      "default": null,
+      "choice": {
+        "type": "Fn",
+        "data": [
+          "_choice_files",
+          true
+        ]
+      },
+      "env": null
+    }
+  ],
+  "envs": [
+    {
+      "id": "EXAMPLE_FOLDER_PATH",
+      "describe": "Path to the examples folder",
+      "required": false,
+      "default": {
+        "type": "Value",
+        "value": "examples/"
+      },
+      "choice": null,
+      "inherited": false
+    }
+  ],
+  "subcommands": [],
+  "command_fn": "main"
+}

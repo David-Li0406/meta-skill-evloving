@@ -1,0 +1,80 @@
+# syntax=docker/dockerfile:1
+
+# Global ARG for runtime image selection
+# - latest: Production (no shell, minimal, most secure)
+# - latest-dev: Development/debugging (includes shell and basic tools)
+ARG RUNTIME_TAG=latest
+
+###############################
+# Builder stage
+###############################
+FROM docker.io/node:lts-slim AS builder
+
+# Ensure apt-get doesn't open a menu on you.
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies first
+RUN <<EOT
+apt update -qqy
+DEBIAN_FRONTEND=noninteractive \
+  apt install -qqy --no-install-recommends --no-install-suggests \
+  tini curl \
+  ca-certificates
+rm -rf /var/lib/apt/lists/*
+# Enable corepack and set pnpm version
+corepack enable && corepack use pnpm
+EOT
+
+# Set working directory
+WORKDIR /app
+
+# Add main project and install it
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+
+# Install devDependencies & dependencies
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --production=false
+
+# Then, add the rest of the project source code
+COPY src ./src
+COPY tsconfig.json ./
+
+# Build to dist and remove devDependencies for production
+RUN <<EOT
+pnpm exec tsc --incremental --tsBuildInfoFile .tsc-cache/buildinfo --project .
+pnpm build
+pnpm prune --production
+EOT
+
+###############################
+# Runtime stage (Wolfi glibc-dynamic)
+###############################
+# Re-declare ARG for this stage
+ARG RUNTIME_TAG=latest
+FROM cgr.dev/chainguard/glibc-dynamic:${RUNTIME_TAG} AS runtime
+
+# Copy tini from builder (Wolfi doesn't include it)
+COPY --from=builder /usr/bin/tini-static /usr/bin/tini
+
+# Copy Node.js binary from builder
+COPY --from=builder /usr/local/bin/node /usr/local/bin/node
+
+# Copy the application from the builder
+COPY --from=builder --chown=65532:65532 /app/node_modules /app/node_modules
+COPY --from=builder --chown=65532:65532 /app/dist /app/dist
+
+# Environment variables for Node.js optimization (2025 best practices)
+ENV NODE_ENV=production \
+    NODE_OPTIONS="--enable-source-maps --max-old-space-size=512" \
+    UV_THREADPOOL_SIZE=16 \
+    PATH="/app/bin:$PATH"
+
+# Switch to non-root user (Wolfi default: 65532)
+USER 65532:65532
+WORKDIR /app
+
+ENTRYPOINT ["tini", "--"]
+CMD ["node", "./dist/index.js"]
+
+# To build for debugging with shell access:
+# podman build --build-arg RUNTIME_TAG=latest-dev -t myapp:debug .

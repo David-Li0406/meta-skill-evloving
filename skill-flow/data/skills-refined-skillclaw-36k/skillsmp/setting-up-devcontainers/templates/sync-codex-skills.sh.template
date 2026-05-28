@@ -1,0 +1,45 @@
+#!/bin/bash
+# =============================================================================
+# Sync skills from Claude Code plugins to Codex CLI
+# =============================================================================
+# This script copies skills from the marketplace plugins directory to
+# ~/.codex/skills/ so they are available in Codex CLI.
+#
+# Usage:
+#   bash sync-codex-skills.sh [--quiet]
+#
+# Note: Codex ignores symlinked directories, so we copy instead of symlink.
+# =============================================================================
+
+set -e
+
+QUIET="${1:-}"
+WORKSPACE="/workspaces/{{PROJECT_DIR}}"
+CODEX_SKILLS_DIR="${HOME}/.codex/skills"
+
+log() {
+    [[ "$QUIET" != "--quiet" ]] && echo "$@"
+}
+
+# Ensure target directory exists
+mkdir -p "$CODEX_SKILLS_DIR"
+
+# Find all skills in plugins/*/skills/*/
+skill_count=0
+for skill_path in "$WORKSPACE"/plugins/*/skills/*/; do
+    # Skip if not a directory or no SKILL.md
+    [ -d "$skill_path" ] || continue
+    [ -f "$skill_path/SKILL.md" ] || continue
+
+    skill_name=$(basename "$skill_path")
+    target_dir="$CODEX_SKILLS_DIR/$skill_name"
+
+    # Remove existing and copy fresh
+    rm -rf "$target_dir"
+    cp -r "$skill_path" "$target_dir"
+
+    log "  Synced: $skill_name"
+    skill_count=$((skill_count + 1))
+done
+
+log "Synced $skill_count skills to ~/.codex/skills/"

@@ -1,0 +1,130 @@
+# syntax=docker/dockerfile:1
+
+# Global ARG for runtime image selection
+# - latest: Production (no shell, minimal, most secure)
+# - latest-dev: Development/debugging (includes shell and basic tools)
+ARG RUNTIME_TAG=latest
+
+###############################
+# Builder stage
+###############################
+FROM docker.io/rust:slim AS builder
+
+# Install tini and musl tools for static compilation
+RUN <<EOT
+apt update -qy
+DEBIAN_FRONTEND=noninteractive \
+  apt install -qyy --no-install-recommends \
+  tini musl-tools \
+  ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOT
+
+# Add musl targets for multi-arch
+RUN rustup target add x86_64-unknown-linux-musl aarch64-unknown-linux-musl
+
+WORKDIR /app
+
+###############################
+# Build Options (choose one):
+#
+# Option A: With BuildKit cache [RECOMMENDED - faster rebuilds]
+#   Uses cache mounts for cargo registry and target directory.
+#   Requires: touch src/main.rs to invalidate incremental cache.
+#
+# Option B: Without cache [simpler, works everywhere]
+#   No cache mounts, simpler but slower rebuilds.
+#   Uncomment Option B and comment out Option A if you prefer.
+###############################
+
+#--- Option A: With BuildKit cache (default) ---
+# Copy manifests first (optimal layer caching)
+COPY Cargo.toml Cargo.lock ./
+
+# Create dummy src for dependency caching
+RUN mkdir -p src && echo "fn main() {}" > src/main.rs
+
+# Determine target based on architecture
+ARG TARGETARCH
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/app/target \
+    if [ "$TARGETARCH" = "arm64" ]; then \
+      RUST_TARGET="aarch64-unknown-linux-musl"; \
+    else \
+      RUST_TARGET="x86_64-unknown-linux-musl"; \
+    fi && \
+    cargo build --target $RUST_TARGET --release
+
+# Copy real source and build
+COPY . .
+
+# Build the actual application
+# NOTE: touch src/main.rs forces Cargo to recompile the main binary.
+# Without this, Cargo's incremental compilation sees no changes and
+# reuses the dummy binary from the dependency caching step above.
+ARG TARGETARCH
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/app/target \
+    if [ "$TARGETARCH" = "arm64" ]; then \
+      RUST_TARGET="aarch64-unknown-linux-musl"; \
+    else \
+      RUST_TARGET="x86_64-unknown-linux-musl"; \
+    fi && \
+    touch src/main.rs && \
+    cargo build --target $RUST_TARGET --release && \
+    cp target/$RUST_TARGET/release/your_app /app/server
+
+#--- Option B: Without cache (simpler fallback) ---
+# COPY . .
+# ARG TARGETARCH
+# RUN if [ "$TARGETARCH" = "arm64" ]; then \
+#       RUST_TARGET="aarch64-unknown-linux-musl"; \
+#     else \
+#       RUST_TARGET="x86_64-unknown-linux-musl"; \
+#     fi && \
+#     cargo build --target $RUST_TARGET --release && \
+#     cp target/$RUST_TARGET/release/your_app /app/server
+
+###############################
+# Runtime stage (static - smallest possible)
+###############################
+# Re-declare ARG for this stage
+ARG RUNTIME_TAG=latest
+FROM cgr.dev/chainguard/static:${RUNTIME_TAG} AS runtime
+
+# Copy tini from builder
+COPY --from=builder /usr/bin/tini-static /sbin/tini
+
+# Copy the static binary
+COPY --from=builder --chown=65532:65532 /app/server /app/server
+
+###############################
+# ⚠️ IMPORTANT: Allocator Performance Warning
+#
+# musl's default allocator is 7-10x SLOWER in multi-threaded workloads!
+# LD_PRELOAD is NOT available (static image has no dynamic linker).
+#
+# [STRONGLY RECOMMENDED] Add mimalloc to your Cargo.toml:
+#
+#   [dependencies]
+#   mimalloc = { version = "0.1", default-features = false }
+#
+# And in src/main.rs:
+#
+#   #[global_allocator]
+#   static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+#
+# Or for musl-only:
+#   [target.'cfg(target_env = "musl")'.dependencies]
+#   mimalloc = { version = "0.1", default-features = false }
+###############################
+
+# Switch to non-root user (Wolfi default: 65532)
+USER 65532:65532
+WORKDIR /app
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/app/server"]
+
+# To build for debugging with shell access:
+# podman build --build-arg RUNTIME_TAG=latest-dev -t myapp:debug .

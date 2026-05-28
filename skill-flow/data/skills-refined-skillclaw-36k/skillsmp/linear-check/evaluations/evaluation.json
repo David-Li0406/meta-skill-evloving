@@ -1,0 +1,272 @@
+{
+  "name": "linear-check",
+  "description": "Evaluations for the linear-check skill",
+  "testCases": [
+    {
+      "id": "no-config",
+      "name": "No Linear configuration",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Needs fixture with no linear section in repos.json",
+      "setup": {
+        "description": "No linear section in .entourage/repos.json and no MCP"
+      },
+      "expectedBehavior": "Returns message about missing configuration",
+      "expectedOutput": {
+        "contains": ["No Linear configuration found", ".entourage/repos.json"]
+      }
+    },
+    {
+      "id": "token-invalid",
+      "name": "Invalid or expired token",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires mock Linear API response",
+      "setup": {
+        "description": "Linear API returns authentication error"
+      },
+      "expectedBehavior": "Returns authentication error with remediation steps",
+      "expectedOutput": {
+        "contains": ["Authentication failed", "Check your token"]
+      }
+    },
+    {
+      "id": "rate-limited",
+      "name": "API rate limit reached",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires mock Linear API response",
+      "setup": {
+        "description": "Linear API returns rate limit error"
+      },
+      "expectedBehavior": "Returns rate limit message",
+      "expectedOutput": {
+        "contains": ["rate limit reached", "Try again later"]
+      }
+    },
+    {
+      "id": "team-not-found",
+      "name": "Team not found",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires mock Linear API response",
+      "setup": {
+        "config": {
+          "linear": {"teamId": "INVALID", "workspace": "my-workspace"}
+        },
+        "description": "Linear API returns team not found"
+      },
+      "expectedBehavior": "Returns team not found message with config suggestion",
+      "expectedOutput": {
+        "contains": ["team not found", "Check `teamId`"]
+      }
+    },
+    {
+      "id": "issue-found-in-progress",
+      "name": "Issue found with In Progress status",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires actual Linear workspace with issue",
+      "setup": {
+        "config": {
+          "linear": {"teamId": "TEAM", "workspace": "my-workspace"}
+        },
+        "description": "Linear has an issue matching 'auth' in In Progress state"
+      },
+      "expectedBehavior": "Returns issue with In Progress status",
+      "expectedOutput": {
+        "contains": ["Linear Scan", "In Progress"],
+        "format": "table"
+      }
+    },
+    {
+      "id": "issue-found-done",
+      "name": "Issue found with Done status",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires actual Linear workspace with completed issue",
+      "setup": {
+        "config": {
+          "linear": {"teamId": "TEAM", "workspace": "my-workspace"}
+        },
+        "description": "Linear has a completed issue matching 'auth'"
+      },
+      "expectedBehavior": "Returns issue with Done status",
+      "expectedOutput": {
+        "contains": ["Linear Scan", "Done"],
+        "status": "Done"
+      }
+    },
+    {
+      "id": "issue-found-triage",
+      "name": "Issue found with Triage status",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires actual Linear workspace with triage issue",
+      "setup": {
+        "config": {
+          "linear": {"teamId": "TEAM", "workspace": "my-workspace"}
+        },
+        "description": "Linear has an issue in Triage state matching 'auth'"
+      },
+      "expectedBehavior": "Returns issue with Triage status",
+      "expectedOutput": {
+        "contains": ["Linear Scan", "Triage"],
+        "status": "Triage"
+      }
+    },
+    {
+      "id": "issue-found-backlog",
+      "name": "Issue found with Backlog status",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires actual Linear workspace with backlog issue",
+      "setup": {
+        "config": {
+          "linear": {"teamId": "TEAM", "workspace": "my-workspace"}
+        },
+        "description": "Linear has an issue in Backlog state matching 'auth'"
+      },
+      "expectedBehavior": "Returns issue with Backlog status",
+      "expectedOutput": {
+        "contains": ["Linear Scan", "Backlog"],
+        "status": "Backlog"
+      }
+    },
+    {
+      "id": "no-issue-found",
+      "name": "No matching issue found",
+      "input": "/linear-check nonexistent-component",
+      "status": "pending",
+      "pendingReason": "Requires actual Linear workspace",
+      "setup": {
+        "config": {
+          "linear": {"teamId": "TEAM", "workspace": "my-workspace"}
+        },
+        "description": "Linear has no issues matching 'nonexistent-component'"
+      },
+      "expectedBehavior": "Returns Unknown status with no issue found message",
+      "expectedOutput": {
+        "contains": ["No Linear issue found"],
+        "status": "Unknown"
+      }
+    },
+    {
+      "id": "multiple-issues",
+      "name": "Multiple issues found for component",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires actual Linear workspace with multiple auth issues",
+      "setup": {
+        "config": {
+          "linear": {"teamId": "TEAM", "workspace": "my-workspace"}
+        },
+        "description": "Linear has multiple issues matching 'auth'"
+      },
+      "expectedBehavior": "Returns table with all matching issues",
+      "expectedOutput": {
+        "format": "table"
+      }
+    },
+    {
+      "id": "multiple-components",
+      "name": "Query for multiple components",
+      "input": "/linear-check auth dashboard payments",
+      "status": "pending",
+      "pendingReason": "Requires actual Linear workspace",
+      "setup": {
+        "config": {
+          "linear": {"teamId": "TEAM", "workspace": "my-workspace"}
+        },
+        "description": "Check multiple components in single query"
+      },
+      "expectedBehavior": "Returns summary table with all components",
+      "expectedOutput": {
+        "contains": ["Linear Scan Summary"],
+        "format": "table"
+      }
+    },
+    {
+      "id": "mcp-fallback",
+      "name": "MCP unavailable, API fallback works",
+      "input": "/linear-check auth",
+      "status": "pending",
+      "pendingReason": "Requires MCP to be unavailable and token configured",
+      "setup": {
+        "config": {
+          "linear": {"token": "lin_api_test", "teamId": "TEAM", "workspace": "my-workspace"}
+        },
+        "description": "Linear MCP not configured, using API token fallback"
+      },
+      "expectedBehavior": "Successfully queries Linear using API token",
+      "expectedOutput": {
+        "contains": ["Linear Scan"]
+      }
+    },
+    {
+      "id": "local-issue-done",
+      "name": "Local: Issue found with Done status",
+      "input": "/linear-check slash command",
+      "status": "active",
+      "setup": {
+        "description": "Tests against real ENT workspace - ENT-48 is Done"
+      },
+      "expectedBehavior": "Returns issue with Done status",
+      "expectedOutput": {
+        "contains": ["ENT-48", "Done"]
+      }
+    },
+    {
+      "id": "local-issue-backlog",
+      "name": "Local: Issue found with Backlog status",
+      "input": "/linear-check context skill",
+      "status": "active",
+      "setup": {
+        "description": "Tests against real ENT workspace - ENT-49 is Backlog"
+      },
+      "expectedBehavior": "Returns issue with Backlog status",
+      "expectedOutput": {
+        "contains": ["ENT-49", "Backlog"]
+      }
+    },
+    {
+      "id": "local-issue-todo",
+      "name": "Local: Issue found with Todo status",
+      "input": "/linear-check tech stack",
+      "status": "active",
+      "setup": {
+        "description": "Tests against real ENT workspace - ENT-50 is Todo"
+      },
+      "expectedBehavior": "Returns issue with Todo status",
+      "expectedOutput": {
+        "contains": ["ENT-50", "Todo"]
+      }
+    },
+    {
+      "id": "local-no-issue",
+      "name": "Local: No matching issue found",
+      "input": "/linear-check nonexistent-xyz-999",
+      "status": "active",
+      "setup": {
+        "description": "Tests against real ENT workspace - no matching issues"
+      },
+      "expectedBehavior": "Returns message indicating no issues found",
+      "expectedOutput": {
+        "contains": ["No Linear issue"]
+      }
+    },
+    {
+      "id": "local-multiple-issues",
+      "name": "Local: Multiple issues found",
+      "input": "/linear-check logger",
+      "status": "active",
+      "setup": {
+        "description": "Tests against real ENT workspace - multiple issues match 'logger'"
+      },
+      "expectedBehavior": "Returns table with multiple issues",
+      "expectedOutput": {
+        "contains": ["ENT-"]
+      }
+    }
+  ]
+}

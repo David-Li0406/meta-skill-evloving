@@ -1,0 +1,68 @@
+{
+    "description": "Patient identity creation - ID|M1|C",
+    "messageType": "ID|M1|C",
+    "hpk": {
+        "raw": "ID|M1|C|HEXAGONE|20260122120000|USER001|PAT12345|DUPONT|JEAN|19750315|M|15 RUE DE LA PAIX|75001|PARIS|FRA|0612345678||||||||||||||||||||||||||||||||||||||",
+        "parsed": {
+            "type": "ID",
+            "message": "M1",
+            "mode": "C",
+            "emetteur": "HEXAGONE",
+            "date": "20260122120000",
+            "user": "USER001",
+            "ipp": "PAT12345",
+            "lastName": "DUPONT",
+            "firstName": "JEAN",
+            "birthDate": "19750315",
+            "gender": "M",
+            "address": "15 RUE DE LA PAIX",
+            "postalCode": "75001",
+            "city": "PARIS",
+            "country": "FRA",
+            "phone": "0612345678"
+        }
+    },
+    "expectedHL7": {
+        "messageType": "ADT^A01",
+        "segments": {
+            "MSH": {
+                "sendingApplication": "HEXAFLUX",
+                "messageType": "ADT^A01^ADT_A01",
+                "versionId": "2.5"
+            },
+            "EVN": {
+                "eventTypeCode": "A01",
+                "recordedDateTime": "20260122120000"
+            },
+            "PID": {
+                "patientId": "PAT12345",
+                "patientName": "DUPONT^JEAN",
+                "dateOfBirth": "19750315",
+                "sex": "M",
+                "patientAddress": "15 RUE DE LA PAIX^^PARIS^^75001^FRA",
+                "phoneNumber": "0612345678"
+            }
+        }
+    },
+    "businessRules": [
+        "HPK IPP (field 6) maps to PID-3 patient identifier",
+        "HPK lastName (field 7) + firstName (field 8) map to PID-5 format: LASTNAME^FIRSTNAME",
+        "HPK birthDate format YYYYMMDD (field 9) maps to PID-7 format YYYYMMDD",
+        "HPK gender 'M' (field 10) maps to HL7 sex 'M' in PID-8",
+        "HPK address fields (11-14) map to PID-11 format: ADDRESS^^CITY^^POSTALCODE^COUNTRY",
+        "HPK phone (field 15) maps to PID-13",
+        "HPK date format YYYYMMDDHHmmss (field 4) maps to EVN-2",
+        "Message mode 'C' (Creation) maps to ADT^A01 (Patient Registration)"
+    ],
+    "testScenario": "New patient registration with complete demographics",
+    "validationChecks": [
+        "HL7 message type must be ADT^A01",
+        "MSH segment must have sendingApplication, messageType, messageControlId",
+        "EVN segment must have eventTypeCode A01 and recordedDateTime",
+        "PID segment must have patientId, patientName, dateOfBirth, sex",
+        "Patient ID in HL7 must match IPP in HPK",
+        "Patient name format must be LASTNAME^FIRSTNAME",
+        "Birth date must match exactly",
+        "Gender must be correctly mapped"
+    ]
+}

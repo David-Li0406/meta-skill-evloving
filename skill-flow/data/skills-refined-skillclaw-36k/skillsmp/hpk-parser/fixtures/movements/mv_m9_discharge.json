@@ -1,0 +1,60 @@
+{
+    "description": "Patient hospital discharge - MV|M9|C",
+    "messageType": "MV|M9|C",
+    "hpk": {
+        "raw": "MV|M9|C|HEXAGONE|20260125180000|USER003|PAT12345|VIS20260122001|20260125180000|DOMICILE|AMELIORE||||||||||||||||||||||||||||||||||",
+        "parsed": {
+            "type": "MV",
+            "message": "M9",
+            "mode": "C",
+            "emetteur": "HEXAGONE",
+            "date": "20260125180000",
+            "user": "USER003",
+            "ipp": "PAT12345",
+            "visitId": "VIS20260122001",
+            "dischargeDateTime": "20260125180000",
+            "dischargeDisposition": "DOMICILE",
+            "dischargeStatus": "AMELIORE"
+        }
+    },
+    "expectedHL7": {
+        "messageType": "ADT^A03",
+        "segments": {
+            "MSH": {
+                "sendingApplication": "HEXAFLUX",
+                "messageType": "ADT^A03^ADT_A03",
+                "versionId": "2.5"
+            },
+            "EVN": {
+                "eventTypeCode": "A03",
+                "recordedDateTime": "20260125180000"
+            },
+            "PID": {
+                "patientId": "PAT12345"
+            },
+            "PV1": {
+                "patientClass": "I",
+                "visitNumber": "VIS20260122001",
+                "dischargeDateTime": "20260125180000",
+                "dischargeDisposition": "HOME"
+            }
+        }
+    },
+    "businessRules": [
+        "MV|M9|C maps to ADT^A03 (Patient Discharge)",
+        "HPK dischargeDateTime (field 8) maps to PV1-45 discharge date/time",
+        "HPK dischargeDisposition 'DOMICILE' maps to HL7 'HOME' in PV1-36",
+        "HPK dischargeStatus 'AMELIORE' indicates patient improvement",
+        "Discharge closes the visit/séjour"
+    ],
+    "testScenario": "Patient discharge home after improvement",
+    "validationChecks": [
+        "HL7 message type must be ADT^A03",
+        "PV1 segment must have discharge date/time",
+        "PV1-45 discharge date/time must match HPK dischargeDateTime",
+        "PV1-36 discharge disposition must be present",
+        "Visit number must match HPK visitId",
+        "Patient ID must match HPK IPP",
+        "Discharge disposition must be correctly mapped from French to HL7 codes"
+    ]
+}

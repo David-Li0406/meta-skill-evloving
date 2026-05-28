@@ -1,0 +1,39 @@
+/* --value() modes: theme, bare, literal, arbitrary */
+
+@theme {
+  --tab-size-2: 2;
+  --tab-size-4: 4;
+  --tab-size-github: 8;
+  --repeat-once: 1;
+  --repeat-twice: 2;
+}
+
+/* Theme: --value(--namespace-*) */
+@utility tab-* {
+  tab-size: --value(--tab-size-*);
+}
+/* Usage: tab-2, tab-github */
+
+/* Bare: --value(type) */
+@utility indent-* {
+  text-indent: calc(--value(integer) * 0.25rem);
+}
+/* Usage: indent-4 → 1rem, indent-8 → 2rem */
+
+/* Literal: --value("keyword") */
+@utility wrap-* {
+  text-wrap: --value("balance", "pretty", "stable");
+}
+/* Usage: wrap-balance, wrap-pretty */
+
+/* Arbitrary: --value([type]) */
+@utility perspective-* {
+  perspective: --value([length]);
+}
+/* Usage: perspective-[30rem], perspective-[60rem] */
+
+/* Combined: theme + bare + literal */
+@utility repeat-* {
+  animation-iteration-count: --value(--repeat-*, integer, "infinite");
+}
+/* Usage: repeat-once (theme), repeat-3 (bare), repeat-infinite (literal) */

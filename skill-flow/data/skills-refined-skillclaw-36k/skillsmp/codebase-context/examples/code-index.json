@@ -1,0 +1,122 @@
+{
+  "version": "1.0",
+  "generated": 1706140800,
+  "project": "ExampleApp",
+
+  "concepts": {
+    "authentication": [
+      "src/app/api/auth/login/route.ts:1",
+      "src/app/api/auth/logout/route.ts:1",
+      "src/lib/auth/session.ts:1",
+      "src/middleware.ts:15"
+    ],
+    "authorization": [
+      "src/lib/auth/permissions.ts:1",
+      "src/middleware.ts:28"
+    ],
+    "error handling": [
+      "src/lib/utils/errors.ts:1",
+      "src/app/api/_middleware.ts:12",
+      "src/components/error-boundary.tsx:1"
+    ],
+    "database": [
+      "src/lib/db/client.ts:1",
+      "src/lib/db/queries.ts:1",
+      "src/lib/db/mutations.ts:1",
+      "prisma/schema.prisma:1"
+    ],
+    "routing": [
+      "src/app/api/v1/*",
+      "src/app/(dashboard)/*",
+      "src/middleware.ts:1"
+    ],
+    "tasks": [
+      "src/app/api/v1/tasks/route.ts:1",
+      "src/components/tasks/task_card.tsx:1",
+      "src/components/tasks/task_list.tsx:1",
+      "src/hooks/use_tasks.ts:1",
+      "src/lib/db/queries.ts:45"
+    ],
+    "users": [
+      "src/app/api/v1/users/route.ts:1",
+      "src/lib/db/queries.ts:12",
+      "src/types/user.ts:1"
+    ],
+    "forms": [
+      "src/components/tasks/task_form.tsx:1",
+      "src/components/settings/profile_form.tsx:1",
+      "src/lib/validations/task.ts:1"
+    ],
+    "testing": [
+      "src/**/*.spec.ts",
+      "vitest.config.ts:1",
+      "src/test/setup.ts:1"
+    ]
+  },
+
+  "entry_points": {
+    "GET /api/v1/tasks": "src/app/api/v1/tasks/route.ts:8",
+    "POST /api/v1/tasks": "src/app/api/v1/tasks/route.ts:25",
+    "GET /api/v1/tasks/:id": "src/app/api/v1/tasks/[id]/route.ts:6",
+    "PUT /api/v1/tasks/:id": "src/app/api/v1/tasks/[id]/route.ts:18",
+    "DELETE /api/v1/tasks/:id": "src/app/api/v1/tasks/[id]/route.ts:35",
+    "GET /api/v1/users": "src/app/api/v1/users/route.ts:8",
+    "GET /api/v1/users/:id": "src/app/api/v1/users/[id]/route.ts:6",
+    "POST /api/auth/login": "src/app/api/auth/login/route.ts:12",
+    "POST /api/auth/logout": "src/app/api/auth/logout/route.ts:8"
+  },
+
+  "exports": {
+    "src/lib/db/client.ts": ["prisma", "PrismaClient"],
+    "src/lib/db/queries.ts": [
+      "getTaskById",
+      "getTasksByUser",
+      "getUserById",
+      "getUserByEmail",
+      "getTagsByTask"
+    ],
+    "src/lib/db/mutations.ts": [
+      "createTask",
+      "updateTask",
+      "deleteTask",
+      "createUser",
+      "updateUser"
+    ],
+    "src/lib/utils/index.ts": ["cn", "formatDate", "debounce", "slugify"],
+    "src/lib/utils/errors.ts": [
+      "AppError",
+      "NotFoundError",
+      "ValidationError",
+      "UnauthorizedError"
+    ],
+    "src/lib/auth/session.ts": ["getSession", "requireSession", "createSession"],
+    "src/components/ui/button.tsx": ["Button", "ButtonProps"],
+    "src/components/ui/input.tsx": ["Input", "InputProps"],
+    "src/components/ui/card.tsx": ["Card", "CardHeader", "CardContent", "CardFooter"],
+    "src/components/tasks/task_card.tsx": ["TaskCard", "TaskCardProps"],
+    "src/components/tasks/task_list.tsx": ["TaskList", "TaskListProps"],
+    "src/hooks/use_tasks.ts": ["useTasks", "useTask", "useCreateTask", "useUpdateTask"]
+  },
+
+  "types": {
+    "User": "src/types/user.ts:5",
+    "Task": "src/types/task.ts:3",
+    "TaskStatus": "src/types/task.ts:15",
+    "Tag": "src/types/tag.ts:1",
+    "ApiResponse": "src/types/api.ts:1",
+    "ApiError": "src/types/api.ts:8",
+    "PaginatedResponse": "src/types/api.ts:15",
+    "Session": "src/lib/auth/session.ts:3",
+    "Permission": "src/lib/auth/permissions.ts:5"
+  },
+
+  "config_files": {
+    "typescript": "tsconfig.json",
+    "eslint": ".eslintrc.js",
+    "prettier": ".prettierrc",
+    "tailwind": "tailwind.config.ts",
+    "prisma": "prisma/schema.prisma",
+    "vitest": "vitest.config.ts",
+    "next": "next.config.js"
+  }
+}

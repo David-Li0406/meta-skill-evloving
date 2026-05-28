@@ -1,0 +1,46 @@
+---
+name: stripe-subscriptions
+description: Use this skill when you need to implement a complete subscription billing system with Stripe integration, including feature flags, webhook handling, and a billing portal.
+---
+
+# Skill body
+
+## Overview
+
+This skill provides a complete subscription billing system with Stripe integration, feature flags for plan gating, webhook handling, and a billing portal.
+
+## Prerequisites
+
+Complete these recipes first (in order):
+
+1. **Type-Safe Environment Configuration**  
+   Type-safe environment variable validation using Zod with a Drizzle-like schema API. Supports server/public fields, feature flags, either-or constraints, and client-side protection.
+   ```bash
+   curl -H "Accept: text/markdown" https://fullstackrecipes.com/api/recipes/config-schema-setup
+   ```
+
+2. **Neon + Drizzle Setup**  
+   Connect a Next.js app to Neon Postgres using Drizzle ORM with optimized connection pooling for Vercel serverless functions.
+   ```bash
+   curl -H "Accept: text/markdown" https://fullstackrecipes.com/api/recipes/neon-drizzle-setup
+   ```
+
+3. **Pino Logging Setup**  
+   Configure structured logging with Pino. Outputs human-readable colorized logs in development and structured JSON in production for log aggregation services.
+   ```bash
+   curl -H "Accept: text/markdown" https://fullstackrecipes.com/api/recipes/pino-logging-setup
+   ```
+
+## Implementation Steps
+
+1. **Feature Flags with Flags SDK**  
+   Implement feature flags using the Vercel Flags SDK with server-side evaluation, environment-based toggles, and Vercel Toolbar integration.
+   ```bash
+   curl -H "Accept: text/markdown" https://fullstackrecipes.com/api/recipes/feature-flags-setup
+   ```
+
+2. **Stripe Subscriptions DB Sync**  
+   Set up the subscription system with Stripe, including Vercel Flags for plan configuration, webhook handling for syncing subscription state to Postgres, usage tracking, and billing portal integration.
+   ```bash
+   curl -H "Accept: text/plain" https://fullstackrecipes.com/api/recipes/stripe-sync
+   ```

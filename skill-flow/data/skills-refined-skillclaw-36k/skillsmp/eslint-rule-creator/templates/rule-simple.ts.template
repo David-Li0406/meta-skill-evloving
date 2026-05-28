@@ -1,0 +1,29 @@
+import { createRule } from "../utilities/create-rule";
+
+type MessageIds = "MESSAGE_ID_HERE";
+
+export default createRule<[], MessageIds>({
+	create(context) {
+		return {
+			// Use AST selector - see https://eslint.org/docs/latest/extend/selectors
+			'CallExpression[callee.type="Identifier"][callee.name="FUNCTION_NAME"]'(node): void {
+				context.report({
+					messageId: "MESSAGE_ID_HERE",
+					node,
+				});
+			},
+		};
+	},
+	defaultOptions: [],
+	meta: {
+		docs: {
+			description: "RULE_DESCRIPTION",
+		},
+		messages: {
+			MESSAGE_ID_HERE: "USER_FACING_MESSAGE",
+		},
+		schema: [],
+		type: "problem", // Or "suggestion" or "layout"
+	},
+	name: "RULE_NAME",
+});

@@ -1,0 +1,14 @@
+/* Layout function with media query branching */
+
+@function --sidebar-cols(--sidebar: 16rem) {
+  result: 1fr;
+
+  @media (width > 640px) {
+    result: --sidebar 1fr;
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: --sidebar-cols();
+}

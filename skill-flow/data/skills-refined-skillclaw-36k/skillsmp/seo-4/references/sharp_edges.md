@@ -1,0 +1,701 @@
+# Seo - Sharp Edges
+
+## Keyword Stuffing
+
+### **Id**
+keyword-stuffing
+### **Summary**
+Unnaturally repeating keywords hoping to rank
+### **Severity**
+critical
+### **Situation**
+  Same keyword appears 50 times on page. Awkward phrasing to fit keywords.
+  Content reads like it was written for robots. Google notices. Rankings tank.
+  
+### **Why**
+  Google has been detecting keyword stuffing for over a decade. It triggers
+  spam filters. Even if it worked briefly, algorithm updates will catch it.
+  Write for humans, include keywords naturally.
+  
+### **Solution**
+  Natural keyword usage checklist:
+  
+  ✓ Title tag: Include primary keyword once
+    <title>Email Marketing Guide - {Brand} | Increase Open Rates</title>
+  
+  ✓ H1: Primary keyword with natural variation
+    <h1>Complete Email Marketing Guide for 2025</h1>
+  
+  ✓ First paragraph: Keyword + context
+    "Email marketing remains one of the highest-ROI channels. This guide
+    covers strategies to build lists, write compelling copy, and optimize
+    deliverability."
+  
+  ✓ Throughout: Use LSI keywords and variations
+    - email campaigns
+    - newsletter strategy
+    - subscriber engagement
+    - email automation
+  
+  ✓ Read aloud test: If it sounds robotic, rewrite
+  
+  Aim: 1-2% keyword density naturally. Quality > density.
+  
+### **Symptoms**
+  - Same phrase repeated excessively
+  - Awkward phrasing
+  - Content sounds robotic
+  - Focus on keyword density
+### **Detection Pattern**
+(\b\w{5,}\b)(?:[^.]{0,100}\1){4,}
+
+## Thin Content Scale
+
+### **Id**
+thin-content-scale
+### **Summary**
+Publishing lots of low-quality pages for keyword coverage
+### **Severity**
+critical
+### **Situation**
+  1000 pages for 1000 keywords. Each page has 200 words. No real value.
+  AI generated without review. Google sees thin content. Site authority tanks.
+  
+### **Why**
+  Google rewards depth over breadth. Thin content signals low quality. Many
+  low-value pages hurt entire site authority. Better to have 50 excellent
+  pages than 1000 mediocre ones.
+  
+### **Solution**
+  Quality bar before publishing:
+  
+  Pre-publish checklist:
+  □ Minimum 800 words (exceptions: tools, calculators)
+  □ Answers the target query completely
+  □ Includes unique insight, data, or examples
+  □ Has clear structure (H2/H3 hierarchy)
+  □ Passes "bookmark test" - would you save this?
+  
+  Content audit command (find thin pages):
+  ```bash
+  # Find HTML files under 1000 words
+  grep -l -P '<body.*?>.*?</body>' *.html | while read f; do
+    wc=$(sed 's/<[^>]*>//g' "$f" | wc -w)
+    [[ $wc -lt 1000 ]] && echo "$f: $wc words"
+  done
+  ```
+  
+  For existing thin content:
+  1. Consolidate similar pages into comprehensive guide
+  2. Deindex and 301 redirect to better page
+  3. Expand with unique value or delete
+  
+  Quality > Quantity. Always.
+  
+### **Symptoms**
+  - Many short pages
+  - AI content without editing
+  - Pages that exist for SEO only
+  - Low time on page across site
+### **Detection Pattern**
+^.{0,800}$
+
+## Link Buying
+
+### **Id**
+link-buying
+### **Summary**
+Purchasing backlinks instead of earning them
+### **Severity**
+critical
+### **Situation**
+  Buying links from link farms. Paying for guest posts on low-quality sites.
+  Private blog networks. Google detects. Manual penalty. Traffic goes to zero.
+  
+### **Why**
+  Google explicitly penalizes link schemes. Their algorithm is built to detect
+  unnatural link patterns. When caught, recovery takes months or years. The
+  risk is not worth it.
+  
+### **Solution**
+  Earn links legitimately:
+  
+  Linkable asset types:
+  1. Original research
+     "State of {Industry} 2025" - survey 500+ professionals, publish data
+     Example: "73% of developers prefer TypeScript" → citable stat
+  
+  2. Free tools
+     Calculator, analyzer, generator that solves real problem
+     Example: Ahrefs Website Authority Checker (free) → thousands of backlinks
+  
+  3. Comprehensive guides
+     "Complete Guide to X" - 10K+ words, everything in one place
+     Better than top 10 results combined
+  
+  4. Industry benchmarks
+     "Average {Metric} by {Industry}" - hard data people cite
+     Example: "Average email open rate: 21.33%" → cited everywhere
+  
+  Outreach template (not spammy):
+  ```
+  Subject: Thought you'd find this data interesting
+  
+  Hi {Name},
+  
+  I saw your post on {topic} and noticed you mentioned {specific point}.
+  
+  We just published research on this with data from {N} {industry professionals}.
+  One finding: {interesting stat that relates to their content}.
+  
+  Full report: {link}
+  
+  Thought it might be useful for future posts. No worries if not relevant.
+  
+  {Your name}
+  ```
+  
+  Link velocity check:
+  - Natural: 5-10 links/month
+  - Suspicious: 100 links in one week then nothing
+  - Red flag: All links from same C-block IPs
+  
+  Legitimacy > Volume. Always.
+  
+### **Symptoms**
+  - Links from irrelevant sites
+  - Paid link placements
+  - Link velocity spikes
+  - PBN usage
+### **Detection Pattern**
+buy.*link|link.*package|guaranteed.*link|pbn|private blog network
+
+## Ignoring Technical Seo
+
+### **Id**
+ignoring-technical-seo
+### **Summary**
+Creating content on broken technical foundation
+### **Severity**
+high
+### **Situation**
+  Great content. Slow site. Mobile issues. Crawl errors. Google cannot
+  index properly. Content never ranks despite quality. Technical issues
+  undermine everything.
+  
+### **Why**
+  Technical SEO is the foundation. If Google cannot crawl and index your
+  content, quality does not matter. If pages load slowly, users bounce.
+  Fix technical issues first.
+  
+### **Solution**
+  Technical SEO audit (copy-paste checklist):
+  
+  Core Web Vitals (test: PageSpeed Insights):
+  □ LCP (Largest Contentful Paint) < 2.5s
+  □ FID (First Input Delay) < 100ms
+  □ CLS (Cumulative Layout Shift) < 0.1
+  
+  Quick wins:
+  - Enable compression (gzip/brotli)
+  - Lazy load images: <img loading="lazy" />
+  - Preload critical resources: <link rel="preload" />
+  - Use CDN for static assets
+  
+  Mobile-first (test: Mobile-Friendly Test):
+  □ Responsive design (viewport meta tag)
+  □ Text readable without zoom
+  □ Touch targets 48x48px minimum
+  □ No horizontal scroll
+  
+  Crawlability (check: Search Console):
+  □ No blocked resources in robots.txt
+  □ Sitemap submitted and indexed
+  □ No 4xx/5xx errors on important pages
+  □ Canonical tags properly set
+  
+  URL structure:
+  ✓ Good: /blog/email-marketing-guide
+  ✗ Bad: /p?id=12345&cat=blog&ref=home
+  
+  Run this command to check Core Web Vitals:
+  ```bash
+  npx @lhci/cli@latest autorun --collect.url=https://yoursite.com
+  ```
+  
+  Search Console > Experience > Core Web Vitals
+  Fix "Poor" URLs first, then "Needs Improvement"
+  
+  Foundation first, content second.
+  
+### **Symptoms**
+  - Slow page loads
+  - Mobile issues
+  - Crawl errors
+  - Good content not ranking
+### **Detection Pattern**
+robots\.txt.*disallow:.*\/|meta.*noindex|canonical.*parameter
+
+## Intent Mismatch
+
+### **Id**
+intent-mismatch
+### **Summary**
+Creating content that does not match what searchers want
+### **Severity**
+high
+### **Situation**
+  Ranking for keyword. High impressions. Low clicks. Or clicks but high
+  bounce. Content does not match what searcher actually wanted. Wrong
+  format for intent.
+  
+### **Why**
+  Google measures user satisfaction. If users click and immediately bounce,
+  your ranking will drop. Understanding intent is as important as keyword
+  research.
+  
+### **Solution**
+  Intent mapping framework:
+  
+  Step 1: Identify intent type
+  Informational: how to, what is, why does, guide to
+  Commercial: best, vs, review, comparison, top
+  Transactional: buy, price, discount, order, hire
+  Navigational: brand + product, login, account
+  
+  Step 2: Search the keyword in incognito
+  Analyze top 10 results:
+  □ What format? (listicle, guide, video, product page, comparison)
+  □ What depth? (500 words or 5000?)
+  □ What features? (images, tables, FAQs, videos)
+  □ What tone? (technical, beginner-friendly, sales-y)
+  
+  Step 3: Match content to dominant format
+  Example: "best email marketing software"
+  Top results are: comparison posts with tables, pros/cons, pricing
+  Don't write: technical guide or company blog post
+  Do write: comparison with feature table and clear winner
+  
+  Step 4: Check engagement signals (Search Console)
+  Metrics to monitor:
+  - CTR < 2% = title/description mismatch
+  - Bounce rate > 70% = content doesn't deliver
+  - Time on page < 30s = wrong format or poor content
+  
+  Intent debugging SQL (Search Console export):
+  ```sql
+  SELECT page, impressions, clicks, ctr, position
+  FROM search_console
+  WHERE impressions > 100 AND ctr < 0.02
+  ORDER BY impressions DESC
+  LIMIT 20
+  ```
+  
+  Fix: Rewrite title/description or change content format
+  
+  Intent accuracy > Keyword density
+  
+### **Symptoms**
+  - High impressions, low CTR
+  - High bounce rate from search
+  - Rankings declining over time
+  - Wrong content format for keyword
+### **Detection Pattern**
+how to.*<h1>.*buy|best.*<h1>.*what is|buy.*<h1>.*guide
+
+## No Content Refresh
+
+### **Id**
+no-content-refresh
+### **Summary**
+Publishing content and never updating it
+### **Severity**
+high
+### **Situation**
+  Blog post from 2019 with outdated information. Screenshots of old UI.
+  Advice that no longer applies. Google sees stale content. Rankings drop
+  to competitors with fresh content.
+  
+### **Why**
+  Google favors freshness for many queries. Outdated content loses rankings
+  over time. Your old posts compete with new competitors. Regular updates
+  maintain and improve rankings.
+  
+### **Solution**
+  Content refresh system:
+  
+  Quarterly audit process:
+  1. Export pages losing traffic (Search Console > Performance > Pages)
+  2. Filter by: Traffic down 20%+ over 90 days
+  3. Check if ranking dropped or search volume changed
+  4. Priority: High traffic pages losing rankings
+  
+  Refresh checklist per page:
+  □ Update year in title: "Best X (2025)"
+  □ Replace outdated stats with current data
+  □ Add new sections for recent developments
+  □ Update screenshots to current UI
+  □ Add internal links to newer related content
+  □ Check competitor content - are they covering new angles?
+  □ Expand depth if competitors are more comprehensive
+  
+  Update publish date in:
+  - Meta tags: <meta property="article:modified_time" content="2025-01-15" />
+  - Schema: "dateModified": "2025-01-15"
+  - Visible on page: "Last updated: January 15, 2025"
+  
+  Track refreshes:
+  ```csv
+  URL,Original Publish,Last Refresh,Traffic Before,Traffic After
+  /blog/email-marketing,2020-03-15,2024-12-01,1200,2100
+  ```
+  
+  Typical results: Rankings recover within 2-4 weeks
+  
+  Set calendar reminder: Quarterly content refresh
+  "Publish and forget" = Rankings decay
+  
+  Pro tip: Google Search Console shows "Last Crawled" date.
+  Force recrawl after major updates: URL Inspection > Request Indexing
+  
+### **Symptoms**
+  - Old content losing rankings
+  - Outdated information live
+  - No update schedule
+  - Competitors publishing fresher content
+### **Detection Pattern**
+<time.*datetime="20(1[0-9]|2[0-2])|article:published_time.*20(1[0-9]|2[0-2])
+
+## Chasing Volume
+
+### **Id**
+chasing-volume
+### **Summary**
+Targeting high-volume keywords you cannot rank for
+### **Severity**
+medium
+### **Situation**
+  Targeting keyword with 100K monthly searches. Massive competition.
+  Domain authority 20. Top results are DA 90. Never going to rank.
+  Wasted effort.
+  
+### **Why**
+  High volume keywords have high competition. Without authority, you cannot
+  compete. Better to rank 1 for 100-search keyword than rank 100 for
+  100K-search keyword.
+  
+### **Solution**
+  Keyword difficulty assessment framework:
+  
+  Step 1: Check your domain authority
+  - Ahrefs: Domain Rating (DR)
+  - Moz: Domain Authority (DA)
+  - Typical new site: DR 0-20
+  
+  Step 2: Analyze target keyword competition
+  - Search the keyword
+  - Check top 10 results' DR/DA
+  - Note: Forbes (DR 94), NYTimes (DR 95), etc.
+  
+  Step 3: Apply the "DR+20 rule"
+  Your DR + 20 = Max competitive DR you can target
+  Examples:
+  - Your DR 15 → Target keywords where top 10 avg DR < 35
+  - Your DR 40 → Can compete up to DR 60 results
+  - Your DR 70 → Most keywords achievable
+  
+  Step 4: Find achievable keywords
+  Filters in Ahrefs/SEMrush:
+  - Keyword Difficulty (KD) < 30 for new sites
+  - KD 30-50 for DR 20-40 sites
+  - KD 50+ only if DR 50+
+  
+  Long-tail strategy (better for startups):
+  ✗ "email marketing" (100K searches, KD 85)
+  ✓ "email marketing for saas startups" (500 searches, KD 25)
+  ✓ "email marketing automation for small teams" (200 searches, KD 15)
+  
+  Volume isn't everything:
+  - 500 searches * 30% CTR * 5% conversion = 7.5 customers/mo
+  - 100K searches * 0% CTR (can't rank) = 0 customers
+  
+  Prioritization formula:
+  Score = (Search Volume × CTR at achievable position) / Keyword Difficulty
+  
+  Build authority ladder:
+  1. Start: KD < 20 (easy wins, build authority)
+  2. Next: KD 20-40 (moderate competition)
+  3. Later: KD 40-60 (competitive)
+  4. Finally: KD 60+ (only after 2+ years)
+  
+  Track DR over time. As it grows, target harder keywords.
+  
+  Win small first. Compound authority. Then compete for volume.
+  
+### **Symptoms**
+  - Targeting keywords beyond reach
+  - No rankings despite good content
+  - Ignoring long-tail opportunities
+  - Frustrated by lack of results
+### **Detection Pattern**
+keyword.*100k|high.*volume.*keyword|target.*popular
+
+## Duplicate Content
+
+### **Id**
+duplicate-content
+### **Summary**
+Same content on multiple pages causing indexing issues
+### **Severity**
+medium
+### **Situation**
+  Product pages with same description. Blog posts covering same topic.
+  Multiple URLs for same content. Google confused about which to rank.
+  Authority diluted across duplicates.
+  
+### **Why**
+  Duplicate content splits authority. Google picks one version, often not
+  the one you want. Canonical tags solve some issues but unique content
+  is better.
+  
+### **Solution**
+  Duplicate content audit and fix:
+  
+  Find duplicates:
+  1. Screaming Frog > Content > Duplicates
+  2. Siteliner.com (free tool)
+  3. Google: site:yoursite.com "exact duplicate phrase"
+  
+  Common causes and fixes:
+  
+  URL parameters:
+  ✗ /product?ref=home
+  ✗ /product?sort=price
+  ✓ /product
+  Fix: <link rel="canonical" href="https://site.com/product" />
+  
+  HTTP vs HTTPS:
+  ✗ http://site.com/page
+  ✗ https://site.com/page
+  Fix: 301 redirect HTTP → HTTPS, canonical to HTTPS
+  
+  WWW vs non-WWW:
+  ✗ www.site.com/page
+  ✗ site.com/page
+  Fix: Pick one, 301 redirect other, canonical to chosen version
+  
+  Printer/mobile versions:
+  ✗ /page?print=true
+  ✗ m.site.com/page
+  Fix: Responsive design, canonical to main version
+  
+  Product variations:
+  ✗ Same description on /shirt-red and /shirt-blue
+  Fix: Unique content per variation OR canonical to parent /shirt
+  
+  Canonical tag template:
+  ```html
+  <link rel="canonical" href="https://www.yoursite.com/preferred-url" />
+  ```
+  
+  Always:
+  - Absolute URL (not relative)
+  - Same domain (cross-domain only if syndicated)
+  - One canonical per page
+  - Self-referential if it's the canonical version
+  
+  Search Console check:
+  Search Console > Coverage > Excluded
+  Look for: "Duplicate, Google chose different canonical than user"
+  
+  Consolidation decision tree:
+  - Similar content? → Merge into comprehensive page + 301 redirect
+  - Different angles on same topic? → Keep separate, differentiate clearly
+  - Same topic, same angle? → Delete weaker page, 301 to stronger
+  
+  Authority flows to one page > Authority split across many
+  
+### **Symptoms**
+  - Multiple pages for same keyword
+  - Canonical issues in Search Console
+  - Wrong page ranking
+  - Authority diluted
+### **Detection Pattern**
+href=.*\?.*=|http://[^"]+(?=.*https://)
+
+## Ignoring Search Console
+
+### **Id**
+ignoring-search-console
+### **Summary**
+Not using free data Google provides
+### **Severity**
+medium
+### **Situation**
+  Search Console set up but never checked. Crawl errors accumulating.
+  Manual actions unnoticed. Free keyword data unused. Flying blind
+  when Google is showing you the way.
+  
+### **Why**
+  Search Console is free insight into how Google sees your site. Crawl
+  errors, keyword rankings, click data. Ignoring it means missing problems
+  and opportunities.
+  
+### **Solution**
+  Search Console audit routine (copy-paste checklist):
+  
+  Weekly checks (15 minutes):
+  □ Overview > Any anomalies in clicks/impressions?
+  □ Coverage > New errors? Fix immediately
+  □ Experience > Core Web Vitals failing pages
+  □ Manual Actions > Any penalties? (should always be 0)
+  
+  Monthly analysis (1 hour):
+  □ Performance > Pages
+     - Sort by impressions, filter CTR < 2%
+     - Opportunity: Rewrite titles/descriptions for low CTR pages
+  □ Performance > Queries
+     - Filter: Position 11-20 (page 2)
+     - Opportunity: Small improvements = page 1
+  □ Links > Top linked pages
+     - Internal linking opportunities
+  □ Sitemaps > Coverage %
+     - Should be > 90% indexed
+  
+  Quarterly deep dive (4 hours):
+  □ Export query data (Performance > Export)
+  □ Analyze in spreadsheet:
+     ```excel
+     =IF(AND(B2>100, D2>10, E2<0.02), "Fix Title/Description", "")
+     (Impressions > 100, Position > 10, CTR < 2%)
+     ```
+  □ Find content gaps: High impressions, no clicks
+  □ Track progress: Compare to last quarter
+  
+  Quick wins to check monthly:
+  1. Position 4-10 with high impressions
+     → Small optimization = big traffic gain
+  2. High impressions, low CTR
+     → Rewrite title/meta description
+  3. Declining clicks on top pages
+     → Content refresh needed
+  
+  Search Console alerts (set these up):
+  - Coverage errors spike
+  - Manual action detected
+  - Core Web Vitals degradation
+  
+  Export query data monthly:
+  Performance > Search Results > Export > Google Sheets
+  Track progress over time in single sheet
+  
+  The data is free. Use it.
+  
+### **Symptoms**
+  - Search Console ignored
+  - Crawl errors unaddressed
+  - Missing easy wins
+  - No keyword insight
+### **Detection Pattern**
+search console.*never|haven.*t checked|ignore.*gsc
+
+## Algorithm Chasing
+
+### **Id**
+algorithm-chasing
+### **Summary**
+Changing strategy with every Google update
+### **Severity**
+medium
+### **Situation**
+  Google announces update. Panic. Change everything. Next update. Change
+  again. Constant pivots based on SEO news. No consistent strategy.
+  
+### **Why**
+  Google updates reward fundamentals. Quality content, good UX, earned
+  links. Chasing updates means chasing symptoms not causes. Build on
+  fundamentals that survive all updates.
+  
+### **Solution**
+  Update-proof SEO strategy:
+  
+  Updates that mattered (what they rewarded):
+  - Panda (2011): Quality content > thin content
+  - Penguin (2012): Natural links > manipulative links
+  - Hummingbird (2013): Semantic search > exact keywords
+  - Mobile-first (2015): Mobile UX > desktop only
+  - RankBrain (2015): User satisfaction > keyword matching
+  - BERT (2019): Natural language > keyword stuffing
+  - Helpful Content (2022-2024): People-first > search-first
+  
+  Pattern: Every update rewards fundamentals
+  
+  What never gets penalized:
+  □ Genuinely helpful content
+     - Solves user problems completely
+     - Written by someone with experience
+     - Better than competitors
+     - Kept up to date
+  
+  □ Excellent user experience
+     - Fast page loads (< 2.5s LCP)
+     - Mobile-friendly design
+     - Clear navigation
+     - No intrusive interstitials
+  
+  □ Natural backlink profile
+     - Links from relevant sites
+     - Editorial links (not paid/exchanged)
+     - Gradual growth over time
+     - Diverse anchor text
+  
+  □ Technical excellence
+     - Crawlable site structure
+     - Clean HTML/schema markup
+     - No duplicate content
+     - Proper canonicals
+  
+  How to respond to updates:
+  1. Don't panic immediately (fluctuations normal)
+  2. Wait 2-4 weeks for dust to settle
+  3. Check Search Console for issues
+  4. If traffic dropped 20%+:
+     - Audit content quality
+     - Review user engagement metrics
+     - Check for technical issues
+     - Compare to competitor changes
+  
+  Red flags (stop doing these):
+  ✗ Reading every SEO blog post about updates
+  ✗ Changing strategy based on speculation
+  ✗ Following "update recovery" checklists blindly
+  ✗ Obsessing over daily rank fluctuations
+  
+  Green lights (keep doing these):
+  ✓ Monthly Search Console review
+  ✓ Quarterly content refresh
+  ✓ Continuous technical optimization
+  ✓ Natural link building from great content
+  
+  Timeline perspective:
+  - Google releases 3,000+ ranking changes per year
+  - Most are minor and unnoticeable
+  - 5-10 per year are "core updates"
+  - Your job: Build on fundamentals, not react to noise
+  
+  Decision framework when update hits:
+  Ask: "Would this be good for users regardless of Google?"
+  - Yes → Do it
+  - No → Don't do it
+  
+  The fundamentals don't change. Tactics come and go.
+  
+  Build on bedrock, not sand.
+  
+### **Symptoms**
+  - Strategy changes after every update
+  - Following SEO news obsessively
+  - Short-term tactics
+  - No consistent approach
+### **Detection Pattern**
+google update|algorithm change|ranking.*dropped|traffic.*lost

@@ -1,0 +1,70 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix paper: <https://kg.corca.ai/paper#> .
+
+# Venues
+paper:ve_c1d2e3f4 a paper:Venue ;
+    rdfs:label "International Conference on Example Research" ;
+    paper:venueType "conference" .
+
+paper:ve_g5h6i7j8 a paper:Venue ;
+    rdfs:label "arXiv" ;
+    paper:venueType "preprint" .
+
+# Concepts
+paper:co_m1n2o3p4 a paper:Concept ;
+    rdfs:label "Example Theory" ;
+    rdfs:comment "A foundational theoretical framework for example research" .
+
+paper:co_q5r6s7t8 a paper:Concept ;
+    rdfs:label "Example Method" ;
+    rdfs:comment "A practical methodology derived from Example Theory" ;
+    paper:broader paper:co_m1n2o3p4 .
+
+paper:co_a2b3c4d5 a paper:Concept ;
+    rdfs:label "Example Component" ;
+    rdfs:comment "A modular component within Example Method" ;
+    paper:partOf paper:co_q5r6s7t8 .
+
+paper:co_e6f7g8h9 a paper:Concept ;
+    rdfs:label "Advanced Example Method" ;
+    rdfs:comment "An extension of Example Method with improved performance characteristics" ;
+    paper:broader paper:co_m1n2o3p4 ;
+    paper:dependsOn paper:co_q5r6s7t8 .
+
+# Authors
+paper:au_a1b2c3d4 a paper:Author ;
+    rdfs:label "Alice Researcher" ;
+    paper:orcidId "0000-0001-1234-5678" .
+
+paper:au_e5f6g7h8 a paper:Author ;
+    rdfs:label "Bob Scientist" .
+
+# Claims
+paper:cl_j1k2l3m4 a paper:Claim ;
+    rdfs:label "Method X outperforms baseline by 20%" ;
+    paper:regarding paper:co_q5r6s7t8 .
+
+paper:cl_n5o6p7q8 a paper:Claim ;
+    rdfs:label "Extended method achieves state-of-the-art" ;
+    paper:extends paper:cl_j1k2l3m4 ;
+    paper:regarding paper:co_q5r6s7t8, paper:co_e6f7g8h9 .
+
+# Papers
+paper:pa_r1s2t3u4 a paper:Paper ;
+    rdfs:label "Foundations of Example Research" ;
+    paper:year 2023 ;
+    paper:doi "10.1234/example.2023.001" ;
+    paper:primaryAuthor paper:au_a1b2c3d4 ;
+    paper:about paper:co_q5r6s7t8 ;
+    paper:hasClaim paper:cl_j1k2l3m4 ;
+    paper:publishedIn paper:ve_c1d2e3f4 .
+
+paper:pa_v5w6x7y8 a paper:Paper ;
+    rdfs:label "Advances in Example Methods" ;
+    paper:year 2024 ;
+    paper:arxivId "2401.00001" ;
+    paper:primaryAuthor paper:au_e5f6g7h8, paper:au_a1b2c3d4 ;
+    paper:about paper:co_q5r6s7t8 ;
+    paper:hasClaim paper:cl_n5o6p7q8 ;
+    paper:publishedIn paper:ve_g5h6i7j8 ;
+    paper:cites paper:pa_r1s2t3u4 .

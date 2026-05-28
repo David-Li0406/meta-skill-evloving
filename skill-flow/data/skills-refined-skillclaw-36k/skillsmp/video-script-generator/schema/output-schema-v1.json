@@ -1,0 +1,345 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://claude-skills-hub/schema/video-script-generator-v1.json",
+  "title": "Video Script Generator Output",
+  "description": "Structured output format for video script generator skill. Separates final script from production metadata.",
+  "type": "object",
+  "required": ["version", "script_type", "final_script", "metadata", "templates"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Output format version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "script_type": {
+      "type": "string",
+      "description": "Script classification type",
+      "enum": ["A", "B", "C"],
+      "enumDescriptions": {
+        "A": "Case Review (案件复盘)",
+        "B": "Consultation Misunderstanding (咨询误解)",
+        "C": "Gap Template (关键缺口/一票否决)"
+      }
+    },
+    "final_script": {
+      "type": "object",
+      "description": "The complete, ready-to-use script - isolated from metadata",
+      "required": ["title", "segments", "full_text", "word_count", "estimated_duration"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Script title or hook line"
+        },
+        "segments": {
+          "type": "array",
+          "description": "Script segments organized by section",
+          "items": {
+            "type": "object",
+            "required": ["section", "text"],
+            "properties": {
+              "section": {
+                "type": "string",
+                "description": "Section type identifier",
+                "enum": ["hook", "slot_1", "slot_2", "slot_3", "slot_4", "slot_5", "closing"]
+              },
+              "text": {
+                "type": "string",
+                "description": "Text content of this segment"
+              },
+              "notes": {
+                "type": "string",
+                "description": "Optional notes for this segment"
+              }
+            }
+          }
+        },
+        "full_text": {
+          "type": "string",
+          "description": "Complete script as plain text (ready for direct use)"
+        },
+        "word_count": {
+          "type": "integer",
+          "description": "Estimated word count",
+          "minimum": 0
+        },
+        "estimated_duration": {
+          "type": "number",
+          "description": "Estimated duration in seconds (word_count / 2.5 for typical speech rate)",
+          "minimum": 0
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Production metadata and analysis logs - separated from final script",
+      "required": ["style_analysis", "system_instruction", "generation_info"],
+      "properties": {
+        "style_analysis": {
+          "type": "object",
+          "description": "7-dimension style analysis report",
+          "required": ["persona_and_audience", "tone_and_emotion", "rhythm_and_syntax", "vocabulary", "structure", "reasoning", "cta_and_guidance"],
+          "properties": {
+            "persona_and_audience": {
+              "type": "object",
+              "description": "人设与关系 - Persona & Audience",
+              "required": ["summary"],
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "description": "Feature summary"
+                },
+                "rules": {
+                  "type": "array",
+                  "description": "Actionable rules (2-5 items)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 5
+                },
+                "sentence_patterns": {
+                  "type": "array",
+                  "description": "Typical sentence patterns",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tone_and_emotion": {
+              "type": "object",
+              "description": "语气与情绪曲线 - Tone & Emotional Arc",
+              "required": ["summary"],
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "description": "Feature summary"
+                },
+                "rules": {
+                  "type": "array",
+                  "description": "Actionable rules (2-5 items)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 5
+                },
+                "sentence_patterns": {
+                  "type": "array",
+                  "description": "Typical sentence patterns",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "rhythm_and_syntax": {
+              "type": "object",
+              "description": "口语节奏与句子结构 - Spoken Rhythm & Syntax",
+              "required": ["summary"],
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "description": "Feature summary"
+                },
+                "rules": {
+                  "type": "array",
+                  "description": "Actionable rules (2-5 items)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 5
+                },
+                "sentence_patterns": {
+                  "type": "array",
+                  "description": "Typical sentence patterns",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "vocabulary": {
+              "type": "object",
+              "description": "用词与口头禅 - Vocabulary & Catchphrases",
+              "required": ["summary"],
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "description": "Feature summary"
+                },
+                "rules": {
+                  "type": "array",
+                  "description": "Actionable rules (2-5 items)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 5
+                },
+                "sentence_patterns": {
+                  "type": "array",
+                  "description": "Typical sentence patterns",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "structure": {
+              "type": "object",
+              "description": "脚本结构母版 - Script Blueprint",
+              "required": ["summary"],
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "description": "Feature summary"
+                },
+                "rules": {
+                  "type": "array",
+                  "description": "Actionable rules (2-5 items)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 5
+                },
+                "sentence_patterns": {
+                  "type": "array",
+                  "description": "Typical sentence patterns",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "reasoning": {
+              "type": "object",
+              "description": "论证与信息密度 - Reasoning Style",
+              "required": ["summary"],
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "description": "Feature summary"
+                },
+                "rules": {
+                  "type": "array",
+                  "description": "Actionable rules (2-5 items)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 5
+                },
+                "sentence_patterns": {
+                  "type": "array",
+                  "description": "Typical sentence patterns",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "cta_and_guidance": {
+              "type": "object",
+              "description": "互动与指令性 - CTA & Guidance",
+              "required": ["summary"],
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "description": "Feature summary"
+                },
+                "rules": {
+                  "type": "array",
+                  "description": "Actionable rules (2-5 items)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 2,
+                  "maxItems": 5
+                },
+                "sentence_patterns": {
+                  "type": "array",
+                  "description": "Typical sentence patterns",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "system_instruction": {
+          "type": "string",
+          "description": "~300-word system instruction for AI to generate scripts in the same style",
+          "minLength": 200,
+          "maxLength": 500
+        },
+        "generation_info": {
+          "type": "object",
+          "description": "Generation metadata",
+          "required": ["script_type", "generated_at"],
+          "properties": {
+            "script_type": {
+              "type": "string",
+              "description": "Detected script type",
+              "enum": ["A", "B", "C"]
+            },
+            "template_used": {
+              "type": "string",
+              "description": "Template type applied"
+            },
+            "generated_at": {
+              "type": "string",
+              "description": "Generation timestamp (ISO 8601)",
+              "format": "date-time"
+            },
+            "input_summary": {
+              "type": "string",
+              "description": "Brief summary of input content"
+            },
+            "model_version": {
+              "type": "string",
+              "description": "AI model version used"
+            }
+          }
+        }
+      }
+    },
+    "templates": {
+      "type": "object",
+      "description": "Ready-to-use template library",
+      "required": ["hooks", "transitions", "ctas"],
+      "properties": {
+        "hooks": {
+          "type": "array",
+          "description": "Script opening hooks (3 templates)",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "transitions": {
+          "type": "array",
+          "description": "Paragraph transition phrases (3 templates)",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "ctas": {
+          "type": "array",
+          "description": "Call-to-action templates (3 templates)",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    }
+  }
+}

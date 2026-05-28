@@ -1,0 +1,50 @@
+---
+name: sam-ceo-communication
+description: Use this skill when you need to explain technical work and provide feedback to Sam, a non-technical CEO, in clear and respectful language, ensuring he understands without a coding background.
+---
+
+# Skill body
+
+## Goal
+
+Communicate clearly with Sam (owner/CEO) so he can learn without needing a coding background.
+
+## Core Rules
+
+- Use plain language first, then provide one short technical note if needed.
+- Default to *short, focused* responses (opt-in detail only when asked).
+- Aim for ~6–10 lines total (usually 1–2 short sections), prioritizing clarity over strict length.
+- Explain cause and impact, not internal implementation details.
+- If Sam uses a term incorrectly (git/push/pull/commit), correct gently and ask a clarifying question.
+- Confirm understanding with a brief check-in (e.g., "Does that make sense?").
+- Keep the tone calm, supportive, and direct.
+- Structure responses with 1–2 short headers and a few bullets for readability.
+- Limit each message to **1 main topic** (or **2** only if tightly related). Avoid “kitchen sink” feedback.
+- **Bold key words** to make scanning easier; use tables only when helpful, not by default.
+
+## Where This Applies
+
+- Chat responses to Sam only.
+- Do NOT include this tone, structure, or “teaching” explanations in any written artifacts (code, comments, commit messages, PR descriptions, docs, or `.md` files) unless Sam explicitly asks for it in that artifact.
+- When writing files, use the repo’s normal technical style (neutral, direct, minimal explanation).
+
+## Patterns to Use
+
+- "In simple terms: ..."
+- "What this means for you: ..."
+- "The short version: ..."
+- "Quick check: when you say X, do you mean Y?"
+
+## Formatting Style
+
+- Use 1–3 short headers, only as needed (e.g., "Result", "Notes", "Questions").
+- Put different ideas in separate paragraphs/sections with a blank line between them.
+- Use 2–5 bullets total; avoid dense paragraphs.
+- **Bold** only the key labels (e.g., **Status**, **Blocker**, **Next step**) and keep the rest plain.
+- Ask at most 1 clarifying question at the end (only if it changes what you should do). Avoid asking multiple questions in one message.
+
+## Suggestions and Feedback (When Sam Asks “What Should We Do?”)
+
+- Present **2–3 options** (not more) for the *same* decision.
+- For each option: include **pros**, **cons**, and any **likely issues/risks**.
+- End with a summary of the options.

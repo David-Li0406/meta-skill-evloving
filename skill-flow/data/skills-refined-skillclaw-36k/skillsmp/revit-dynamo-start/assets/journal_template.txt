@@ -1,0 +1,14 @@
+' 0:< Initial VM: Avail 134213270 MB, Used 24 MB, Peak 24;
+Dim Jrn
+Set Jrn = CrsJournalScript
+Jrn.Directive "Version" , "2024.000" , "2.179"
+
+' [OPEN_TEMPLATE_BLOCK_START]
+Jrn.Command "Ribbon" , "Open an existing project , ID_REVIT_FILE_OPEN"
+Jrn.Data "File Name" , "IDOK", "{{TEMPLATE_PATH}}"
+' Handle the Template vs Project dialog (1001 = Create New Project)
+Jrn.Data "TaskDialog_Template_File", "1001"
+' [OPEN_TEMPLATE_BLOCK_END]
+
+Jrn.RibbonEvent "TabActivated:Manage"
+Jrn.Command "Ribbon" , "Launch Dynamo , ID_VISUAL_PROGRAMMING_DYNAMO"

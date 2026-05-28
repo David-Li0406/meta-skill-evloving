@@ -1,0 +1,59 @@
+{
+  "name": "to-array",
+  "description": "Convert value to array (wrap non-arrays, pass through arrays)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing any value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to value to convert to array (e.g., 'items' or 'data.values')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with value at path converted to array (arrays unchanged, other values wrapped)"
+  },
+  "examples": [
+    {
+      "description": "Convert string to array",
+      "input": {"name": "skogix"},
+      "args": {"path": "name"},
+      "output": {"name": ["skogix"]}
+    },
+    {
+      "description": "Pass through existing array",
+      "input": {"items": [1, 2, 3]},
+      "args": {"path": "items"},
+      "output": {"items": [1, 2, 3]}
+    },
+    {
+      "description": "Wrap number in array",
+      "input": {"count": 42},
+      "args": {"path": "count"},
+      "output": {"count": [42]}
+    },
+    {
+      "description": "Wrap boolean in array",
+      "input": {"active": true},
+      "args": {"path": "active"},
+      "output": {"active": [true]}
+    },
+    {
+      "description": "Wrap null in array",
+      "input": {"value": null},
+      "args": {"path": "value"},
+      "output": {"value": [null]}
+    },
+    {
+      "description": "Wrap object in array",
+      "input": {"user": {"name": "test"}},
+      "args": {"path": "user"},
+      "output": {"user": [{"name": "test"}]}
+    }
+  ],
+  "tags": ["array", "conversion", "wrap", "normalize"]
+}

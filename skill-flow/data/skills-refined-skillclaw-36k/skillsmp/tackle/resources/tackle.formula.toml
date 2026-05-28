@@ -1,0 +1,112 @@
+description = """
+Upstream-aware issue implementation workflow with approval gates.
+
+Tracks work from initial research through PR submission. Each step is a
+checkpoint that survives session restarts. Gates require explicit approval.
+
+**REQUIRED:** Run `/tackle --resume` after compaction or new session to load full guidance.
+
+Usage: gt sling tackle --on <issue-bead>
+
+Context is read from the bonded bead:
+- Issue ID: gt hook --json | jq -r '.bead_id'
+- Upstream: stored in bead notes before slinging (grep 'upstream:')
+"""
+formula = "tackle"
+version = 5
+
+[[steps]]
+id = "plan"
+title = "[PLAN] Run /tackle --resume plan"
+description = """
+Create implementation plan based on:
+- Issue requirements
+- Upstream context (patterns, conventions)
+- Hot areas to avoid
+"""
+
+[[steps]]
+id = "gate-plan"
+title = "[GATE-PLAN] Run /tackle --resume gate-plan"
+needs = ["plan"]
+description = """
+**MANDATORY STOP**
+
+Present plan to user. Wait for explicit approval.
+DO NOT PROCEED WITHOUT APPROVAL.
+"""
+
+[[steps]]
+id = "branch"
+title = "[BRANCH] Run /tackle --resume branch"
+needs = ["gate-plan"]
+description = """
+Create clean branch from upstream default branch.
+"""
+
+[[steps]]
+id = "implement"
+title = "[IMPLEMENT] Run /tackle --resume implement"
+needs = ["branch"]
+description = """
+Implement following upstream conventions.
+Commit atomically with conventional commit messages.
+"""
+
+[[steps]]
+id = "validate"
+title = "[VALIDATE] Run /tackle --resume validate"
+needs = ["implement"]
+description = """
+- Run tests
+- Check isolation (single concern)
+- Verify branch is rebased on upstream
+"""
+
+[[steps]]
+id = "gate-submit"
+title = "[GATE-SUBMIT] Run /tackle --resume gate-submit"
+needs = ["validate"]
+description = """
+**MANDATORY STOP**
+
+On entering this gate:
+1. Check if draft PR already exists (idempotent)
+2. If not, create draft PR on upstream
+3. Present for review
+
+Wait for explicit approval.
+DO NOT MARK PR READY WITHOUT APPROVAL.
+"""
+
+[[steps]]
+id = "submit"
+title = "[SUBMIT] Run /tackle --resume submit"
+needs = ["gate-submit"]
+description = """
+Only after explicit approval:
+1. Mark draft PR as ready for review: gh pr ready
+2. Verify PR is no longer in draft state
+"""
+
+[[steps]]
+id = "record"
+title = "[RECORD] Run /tackle --resume record"
+needs = ["submit"]
+description = """
+Track PR URL and outcome for future learning.
+Update local issue with PR link.
+"""
+
+[[steps]]
+id = "reflect"
+title = "[REFLECT] Run /tackle --resume reflect"
+needs = ["record"]
+description = """
+Reflect on issues tackle could help prevent in future runs.
+
+**Fix immediately**: Objective errors (wrong flags, syntax errors).
+**Note for pattern detection**: Subjective friction via molecule history.
+
+Ignore task-specific issues (test failures, upstream quirks).
+"""

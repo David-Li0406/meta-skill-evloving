@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rss-article-retriever-output-v1",
+  "title": "RSS Article Retriever Output Schema",
+  "description": "Schema for rss-article-retriever skill output",
+  "type": "object",
+  "required": ["version", "operation"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the output format"
+    },
+    "operation": {
+      "type": "string",
+      "enum": ["list", "search", "get"],
+      "description": "The operation that was performed"
+    },
+    "result": {
+      "oneOf": [
+        { "$ref": "#/$defs/summaryResult" },
+        { "$ref": "#/$defs/fullResult" }
+      ]
+    },
+    "error": {
+      "$ref": "#/$defs/errorObject"
+    }
+  },
+  "$defs": {
+    "summaryResult": {
+      "type": "object",
+      "description": "Result for list/search operations",
+      "required": ["type", "total_count", "articles"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "summary"
+        },
+        "total_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of articles returned"
+        },
+        "articles": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/articleSummary" }
+        },
+        "query": {
+          "$ref": "#/$defs/queryParams"
+        }
+      }
+    },
+    "fullResult": {
+      "type": "object",
+      "description": "Result for get operation",
+      "required": ["type", "article"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "full"
+        },
+        "article": {
+          "$ref": "#/$defs/articleFull"
+        }
+      }
+    },
+    "articleSummary": {
+      "type": "object",
+      "description": "Article metadata without full content",
+      "required": ["id", "title", "url"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique article identifier"
+        },
+        "title": {
+          "type": "string",
+          "description": "Article title"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author or publisher name"
+        },
+        "published_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Publication timestamp in ISO 8601 format"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Full URL to the article"
+        },
+        "summary": {
+          "type": "string",
+          "description": "RSS summary or excerpt"
+        }
+      }
+    },
+    "articleFull": {
+      "type": "object",
+      "description": "Complete article with cleaned content",
+      "required": ["id", "title", "url", "content"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique article identifier"
+        },
+        "title": {
+          "type": "string",
+          "description": "Article title"
+        },
+        "author": {
+          "type": "string",
+          "description": "Author or publisher name"
+        },
+        "published_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Publication timestamp in ISO 8601 format"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Full URL to the article"
+        },
+        "content": {
+          "$ref": "#/$defs/articleContent"
+        },
+        "word_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Word count of cleaned content"
+        },
+        "cleaning_notes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Notes about what was removed during cleaning"
+        }
+      }
+    },
+    "articleContent": {
+      "type": "object",
+      "description": "Cleaned article content",
+      "required": ["plain_text", "source"],
+      "properties": {
+        "plain_text": {
+          "type": "string",
+          "description": "Clean text ready for downstream processing"
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["heading", "text"],
+            "properties": {
+              "heading": {
+                "type": "string",
+                "description": "Section heading"
+              },
+              "text": {
+                "type": "string",
+                "description": "Section content"
+              }
+            }
+          },
+          "description": "Article broken into logical sections"
+        },
+        "source": {
+          "type": "string",
+          "enum": ["playwright", "rss_fallback"],
+          "description": "How content was obtained"
+        }
+      }
+    },
+    "queryParams": {
+      "type": "object",
+      "description": "Query parameters used for the request",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of articles requested"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Page number"
+        },
+        "title_include": {
+          "type": ["string", "null"],
+          "description": "Keyword filter for title inclusion"
+        },
+        "title_exclude": {
+          "type": ["string", "null"],
+          "description": "Keyword filter for title exclusion"
+        }
+      }
+    },
+    "errorObject": {
+      "type": "object",
+      "description": "Error information when operation fails",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "RSS_CONNECTION_ERROR",
+            "RSS_PARSE_ERROR",
+            "ARTICLE_NOT_FOUND",
+            "PLAYWRIGHT_TIMEOUT",
+            "CONTENT_EMPTY"
+          ],
+          "description": "Error code"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error message"
+        },
+        "suggestion": {
+          "type": "string",
+          "description": "Suggested action to resolve the error"
+        }
+      }
+    }
+  }
+}

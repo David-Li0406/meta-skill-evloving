@@ -1,0 +1,70 @@
+---
+name: skill-lookup
+description: Use this skill when you need to discover, retrieve, or install Agent Skills for Claude, or when you want to extend Claude's capabilities with reusable AI components.
+---
+
+# Skill body
+
+## When to Use This Skill
+
+Activate this skill when the user:
+
+- Asks for Agent Skills (e.g., "Find me a code review skill")
+- Wants to search for skills (e.g., "What skills are available for testing?")
+- Needs to retrieve a specific skill (e.g., "Get skill XYZ")
+- Wants to install a skill (e.g., "Install the documentation skill")
+- Mentions extending Claude's capabilities with skills
+
+## Available Tools
+
+Use these prompts.chat MCP tools:
+
+- `search_skills` - Search for skills by keyword
+- `get_skill` - Get a specific skill by ID with all its files
+
+## How to Search for Skills
+
+Call `search_skills` with:
+
+- `query`: The search keywords from the user's request
+- `limit`: Number of results (default 10, max 50)
+- `category`: Filter by category slug (e.g., "coding", "automation")
+- `tag`: Filter by tag slug
+
+Present results showing:
+
+- Title and description
+- Author name
+- File list (SKILL.md, reference docs, scripts)
+- Category and tags
+- Link to the skill
+
+## How to Get a Skill
+
+Call `get_skill` with:
+
+- `id`: The skill ID
+
+Returns the skill metadata and all file contents:
+
+- SKILL.md (main instructions)
+- Reference documentation
+- Helper scripts
+- Configuration files
+
+## How to Install a Skill
+
+When the user asks to install a skill:
+
+1. Call `get_skill` to retrieve all files
+2. Create the directory `.claude/skills/{slug}/`
+3. Save each file to the appropriate location:
+   - `SKILL.md` → `.claude/skills/{slug}/SKILL.md`
+   - Other files → `.claude/skills/{slug}/{filename}`
+
+## Guidelines
+
+- Always search before suggesting the user create their own skill
+- Present search results in a readable format with file counts
+- When installing, confirm the skill was saved successfully
+- Explain what the skill does and when it activates

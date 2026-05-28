@@ -1,0 +1,113 @@
+# 需求字段定义
+# 定义需要从用户收集的信息
+
+fields:
+  - id: project_title
+    name: 项目名称
+    description: 您计划申报的项目名称
+    type: text
+    required: true
+    placeholder: "例如：基于深度学习的..."
+
+  - id: research_field
+    name: 研究领域
+    description: 项目所属的学科领域
+    type: text
+    required: true
+    placeholder: "例如：人工智能、材料科学、生物医学..."
+
+  - id: research_problem
+    name: 研究问题
+    description: 您想要解决的核心科学问题是什么？
+    type: textarea
+    required: true
+    placeholder: 请详细描述您要解决的问题，包括背景、现有方法的不足等
+    validation_prompt: 检查用户描述的研究问题是否清晰、具体、有科学价值
+
+  - id: research_method
+    name: 研究方法
+    description: 您计划采用什么方法解决这个问题？
+    type: textarea
+    required: true
+    placeholder: 请描述您的技术路线和研究方法
+
+  - id: innovation_points
+    name: 创新点
+    description: 您认为项目的主要创新点是什么？
+    type: textarea
+    required: true
+    placeholder: 请列出2-3个主要创新点
+
+  - id: prior_work
+    name: 前期工作
+    description: 您在该领域已有的研究基础
+    type: textarea
+    required: false
+    placeholder: 已发表的相关论文、已完成的相关项目等
+
+  - id: team_info
+    name: 团队信息
+    description: 项目组成员情况
+    type: textarea
+    required: false
+    placeholder: 主要成员及其专长
+
+  - id: project_type
+    name: 项目类型
+    description: 申报的项目类型
+    type: select
+    required: true
+    options:
+      - 面上项目
+      - 青年项目
+      - 地区项目
+      - 重点项目
+
+  - id: duration
+    name: 研究周期
+    description: 预计研究周期
+    type: select
+    required: true
+    options:
+      - 3年
+      - 4年
+      - 5年
+
+  - id: budget
+    name: 申请经费
+    description: 预计申请的经费额度（万元）
+    type: text
+    required: false
+    placeholder: "例如：60"
+
+  - id: keywords
+    name: 关键词
+    description: 项目的关键词（3-5个）
+    type: text
+    required: false
+    placeholder: "例如：深度学习, 目标检测, 自动驾驶"
+
+# 收集策略配置
+collection_strategy:
+  # 核心字段：必须收集
+  core_fields:
+    - project_title
+    - research_field
+    - research_problem
+    - research_method
+    - innovation_points
+    - project_type
+
+  # 补充字段：可选收集
+  optional_fields:
+    - prior_work
+    - team_info
+    - duration
+    - budget
+    - keywords
+
+  # 每轮最多询问的字段数
+  max_fields_per_turn: 2
+
+  # 是否允许跳过可选字段
+  allow_skip_optional: true

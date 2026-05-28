@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-skills"
+version = "0.1.0"
+description = "Universal skill manager for AI coding assistants (Codex, Claude, Cursor)"
+authors = [{name = "mcarls"}]
+requires-python = ">=3.8"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.scripts]
+skills = "agent_skills.cli:main"
+agent-skills = "agent_skills.cli:main"
+
+[tool.setuptools]
+packages = ["agent_skills"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

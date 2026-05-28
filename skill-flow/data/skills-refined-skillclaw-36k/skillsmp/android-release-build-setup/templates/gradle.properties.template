@@ -1,0 +1,24 @@
+# Template for local development signing configuration
+# Copy this to gradle.properties (gitignored) and fill in values
+
+# Path to your LOCAL development keystore (NOT production!)
+SIGNING_KEY_STORE_PATH=/path/to/keystores/local-dev-release.jks
+
+# Local development keystore credentials
+SIGNING_KEY_ALIAS=local-dev
+SIGNING_STORE_PASSWORD=your-local-dev-password
+SIGNING_KEY_PASSWORD=your-local-dev-password
+
+#===============================================================================
+# IMPORTANT SECURITY NOTES:
+#===============================================================================
+# 1. This is for LOCAL testing of release builds ONLY
+# 2. NEVER use production keystore locally
+# 3. Production keystore lives ONLY in CI/CD (GitHub Secrets)
+# 4. Each developer should have their own unique local keystore
+# 5. Never commit gradle.properties to version control
+#
+# To generate your local development keystore, run:
+#   /devtools:android-release-setup
+#
+# The skill will generate both keystores and configure everything for you.

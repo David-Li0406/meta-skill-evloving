@@ -1,0 +1,66 @@
+name: 🏗️ Terraform Module Runner
+
+on:
+  workflow_call:
+    inputs:
+      cmd:
+        description: "Terraform command (plan, apply, destroy)"
+        type: string
+        default: plan
+      module:
+        description: "Module directory name"
+        type: string
+        required: true
+      workspace:
+        description: "Terraform workspace name"
+        type: string
+        required: true
+      portal:
+        description: "Duplocloud portal environment name"
+        type: string
+        required: true
+    secrets:
+      DUPLO_TOKEN:
+        description: "Duplocloud API token"
+        required: true
+
+jobs:
+  terraform:
+    name: ${{ inputs.cmd }} - ${{ inputs.workspace }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.portal }}
+    env:
+      DUPLO_HOST: ${{ vars.DUPLO_HOST }}
+      DUPLO_TOKEN: ${{ secrets.DUPLO_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Duplocloud
+        uses: duplocloud/actions/setup@main
+        with:
+          admin: true
+
+      - name: Setup Terraform
+        uses: duplocloud/actions/setup-terraform@main
+
+      - name: Terraform Init
+        uses: duplocloud/actions/terraform-module@main
+        with:
+          module: modules/${{ inputs.module }}
+
+      - name: Terraform ${{ inputs.cmd }}
+        uses: duplocloud/actions/terraform-exec@main
+        with:
+          module: modules/${{ inputs.module }}
+          command: ${{ inputs.cmd }}
+          workspace: ${{ inputs.workspace }}
+          config: config/${{ inputs.module }}
+
+      - name: Comment Plan on PR
+        if: inputs.cmd == 'plan' && github.event_name == 'pull_request'
+        uses: duplocloud/actions/terraform-comment@main
+        with:
+          module: modules/${{ inputs.module }}

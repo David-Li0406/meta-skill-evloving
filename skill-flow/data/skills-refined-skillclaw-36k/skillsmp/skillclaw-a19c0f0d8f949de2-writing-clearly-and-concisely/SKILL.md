@@ -1,0 +1,66 @@
+---
+name: writing-clearly-and-concisely
+description: Use this skill when writing prose for humans, such as documentation, commit messages, error messages, explanations, reports, or UI text. It applies Strunk's timeless rules for clearer, stronger, and more professional writing.
+---
+
+# Writing Clearly and Concisely
+
+## Overview
+
+Write with clarity and force. This skill covers what to do (Strunk) and what not to do (AI patterns).
+
+## When to Use This Skill
+
+Use this skill whenever you write prose for humans:
+
+- Documentation, README files, technical explanations
+- Commit messages, pull request descriptions
+- Error messages, UI copy, help text, comments
+- Reports, summaries, or any explanation
+- Editing to improve clarity
+
+**If you're writing sentences for a human to read, use this skill.**
+
+## Limited Context Strategy
+
+When context is tight:
+
+1. Write your draft using judgment.
+2. Dispatch a subagent with your draft and the relevant section file.
+3. Have the subagent copyedit and return the revision.
+
+Loading a single section (~1,000-4,500 tokens) instead of everything saves significant context.
+
+## Elements of Style
+
+William Strunk Jr.'s *The Elements of Style* (1918) teaches you to write clearly and cut ruthlessly.
+
+### Rules
+
+**Elementary Rules of Usage (Grammar/Punctuation)**:
+
+1. Form possessive singular by adding 's.
+2. Use a comma after each term in a series except the last.
+3. Enclose parenthetic expressions between commas.
+4. Use a comma before conjunction introducing a co-ordinate clause.
+5. Don't join independent clauses with a comma.
+6. Don't break sentences in two.
+7. A participial phrase at the beginning refers to the grammatical subject.
+
+**Elementary Principles of Composition**:
+
+8. One paragraph per topic.
+9. Begin paragraphs with a topic sentence.
+10. **Use active voice.**
+11. **Put statements in positive form.**
+12. **Use definite, specific, concrete language.**
+13. **Omit needless words.**
+14. Avoid a succession of loose sentences.
+15. Express co-ordinate ideas in similar form.
+16. **Keep related words together.**
+17. Keep to one tense in summaries.
+18. **Place emphatic words at the end of the sentence.**
+
+### Reference Files
+
+The rules above are summarized from Strunk's original text. For complete explanations with examples, refer to the relevant sections in *The Elements of Style*.

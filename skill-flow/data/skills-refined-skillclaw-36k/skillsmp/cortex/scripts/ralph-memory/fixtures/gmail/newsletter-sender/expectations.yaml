@@ -1,0 +1,28 @@
+# Fixture: Cloudflare invoice email
+description: "Invoice email from Cloudflare with company details"
+
+entities:
+  must_have:
+    - name_contains: "Cloudflare"
+      entity_type: Organization
+
+  optional:
+    - name_contains: "Tyler"
+      entity_type: Person
+    - name_contains: "San Francisco"
+      entity_type: Location
+
+relationships:
+  optional:
+    # Tyler is customer of Cloudflare
+    - source_entity_name_contains: "Tyler"
+      relation_type: CUSTOMER_OF
+      target_entity_name_contains: "Cloudflare"
+      
+    # Cloudflare located in San Francisco
+    - source_entity_name_contains: "Cloudflare"
+      relation_type: LOCATED_IN
+
+episode_entity_mentions:
+  must_have:
+    - entity_name_contains: "Cloudflare"

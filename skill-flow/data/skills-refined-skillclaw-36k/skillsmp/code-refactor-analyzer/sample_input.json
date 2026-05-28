@@ -1,0 +1,67 @@
+{
+  "scenarios": [
+    {
+      "id": "scenario_1",
+      "name": "首次使用 - 生成报告",
+      "description": "用户首次提出添加用户认证功能的需求",
+      "requirement": "添加用户认证功能，包括登录、注册和密码重置",
+      "expected_action": "generate_report",
+      "expected_output_fields": ["report_path", "total_tasks", "priority_distribution"]
+    },
+    {
+      "id": "scenario_2",
+      "name": "后续使用 - 检查完成情况",
+      "description": "用户再次提出相同需求，检查完成情况",
+      "requirement": "添加用户认证功能，包括登录、注册和密码重置",
+      "expected_action": "check_completion",
+      "expected_output_fields": ["completion_rate", "task_stats", "summary"]
+    },
+    {
+      "id": "scenario_3",
+      "name": "新需求 - 数据库优化",
+      "description": "用户提出数据库查询优化的新需求",
+      "requirement": "优化数据库查询性能，减少响应时间",
+      "expected_action": "generate_report",
+      "expected_output_fields": ["report_path", "total_tasks", "analysis_summary"]
+    },
+    {
+      "id": "scenario_4",
+      "name": "API功能扩展",
+      "description": "用户需要扩展API以支持新功能",
+      "requirement": "扩展用户API以支持个人资料管理和偏好设置",
+      "expected_action": "generate_report",
+      "expected_output_fields": ["report_path", "total_tasks", "priority_distribution"]
+    },
+    {
+      "id": "scenario_5",
+      "name": "安全检查",
+      "description": "用户需要安全检查相关的重构",
+      "requirement": "增强应用安全性，添加输入验证和XSS防护",
+      "expected_action": "generate_report",
+      "expected_output_fields": ["report_path", "total_tasks", "priority_distribution"]
+    }
+  ],
+  "test_cases": [
+    {
+      "input": "添加用户登录功能",
+      "expected_keywords": ["用户", "登录", "功能", "添加"],
+      "expected_priority": "high"
+    },
+    {
+      "input": "优化数据库查询性能",
+      "expected_keywords": ["优化", "数据库", "查询", "性能"],
+      "expected_priority": "medium"
+    },
+    {
+      "input": "更新UI组件样式",
+      "expected_keywords": ["更新", "ui", "组件", "样式"],
+      "expected_priority": "low"
+    }
+  ],
+  "config": {
+    "max_files_to_analyze": 20,
+    "report_dir": ".claude/code_refactor_report/",
+    "state_file": ".claude/code_refactor_state/state.json",
+    "supported_file_extensions": [".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".cpp", ".c", ".h", ".go", ".rs"]
+  }
+}

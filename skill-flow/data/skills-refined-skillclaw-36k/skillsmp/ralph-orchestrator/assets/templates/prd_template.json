@@ -1,0 +1,62 @@
+{
+  "name": "example-task",
+  "created_at": "2025-01-09T12:00:00Z",
+  "status": "draft",
+  "problem_statement": "Clear description of the problem being solved",
+  "success_criteria": [
+    "All tests pass with >80% coverage",
+    "API responds in <200ms",
+    "No console errors in browser"
+  ],
+  "out_of_scope": [
+    "Authentication changes",
+    "Database migrations"
+  ],
+  "verification": {
+    "method": "test",
+    "command": "npm test",
+    "description": "Run Jest test suite"
+  },
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Create basic endpoint structure",
+      "description": "As a developer, I want the basic API structure so that I can add endpoints",
+      "acceptance_criteria": [
+        "Express server starts without errors",
+        "Health check endpoint returns 200"
+      ],
+      "verification": "curl localhost:3000/health returns 200",
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Implement CRUD operations",
+      "description": "As a user, I want to create, read, update, and delete items",
+      "acceptance_criteria": [
+        "POST /items creates an item",
+        "GET /items returns all items",
+        "GET /items/:id returns one item",
+        "PUT /items/:id updates an item",
+        "DELETE /items/:id deletes an item"
+      ],
+      "verification": "All CRUD tests pass",
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Add input validation",
+      "description": "As a developer, I want input validation so that invalid data is rejected",
+      "acceptance_criteria": [
+        "Invalid POST body returns 400",
+        "Missing required fields return descriptive errors",
+        "Type mismatches are caught"
+      ],
+      "verification": "Validation tests pass",
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

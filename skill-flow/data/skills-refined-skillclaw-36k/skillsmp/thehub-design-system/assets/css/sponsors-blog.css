@@ -1,0 +1,811 @@
+/* =============================================
+   GLOBAL SPONSOR SYSTEM STYLING
+   Responsivt system: Mobil → Tablet → Desktop (max 1600px)
+   Uppladdning: 1200x150px (8:1), skalas responsivt
+   ============================================= */
+
+/* Sponsor Sections */
+.sponsor-section {
+    margin: var(--space-lg) 0;
+    padding: var(--space-md);
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+.sponsor-section-title {
+    font-family: var(--font-heading-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+}
+
+/* =============================================
+   SPONSOR GRID - Responsiv med flexbox
+   Desktop (1600px): 5 per rad
+   Tablet (1024px): 4 per rad
+   Mobil (768px): 2-3 per rad
+   ============================================= */
+.sponsor-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    align-items: center;
+    justify-content: center;
+}
+
+/* Content areas: 5 per rad på desktop */
+.sponsor-grid-content_top,
+.sponsor-grid-content_bottom {
+    gap: var(--space-sm);
+}
+
+.sponsor-grid-content_top .sponsor-item,
+.sponsor-grid-content_bottom .sponsor-item {
+    flex: 0 1 calc(20% - var(--space-sm));
+    min-width: 150px;
+    max-width: 280px;
+}
+
+/* Footer: 6 per rad på desktop, mer kompakt */
+.sponsor-grid-footer {
+    gap: var(--space-xs);
+}
+
+.sponsor-grid-footer .sponsor-item {
+    flex: 0 1 calc(16.66% - var(--space-xs));
+    min-width: 120px;
+    max-width: 200px;
+}
+
+/* Sidebar */
+.sponsor-grid-sidebar_top,
+.sponsor-grid-sidebar_mid {
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+/* Sponsor Items - Responsiv box */
+.sponsor-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-sm);
+    background: var(--color-bg-card);
+    border-radius: var(--radius-sm);
+    transition: all 0.3s ease;
+    border: 1px solid var(--color-border);
+    aspect-ratio: 4 / 1;
+}
+
+.sponsor-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--color-border-strong);
+}
+
+/* Tier Styling */
+.sponsor-tier-title_gravityseries {
+    border: 2px solid var(--color-accent);
+    background: linear-gradient(135deg,
+        var(--color-accent-light),
+        transparent);
+}
+
+.sponsor-tier-title_series {
+    border: 2px solid var(--color-accent);
+}
+
+.sponsor-tier-gold {
+    border: 2px solid #FFD700;
+}
+
+.sponsor-tier-silver {
+    border: 1px solid #C0C0C0;
+}
+
+.sponsor-tier-branch {
+    border: 1px solid var(--color-border);
+}
+
+/* =============================================
+   SPONSOR BILDER - Responsiva, fyller sin container
+   ============================================= */
+.sponsor-logo,
+.sponsor-banner {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+}
+
+.sponsor-logo {
+    filter: grayscale(20%);
+    transition: filter 0.3s ease;
+}
+
+.sponsor-item:hover .sponsor-logo {
+    filter: grayscale(0%);
+}
+
+.sponsor-name {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+/* Sponsor Links */
+.sponsor-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+}
+
+/* =============================================
+   HEADER INLINE - Kompakt i menyraden
+   ============================================= */
+.sponsor-section-header_inline {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sponsor-grid-header_inline {
+    gap: var(--space-md);
+}
+
+.sponsor-section-header_inline .sponsor-item {
+    background: transparent;
+    border: none;
+    padding: 0;
+    aspect-ratio: auto;
+    flex: 0 0 auto;
+    max-width: 200px;
+    max-height: 36px;
+}
+
+.sponsor-section-header_inline .sponsor-item:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.sponsor-section-header_inline .sponsor-logo,
+.sponsor-section-header_inline .sponsor-banner {
+    max-height: 36px;
+    width: auto;
+    height: auto;
+    filter: none;
+}
+
+/* =============================================
+   HEADER BANNER - Fullbredd, responsiv
+   Uppladdning: 1200x150px, skalas till max 1600px bredd
+   ============================================= */
+.sponsor-section-header_banner {
+    margin: var(--space-md) 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    text-align: center;
+}
+
+.sponsor-grid-header_banner {
+    justify-content: center;
+}
+
+.sponsor-section-header_banner .sponsor-item {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    background: transparent;
+    border: none;
+    aspect-ratio: 8 / 1;
+}
+
+.sponsor-section-header_banner .sponsor-item:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.sponsor-section-header_banner .sponsor-logo,
+.sponsor-section-header_banner .sponsor-banner {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    border-radius: var(--radius-md);
+}
+
+/* =============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================= */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .sponsor-grid-content_top .sponsor-item,
+    .sponsor-grid-content_bottom .sponsor-item {
+        flex: 0 1 calc(25% - var(--space-sm));
+    }
+
+    .sponsor-grid-footer .sponsor-item {
+        flex: 0 1 calc(20% - var(--space-xs));
+    }
+}
+
+/* Mobil */
+@media (max-width: 767px) {
+    .sponsor-grid-content_top .sponsor-item,
+    .sponsor-grid-content_bottom .sponsor-item {
+        flex: 0 1 calc(50% - var(--space-sm));
+        min-width: 140px;
+    }
+
+    .sponsor-grid-footer .sponsor-item {
+        flex: 0 1 calc(33.33% - var(--space-xs));
+        min-width: 100px;
+    }
+
+    .sponsor-section {
+        margin-left: -16px;
+        margin-right: -16px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        width: calc(100% + 32px);
+    }
+
+    .sponsor-section-header_inline .sponsor-item {
+        max-width: 120px;
+        max-height: 28px;
+    }
+
+    .sponsor-section-header_inline .sponsor-logo,
+    .sponsor-section-header_inline .sponsor-banner {
+        max-height: 28px;
+    }
+}
+
+/* =============================================
+   RACE REPORTS / BLOGG SYSTEM
+   ============================================= */
+
+/* Report Grid */
+.race-reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-lg);
+    margin: var(--space-lg) 0;
+}
+
+/* Report Card */
+.race-report-card {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    border: 1px solid var(--color-border);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.race-report-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    border-color: var(--color-accent);
+}
+
+.race-report-card-featured {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Report Image */
+.race-report-image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: var(--color-bg-surface);
+}
+
+.race-report-card-featured .race-report-image {
+    aspect-ratio: 1/1;
+}
+
+.race-report-no-image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, var(--color-accent-light), var(--color-bg-surface));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.race-report-no-image i {
+    width: 48px;
+    height: 48px;
+    color: var(--color-accent);
+    opacity: 0.5;
+}
+
+/* Report Content */
+.race-report-content {
+    padding: var(--space-md);
+}
+
+.race-report-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xs);
+    flex-wrap: wrap;
+}
+
+.race-report-author {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+}
+
+.race-report-author-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.race-report-title {
+    font-family: var(--font-heading-secondary);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: var(--space-xs);
+    line-height: 1.4;
+    color: var(--color-text-primary);
+}
+
+.race-report-card-featured .race-report-title {
+    font-size: 1.5rem;
+}
+
+.race-report-excerpt {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-xs);
+}
+
+/* Report Tags */
+.race-report-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    margin-bottom: var(--space-xs);
+}
+
+.race-report-tag {
+    padding: 2px 8px;
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+}
+
+.race-report-tag:hover {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+}
+
+/* Report Stats */
+.race-report-stats {
+    display: flex;
+    gap: var(--space-md);
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.race-report-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+}
+
+.race-report-stat i {
+    width: 14px;
+    height: 14px;
+}
+
+/* Single Report View */
+.race-report-single {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+.race-report-single-header {
+    margin-bottom: var(--space-lg);
+}
+
+.race-report-single-title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: var(--space-sm);
+    line-height: 1.2;
+    color: var(--color-text-primary);
+}
+
+.race-report-single-image {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-lg);
+}
+
+.race-report-single-body {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--color-text-primary);
+}
+
+.race-report-single-body p {
+    margin-bottom: var(--space-md);
+}
+
+.race-report-single-body h2 {
+    font-family: var(--font-heading-secondary);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: var(--space-lg) 0 var(--space-sm);
+}
+
+.race-report-single-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+    margin: var(--space-md) 0;
+}
+
+/* Instagram Embed */
+.race-report-instagram {
+    margin: var(--space-lg) 0;
+    text-align: center;
+}
+
+.race-report-instagram a {
+    color: var(--color-accent);
+}
+
+/* Actions */
+.race-report-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border);
+}
+
+/* Like Button */
+.race-report-like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.race-report-like-btn:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-accent);
+}
+
+.race-report-like-btn.liked {
+    background: var(--color-accent);
+    color: var(--color-bg-page);
+    border-color: var(--color-accent);
+}
+
+.race-report-like-btn i {
+    width: 16px;
+    height: 16px;
+}
+
+.race-report-views {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+.race-report-views i {
+    width: 16px;
+    height: 16px;
+}
+
+/* Comments Section */
+.race-report-comments {
+    margin-top: var(--space-2xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.race-report-comments-title {
+    font-family: var(--font-heading-secondary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+    color: var(--color-text-primary);
+}
+
+.race-report-comment {
+    padding: var(--space-md);
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.race-report-comment-reply {
+    margin-left: var(--space-lg);
+}
+
+.race-report-comment-author {
+    font-weight: 600;
+    margin-bottom: var(--space-2xs);
+    color: var(--color-text-primary);
+}
+
+.race-report-comment-text {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+}
+
+.race-report-comment-time {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: var(--space-2xs);
+}
+
+/* Comment Form */
+.race-report-comment-form {
+    margin-top: var(--space-md);
+}
+
+.race-report-comment-form textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: var(--space-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    resize: vertical;
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+}
+
+.race-report-comment-form textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+/* Filters */
+.race-reports-filters {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    flex-wrap: wrap;
+}
+
+.race-reports-filter-btn {
+    padding: var(--space-xs) var(--space-md);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.race-reports-filter-btn:hover,
+.race-reports-filter-btn.active {
+    background: var(--color-accent);
+    color: var(--color-bg-page);
+    border-color: var(--color-accent);
+}
+
+/* Mobile Responsive */
+@media (max-width: 767px) {
+    .race-reports-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .race-report-card-featured {
+        grid-column: span 1;
+        grid-template-columns: 1fr;
+    }
+
+    .race-report-single {
+        padding: var(--space-sm);
+    }
+
+    .race-report-single-title {
+        font-size: 1.5rem;
+    }
+
+    .race-report-comment-reply {
+        margin-left: var(--space-sm);
+    }
+}
+
+/* =============================================
+   ADMIN: SPONSOR MANAGEMENT
+   ============================================= */
+
+.sponsor-placement-matrix {
+    display: grid;
+    grid-template-columns: 200px repeat(7, 1fr);
+    gap: 1px;
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    font-size: 0.75rem;
+}
+
+.sponsor-placement-cell {
+    background: var(--color-bg-card);
+    padding: var(--space-xs);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.sponsor-placement-cell-header {
+    background: var(--color-bg-surface);
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.sponsor-placement-cell-active {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+}
+
+/* Sponsor Stats Dashboard */
+.sponsor-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+}
+
+.sponsor-stat-card {
+    background: var(--color-bg-card);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    text-align: center;
+    border: 1px solid var(--color-border);
+}
+
+.sponsor-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.sponsor-stat-label {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin-top: var(--space-2xs);
+}
+
+/* Tier Benefits Display */
+.sponsor-tier-benefits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-lg);
+}
+
+.sponsor-tier-card {
+    background: var(--color-bg-card);
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+    border: 2px solid transparent;
+}
+
+.sponsor-tier-card-title_gravityseries {
+    border-color: var(--color-accent);
+}
+
+.sponsor-tier-card-title_series {
+    border-color: var(--color-accent);
+}
+
+.sponsor-tier-card-gold {
+    border-color: #FFD700;
+}
+
+.sponsor-tier-card-silver {
+    border-color: #C0C0C0;
+}
+
+.sponsor-tier-card-branch {
+    border-color: var(--color-border);
+}
+
+.sponsor-tier-title {
+    font-family: var(--font-heading-secondary);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+    color: var(--color-text-primary);
+}
+
+.sponsor-tier-benefits-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sponsor-tier-benefits-list li {
+    padding: var(--space-2xs) 0;
+    display: flex;
+    align-items: start;
+    gap: var(--space-xs);
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.sponsor-tier-benefits-list li i {
+    width: 16px;
+    height: 16px;
+    color: var(--color-success);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Placement badges in admin */
+.placement-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    padding: 2px 8px;
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-sm);
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin: 2px;
+}
+
+.placement-badge.active {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+}

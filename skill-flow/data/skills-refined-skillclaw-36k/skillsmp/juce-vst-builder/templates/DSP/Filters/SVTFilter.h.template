@@ -1,0 +1,214 @@
+#pragma once
+
+#include <juce_dsp/juce_dsp.h>
+#include <cmath>
+
+/**
+ * SVTFilter (State Variable Topology-Preserving Transform Filter)
+ *
+ * A 12dB/octave state-variable filter with simultaneous LP, HP, BP outputs.
+ * Uses the Topology-Preserving Transform (TPT) for stable modulation and
+ * zero-delay feedback characteristics.
+ *
+ * This implementation is based on the Chamberlin/Zavalishin TPT method,
+ * which provides excellent numerical stability and smooth parameter changes.
+ */
+class SVTFilter
+{
+public:
+    enum class Mode
+    {
+        LowPass,
+        HighPass,
+        BandPass,
+        Notch
+    };
+
+    SVTFilter() = default;
+
+    //==========================================================================
+    void prepare(double sampleRate)
+    {
+        this->sampleRate = sampleRate;
+        reset();
+    }
+
+    void reset()
+    {
+        ic1eq = 0.0f;
+        ic2eq = 0.0f;
+    }
+
+    //==========================================================================
+    void setMode(Mode m)
+    {
+        mode = m;
+    }
+
+    void setCutoff(float frequencyHz)
+    {
+        cutoff = juce::jlimit(20.0f, static_cast<float>(sampleRate * 0.49f), frequencyHz);
+        updateCoefficients();
+    }
+
+    void setResonance(float res)
+    {
+        // Resonance: 0.5 (no resonance) to 10+ (self-oscillation)
+        resonance = juce::jlimit(0.5f, 20.0f, res);
+        updateCoefficients();
+    }
+
+    //==========================================================================
+    float process(float input)
+    {
+        // TPT State Variable Filter
+        // Based on Andy Cytomic's work and Vadim Zavalishin's papers
+
+        float v3 = input - ic2eq;
+        float v1 = a1 * ic1eq + a2 * v3;
+        float v2 = ic2eq + a2 * ic1eq + a3 * v3;
+
+        ic1eq = 2.0f * v1 - ic1eq;
+        ic2eq = 2.0f * v2 - ic2eq;
+
+        // v1 = bandpass, v2 = lowpass
+        // highpass = input - k*v1 - v2
+        // notch = highpass + lowpass = input - k*v1
+
+        switch (mode)
+        {
+            case Mode::LowPass:
+                return v2;
+
+            case Mode::HighPass:
+                return input - k * v1 - v2;
+
+            case Mode::BandPass:
+                return v1;
+
+            case Mode::Notch:
+                return input - k * v1;
+        }
+
+        return v2;
+    }
+
+    //==========================================================================
+    // Process stereo buffer
+    void processBlock(juce::AudioBuffer<float>& buffer)
+    {
+        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+        {
+            auto* channelData = buffer.getWritePointer(channel);
+            for (int i = 0; i < buffer.getNumSamples(); ++i)
+            {
+                channelData[i] = process(channelData[i]);
+            }
+        }
+    }
+
+private:
+    void updateCoefficients()
+    {
+        // Pre-warped frequency
+        float g = std::tan(juce::MathConstants<float>::pi * cutoff / static_cast<float>(sampleRate));
+
+        // Damping factor (k = 1/Q)
+        k = 1.0f / resonance;
+
+        // TPT coefficients
+        a1 = 1.0f / (1.0f + g * (g + k));
+        a2 = g * a1;
+        a3 = g * a2;
+    }
+
+    //==========================================================================
+    double sampleRate = 44100.0;
+    Mode mode = Mode::LowPass;
+
+    float cutoff = 1000.0f;
+    float resonance = 1.0f;
+
+    // Coefficients
+    float k = 1.0f;
+    float a1 = 0.0f;
+    float a2 = 0.0f;
+    float a3 = 0.0f;
+
+    // State variables (per-channel if needed)
+    float ic1eq = 0.0f;
+    float ic2eq = 0.0f;
+};
+
+//==============================================================================
+/**
+ * StereoSVTFilter
+ *
+ * Stereo version of SVTFilter with independent left/right state.
+ */
+class StereoSVTFilter
+{
+public:
+    void prepare(double sampleRate)
+    {
+        filterL.prepare(sampleRate);
+        filterR.prepare(sampleRate);
+    }
+
+    void reset()
+    {
+        filterL.reset();
+        filterR.reset();
+    }
+
+    void setMode(SVTFilter::Mode m)
+    {
+        filterL.setMode(m);
+        filterR.setMode(m);
+    }
+
+    void setCutoff(float frequencyHz)
+    {
+        filterL.setCutoff(frequencyHz);
+        filterR.setCutoff(frequencyHz);
+    }
+
+    void setResonance(float res)
+    {
+        filterL.setResonance(res);
+        filterR.setResonance(res);
+    }
+
+    void process(float& left, float& right)
+    {
+        left = filterL.process(left);
+        right = filterR.process(right);
+    }
+
+    void processBlock(juce::AudioBuffer<float>& buffer)
+    {
+        if (buffer.getNumChannels() >= 2)
+        {
+            auto* leftChannel = buffer.getWritePointer(0);
+            auto* rightChannel = buffer.getWritePointer(1);
+
+            for (int i = 0; i < buffer.getNumSamples(); ++i)
+            {
+                leftChannel[i] = filterL.process(leftChannel[i]);
+                rightChannel[i] = filterR.process(rightChannel[i]);
+            }
+        }
+        else if (buffer.getNumChannels() == 1)
+        {
+            auto* channel = buffer.getWritePointer(0);
+            for (int i = 0; i < buffer.getNumSamples(); ++i)
+            {
+                channel[i] = filterL.process(channel[i]);
+            }
+        }
+    }
+
+private:
+    SVTFilter filterL;
+    SVTFilter filterR;
+};

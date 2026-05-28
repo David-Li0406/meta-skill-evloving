@@ -1,0 +1,34 @@
+{
+  "codebase": {
+    "files": [
+      {
+        "path": "src/main.py",
+        "lines": 100,
+        "deps": 2,
+        "affected": ["src/main.py"],
+        "coverage": 85
+      },
+      {
+        "path": "src/utils.py",
+        "lines": 200,
+        "deps": 10,
+        "affected": ["src/utils.py", "src/models.py"],
+        "coverage": 60
+      },
+      {
+        "path": "tests/test_main.py",
+        "lines": 50,
+        "deps": 15,
+        "affected": ["tests/*", "src/*"],
+        "coverage": 90
+      }
+    ],
+    "tests": ["tests/"],
+    "deps": { "external": ["numpy", "pandas"] }
+  },
+  "goals": ["improve modularity"],
+  "metrics": {
+    "coverage": 75,
+    "perf_ms": 200
+  }
+}

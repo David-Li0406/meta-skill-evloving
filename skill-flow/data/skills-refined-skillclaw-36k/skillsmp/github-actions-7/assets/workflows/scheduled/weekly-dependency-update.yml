@@ -1,0 +1,45 @@
+# Weekly Dependency Update
+# Automated dependency updates with Dependabot
+# Runs every Sunday
+
+name: Weekly Dependency Update
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update npm dependencies
+        run: |
+          npm update
+          npm audit fix || true
+
+      - name: Check for changes
+        id: verify
+        run: |
+          if git diff --quiet package.json package-lock.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR
+        if: steps.verify.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: 'Weekly dependency update'
+          body: 'Automated dependency updates'
+          branch: 'deps/weekly-update'
+          commit-message: 'Update dependencies'

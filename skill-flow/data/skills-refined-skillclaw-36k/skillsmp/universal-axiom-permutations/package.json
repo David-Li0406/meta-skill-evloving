@@ -1,0 +1,85 @@
+{
+  "name": "@universal-axiom/core",
+  "version": "0.1.0",
+  "description": "The Universal Axiom & The Epiphany Engine - A fundamental framework for modeling intelligence through immutable natural laws",
+  "type": "module",
+  "main": "dist/javascript/universal-axiom.js",
+  "types": "dist/javascript/universal-axiom.d.ts",
+  "files": [
+    "dist/javascript/**/*.js",
+    "dist/javascript/**/*.d.ts",
+    "dist/javascript/**/*.map",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheUniversalAxiom/pointy-stick.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TheUniversalAxiom/pointy-stick/issues"
+  },
+  "homepage": "https://www.epiphanyengine.ai",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "build:mcp": "cd mcp-server && npm run build",
+    "mcp:start": "cd mcp-server && npm start",
+    "example:js": "node examples/javascript/basic-usage.js",
+    "example:ts": "ts-node examples/javascript/basic-usage.ts",
+    "test": "npm run build && node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "lint": "eslint src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "prepare": "husky",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "tsc --noEmit"
+    ],
+    "*.js": [
+      "eslint --fix"
+    ],
+    "*.py": [
+      "python -m py_compile"
+    ]
+  },
+  "keywords": [
+    "universal-axiom",
+    "epiphany-engine",
+    "intelligence",
+    "ai",
+    "reasoning",
+    "consciousness"
+  ],
+  "author": "Matt Belanger",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.0.10",
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
+    "@typescript-eslint/parser": "^8.53.0",
+    "eslint": "^9.39.2",
+    "husky": "^9.1.7",
+    "jest": "^30.2.0",
+    "lint-staged": "^16.2.7",
+    "ts-jest": "^29.1.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  },
+  "overrides": {
+    "diff": "^8.0.3",
+    "glob": "^10.4.0",
+    "inflight": "npm:@zkochan/inflight@^1.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2"
+  }
+}

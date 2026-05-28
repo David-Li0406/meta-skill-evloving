@@ -1,0 +1,122 @@
+import { Badge } from "@openpromo/ui/components/badge";
+import { Button } from "@openpromo/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@openpromo/ui/components/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@openpromo/ui/components/table";
+import type { {{EntityName}}RouterOutputs } from "@worker/orpc";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { use{{EntityName}} } from "@/queries/{{entityKebab}}";
+
+type {{EntityName}} = {{EntityName}}RouterOutputs["list"]["{{entities}}"][number];
+
+interface {{EntityName}}TableProps {
+  {{entities}}: {{EntityName}}[];
+}
+
+export function {{EntityName}}Table({ {{entities}} }: {{EntityName}}TableProps) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Created</TableHead>
+          <TableHead className="w-[50px]" />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {{{entities}}.map(({{entityName}}) => (
+          <{{EntityName}}TableRow key={{{entityName}}.id} {{entityName}}={{{entityName}}} />
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+function {{EntityName}}TableRow({ {{entityName}} }: { {{entityName}}: {{EntityName}} }) {
+  const { workspace } = useWorkspace();
+  const { remove } = use{{EntityName}}();
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+
+  const handleRemove = async () => {
+    await remove.mutateAsync({
+      workspaceSlug: workspace.slug,
+      id: {{entityName}}.id,
+    });
+    setRemoveDialogOpen(false);
+  };
+
+  const statusVariant = {
+    active: "default" as const,
+    paused: "secondary" as const,
+    archived: "outline" as const,
+  };
+
+  return (
+    <>
+      <TableRow>
+        <TableCell className="font-medium">{{{entityName}}.name}</TableCell>
+        <TableCell>
+          <Badge variant={statusVariant[{{entityName}}.status] ?? "outline"}>
+            {{{entityName}}.status}
+          </Badge>
+        </TableCell>
+        <TableCell className="text-muted-foreground">
+          {new Date({{entityName}}.createdAt).toLocaleDateString()}
+        </TableCell>
+        <TableCell>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                disabled={remove.isPending}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setRemoveDialogOpen(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+
+      <ConfirmDialog
+        open={removeDialogOpen}
+        onOpenChange={setRemoveDialogOpen}
+        title="Delete {{EntityName}}"
+        desc={`Are you sure you want to delete "${{{entityName}}.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        destructive
+        handleConfirm={handleRemove}
+        isLoading={remove.isPending}
+      />
+    </>
+  );
+}

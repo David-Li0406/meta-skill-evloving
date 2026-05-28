@@ -1,0 +1,221 @@
+/**
+ * TheHUB Viewport System
+ *
+ * Dynamiska viewport-variabler som anpassar sig till skarmens storlek.
+ * Hanterar mobile browser chrome (adressfalt som andrar storlek).
+ *
+ * Anvandning:
+ *   height: var(--vh-100);           // 100% av viewport-hojd
+ *   height: var(--vh-50);            // 50% av viewport-hojd
+ *   height: calc(var(--vh-100) - 60px); // Viewport minus header
+ *   min-height: var(--map-height);   // Kartans rekommenderade hojd
+ *
+ * @since 2025-12-14
+ */
+
+/* ==========================================================================
+   VIEWPORT TOKENS - Sätts av JavaScript, fallback till CSS units
+   ========================================================================== */
+
+:root {
+    /* Dynamiska viewport-variabler (uppdateras av JS) */
+    /* Fallback till moderna CSS units om JS inte laddat */
+    --vh: 1vh;
+    --vw: 1vw;
+
+    /* Viewport-hojder (i procent) */
+    --vh-100: calc(var(--vh) * 100);
+    --vh-90: calc(var(--vh) * 90);
+    --vh-80: calc(var(--vh) * 80);
+    --vh-75: calc(var(--vh) * 75);
+    --vh-70: calc(var(--vh) * 70);
+    --vh-60: calc(var(--vh) * 60);
+    --vh-50: calc(var(--vh) * 50);
+    --vh-40: calc(var(--vh) * 40);
+    --vh-30: calc(var(--vh) * 30);
+    --vh-25: calc(var(--vh) * 25);
+    --vh-20: calc(var(--vh) * 20);
+
+    /* Viewport-bredder (i procent) */
+    --vw-100: calc(var(--vw) * 100);
+    --vw-50: calc(var(--vw) * 50);
+    --vw-33: calc(var(--vw) * 33.333);
+    --vw-25: calc(var(--vw) * 25);
+
+    /* Komponent-specifika hojder (kan overridas via branding) */
+    --map-height-mobile: calc(var(--vh) * 60);
+    --map-height-tablet: calc(var(--vh) * 65);
+    --map-height-desktop: calc(var(--vh) * 70);
+    --map-min-height: 400px;
+    --map-max-height: 800px;
+
+    /* Hero-sektioner */
+    --hero-height-mobile: calc(var(--vh) * 50);
+    --hero-height-desktop: calc(var(--vh) * 60);
+
+    /* Fullskarm minus header */
+    --content-height: calc(var(--vh-100) - var(--header-height, 60px));
+    --content-height-with-nav: calc(var(--vh-100) - var(--header-height, 60px) - var(--mobile-nav-height, 64px));
+}
+
+/* Modern browsers: Anvand dynamic viewport units om tillgangliga */
+@supports (height: 100dvh) {
+    :root {
+        --vh: 1dvh;
+        --vw: 1dvw;
+    }
+}
+
+/* ==========================================================================
+   RESPONSIVE MAP HEIGHTS
+   ========================================================================== */
+
+/* Standardklass for kartor - anpassar sig till viewport */
+.map-viewport {
+    height: var(--map-height-mobile);
+    min-height: var(--map-min-height);
+    max-height: var(--map-max-height);
+    width: 100%;
+    transition: height 0.3s ease;
+}
+
+@media (min-width: 768px) {
+    .map-viewport {
+        height: var(--map-height-tablet);
+    }
+}
+
+@media (min-width: 1024px) {
+    .map-viewport {
+        height: var(--map-height-desktop);
+    }
+}
+
+/* Variant: Karta som fyller tillgangligt utrymme */
+.map-viewport--fill {
+    height: var(--content-height);
+    max-height: none;
+}
+
+@media (max-width: 899px) {
+    .map-viewport--fill {
+        height: var(--content-height-with-nav);
+    }
+}
+
+/* Variant: Karta med fast aspekt-ratio */
+.map-viewport--16x9 {
+    height: auto;
+    aspect-ratio: 16 / 9;
+    min-height: var(--map-min-height);
+    max-height: var(--map-max-height);
+}
+
+.map-viewport--4x3 {
+    height: auto;
+    aspect-ratio: 4 / 3;
+    min-height: var(--map-min-height);
+    max-height: var(--map-max-height);
+}
+
+/* ==========================================================================
+   UTILITY CLASSES - Viewport-baserade hojder
+   ========================================================================== */
+
+/* Fasta viewport-hojder */
+.h-vh-100 { height: var(--vh-100); }
+.h-vh-90 { height: var(--vh-90); }
+.h-vh-80 { height: var(--vh-80); }
+.h-vh-75 { height: var(--vh-75); }
+.h-vh-70 { height: var(--vh-70); }
+.h-vh-60 { height: var(--vh-60); }
+.h-vh-50 { height: var(--vh-50); }
+.h-vh-40 { height: var(--vh-40); }
+.h-vh-30 { height: var(--vh-30); }
+
+/* Min-hojder */
+.min-h-vh-100 { min-height: var(--vh-100); }
+.min-h-vh-75 { min-height: var(--vh-75); }
+.min-h-vh-50 { min-height: var(--vh-50); }
+
+/* Max-hojder */
+.max-h-vh-100 { max-height: var(--vh-100); }
+.max-h-vh-75 { max-height: var(--vh-75); }
+.max-h-vh-50 { max-height: var(--vh-50); }
+
+/* Content-hojd (minus header) */
+.h-content { height: var(--content-height); }
+.min-h-content { min-height: var(--content-height); }
+
+/* ==========================================================================
+   HERO SECTIONS
+   ========================================================================== */
+
+.hero-viewport {
+    height: var(--hero-height-mobile);
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (min-width: 1024px) {
+    .hero-viewport {
+        height: var(--hero-height-desktop);
+        min-height: 400px;
+    }
+}
+
+/* ==========================================================================
+   SCROLLABLE CONTAINERS
+   ========================================================================== */
+
+/* Scrollbar container som fyller tillganglig hojd */
+.scroll-viewport {
+    height: var(--content-height);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+}
+
+@media (max-width: 899px) {
+    .scroll-viewport {
+        height: var(--content-height-with-nav);
+    }
+}
+
+/* ==========================================================================
+   MOBILE-SPECIFIC ADJUSTMENTS
+   ========================================================================== */
+
+/* iOS Safari safe area handling */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    :root {
+        --safe-area-top: env(safe-area-inset-top);
+        --safe-area-bottom: env(safe-area-inset-bottom);
+        --safe-area-left: env(safe-area-inset-left);
+        --safe-area-right: env(safe-area-inset-right);
+    }
+
+    .map-viewport--fill,
+    .scroll-viewport {
+        padding-bottom: var(--safe-area-bottom);
+    }
+}
+
+/* ==========================================================================
+   DATA ATTRIBUTES FOR JS CONTROL
+   ========================================================================== */
+
+/* Tillat JS att styra specifika elements hojd */
+[data-vh-height] {
+    height: calc(var(--vh) * var(--element-vh, 50));
+}
+
+[data-vh-min-height] {
+    min-height: calc(var(--vh) * var(--element-vh-min, 30));
+}
+
+[data-vh-max-height] {
+    max-height: calc(var(--vh) * var(--element-vh-max, 80));
+}

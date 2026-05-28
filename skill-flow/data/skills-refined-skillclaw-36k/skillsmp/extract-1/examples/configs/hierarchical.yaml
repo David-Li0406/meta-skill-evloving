@@ -1,0 +1,100 @@
+# Hierarchical Extraction Example
+# Use this template for nested structures like conference schedules, category listings, etc.
+# Context inheritance allows child items to inherit fields from parent containers.
+
+version: "1.0"
+name: "conference_schedule"
+description: "Extract conference sessions with day/time context inheritance"
+
+source:
+  url: "https://conference.example.com/schedule"
+  options:
+    headless: true
+    wait_for: ".schedule-loaded"  # Wait for JS to load
+
+output:
+  format: [json, csv]
+  path: "output/conference_sessions"
+
+# Define context hierarchy (order matters - parents before children)
+contexts:
+  # Level 1: Day container
+  - name: day
+    selector: "div.day-container"
+    fields:
+      date:
+        selector: ".day-header"
+        extract: text
+
+  # Level 2: Time block (nested within day)
+  - name: time_block
+    selector: "div.time-slot"
+    parent: day  # Inherits 'date' from day context
+    fields:
+      time:
+        selector: ".time-label"
+        extract: text
+      end_time:
+        selector: ".time-end"
+        extract: text
+
+  # Level 3: Track (optional - for multi-track conferences)
+  - name: track
+    selector: "div.track"
+    parent: time_block  # Inherits date, time, end_time
+    fields:
+      track_name:
+        selector: ".track-title"
+        extract: text
+      location:
+        selector: ".room"
+        extract: text
+
+# Items inherit from their context
+items:
+  - name: session
+    selector: "div.session"
+    context: track  # Inherits: date, time, end_time, track_name, location
+    fields:
+      title:
+        selector: ".session-title"
+        extract: text
+      speaker:
+        selector: ".speaker-name"
+        extract: text
+      abstract:
+        selector: ".abstract"
+        extract: text
+      url:
+        selector: "a.details-link"
+        extract: href
+        transform: absolute_url
+
+# Reusable transforms
+transforms:
+  clean_time:
+    type: regex
+    pattern: '(\d{1,2}:\d{2}\s*(?:AM|PM)?)'
+    group: 1
+
+# Output schema
+schema:
+  fields:
+    - name: title
+      required: true
+    - name: date
+      required: true
+    - name: time
+      required: true
+    - name: end_time
+      required: false
+    - name: track_name
+      required: false
+    - name: location
+      required: false
+    - name: speaker
+      required: false
+    - name: abstract
+      required: false
+    - name: url
+      required: false

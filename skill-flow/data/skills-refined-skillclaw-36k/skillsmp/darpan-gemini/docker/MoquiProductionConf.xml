@@ -1,0 +1,36 @@
+<moqui-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/moqui-conf-3.xsd">
+
+    <default-property name="webapp_allow_origins" value="*"/>
+    <default-property name="entity_ds_db_conf" value="mysql"/>
+    <default-property name="entity_ds_host" value="127.0.0.1"/>
+    <default-property name="entity_ds_port" value="3306"/>
+    <default-property name="entity_ds_user" value="moqui"/>
+    <default-property name="entity_ds_password" value="moqui"/>
+    <default-property name="entity_ds_database" value="moqui"/>
+
+    <default-property name="webapp_http_host" value=""/>
+    <default-property name="webapp_http_port" value="80"/>
+    <default-property name="webapp_https_port" value="443"/>
+    <default-property name="webapp_https_enabled" value="true"/>
+
+    <!-- Property for setting timezone - configurable as part of Dockerfile  -->
+    <default-property name="default_time_zone" value=""/>
+    <default-property name="database_time_zone" value=""/>
+
+    <tools>
+        <tool-factory class="org.moqui.impl.tools.H2ServerToolFactory" init-priority="12" disabled="true"/>
+    </tools>
+    <server-stats stats-skip-condition="pathInfo?.startsWith('/rpc') || pathInfo?.startsWith('/rest') || pathInfo?.startsWith('/status')" visit-enabled="false" visitor-enabled="false"/>
+
+    <!-- NOTE: using the environment variable is relatively secure in a container environment, but for more security set it here instead -->
+    <entity-facade crypt-pass="${entity_ds_crypt_pass}" query-stats="true">
+        <datasource group-name="transactional" database-conf-name="${entity_ds_db_conf}">
+            <inline-jdbc pool-maxsize="140" xa-ds-class="com.mysql.cj.jdbc.MysqlXADataSource">
+                <xa-properties pinGlobalTxToPhysicalConnection="true" autoReconnectForPools="true" useSSL="false" allowPublicKeyRetrieval="true"
+                               serverName="${entity_ds_host}" port="${entity_ds_port?:'3306'}"
+                               databaseName="${entity_ds_database}" user="${entity_ds_user}" password="${entity_ds_password}"/>
+            </inline-jdbc>
+        </datasource>
+    </entity-facade>
+
+</moqui-conf>

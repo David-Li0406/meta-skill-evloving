@@ -1,0 +1,129 @@
+# Example configuration for NetCDF (.nc) ocean data
+# This demonstrates how to use NetCDF files with flexible variable mapping
+
+model:
+  name: 'OceanCNN'  # Can use any available model
+
+data:
+  name: 'ocean'      # Use ocean dataset type
+  dataset: 'netcdf_data'   # For logging directory naming
+  data_path: 'path/to/your/ocean_data.nc'  # Path to your NetCDF file
+  use_old_split: false  # Set to true to reuse previous data split
+  patches_per_day: 1    # Number of spatial regions in your data
+
+  # Temporal configuration
+  input_len: 7          # Number of input time steps
+  output_len: 1         # Number of output time steps to predict
+
+  # Data splitting
+  train_ratio: 0.7      # 70% for training
+  valid_ratio: 0.15     # 15% for validation
+  test_ratio: 0.15      # 15% for testing
+
+  train_batchsize: 16
+  eval_batchsize: 16
+
+  # Subset for quick testing
+  subset: false
+  subset_ratio: 0.2
+
+  # Normalization options: 'standardize', 'normalize', 'none'
+  normalization_mode: 'standardize'
+
+  # Data loading
+  num_workers: 4
+  pin_memory: true
+
+  # NetCDF variable mapping configuration
+  # Customize these to match your NetCDF file structure
+  nc_config:
+    # Velocity variable names (will try each in order until one is found)
+    # Add your specific variable names at the beginning of each list
+    u_var: ['u', 'U', 'uo', 'u_velocity', 'eastward_velocity',
+            'eastward_sea_water_velocity', 'water_u', 'ucur', 'UCUR']
+    v_var: ['v', 'V', 'vo', 'v_velocity', 'northward_velocity',
+            'northward_sea_water_velocity', 'water_v', 'vcur', 'VCUR']
+
+    # Coordinate variable names
+    lat_var: ['lat', 'latitude', 'LAT', 'LATITUDE', 'nav_lat', 'y', 'Y']
+    lon_var: ['lon', 'longitude', 'LON', 'LONGITUDE', 'nav_lon', 'x', 'X']
+
+    # Optional mask variable (if not provided, will generate from NaN values)
+    mask_var: ['mask', 'MASK', 'land_mask', 'sea_mask', 'lsm', 'tmask']
+
+    # Time dimension name
+    time_var: ['time', 'TIME', 't', 'T', 'times']
+
+    # Depth dimension (for 3D data, will select specified level)
+    depth_var: ['depth', 'DEPTH', 'z', 'Z', 'level', 'lev', 'deptht']
+    depth_level: 0  # 0 = surface, -1 = bottom, or specific index
+
+    # Fill value handling (None = auto-detect)
+    fill_value: null
+
+# ========== Custom Configuration Examples ==========
+
+# Example 1: CMEMS (Copernicus Marine Service) data
+# If your NetCDF uses CMEMS naming conventions, use this:
+# nc_config:
+#   u_var: ['uo']      # Eastward velocity
+#   v_var: ['vo']      # Northward velocity
+#   lat_var: ['latitude']
+#   lon_var: ['longitude']
+#   depth_var: ['depth']
+#   depth_level: 0
+#   time_var: ['time']
+
+# Example 2: ROMS (Regional Ocean Modeling System) output
+# If your NetCDF is from ROMS model:
+# nc_config:
+#   u_var: ['u']
+#   v_var: ['v']
+#   lat_var: ['lat_rho']
+#   lon_var: ['lon_rho']
+#   mask_var: ['mask_rho']
+#   depth_var: ['s_rho']
+#   depth_level: -1    # Surface (ROMS uses -1 for surface)
+#   time_var: ['ocean_time']
+
+# Example 3: Custom research data
+# If you have custom variable names in your NetCDF:
+# nc_config:
+#   u_var: ['your_u_variable_name']
+#   v_var: ['your_v_variable_name']
+#   lat_var: ['your_lat_name']
+#   lon_var: ['your_lon_name']
+#   time_var: ['your_time_name']
+
+train:
+  random_seed: 42
+  cuda: true
+  device_ids: [0]       # GPU IDs to use
+  epochs: 100
+  patience: 20          # Early stopping patience
+  eval_freq: 5          # Evaluate every N epochs
+  saving_best: true
+  saving_checkpoint: true
+  checkpoint_freq: 10
+
+  # Distributed training: 'DP' (DataParallel) or 'DDP' (DistributedDataParallel)
+  distribute_mode: 'DP'
+  local_rank: 0
+
+optimizer:
+  optimizer: 'AdamW'
+  lr: 0.001
+  weight_decay: 0.0001
+
+scheduler:
+  scheduler: 'CosineAnnealingWarmRestarts'
+  T_0: 20
+  T_mult: 2
+  eta_min: 0.00001
+
+log:
+  verbose: true
+  log: true
+  log_dir: './logs'
+  wandb: false          # Set to true to use Weights & Biases
+  wandb_project: 'ocean_netcdf_prediction'

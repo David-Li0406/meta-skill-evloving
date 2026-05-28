@@ -1,0 +1,340 @@
+# Documentation That Slaps
+
+## Patterns
+
+
+---
+  #### **Name**
+The README Formula
+  #### **Description**
+Structure for READMEs that convert
+  #### **When To Use**
+Writing any README
+  #### **Implementation**
+    ## README That Slaps
+    
+    ### 1. The Hook (First 3 Seconds)
+    
+    ```markdown
+    # Project Name
+    
+    [One sentence: What it does + why you'd care]
+    
+    [One GIF or screenshot showing it in action]
+    ```
+    
+    | Element | Purpose |
+    |---------|---------|
+    | Name | Identity |
+    | One-liner | Value prop |
+    | Visual | Proof it works |
+    
+    ### 2. The Quick Win (30 Seconds)
+    
+    ```markdown
+    ## Quick Start
+    
+    ```bash
+    npm install your-package
+    ```
+    
+    ```javascript
+    import { thing } from 'your-package';
+    thing.doAwesome(); // → magic happens
+    ```
+    ```
+    
+    | Principle | Why |
+    |-----------|-----|
+    | < 3 steps | Reduces friction |
+    | Copy-pasteable | No thinking required |
+    | Shows result | Proves it works |
+    
+    ### 3. The "Why Should I Care" Section
+    
+    ```markdown
+    ## Why This?
+    
+    - **Problem 1** → Our solution
+    - **Problem 2** → Our solution
+    - **Problem 3** → Our solution
+    ```
+    
+    ### 4. Progressive Depth
+    
+    ```
+    1. Quick Start (everyone)
+    2. Common Use Cases (most people)
+    3. API Reference (when needed)
+    4. Advanced Usage (power users)
+    5. Contributing (rare)
+    ```
+    
+
+---
+  #### **Name**
+Example-First Documentation
+  #### **Description**
+Leading with examples, not explanations
+  #### **When To Use**
+Any technical documentation
+  #### **Implementation**
+    ## Example-First Approach
+    
+    ### 1. The Principle
+    
+    ```
+    INSTEAD OF:
+    
+    "The authenticate() function takes a credentials
+    object with username and password fields and
+    returns a Promise that resolves to a session..."
+    
+    DO THIS:
+    
+    ```javascript
+    const session = await authenticate({
+      username: 'dev@example.com',
+      password: 'hunter2'
+    });
+    // session.token → 'eyJhbGc...'
+    ```
+    ```
+    
+    ### 2. Example Anatomy
+    
+    | Part | Purpose |
+    |------|---------|
+    | Minimal code | Show the essential |
+    | Real values | Not "foo" and "bar" |
+    | Result comment | What to expect |
+    | Copy-pasteable | Actually runs |
+    
+    ### 3. Progressive Examples
+    
+    ```markdown
+    ## Basic Usage
+    
+    [Simplest possible example]
+    
+    ## With Options
+    
+    [Same example + one option]
+    
+    ## Advanced
+    
+    [Complex real-world example]
+    ```
+    
+    ### 4. The Golden Rule
+    
+    ```
+    If you can show it, don't explain it.
+    If you must explain, show it first.
+    
+    Code > Prose
+    Output > Description
+    Examples > Specifications
+    ```
+    
+
+---
+  #### **Name**
+Error Documentation
+  #### **Description**
+Documenting errors so users can self-serve
+  #### **When To Use**
+Writing error messages and error docs
+  #### **Implementation**
+    ## Error Docs That Help
+    
+    ### 1. Error Message Structure
+    
+    ```
+    ERROR: What went wrong (specific)
+    WHY: Common cause
+    FIX: What to do about it
+    
+    Example:
+    "ECONNREFUSED: Cannot connect to database at localhost:5432.
+     Database server may not be running.
+     Run: docker-compose up -d postgres"
+    ```
+    
+    ### 2. Error Documentation Format
+    
+    | Section | Content |
+    |---------|---------|
+    | Error code | Searchable identifier |
+    | Message | Human explanation |
+    | Causes | Why this happens |
+    | Solutions | Step-by-step fixes |
+    | Related | Links to more info |
+    
+    ### 3. Common Error Patterns
+    
+    ```markdown
+    ## ERR_AUTH_FAILED
+    
+    **What it means:** Authentication failed.
+    
+    **Common causes:**
+    1. Invalid credentials
+    2. Expired token
+    3. Wrong environment
+    
+    **Solutions:**
+    
+    If invalid credentials:
+    ```bash
+    # Verify your credentials
+    echo $API_KEY
+    ```
+    
+    If expired token:
+    ```bash
+    # Refresh your token
+    npm run auth:refresh
+    ```
+    ```
+    
+    ### 4. The Searchability Rule
+    
+    ```
+    Every error message should be:
+    - Unique (searchable)
+    - Specific (diagnosable)
+    - Actionable (fixable)
+    
+    Bad:  "Error occurred"
+    Good: "ERR_RATE_LIMIT: API quota exceeded. Retry after 60s."
+    ```
+    
+
+---
+  #### **Name**
+Internal Documentation
+  #### **Description**
+Docs for team knowledge preservation
+  #### **When To Use**
+Writing internal/team documentation
+  #### **Implementation**
+    ## Internal Docs That Get Used
+    
+    ### 1. The Decision Log (ADR)
+    
+    ```markdown
+    # ADR-001: Use PostgreSQL for primary database
+    
+    ## Status
+    Accepted
+    
+    ## Context
+    Need persistent storage. Options: Postgres, MySQL, MongoDB.
+    
+    ## Decision
+    PostgreSQL - strong JSON support, team familiarity.
+    
+    ## Consequences
+    - Need Postgres expertise
+    - Can use JSONB for flexible data
+    - Proven scaling path
+    ```
+    
+    ### 2. The Runbook
+    
+    | Section | Content |
+    |---------|---------|
+    | Trigger | When to use this |
+    | Steps | Exactly what to do |
+    | Verification | How to know it worked |
+    | Rollback | If it goes wrong |
+    
+    ### 3. The Onboarding Doc
+    
+    ```markdown
+    # Getting Started (Day 1)
+    
+    ## Before You Code
+    
+    1. [ ] Get credentials from [person]
+    2. [ ] Clone repos: `git clone ...`
+    3. [ ] Run setup: `./scripts/setup.sh`
+    4. [ ] Verify: `npm test` passes
+    
+    ## Your First Task
+    
+    1. [ ] Find ticket labeled 'good-first-issue'
+    2. [ ] Read the CONTRIBUTING.md
+    3. [ ] Submit a PR (it's okay if small!)
+    
+    ## When You're Stuck
+    
+    - Ask in #engineering
+    - Check the wiki
+    - Ping [mentor name]
+    ```
+    
+    ### 4. The Rotation Principle
+    
+    ```
+    Docs that matter most:
+    - Written by doers
+    - Updated when wrong
+    - Owned by someone
+    - Reviewed regularly
+    
+    No owner = dead doc
+    ```
+    
+
+## Anti-Patterns
+
+
+---
+  #### **Name**
+The Novel
+  #### **Description**
+Writing too much documentation
+  #### **Why Bad**
+    Nobody reads it.
+    Impossible to maintain.
+    Important info gets buried.
+    
+  #### **What To Do Instead**
+    Be concise.
+    Link, don't repeat.
+    Examples over explanations.
+    
+
+---
+  #### **Name**
+The Treasure Hunt
+  #### **Description**
+Information scattered across many places
+  #### **Why Bad**
+    Can't find anything.
+    Duplicated info diverges.
+    New people lost.
+    
+  #### **What To Do Instead**
+    One source of truth.
+    Good information architecture.
+    Search works.
+    
+
+---
+  #### **Name**
+The Time Capsule
+  #### **Description**
+Documentation that's never updated
+  #### **Why Bad**
+    Wrong docs worse than no docs.
+    Erodes trust.
+    Wastes time.
+    
+  #### **What To Do Instead**
+    Update docs with code.
+    Delete outdated content.
+    Own your docs.
+    

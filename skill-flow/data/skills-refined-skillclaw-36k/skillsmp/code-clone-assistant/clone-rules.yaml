@@ -1,0 +1,207 @@
+rules:
+  # BASELINE RULES (Original)
+
+  - id: duplicate-validation-pattern
+    pattern-either:
+      - pattern: |
+          if not $VAR or len($VAR) < $N:
+              raise ValueError(...)
+      - pattern: |
+          if not $VAR or '@' not in $VAR:
+              raise ValueError(...)
+      - pattern: |
+          if $VAR < 0:
+              raise ValueError(...)
+    message: Duplicate validation logic detected - consider extracting to shared function
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+
+  - id: duplicate-error-collection-pattern
+    pattern: |
+      errors = []
+      ...
+      if $COND1 not in $DATA:
+          errors.append(...)
+      ...
+      if $COND2 not in $DATA:
+          errors.append(...)
+    message: Duplicate error collection pattern - consider extracting validator
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      note: Use PMD CPD --exclude flag to exclude test files where duplication is acceptable
+
+  - id: js-duplicate-validation
+    pattern-either:
+      - pattern: |
+          if (!$VAR || $VAR.length < $N) {
+              throw new Error(...);
+          }
+      - pattern: |
+          if (!$VAR || !$VAR.includes('@')) {
+              throw new Error(...);
+          }
+      - pattern: |
+          if ($VAR < 0) {
+              throw new Error(...);
+          }
+    message: Duplicate validation logic - consider extracting to shared function
+    languages: [javascript, typescript]
+    severity: WARNING
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+
+  # ADVANCED RULES (Using metavariable features)
+
+  - id: duplicate-validation-threshold
+    patterns:
+      - pattern-either:
+          - pattern: |
+              if not $VAR or len($VAR) < $N:
+                  raise ValueError(...)
+          - pattern: |
+              if len($VAR) < $N:
+                  raise ValueError(...)
+      - metavariable-comparison:
+          metavariable: $N
+          comparison: $N > 0 and $N < 10
+    message: Duplicate validation with threshold $N - extract to constant or validator
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      feature: metavariable-comparison
+
+  - id: common-field-duplication
+    patterns:
+      - pattern: |
+          if not $VAR or len($VAR) < $N:
+              raise ValueError(...)
+      - metavariable-regex:
+          metavariable: $VAR
+          regex: "^(name|username|email|password|title)$"
+    message: Duplicate validation for common field '$VAR' - extract to shared validators
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      feature: metavariable-regex
+
+  - id: nested-field-validation
+    patterns:
+      - pattern: |
+          if not $OBJ.get($KEY) or $COND:
+              raise ValueError(...)
+      - metavariable-pattern:
+          metavariable: $KEY
+          patterns:
+            - pattern: "'email'"
+    message: Duplicate nested email validation - extract to validator
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      feature: metavariable-pattern
+
+  - id: function-level-duplication
+    patterns:
+      - pattern-inside: |
+          def $FUNC($...ARGS):
+              ...
+      - pattern: |
+          errors = []
+          ...
+          if $COND1 not in $DATA:
+              errors.append(...)
+          ...
+          if $COND2 not in $DATA:
+              errors.append(...)
+    message: Duplicate error collection in function $FUNC - extract to validator class
+    languages: [python]
+    severity: WARNING
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      feature: pattern-inside
+
+  - id: highlight-duplicate-values
+    patterns:
+      - pattern: |
+          errors.append($MSG)
+      - focus-metavariable: $MSG
+    message: Repeated error message pattern - consolidate error handling
+    languages: [python]
+    severity: INFO
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      feature: focus-metavariable
+
+  - id: duplicate-function-signatures
+    patterns:
+      - pattern: |
+          def $FUNC($ARG):
+              if not $ARG or len($ARG) < $N:
+                  raise ValueError(...)
+              ...
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: "^(validate|check|verify)_(name|email|username|password)$"
+    message: Similar validation function '$FUNC' - consolidate to single validator
+    languages: [python]
+    severity: INFO
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      feature: metavariable-regex
+      note: Reduced noise by targeting specific common validator names
+
+  - id: js-duplicate-async-validation
+    pattern-either:
+      - pattern: |
+          async function $FUNC($ARG) {
+              if (!$ARG || $ARG.length < $N) {
+                  throw new Error(...);
+              }
+              ...
+          }
+      - pattern: |
+          const $FUNC = async ($ARG) => {
+              if (!$ARG || $ARG.length < $N) {
+                  throw new Error(...);
+              }
+              ...
+          }
+    message: Duplicate async validation pattern - extract to shared async validator
+    languages: [javascript, typescript]
+    severity: WARNING
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      feature: async-patterns
+
+  - id: ts-duplicate-type-guards
+    patterns:
+      - pattern: |
+          function is$TYPE($VAR: any): $VAR is $TYPE {
+              return $VAR !== null && typeof $VAR.$FIELD === '$FIELDTYPE';
+          }
+      - metavariable-regex:
+          metavariable: $TYPE
+          regex: "^(String|Number|Object|Array|Valid)"
+    message: Duplicate TypeScript type guard for '$TYPE' - consolidate to generic type guard
+    languages: [typescript]
+    severity: INFO
+    metadata:
+      category: maintainability
+      subcategory: code-duplication
+      feature: typescript-specific

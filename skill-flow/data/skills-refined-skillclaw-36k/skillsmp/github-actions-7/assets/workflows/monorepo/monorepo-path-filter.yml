@@ -1,0 +1,335 @@
+# Monorepo CI with Path Filtering
+# Run CI only on affected paths in a monorepo
+# Features: Path-based change detection, parallel jobs, selective deployment
+
+name: Monorepo CI (Path Filter)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Detect changes
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+      infra: ${{ steps.filter.outputs.infra }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for proper diff
+
+      - name: Detect changes using paths-filter
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+              - 'packages/ui/**'
+            backend:
+              - 'backend/**'
+              - 'packages/api/**'
+              - 'packages/shared/**'
+            mobile:
+              - 'mobile/**'
+            infra:
+              - 'infrastructure/**'
+              - 'docker/**'
+              - 'k8s/**'
+              - '.github/**'
+
+  # Frontend CI
+  frontend-ci:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Type check
+        working-directory: ./frontend
+        run: npm run type-check
+
+      - name: Test
+        working-directory: ./frontend
+        run: npm test
+
+      - name: Build
+        working-directory: ./frontend
+        run: npm run build
+
+  # Backend CI
+  backend-ci:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Lint
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Test
+        working-directory: ./backend
+        run: npm test
+
+      - name: Build
+        working-directory: ./backend
+        run: npm run build
+
+  # Mobile CI
+  mobile-ci:
+    name: Mobile CI
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.mobile == 'true'
+
+    strategy:
+      matrix:
+        platform: [ios, android]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Lint
+        working-directory: ./mobile
+        run: npm run lint
+
+      - name: Test
+        working-directory: ./mobile
+        run: npm test -- --no-watch --coverage --maxWorkers=2
+
+      - name: Build (Android)
+        if: matrix.platform == 'android'
+        working-directory: ./mobile
+        run: npm run build:android
+
+      - name: Build (iOS)
+        if: matrix.platform == 'ios'
+        working-directory: ./mobile
+        run: npm run build:ios
+
+  # Infrastructure CI
+  infra-ci:
+    name: Infrastructure CI
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.infra == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate Terraform
+        working-directory: ./infrastructure/terraform
+        run: |
+          terraform fmt -check
+          terraform init
+          terraform validate
+        continue-on-error: true
+
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl apply --dry-run=client -f k8s/
+        continue-on-error: true
+
+      - name: Validate Docker Compose
+        run: |
+          docker-compose -f docker/docker-compose.yml config
+        continue-on-error: true
+
+      - name: Lint Dockerfiles
+        run: |
+          docker run --rm -v $PWD:/work -w /work hadolint/hadolint hadolint **/Dockerfile
+        continue-on-error: true
+
+  # Deploy Frontend
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: [detect-changes, frontend-ci]
+    if: needs.detect-changes.outputs.frontend == 'true' && github.ref == 'refs/heads/main'
+
+    environment:
+      name: production-frontend
+      url: https://app.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: ./frontend
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Deploy to Vercel
+        working-directory: ./frontend
+        run: npm run deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # Deploy Backend
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    needs: [detect-changes, backend-ci]
+    if: needs.detect-changes.outputs.backend == 'true' && github.ref == 'refs/heads/main'
+
+    environment:
+      name: production-backend
+      url: https://api.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/backend:latest
+            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/backend \
+            backend=ghcr.io/${{ github.repository }}/backend:${{ github.sha }} \
+            --namespace=production
+        env:
+          KUBECONFIG: ${{ secrets.KUBE_CONFIG_PROD }}
+
+  # Deploy Mobile
+  deploy-mobile:
+    name: Deploy Mobile
+    runs-on: ubuntu-latest
+    needs: [detect-changes, mobile-ci]
+    if: needs.detect-changes.outputs.mobile == 'true' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: npm ci
+
+      - name: Build and deploy Android
+        working-directory: ./mobile
+        run: npm run deploy:android
+        env:
+          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+
+      - name: Build and deploy iOS
+        working-directory: ./mobile
+        run: npm run deploy:ios
+        env:
+          IOS_CERTIFICATES: ${{ secrets.IOS_CERTIFICATES }}
+
+  # Summary
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [detect-changes, frontend-ci, backend-ci, mobile-ci, infra-ci]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "### Monorepo CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Changed | CI Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|---------|-----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.detect-changes.outputs.frontend }} | ${{ needs.frontend-ci.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.detect-changes.outputs.backend }} | ${{ needs.backend-ci.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Mobile | ${{ needs.detect-changes.outputs.mobile }} | ${{ needs.mobile-ci.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Infrastructure | ${{ needs.detect-changes.outputs.infra }} | ${{ needs.infra-ci.result }} |" >> $GITHUB_STEP_SUMMARY

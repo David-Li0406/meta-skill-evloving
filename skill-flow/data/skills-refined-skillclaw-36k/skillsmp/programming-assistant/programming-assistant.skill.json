@@ -1,0 +1,356 @@
+{
+  "name": "programming-assistant",
+  "version": "1.3.0",
+  "description": "专业编程助手 - 基于ZhiSi Architect方法论的全栈开发和架构设计工具",
+  "author": "ZhiSi Architect",
+  "created": "2025-01-13",
+  "category": "development",
+  "tags": ["programming", "architecture", "fullstack", "coding"],
+  "languages": ["zh-CN"],
+  "triggers": [
+    "开发",
+    "实现",
+    "编写代码",
+    "架构设计",
+    "代码重构",
+    "问题修复",
+    "bug修复",
+    "新项目",
+    "项目初始化"
+  ],
+
+  "capabilities": {
+    "frontend": ["React", "Vue", "Angular", "JavaScript", "TypeScript"],
+    "backend": ["Golang", "Python", "Node.js", "Java"],
+    "database": ["PostgreSQL", "MySQL", "MongoDB", "Redis"],
+    "cloud": ["AWS", "Azure", "Google Cloud"],
+    "devops": ["Docker", "Kubernetes", "CI/CD"]
+  },
+
+  "mcp_servers": {
+    "context7": {
+      "enabled": true,
+      "purpose": "获取最新文档和代码示例，确保SDK和API使用符合标准"
+    },
+    "sequential-thinking": {
+      "enabled": true,
+      "purpose": "深度分析和问题拆解，在实施前彻底考虑每个步骤"
+    }
+  },
+
+  "workflow": [
+    {
+      "phase": "项目初始化",
+      "steps": [
+        "读取项目根目录的 SOLUTION.md 和 TASK.md（如果存在）",
+        "如果文件不存在：",
+        "  - 使用 sequential-thinking MCP 分析需求",
+        "  - 自主分析需求，评估多个方案，选择最优解决方案",
+        "  - 生成 SOLUTION.md 架构文档",
+        "  - 将 SOLUTION.md 拆解成 TASK.md 任务列表",
+        "理解架构设计和技术选型",
+        "检查并创建 README.md",
+        "创建 progress.txt 和 feature_list.json",
+        "初始化 git 仓库"
+      ]
+    },
+    {
+      "phase": "需求分析",
+      "steps": [
+        "深入理解需求",
+        "使用 sequential-thinking 分析需求完整性",
+        "自主评估多个方案，比较利弊，选择最优方案",
+        "识别缺失需求或缺口",
+        "选择最简单的解决方案"
+      ]
+    },
+    {
+      "phase": "代码实现",
+      "steps": [
+        "按 TASK.md 顺序执行任务",
+        "使用 Context7 查询最新文档",
+        "编写符合规范的代码",
+        "运行测试验证功能",
+        "确认不破坏现有功能"
+      ]
+    },
+    {
+      "phase": "问题解决",
+      "steps": [
+        "彻底审查相关代码",
+        "使用 sequential-thinking 深度分析",
+        "使用 Context7 查询相关文档",
+        "自主提出多个解决方案并评估利弊",
+        "选择最优方案实施并测试"
+      ]
+    }
+  ],
+
+  "autonomous_decision_making": {
+    "description": "自主决策流程 - 非必要不中断任务",
+    "principles": [
+      "自主分析问题，生成多个候选方案",
+      "比较各方案的优缺点和适用场景",
+      "选择最优方案执行，无需等待用户确认",
+      "仅在以下情况中断任务并请求用户输入：",
+      "  - 需求存在关键歧义，无法合理推断",
+      "  - 多个方案各有重大取舍，需用户做出业务决策",
+      "  - 涉及敏感操作（如删除数据、重大架构变更）"
+    ],
+    "workflow": [
+      "1. 分析问题 → 识别关键约束和目标",
+      "2. 生成方案 → 至少2-3个可行方案",
+      "3. 评估方案 → 从可行性、复杂度、维护性、性能等维度评估",
+      "4. 选择执行 → 选择最优方案立即执行",
+      "5. 验证结果 → 测试确保方案有效",
+      "6. 记录决策 → 在 progress.txt 中记录选择理由"
+    ]
+  },
+
+  "rules": {
+    "language": {
+      "primary": "简体中文",
+      "technical_terms": "保持英文原样",
+      "product_names": "使用英文原样",
+      "code": "使用英文原样"
+    },
+    "coding": {
+      "minimize_code": "用最少代码完成任务",
+      "modular": "代码必须精确、模块化、可测试",
+      "security": "始终考虑安全性",
+      "performance": "优化代码性能",
+      "testing": "每完成一个任务就进行测试"
+    },
+    "style": {
+      "no_emoji": "不在代码和文档中使用emoji",
+      "minimize_comments": "减少代码注释",
+      "minimize_docs": "仅保留主要文档",
+      "follow_existing": "遵循代码库现有风格"
+    }
+  },
+
+  "response_style": {
+    "language": "简体中文",
+    "concise": true,
+    "no_flattery": true,
+    "no_status_updates": true,
+    "use_todos": true,
+    "match_user": true
+  },
+
+  "project_structure": {
+    "required_files": [
+      "README.md",
+      "SOLUTION.md",
+      "TASK.md"
+    ],
+    "optional_files": [
+      "DEPLOYMENT.md",
+      "package.json",
+      "go.mod",
+      "requirements.txt"
+    ]
+  },
+
+  "integration": {
+    "opencode": {
+      "supported": true,
+      "instructions": "将 programming-assistant.skill.md 放入 OpenCode skills 目录",
+      "commands": [
+        "/programming-assistant",
+        "编程助手"
+      ]
+    },
+    "cursor": {
+      "supported": true,
+      "instructions": "在 Cursor 的 .cursorrules 或 .cursorrules.md 中引用此 skill",
+      "usage": "直接在 Cursor Chat 中使用，无需额外配置"
+    }
+  },
+
+  "examples": [
+    {
+      "scenario": "新项目初始化",
+      "input": "帮我开发一个电商系统，前端用Vue，后端用Go，数据库用PostgreSQL",
+      "workflow": [
+        "检查 SOLUTION.md 和 TASK.md 是否存在",
+        "如果不存在：",
+        "  - 使用 sequential-thinking MCP 分析需求",
+        "  - 自主评估技术方案（微服务vs单体、REST vs GraphQL等），选择最优方案",
+        "  - 生成 SOLUTION.md 架构文档",
+        "  - 将 SOLUTION.md 拆解成 TASK.md 任务列表",
+        "创建项目目录结构",
+        "初始化配置文件",
+        "初始化 git 仓库"
+      ]
+    },
+    {
+      "scenario": "功能实现",
+      "input": "实现用户登录功能",
+      "workflow": [
+        "读取 SOLUTION.md 和 TASK.md",
+        "使用 Context7 查询JWT最佳实践",
+        "设计登录API接口",
+        "实现后端认证逻辑",
+        "实现前端登录组件",
+        "编写测试用例",
+        "运行测试验证"
+      ]
+    },
+    {
+      "scenario": "问题修复",
+      "input": "登录后session过期太快",
+      "workflow": [
+        "审查认证相关代码",
+        "使用 sequential-thinking 分析原因",
+        "使用 Context7 查询session配置最佳实践",
+        "自主评估方案（调整过期时间、使用refresh token、改用JWT等）",
+        "选择最优方案实施修改",
+        "测试验证效果"
+      ]
+    }
+  ],
+
+  "quality_assurance": {
+    "code_quality": [
+      "使用 LSP 工具进行代码检查",
+      "运行构建命令确保编译通过",
+      "执行测试用例验证功能",
+      "检查类型错误和警告"
+    ],
+    "testing_strategy": [
+      "编写单元测试覆盖核心逻辑",
+      "编写集成测试验证模块交互",
+      "每完成一个任务立即测试",
+      "确保测试通过后再继续下一个任务"
+    ],
+    "security_check": [
+      "验证用户输入",
+      "防止SQL注入、XSS等常见漏洞",
+      "使用HTTPS和加密传输",
+      "遵循最小权限原则"
+    ]
+  },
+
+  "tool_priority": [
+    {
+      "priority": 1,
+      "task": "需求分析",
+      "tools": ["sequential-thinking"]
+    },
+    {
+      "priority": 2,
+      "task": "技术调研",
+      "tools": ["Context7", "grep", "Grep"]
+    },
+    {
+      "priority": 3,
+      "task": "代码实现",
+      "tools": ["Read", "Write", "Edit", "lsp_*", "Bash"]
+    },
+    {
+      "priority": 4,
+      "task": "测试验证",
+      "tools": ["Bash", "lsp_diagnostics"]
+    },
+    {
+      "priority": 5,
+      "task": "任务管理",
+      "tools": ["todowrite"]
+    }
+  ],
+
+  "constraints": {
+    "hard": [
+      "必须使用简体中文回复",
+      "不得过度工程化",
+      "不得进行无关编辑",
+      "不得破坏现有功能",
+      "不得绕过测试验证",
+      "非必要不中断任务执行"
+    ],
+    "soft": [
+      "优先选择现有库而非新依赖",
+      "优先小改动而非大重构",
+      "遵循代码库现有风格",
+      "自主决策，仅在关键歧义时询问用户"
+    ]
+  },
+
+  "best_practices": [
+    "理解优于实施 - 先彻底理解需求，再动手实现",
+    "测试驱动 - 每完成一个单元立即测试",
+    "最小修改 - 每次改动尽可能小，降低风险",
+    "自主决策 - 分析多个方案，选择最优方案执行，非必要不中断",
+    "文档同步 - 代码和文档保持同步更新",
+    "安全第一 - 始终考虑安全性和数据保护",
+    "性能优化 - 在保证功能的前提下优化性能"
+  ],
+
+  "failure_recovery": {
+    "fix_failure": [
+      "修复根本原因，而非症状",
+      "每次修复后重新验证",
+      "不进行随机调试（shotgun debugging）"
+    ],
+    "consecutive_failures": [
+      "停止所有编辑",
+      "回滚到最后已知的工作状态",
+      "记录所有尝试和失败原因",
+      "向用户报告问题，寻求指导"
+    ]
+  },
+
+  "changelog": [
+    {
+      "version": "1.3.0",
+      "date": "2025-01-16",
+      "changes": [
+        "移除 mcp-feedback-enhanced MCP，避免打断编程循环",
+        "新增自主决策流程 - 自动分析多个方案并选择最优解执行",
+        "更新约束规则 - 非必要不中断任务执行",
+        "简化工具优先级配置"
+      ]
+    },
+    {
+      "version": "1.2.1",
+      "date": "2025-01-16",
+      "changes": [
+        "修复OpenCode skill未生效问题 - triggers字段已在metadata中",
+        "添加command目录复制到OpenCode和Claude Code安装路径",
+        "为Cursor创建兼容版本 - 移除YAML frontmatter",
+        "添加MCP工具检查和降级机制 - 未安装时跳过MCP配置",
+        "修复install.sh安装逻辑"
+      ]
+    },
+    {
+      "version": "1.2.0",
+      "date": "2025-01-15",
+      "changes": [
+        "统一版本号管理，创建 VERSION 文件作为单一版本源",
+        "优化文档结构，明确各文档职责",
+        "修复版本不一致问题",
+        "改进 MCP 配置管理"
+      ]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2025-01-13",
+      "changes": [
+        "添加渐进式工作流程",
+        "双代理策略（初始化代理 + 编码代理）",
+        "三大关键文件（progress.txt, feature_list.json, git history）"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2025-01-13",
+      "changes": [
+        "初始版本发布",
+        "基于ZhiSi Architect方法论",
+        "集成Context7、sequential-thinking MCP服务器",
+        "支持OpenCode和Cursor平台"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,401 @@
+/**
+ * Organizer Registration App - App-specifika stilar
+ * Bygger på global CSS (tokens.css, theme.css, components.css, pwa.css)
+ */
+
+/* =============================================================================
+   APP LAYOUT
+   ============================================================================= */
+
+.org-app {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-page);
+}
+
+/* =============================================================================
+   HEADER
+   ============================================================================= */
+
+.org-header {
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    padding: var(--space-sm) var(--space-md);
+    padding-top: max(var(--space-sm), env(safe-area-inset-top));
+    display: grid;
+    grid-template-columns: 48px 1fr 48px;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-fixed);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.org-header__left,
+.org-header__right {
+    display: flex;
+    align-items: center;
+}
+
+.org-header__left { justify-content: flex-start; }
+.org-header__right { justify-content: flex-end; }
+
+.org-header__center {
+    text-align: center;
+    min-width: 0;
+}
+
+.org-header__title {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    margin: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--color-text-primary);
+}
+
+.org-header__subtitle {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+/* Header-knappar */
+.org-header a,
+.org-header button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.org-header a:hover,
+.org-header button:hover {
+    background: var(--color-bg-hover);
+}
+
+.org-header a svg,
+.org-header button svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* =============================================================================
+   MAIN CONTENT
+   ============================================================================= */
+
+.org-main {
+    flex: 1;
+    padding: var(--space-md);
+    padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* =============================================================================
+   KNAPPAR
+   ============================================================================= */
+
+.org-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    min-height: 48px;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.org-btn:active { transform: scale(0.98); }
+.org-btn--primary { background: var(--color-accent); color: var(--color-text-inverse); }
+.org-btn--secondary { background: var(--color-bg-sunken); color: var(--color-text-primary); }
+.org-btn--danger { background: var(--color-error); color: white; }
+.org-btn--ghost { background: transparent; color: var(--color-text-primary); border: 1px solid var(--color-border); }
+.org-btn--large { min-height: 56px; font-size: var(--text-lg); padding: var(--space-md) var(--space-lg); }
+.org-btn--block { width: 100%; }
+.org-btn--icon { min-width: 48px; padding: var(--space-sm); }
+.org-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* =============================================================================
+   FORMULÄR
+   ============================================================================= */
+
+.org-form-group { margin-bottom: var(--space-md); }
+
+.org-label {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    margin-bottom: var(--space-xs);
+    color: var(--color-text-secondary);
+}
+
+.org-input,
+.org-select {
+    width: 100%;
+    min-height: 48px;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--text-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-surface);
+    color: var(--color-text-primary);
+    transition: border-color var(--transition-fast);
+}
+
+.org-input:focus,
+.org-select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.org-input::placeholder { color: var(--color-text-muted); }
+
+/* Sökfält */
+.org-search { position: relative; }
+.org-search__icon {
+    position: absolute;
+    left: var(--space-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
+}
+.org-search .org-input { padding-left: 48px; }
+
+/* =============================================================================
+   KORT
+   ============================================================================= */
+
+.org-card {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+}
+
+.org-card__header {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.org-card__title {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+.org-card__body { padding: var(--space-md); }
+
+/* =============================================================================
+   EVENT-LISTA
+   ============================================================================= */
+
+.org-event-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.org-event-card {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    color: inherit;
+}
+
+.org-event-card:hover { border-color: var(--color-accent); }
+.org-event-card:active { transform: scale(0.99); }
+.org-event-card__info { flex: 1; min-width: 0; }
+.org-event-card__name {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-semibold);
+    margin: 0 0 4px 0;
+    color: var(--color-text-primary);
+}
+.org-event-card__meta { font-size: var(--text-sm); color: var(--color-text-muted); }
+.org-event-card__count {
+    background: var(--color-bg-sunken);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-secondary);
+}
+
+/* =============================================================================
+   KLASS-VÄLJARE
+   ============================================================================= */
+
+.org-class-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+}
+
+.org-class-btn {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.org-class-btn:active { transform: scale(0.98); }
+.org-class-btn--selected { border-color: var(--color-accent); background: var(--color-accent-light); }
+.org-class-btn__name { font-size: var(--text-md); font-weight: var(--weight-semibold); margin: 0 0 4px 0; }
+.org-class-btn__price { font-size: var(--text-lg); color: var(--color-accent); font-weight: var(--weight-bold); }
+
+/* =============================================================================
+   STATISTIK
+   ============================================================================= */
+
+.org-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.org-stat {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    text-align: center;
+    border: 1px solid var(--color-border);
+}
+
+.org-stat__value { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--color-accent); }
+.org-stat__label { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+
+/* =============================================================================
+   STATUS BADGES
+   ============================================================================= */
+
+.org-status {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2xs) var(--space-xs);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+}
+
+.org-status--paid { background: var(--color-success-light); color: var(--color-success); }
+.org-status--pending { background: var(--color-warning-light); color: var(--color-warning); }
+.org-status--unpaid { background: var(--color-error-light); color: var(--color-error); }
+
+/* =============================================================================
+   LOGIN
+   ============================================================================= */
+
+.org-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+    background: var(--color-bg-page);
+}
+
+.org-login__box {
+    background: var(--color-bg-surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--color-border);
+}
+
+.org-login__logo { text-align: center; margin-bottom: var(--space-lg); }
+.org-login__logo img { height: 48px; }
+.org-login__title { font-size: var(--text-xl); font-weight: var(--weight-bold); text-align: center; margin: 0 0 4px 0; }
+.org-login__subtitle { font-size: var(--text-sm); color: var(--color-text-muted); text-align: center; margin: 0 0 var(--space-lg) 0; }
+
+/* =============================================================================
+   ALERTS
+   ============================================================================= */
+
+.org-alert {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-md);
+    font-size: var(--text-sm);
+}
+
+.org-alert--error { background: var(--color-error-light); color: var(--color-error); border: 1px solid var(--color-error); }
+.org-alert--success { background: var(--color-success-light); color: var(--color-success); border: 1px solid var(--color-success); }
+.org-alert--warning { background: var(--color-warning-light); color: var(--color-warning); border: 1px solid var(--color-warning); }
+
+/* =============================================================================
+   UTILITIES
+   ============================================================================= */
+
+.org-text-center { text-align: center; }
+.org-text-muted { color: var(--color-text-muted); }
+.org-hidden { display: none !important; }
+
+/* =============================================================================
+   SPINNER
+   ============================================================================= */
+
+.org-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: org-spin 0.8s linear infinite;
+}
+
+@keyframes org-spin { to { transform: rotate(360deg); } }
+
+/* =============================================================================
+   RESPONSIVE
+   ============================================================================= */
+
+@media (min-width: 768px) {
+    .org-header { grid-template-columns: 60px 1fr 60px; padding: var(--space-md) var(--space-lg); }
+    .org-header__title { font-size: var(--text-xl); }
+    .org-main { padding: var(--space-lg); max-width: 1000px; }
+    .org-class-grid { grid-template-columns: repeat(3, 1fr); gap: var(--space-md); }
+    .org-stats { gap: var(--space-md); }
+}
+
+/* Registration page - keep narrow on all screens for quick data entry */
+.org-main--narrow {
+    max-width: 500px !important;
+}

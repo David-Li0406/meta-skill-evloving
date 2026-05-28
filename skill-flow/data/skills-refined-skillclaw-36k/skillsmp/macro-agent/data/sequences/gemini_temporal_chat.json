@@ -1,0 +1,73 @@
+{
+  "name": "gemini_temporal_chat",
+  "display_name": "Gemini Chat Temporal",
+  "description": "Abre Brave, va a Gemini, detecta si el icono temporal está visible (if-visible), abre chat temporal, escribe y envía mensaje",
+  "created": "2026-01-16T16:50:24.528850",
+  "actions": [
+    {
+      "type": "click-on",
+      "target": "brave_icon_open"
+    },
+    {
+      "type": "wait",
+      "seconds": 1.0
+    },
+    {
+      "type": "click-on",
+      "target": "google_gemini_tab_brave"
+    },
+    {
+      "type": "wait",
+      "seconds": 0.5
+    },
+    {
+      "type": "if-visible",
+      "target": "google_gemini_temporal_chat_icon",
+      "then": [
+        {
+          "type": "click-on",
+          "target": "google_gemini_temporal_chat_icon"
+        }
+      ],
+      "else": [
+        {
+          "type": "click-on",
+          "target": "google_gemini_hamburguer_menu"
+        },
+        {
+          "type": "wait",
+          "seconds": 0.5
+        },
+        {
+          "type": "click-on",
+          "target": "google_gemini_temporal_chat_icon"
+        }
+      ]
+    },
+    {
+      "type": "wait",
+      "seconds": 1.0
+    },
+    {
+      "type": "click-on",
+      "target": "ask_google_gemini_input_text"
+    },
+    {
+      "type": "wait",
+      "seconds": 0.5
+    },
+    {
+      "type": "write",
+      "text": "¿Cuál es la capital de Francia y cuáles son sus monumentos más famosos?"
+    },
+    {
+      "type": "wait",
+      "seconds": 0.5
+    },
+    {
+      "type": "click-on",
+      "target": "google_gemini_send_message_icon_action"
+    }
+  ],
+  "updated": "2026-01-16T16:50:37.595023"
+}

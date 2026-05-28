@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{TITLE}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;700&display=swap');
+
+    :root {
+      --bg: #0b0f14;
+      --panel: #0f172a;
+      --panel-2: #111827;
+      --text: #e5e7eb;
+      --muted: #9aa4b2;
+      --accent: #f4b444;
+      --accent-2: #64d2ff;
+      --line: rgba(148, 163, 184, 0.25);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #0b0f14 0%, #0f172a 60%, #0b0f14 100%);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 20px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 8px 8px 16px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-title {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      margin: 0 0 6px;
+    }
+
+    .sidebar-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .nav-item:hover {
+      background: rgba(244, 180, 68, 0.12);
+      color: var(--accent);
+    }
+
+    .main {
+      padding: 24px 32px 72px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+
+    .doc-title {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(24px, 2.6vw, 40px);
+      margin: 0;
+    }
+
+    .doc-meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      background: rgba(244, 180, 68, 0.2);
+      color: var(--accent);
+      border: 1px solid rgba(244, 180, 68, 0.4);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .section {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      font-size: 20px;
+      color: var(--accent);
+    }
+
+    .section h3 {
+      font-size: 18px;
+      color: #cbd5f5;
+    }
+
+    .section h4 {
+      font-size: 16px;
+      color: #e2e8f0;
+    }
+
+    p { line-height: 1.55; }
+    ul, ol { color: var(--muted); line-height: 1.5; }
+    blockquote {
+      border-left: 3px solid rgba(244, 180, 68, 0.6);
+      padding-left: 12px;
+      color: var(--muted);
+      margin: 12px 0;
+    }
+    code {
+      background: rgba(148, 163, 184, 0.15);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+    }
+    pre {
+      background: #0b1120;
+      color: #cbd5f5;
+      padding: 14px;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--panel-2);
+      color: var(--text);
+    }
+    a { color: #7dd3fc; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">{{TITLE}}</div>
+        <div class="sidebar-subtitle">{{DATE}} · {{STATUS}}</div>
+      </div>
+      <nav>
+        <!-- NAV_ITEMS -->
+        <!-- Example:
+        <a class="nav-item" href="#tldr"><span>⚡</span><span>TL;DR</span></a>
+        -->
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <div class="doc-title">{{TITLE}}</div>
+          <div class="doc-meta">{{SOURCE_PATH}}</div>
+          <div class="doc-meta">Work log: {{WORKLOG_PATH}}</div>
+        </div>
+        <span class="status">{{STATUS}}</span>
+      </div>
+
+      <!-- SECTIONS -->
+      <!-- Each section should be inserted as:
+      <section id="tldr" class="section">
+        <h2>⚡ TL;DR</h2>
+        <div class="section-body">
+          ...content...
+        </div>
+      </section>
+      -->
+    </main>
+  </div>
+</body>
+</html>

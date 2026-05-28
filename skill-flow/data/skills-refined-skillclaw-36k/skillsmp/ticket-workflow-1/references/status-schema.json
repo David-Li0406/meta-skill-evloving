@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ticket Workflow Status",
+  "description": "Status tracking for ticket resolution workflow",
+  "type": "object",
+  "required": ["ticket_id", "state", "phases"],
+  "properties": {
+    "ticket_id": {
+      "type": "string",
+      "description": "The ticket identifier (e.g., PROJ-123, #456)"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["youtrack", "github", "file"],
+      "description": "Source system for the ticket"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when workflow started"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp of last status update"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when workflow completed (if applicable)"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "fetched",
+        "analyzed",
+        "planned",
+        "plan_validated",
+        "implementing",
+        "reviewed",
+        "finalized",
+        "completed",
+        "failed"
+      ],
+      "description": "Current overall workflow state"
+    },
+    "plan_validated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when plan was validated (for --continue resumption)"
+    },
+    "refined": {
+      "type": "boolean",
+      "description": "Whether the plan was refined interactively via --refine-plan"
+    },
+    "complexity": {
+      "type": "string",
+      "enum": ["simple", "medium", "complex"],
+      "description": "Determined complexity level"
+    },
+    "complexity_score": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Calculated complexity score"
+    },
+    "phases": {
+      "type": "object",
+      "description": "Status of each workflow phase",
+      "properties": {
+        "fetch": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped", "failed"],
+          "default": "pending"
+        },
+        "analyze": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped", "failed"],
+          "default": "pending"
+        },
+        "explore": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped", "failed"],
+          "default": "pending"
+        },
+        "plan": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped", "failed"],
+          "default": "pending"
+        },
+        "implement": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped", "failed"],
+          "default": "pending"
+        },
+        "simplify": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped", "failed"],
+          "default": "pending"
+        },
+        "review": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped", "failed"],
+          "default": "pending"
+        },
+        "finalize": {
+          "type": "string",
+          "enum": ["pending", "in_progress", "completed", "skipped", "failed"],
+          "default": "pending"
+        }
+      }
+    },
+    "pr": {
+      "type": "object",
+      "description": "Pull request information",
+      "properties": {
+        "number": {
+          "type": "integer",
+          "description": "PR number"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "PR URL"
+        },
+        "draft": {
+          "type": "boolean",
+          "description": "Whether PR is a draft"
+        },
+        "target": {
+          "type": "string",
+          "description": "Target branch for the PR"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the PR was created"
+        }
+      }
+    },
+    "options": {
+      "type": "object",
+      "description": "Options used for this workflow run",
+      "properties": {
+        "skip_explore": {
+          "type": "boolean",
+          "default": false
+        },
+        "skip_architect": {
+          "type": "boolean",
+          "default": false
+        },
+        "force_simple": {
+          "type": "boolean",
+          "default": false
+        },
+        "auto_implement": {
+          "type": "boolean",
+          "default": false
+        },
+        "auto_pr": {
+          "type": "boolean",
+          "default": false
+        },
+        "draft_pr": {
+          "type": "boolean",
+          "default": true
+        },
+        "base_branch": {
+          "type": "string"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "description": "Error information if workflow failed",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "description": "Phase where error occurred"
+        },
+        "message": {
+          "type": "string",
+          "description": "Error message"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "files": {
+      "type": "object",
+      "description": "Paths to generated files",
+      "properties": {
+        "ticket": {
+          "type": "string",
+          "description": "Path to ticket.md"
+        },
+        "analysis": {
+          "type": "string",
+          "description": "Path to analysis.md"
+        },
+        "plan": {
+          "type": "string",
+          "description": "Path to plan.md"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

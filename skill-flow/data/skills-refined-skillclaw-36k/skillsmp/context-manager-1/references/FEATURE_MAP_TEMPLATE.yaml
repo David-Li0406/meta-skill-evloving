@@ -1,0 +1,104 @@
+# FEATURE_MAP.yaml - Feature definitions for CMS
+#
+# Each feature defines a working set for parallel agents.
+# Features enable scoped context loading - agents only read
+# the feature bundle relevant to their task.
+#
+# Structure:
+#   feature_name:
+#     description: What this feature is
+#     files: List of file paths/patterns owned by this feature
+#     keywords: Terms that indicate work on this feature
+#     depends_on: Other features this one requires
+#
+# Tips:
+# - Keep features focused (3-10 files typical)
+# - Use directory patterns for related files (src/api/)
+# - Keywords help auto-detect which feature a task belongs to
+# - Dependencies ensure agents load prerequisite context
+
+# Example feature definitions - customize for your project:
+
+api:
+  description: REST API endpoints and request handlers
+  files:
+    - src/api/
+    - src/routes/
+    - src/middleware/
+  keywords:
+    - endpoint
+    - route
+    - handler
+    - middleware
+    - request
+    - response
+  depends_on: []
+
+ui:
+  description: Frontend components and user interface
+  files:
+    - src/components/
+    - src/views/
+    - src/pages/
+    - src/styles/
+  keywords:
+    - component
+    - render
+    - useState
+    - props
+    - onClick
+    - className
+  depends_on:
+    - api  # UI typically consumes API
+
+data:
+  description: Data layer, models, and storage
+  files:
+    - src/models/
+    - src/db/
+    - src/repositories/
+  keywords:
+    - model
+    - schema
+    - query
+    - database
+    - repository
+    - entity
+  depends_on: []
+
+core:
+  description: Core business logic and domain rules
+  files:
+    - src/core/
+    - src/services/
+    - src/domain/
+  keywords:
+    - service
+    - business
+    - logic
+    - domain
+    - rule
+  depends_on:
+    - data
+
+config:
+  description: Configuration and environment setup
+  files:
+    - config/
+    - src/config/
+    - .env.example
+  keywords:
+    - config
+    - environment
+    - setting
+    - option
+  depends_on: []
+
+# Add more features as needed for your project...
+#
+# Common additional features:
+# - auth: Authentication and authorization
+# - testing: Test utilities and fixtures
+# - cli: Command-line interface
+# - docs: Documentation generation
+# - infra: Infrastructure and deployment

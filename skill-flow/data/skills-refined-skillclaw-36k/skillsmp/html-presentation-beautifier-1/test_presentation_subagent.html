@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q4 2024 产品性能分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #FFFFFF;
+            --bg-header: #000000;
+            --accent-primary: #F85d42;
+            --accent-secondary: #74788d;
+            --color-deep-blue: #556EE6;
+            --color-green: #34c38f;
+            --color-blue: #50a5f1;
+            --color-yellow: #f1b44c;
+            --color-text: #333333;
+            --color-text-light: #74788d;
+            --color-border: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--color-text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-header);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 1000;
+        }
+
+        .nav-button {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .slide-counter {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .fullscreen-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* Slides Container */
+        .slides-container {
+            height: calc(100vh - 60px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            padding: 60px 80px;
+        }
+
+        .slide.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Header Bar */
+        .slide-header {
+            background: var(--bg-header);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 40px;
+        }
+
+        .slide-header h1 {
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .slide-header .subtitle {
+            font-size: 20px;
+            color: rgba(255,255,255,0.85);
+        }
+
+        /* Title Slide */
+        .slide.type-title {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+        }
+
+        .slide.type-title h1 {
+            font-size: 64px;
+            font-weight: bold;
+            color: var(--bg-header);
+            margin-bottom: 24px;
+        }
+
+        .slide.type-title .subtitle {
+            font-size: 28px;
+            color: var(--accent-primary);
+            margin-bottom: 40px;
+        }
+
+        .slide.type-title .key-points {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        .slide.type-title .key-point {
+            background: var(--bg-header);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
+        /* Content Layouts */
+        .content-section {
+            margin-bottom: 30px;
+        }
+
+        .content-section h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--bg-header);
+            margin-bottom: 16px;
+        }
+
+        .content-section .description {
+            font-size: 18px;
+            color: var(--color-text-light);
+            margin-bottom: 24px;
+        }
+
+        /* Bullet Points */
+        .bullet-points {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .bullet-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-left: 4px solid var(--accent-primary);
+            border-radius: 4px;
+        }
+
+        .bullet-item::before {
+            content: '✓';
+            color: var(--accent-primary);
+            font-size: 20px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        /* Full Width Layout */
+        .layout-full-width {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Two Column Layout */
+        .layout-two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            height: 100%;
+        }
+
+        /* Conclusions Grid */
+        .conclusions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .conclusion-item {
+            background: linear-gradient(135deg, var(--bg-header) 0%, #333 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .conclusion-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-primary);
+        }
+
+        .conclusion-item h3 {
+            font-size: 16px;
+            color: var(--accent-primary);
+            margin-bottom: 12px;
+        }
+
+        .conclusion-item p {
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* Conceptual Visualizations */
+        .emphasis-layout {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .emphasis-box {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid var(--accent-primary);
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .emphasis-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(248, 93, 66, 0.2);
+        }
+
+        .emphasis-box::before {
+            content: '★';
+            font-size: 40px;
+            color: var(--accent-primary);
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .emphasis-box h3 {
+            font-size: 20px;
+            color: var(--bg-header);
+            margin-bottom: 12px;
+        }
+
+        .emphasis-box p {
+            font-size: 15px;
+            color: var(--color-text-light);
+        }
+
+        /* Key Points Strip */
+        .key-points-strip {
+            display: flex;
+            gap: 16px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .key-point-tag {
+            background: var(--color-deep-blue);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .slide {
+                padding: 40px 60px;
+            }
+
+            .slide.type-title h1 {
+                font-size: 48px;
+            }
+
+            .slide-header h1 {
+                font-size: 36px;
+            }
+
+            .bullet-points {
+                grid-template-columns: 1fr;
+            }
+
+            .conclusions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 30px 40px;
+            }
+
+            .slide.type-title h1 {
+                font-size: 36px;
+            }
+
+            .slide.type-title .subtitle {
+                font-size: 20px;
+            }
+
+            .slide-header h1 {
+                font-size: 28px;
+            }
+
+            .nav-bar {
+                padding: 0 20px;
+            }
+
+            .emphasis-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .layout-two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-secondary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="slides-container" id="slidesContainer">
+        <!-- Slide 1: Title -->
+        <div class="slide type-title active" data-slide="1">
+            <h1>Q4 2024 产品性能分析报告</h1>
+            <div class="subtitle">产品性能关键指标和趋势分析</div>
+            <div class="key-points">
+                <div class="key-point">用户增长</div>
+                <div class="key-point">收入表现</div>
+                <div class="key-point">市场渗透率</div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Executive Summary -->
+        <div class="slide" data-slide="2">
+            <div class="slide-header">
+                <h1>主要结论</h1>
+                <div class="subtitle">本季度关键成果总结</div>
+            </div>
+            <div class="bullet-points">
+                <div class="bullet-item">用户增长率达到35%，创历史新高</div>
+                <div class="bullet-item">企业客户收入占比提升至45%</div>
+                <div class="bullet-item">移动端用户活跃度超过桌面端</div>
+                <div class="bullet-item">客户满意度评分提升至4.5/5.0</div>
+                <div class="bullet-item">新市场扩张策略初见成效</div>
+            </div>
+        </div>
+
+        <!-- Slide 3: User Growth -->
+        <div class="slide" data-slide="3">
+            <div class="slide-header">
+                <h1>用户增长分析</h1>
+                <div class="subtitle">各渠道用户增长表现</div>
+            </div>
+            <div class="key-points-strip">
+                <span class="key-point-tag">同比增长率35%</span>
+                <span class="key-point-tag">环比增长15%</span>
+                <span class="key-point-tag">新功能推出和市场营销活动加强推动增长</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart3"></canvas>
+            </div>
+        </div>
+
+        <!-- Slide 4: Monthly Revenue -->
+        <div class="slide" data-slide="4">
+            <div class="slide-header">
+                <h1>月度收入趋势</h1>
+                <div class="subtitle">Q4月度收入持续增长</div>
+            </div>
+            <div class="key-points-strip">
+                <span class="key-point-tag">10月：$2.3M</span>
+                <span class="key-point-tag">11月：$2.8M</span>
+                <span class="key-point-tag">12月：$3.5M</span>
+                <span class="key-point-tag">季度总收入：$8.6M</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart4"></canvas>
+            </div>
+        </div>
+
+        <!-- Slide 5: Product Line Revenue -->
+        <div class="slide" data-slide="5">
+            <div class="slide-header">
+                <h1>产品线收入分布</h1>
+                <div class="subtitle">各产品线收入占比</div>
+            </div>
+            <div class="key-points-strip">
+                <span class="key-point-tag">企业版占比最高</span>
+                <span class="key-point-tag">专业版稳步增长</span>
+                <span class="key-point-tag">免费版增值贡献显著</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart5"></canvas>
+            </div>
+        </div>
+
+        <!-- Slide 6: Regional Revenue -->
+        <div class="slide" data-slide="6">
+            <div class="slide-header">
+                <h1>地区收入分布</h1>
+                <div class="subtitle">各区域市场收入表现</div>
+            </div>
+            <div class="key-points-strip">
+                <span class="key-point-tag">北美市场领先</span>
+                <span class="key-point-tag">欧洲稳定增长</span>
+                <span class="key-point-tag">亚太潜力巨大</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart6"></canvas>
+            </div>
+        </div>
+
+        <!-- Slide 7: Market Penetration -->
+        <div class="slide" data-slide="7">
+            <div class="slide-header">
+                <h1>市场渗透率</h1>
+                <div class="subtitle">目标市场渗透率表现</div>
+            </div>
+            <div class="key-points-strip">
+                <span class="key-point-tag">金融服务行业领先</span>
+                <span class="key-point-tag">医疗健康领域突破</span>
+                <span class="key-point-tag">教育科技持续增长</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart7"></canvas>
+            </div>
+        </div>
+
+        <!-- Slide 8: Feature Priority -->
+        <div class="slide" data-slide="8">
+            <div class="slide-header">
+                <h1>产品功能优先级</h1>
+                <div class="subtitle">基于用户反馈的功能开发优先级</div>
+            </div>
+            <div class="key-points-strip">
+                <span class="key-point-tag">AI智能推荐重要性最高</span>
+                <span class="key-point-tag">移动端优化迫切</span>
+                <span class="key-point-tag">数据导出功能需求强烈</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart8"></canvas>
+            </div>
+        </div>
+
+        <!-- Slide 9: Customer Satisfaction -->
+        <div class="slide" data-slide="9">
+            <div class="slide-header">
+                <h1>客户满意度提升</h1>
+                <div class="subtitle">客户满意度从4.2提升至4.5的关键因素</div>
+            </div>
+            <div class="bullet-points">
+                <div class="bullet-item">产品稳定性提升</div>
+                <div class="bullet-item">客户支持响应时间缩短</div>
+                <div class="bullet-item">新功能用户体验优化</div>
+                <div class="bullet-item">文档和教程完善</div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Industry Comparison -->
+        <div class="slide" data-slide="10">
+            <div class="slide-header">
+                <h1>行业对比分析</h1>
+                <div class="subtitle">与主要竞争对手表现对比</div>
+            </div>
+            <div class="key-points-strip">
+                <span class="key-point-tag">产品易用性：优秀</span>
+                <span class="key-point-tag">客户支持：优秀</span>
+                <span class="key-point-tag">创新能力：良好</span>
+                <span class="key-point-tag">市场份额：中等</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart10"></canvas>
+            </div>
+        </div>
+
+        <!-- Slide 11: Satisfaction Framework -->
+        <div class="slide" data-slide="11">
+            <div class="slide-header">
+                <h1>客户满意度改进框架</h1>
+                <div class="subtitle">提升客户满意度的四大支柱</div>
+            </div>
+            <div class="emphasis-layout">
+                <div class="emphasis-box">
+                    <h3>产品稳定性提升</h3>
+                    <p>持续优化系统架构，减少故障率</p>
+                </div>
+                <div class="emphasis-box">
+                    <h3>客户支持响应时间缩短</h3>
+                    <p>7x24小时快速响应机制</p>
+                </div>
+                <div class="emphasis-box">
+                    <h3>新功能用户体验优化</h3>
+                    <p>以用户为中心的设计理念</p>
+                </div>
+                <div class="emphasis-box">
+                    <h3>文档和教程完善</h3>
+                    <p>全面的知识库和视频教程</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Recommendations -->
+        <div class="slide" data-slide="12">
+            <div class="slide-header">
+                <h1>建议和行动计划</h1>
+                <div class="subtitle">基于分析结果的战略建议</div>
+            </div>
+            <div class="conclusions-grid">
+                <div class="conclusion-item">
+                    <h3>行动 1</h3>
+                    <p>加大AI功能研发投入，保持竞争优势</p>
+                </div>
+                <div class="conclusion-item">
+                    <h3>行动 2</h3>
+                    <p>扩大亚太市场销售团队</p>
+                </div>
+                <div class="conclusion-item">
+                    <h3>行动 3</h3>
+                    <p>优化移动端用户体验</p>
+                </div>
+                <div class="conclusion-item">
+                    <h3>行动 4</h3>
+                    <p>加强企业客户成功团队</p>
+                </div>
+                <div class="conclusion-item" style="grid-column: 1 / -1;">
+                    <h3>行动 5</h3>
+                    <p>持续改进客户支持流程</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Conclusions -->
+        <div class="slide" data-slide="13">
+            <div class="slide-header">
+                <h1>结论</h1>
+                <div class="subtitle">季度总结与展望</div>
+            </div>
+            <div class="bullet-points">
+                <div class="bullet-item">Q4 2024表现强劲，各项指标均超出预期</div>
+                <div class="bullet-item">建议继续保持当前增长策略</div>
+                <div class="bullet-item">在AI功能和新兴市场加大投入</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+        <button class="nav-button" id="prevBtn" onclick="previousSlide()">← 上一页</button>
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">13</span>
+        </div>
+        <div style="display: flex; gap: 16px; align-items: center;">
+            <button class="fullscreen-btn" onclick="toggleFullscreen()" title="全屏">⛶</button>
+            <button class="nav-button" id="nextBtn" onclick="nextSlide()">下一页 →</button>
+        </div>
+    </div>
+
+    <script>
+        // Slide Navigation
+        let currentSlide = 1;
+        const totalSlides = 13;
+
+        function showSlide(n) {
+            const slides = document.querySelectorAll('.slide');
+            
+            if (n > totalSlides) currentSlide = 1;
+            if (n < 1) currentSlide = totalSlides;
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide - 1].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = currentSlide;
+        }
+
+        function nextSlide() {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+
+        function previousSlide() {
+            currentSlide--;
+            showSlide(currentSlide);
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            } else if (e.key === 'f' || e.key === 'F') {
+                toggleFullscreen();
+            }
+        });
+
+        // Fullscreen Toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Chart.js Configurations
+        const chartColors = {
+            primary: '#F85d42',
+            secondary: '#74788d',
+            deepBlue: '#556EE6',
+            green: '#34c38f',
+            blue: '#50a5f1',
+            yellow: '#f1b44c'
+        };
+
+        // Chart 3: User Growth (Bar)
+        new Chart(document.getElementById('chart3'), {
+            type: 'bar',
+            data: {
+                labels: ['自然搜索', '付费广告', '社交媒体', '推荐计划', '直接访问'],
+                datasets: [{
+                    label: '新增用户（万）',
+                    data: [12.5, 8.3, 6.7, 4.2, 3.1],
+                    backgroundColor: [chartColors.primary, chartColors.deepBlue, chartColors.green, chartColors.blue, chartColors.yellow],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => context.parsed.y + '万'
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: '新增用户（万）' } }
+                }
+            }
+        });
+
+        // Chart 4: Monthly Revenue (Line)
+        new Chart(document.getElementById('chart4'), {
+            type: 'line',
+            data: {
+                labels: ['10月', '11月', '12月'],
+                datasets: [{
+                    label: '月度收入',
+                    data: [2.3, 2.8, 3.5],
+                    borderColor: chartColors.primary,
+                    backgroundColor: 'rgba(248, 93, 66, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 8,
+                    pointHoverRadius: 12
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => '$' + context.parsed.y + 'M'
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: '收入（M）' } }
+                }
+            }
+        });
+
+        // Chart 5: Product Line Revenue (Doughnut)
+        new Chart(document.getElementById('chart5'), {
+            type: 'doughnut',
+            data: {
+                labels: ['企业版', '专业版', '免费版增值', '其他'],
+                datasets: [{
+                    data: [3.8, 2.5, 1.3, 0.8],
+                    backgroundColor: [chartColors.primary, chartColors.deepBlue, chartColors.green, chartColors.secondary],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => context.label + ': $' + context.parsed + 'M'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart 6: Regional Revenue (Doughnut)
+        new Chart(document.getElementById('chart6'), {
+            type: 'doughnut',
+            data: {
+                labels: ['北美', '欧洲', '亚太', '其他'],
+                datasets: [{
+                    data: [3.5, 2.1, 1.8, 0.8],
+                    backgroundColor: [chartColors.blue, chartColors.green, chartColors.primary, chartColors.secondary],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => context.label + ': $' + context.parsed + 'M'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart 7: Market Penetration (Bar)
+        new Chart(document.getElementById('chart7'), {
+            type: 'bar',
+            data: {
+                labels: ['金融服务', '医疗健康', '教育科技', '电子商务', '制造业'],
+                datasets: [{
+                    label: '市场渗透率',
+                    data: [68, 54, 47, 41, 35],
+                    backgroundColor: [chartColors.deepBlue, chartColors.green, chartColors.primary, chartColors.blue, chartColors.yellow],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => context.parsed.x + '%'
+                        }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true, max: 100, title: { display: true, text: '渗透率 (%)' } }
+                }
+            }
+        });
+
+        // Chart 8: Feature Priority (Bar)
+        new Chart(document.getElementById('chart8'), {
+            type: 'bar',
+            data: {
+                labels: ['AI智能推荐', '移动端优化', '数据导出功能', '团队协作工具', 'API集成能力'],
+                datasets: [{
+                    label: '优先级评分',
+                    data: [9, 8, 8, 7, 7],
+                    backgroundColor: [chartColors.primary, chartColors.deepBlue, chartColors.green, chartColors.blue, chartColors.yellow],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => context.parsed.y + '/10'
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 10, title: { display: true, text: '优先级评分' } }
+                }
+            }
+        });
+
+        // Chart 10: Industry Comparison (Radar)
+        new Chart(document.getElementById('chart10'), {
+            type: 'radar',
+            data: {
+                labels: ['产品易用性', '价格竞争力', '客户支持', '创新能力', '市场份额'],
+                datasets: [{
+                    label: '我方表现',
+                    data: [5, 4, 5, 4, 3],
+                    backgroundColor: 'rgba(248, 93, 66, 0.2)',
+                    borderColor: chartColors.primary,
+                    pointBackgroundColor: chartColors.primary
+                }, {
+                    label: '行业平均',
+                    data: [3.5, 3.5, 3.5, 3.5, 3.5],
+                    backgroundColor: 'rgba(116, 120, 141, 0.1)',
+                    borderColor: chartColors.secondary,
+                    pointBackgroundColor: chartColors.secondary
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 5,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

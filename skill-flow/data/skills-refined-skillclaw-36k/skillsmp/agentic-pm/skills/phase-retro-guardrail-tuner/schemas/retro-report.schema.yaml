@@ -1,0 +1,190 @@
+# Retro Report Schema
+# Output format for phase retrospective reports
+
+retro_report:
+  type: object
+  required:
+    - phase_name
+    - patterns
+    - proposals
+  properties:
+    phase_name:
+      type: string
+
+    date:
+      type: string
+      format: date
+
+    tasks_reviewed:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          title:
+            type: string
+          status:
+            type: string
+
+    wins:
+      type: array
+      items:
+        type: string
+      description: Things that went well
+
+    frictions:
+      type: array
+      items:
+        type: object
+        properties:
+          issue:
+            type: string
+          tasks_affected:
+            type: array
+            items:
+              type: string
+          impact:
+            type: string
+          root_cause:
+            type: string
+
+    quality_issues:
+      type: object
+      properties:
+        ci_failures:
+          type: array
+          items:
+            type: object
+            properties:
+              task:
+                type: string
+              type:
+                type: string
+              resolution:
+                type: string
+        bugs:
+          type: array
+          items:
+            type: string
+        merge_conflicts:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              resolution:
+                type: string
+
+    patterns:
+      type: array
+      items:
+        type: object
+        required:
+          - name
+          - frequency
+          - root_cause
+          - prevention
+        properties:
+          name:
+            type: string
+          frequency:
+            type: integer
+            description: Number of tasks impacted
+          severity:
+            type: string
+            enum: [critical, high, medium, low]
+          evidence:
+            type: array
+            items:
+              type: object
+              properties:
+                task:
+                  type: string
+                quote:
+                  type: string
+          root_cause:
+            type: string
+          prevention:
+            type: array
+            items:
+              type: string
+
+    proposals:
+      type: array
+      items:
+        type: object
+        required:
+          - target
+          - change
+          - rationale
+          - rollout
+        properties:
+          id:
+            type: string
+          title:
+            type: string
+          pattern_addressed:
+            type: string
+          target:
+            type: string
+            description: File path to modify
+          change_type:
+            type: string
+            enum: [add, replace, remove]
+          change:
+            type: string
+            description: Exact text change (diff format)
+          rationale:
+            type: string
+          applies_to:
+            type: string
+          rollout:
+            type: string
+            enum: [immediate, next_phase, migration_required]
+
+    rollout_plan:
+      type: object
+      properties:
+        immediate:
+          type: array
+          items:
+            type: string
+        next_phase:
+          type: array
+          items:
+            type: string
+        migration_required:
+          type: array
+          items:
+            type: object
+            properties:
+              change:
+                type: string
+              steps:
+                type: array
+                items:
+                  type: string
+        success_metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              metric:
+                type: string
+              measurement:
+                type: string
+
+    action_items:
+      type: array
+      items:
+        type: object
+        properties:
+          action:
+            type: string
+          owner:
+            type: string
+          status:
+            type: string
+            enum: [pending, in_progress, completed]

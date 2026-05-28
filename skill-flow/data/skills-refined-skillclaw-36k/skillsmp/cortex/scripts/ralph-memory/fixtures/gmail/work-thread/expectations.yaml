@@ -1,0 +1,44 @@
+# Fixture: Tyler emails CLEAR about meeting with Jeff/Vlad
+description: "Work email scheduling meeting, mentions last day at job"
+
+entities:
+  must_have:
+    - name_contains: "Tyler"
+      entity_type: Person
+      
+    - name_contains: "Charley"
+      entity_type: Person
+      
+    - name_contains: "CLEAR"
+      entity_type: Organization
+
+  optional:
+    # Jeff and Vlad may be extracted from subject line
+    - name_contains: "Jeff"
+      entity_type: Person
+    - name_contains: "Vlad"
+      entity_type: Person
+
+relationships:
+  optional:
+    # Tyler knows Charley (implicit from email)
+    - source_entity_name_contains: "Tyler"
+      relation_type: KNOWS
+      target_entity_name_contains: "Charley"
+      
+    # Charley works at CLEAR
+    - source_entity_name_contains: "Charley"
+      relation_type: WORKS_AT
+      target_entity_name_contains: "CLEAR"
+
+aliases:
+  optional:
+    # Tyler's email from the sender
+    - entity_name_contains: "Tyler"
+      alias_like: "%tnapathy@gmail.com%"
+      alias_type: email
+
+episode_entity_mentions:
+  must_have:
+    - entity_name_contains: "Tyler"
+    - entity_name_contains: "Charley"

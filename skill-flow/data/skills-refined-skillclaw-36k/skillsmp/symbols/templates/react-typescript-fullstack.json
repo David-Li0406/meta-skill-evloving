@@ -1,0 +1,110 @@
+{
+  "$schema": "../symbols-config-schema.json",
+  "projectName": "SkillMeat",
+  "symbolsDir": "{{SYMBOLS_DIR}}",
+  "domains": {
+    "ui": {
+      "file": "symbols-ui.json",
+      "description": "UI components library - Reusable React components, hooks, utilities. Customize directories to match your component library location.",
+      "testFile": "symbols-ui-tests.json",
+      "enabled": true
+    },
+    "web": {
+      "file": "symbols-web.json",
+      "description": "Next.js web application - App router pages, layouts, client/server components. Adjust directories for your Next.js structure.",
+      "enabled": true
+    },
+    "api": {
+      "file": "symbols-api.json",
+      "description": "Backend API layer - FastAPI routers, services, repositories, schemas. Use apiLayers for granular access by architectural layer.",
+      "testFile": "symbols-api-tests.json",
+      "enabled": true
+    },
+    "shared": {
+      "file": "symbols-shared.json",
+      "description": "Shared types and utilities - Type definitions, constants, helpers used across frontend and backend.",
+      "enabled": true
+    }
+  },
+  "apiLayers": {
+    "routers": {
+      "file": "symbols-api-routers.json",
+      "description": "API route handlers - FastAPI routers, endpoints, request/response handling",
+      "enabled": true
+    },
+    "services": {
+      "file": "symbols-api-services.json",
+      "description": "Business logic services - Orchestration, validation, domain operations",
+      "enabled": true
+    },
+    "repositories": {
+      "file": "symbols-api-repositories.json",
+      "description": "Data access layer - Database queries, ORM operations, RLS enforcement",
+      "enabled": true
+    },
+    "schemas": {
+      "file": "symbols-api-schemas.json",
+      "description": "Data Transfer Objects - Pydantic models for API serialization and validation",
+      "enabled": true
+    },
+    "cores": {
+      "file": "symbols-api-cores.json",
+      "description": "Core utilities - Auth, observability, middleware, error handling",
+      "enabled": true
+    }
+  },
+  "extraction": {
+    "python": {
+      "directories": [
+        "services/api",
+        "packages/backend"
+      ],
+      "extensions": [".py"],
+      "excludes": [
+        "__pycache__",
+        "*.pyc",
+        ".pytest_cache",
+        ".venv",
+        "venv",
+        ".tox",
+        "*.egg-info",
+        "build",
+        "dist",
+        ".mypy_cache",
+        ".ruff_cache"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    },
+    "typescript": {
+      "directories": [
+        "apps/web",
+        "apps/mobile",
+        "packages/ui",
+        "packages/shared"
+      ],
+      "extensions": [".ts", ".tsx", ".js", ".jsx"],
+      "excludes": [
+        "node_modules/",
+        "*.test.*",
+        "*.spec.*",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "dist/",
+        "build/",
+        ".next/",
+        ".expo/",
+        "out/",
+        "coverage/",
+        ".turbo/",
+        "*.d.ts"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "Template for React + TypeScript monorepo with FastAPI backend. Common patterns: Radix UI, React Query, Tailwind, SQLAlchemy, Pydantic. Customize directories, domains, and layers to match your project structure."
+  }
+}

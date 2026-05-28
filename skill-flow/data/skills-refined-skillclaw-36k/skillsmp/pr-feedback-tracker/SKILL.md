@@ -1,0 +1,362 @@
+---
+name: pr-feedback-tracker
+description: "Process PR review feedback, categorize comments, create tracking issues for deferred items, and resolve conversations. Can be invoked standalone or during submit-pr Phase 6."
+---
+
+# PR Feedback Tracker
+
+## Overview
+
+Systematically process PR review comments from CodeRabbit, Greptile, and human reviewers. Categorizes feedback, creates tracking issues for deferred work, and ensures all conversations are resolved.
+
+## When to Use
+
+**Standalone:**
+- `/pr-feedback-tracker #123` - Process feedback on any PR
+- After receiving automated review feedback
+- When you need to track deferred items retroactively
+
+**During submit-pr:**
+- Automatically invoked in Phase 6
+- Ensures deferred items aren't lost
+
+---
+
+## IRON LAW: All Conversations Must Be Resolved
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  EVERY comment → Reply → Click "Resolve conversation"       │
+│                                                             │
+│  No comment should EVER be left unresolved.                 │
+│  ALL paths end with "Resolve conversation" clicked.         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Why?**
+- Unresolved conversations block PR merge in many repos
+- Silent resolutions without replies are unprofessional
+- Tracking requires explicit categorization
+
+---
+
+## Decision Tree
+
+```
+For EACH comment:
+    ↓
+Categorize:
+├── FIX → Make change → Reply "Fixed" → RESOLVE ✓
+├── DEFER → Create issue → Reply "Tracked in #X" → RESOLVE ✓
+├── DISMISS → Reply "Intentional: [reason]" → RESOLVE ✓
+└── OUT_OF_SCOPE → Reply "Out of scope" → RESOLVE ✓
+                                                ↑
+                                    ALL paths end here
+```
+
+---
+
+## Categories
+
+| Category | Meaning | Creates Issue? | Resolve? |
+|----------|---------|----------------|----------|
+| **Fixed** | Code changed to address | No | Yes |
+| **Deferred** | Valid, tracked for future PR | **Yes** | Yes |
+| **Out of Scope** | Trivial/unrelated to this PR | No | Yes |
+| **Dismissed** | Disagree with feedback | No | Yes |
+
+---
+
+## Workflow
+
+### Step 1: Fetch All Comments
+
+```bash
+# Get PR number (if not provided)
+PR_NUMBER=$(gh pr view --json number -q '.number')
+
+# Fetch all review comments
+gh api graphql -f query='
+query($owner: String!, $repo: String!, $pr: Int!) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $pr) {
+      reviewThreads(first: 100) {
+        nodes {
+          id
+          isResolved
+          comments(first: 10) {
+            nodes {
+              author { login }
+              body
+              path
+              line
+            }
+          }
+        }
+      }
+    }
+  }
+}' -f owner="$(gh repo view --json owner -q '.owner.login')" \
+   -f repo="$(gh repo view --json name -q '.name')" \
+   -F pr="$PR_NUMBER"
+```
+
+### Step 2: Categorize Each Comment
+
+Process each comment and assign a category:
+
+```markdown
+## Feedback Triage
+
+| # | File | Comment Summary | Category | Action |
+|---|------|-----------------|----------|--------|
+| 1 | auth.ts:42 | Missing error handling | Fixed | Added try/catch |
+| 2 | api.ts:15 | Race condition possible | Deferred | Create issue |
+| 3 | utils.ts:8 | Could use optional chaining | Out of Scope | Trivial |
+| 4 | db.ts:30 | Prefer ORM over raw SQL | Dismissed | Intentional |
+```
+
+### Step 3: Process Each Category
+
+#### FIX Path
+
+```bash
+# 1. Make the code change
+# 2. Reply to comment
+gh pr comment $PR_NUMBER --body "Fixed in [commit]"
+
+# 3. Resolve the thread (via GraphQL)
+gh api graphql -f query='
+mutation($threadId: ID!) {
+  resolveReviewThread(input: {threadId: $threadId}) {
+    thread { isResolved }
+  }
+}' -f threadId="THREAD_ID"
+```
+
+#### DEFER Path (Creates Tracking Issue)
+
+```bash
+# 1. Collect all deferred items
+# 2. Create a single tracking issue (note: unquoted EOF allows variable expansion)
+gh issue create \
+  --title "Follow-up: Deferred items from PR #$PR_NUMBER" \
+  --body "$(cat <<EOF
+## Deferred from PR #$PR_NUMBER
+
+These items were identified during code review but deferred to keep the PR focused.
+
+### Items to Address
+
+- [ ] **Race condition in auth.ts:42** - Duplicate requests possible under concurrent load
+- [ ] **Rate limit TOCTOU in api.ts:15** - Could allow bypassing rate limits
+- [ ] **[Other item]** - [Description]
+
+### Context
+
+- PR: #$PR_NUMBER
+- Review sources: CodeRabbit, Greptile
+- Date: $(date +%Y-%m-%d)
+
+### Priority
+
+These are hardening items, not blocking bugs. Address in a follow-up PR.
+
+---
+*Auto-generated by pr-feedback-tracker*
+EOF
+)" --label "tech-debt" --label "follow-up"
+
+# 3. Reply to original comment with issue link
+gh pr comment $PR_NUMBER --body "Tracked in #ISSUE_NUMBER for follow-up"
+
+# 4. Resolve the thread
+```
+
+#### OUT OF SCOPE Path
+
+```bash
+# 1. Reply
+gh pr comment $PR_NUMBER --body "Out of scope for this PR - deferred to future work"
+
+# 2. Resolve thread
+```
+
+#### DISMISS Path
+
+```bash
+# 1. Reply with reasoning
+gh pr comment $PR_NUMBER --body "Intentional: [explanation of why this approach is correct]"
+
+# 2. Resolve thread
+```
+
+### Step 4: Verify All Resolved
+
+```bash
+# Check for unresolved threads
+UNRESOLVED=$(gh api graphql -f query='
+query($owner: String!, $repo: String!, $pr: Int!) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $pr) {
+      reviewThreads(first: 100) {
+        nodes { isResolved }
+      }
+    }
+  }
+}' -f owner="$(gh repo view --json owner -q '.owner.login')" \
+   -f repo="$(gh repo view --json name -q '.name')" \
+   -F pr="$PR_NUMBER" | jq '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)] | length')
+
+echo "Unresolved threads: $UNRESOLVED"
+```
+
+### Step 5: Generate Summary
+
+```markdown
+## PR Feedback Summary
+
+**PR:** #123
+**Total comments:** 20
+
+| Category | Count | Details |
+|----------|-------|---------|
+| Fixed | 4 | Code changes made |
+| Deferred | 3 | Tracked in #456 |
+| Out of Scope | 10 | Trivial nitpicks |
+| Dismissed | 3 | With explanations |
+
+**Status:**
+- [x] All comments processed
+- [x] All threads resolved
+- [x] Deferred items tracked in #456
+- [x] Ready for human review
+```
+
+---
+
+## Standalone Usage
+
+### Basic
+
+```bash
+/pr-feedback-tracker #123
+```
+
+### With Options
+
+```bash
+# Skip creating issues (just categorize)
+/pr-feedback-tracker #123 --dry-run
+
+# Only process unresolved threads
+/pr-feedback-tracker #123 --unresolved-only
+
+# Include specific reviewer only
+/pr-feedback-tracker #123 --reviewer coderabbitai
+```
+
+---
+
+## Integration with submit-pr
+
+In Phase 6 of submit-pr, invoke this skill:
+
+```markdown
+### Phase 6: Automated Review Feedback
+
+**Step 1:** Invoke pr-feedback-tracker
+
+The tracker will:
+1. Fetch all review comments
+2. Help categorize each (ask if unclear)
+3. Create tracking issues for deferred items
+4. Resolve all threads
+5. Generate summary
+
+**Step 2:** Push any fixes
+
+**Step 3:** Verify CI passes
+```
+
+---
+
+## Response Templates
+
+### Fixed
+
+```markdown
+Fixed in abc1234. Added error handling as suggested.
+```
+
+### Deferred
+
+```markdown
+Valid point. This is a hardening item tracked in #456 for follow-up.
+Keeping this PR focused on [original scope].
+```
+
+### Out of Scope
+
+```markdown
+Thanks for the suggestion. This is outside the scope of this PR.
+Will consider in future refactoring.
+```
+
+### Dismissed
+
+```markdown
+Intentional approach. [Explanation of why current code is correct].
+```
+
+---
+
+## Red Flags - STOP
+
+**Never:**
+- Leave security issues as "deferred" (fix them now)
+- Leave bugs as "out of scope" (fix or defer properly)
+- Resolve without replying (always explain)
+- Create issues for trivial nitpicks (wastes issue tracker)
+
+**Always:**
+- Process EVERY comment
+- Create issues for meaningful deferred work
+- Link tracking issues in PR comments
+- Verify all threads resolved before completing
+
+---
+
+## Completion Criteria
+
+- [ ] All comments categorized
+- [ ] **All threads have replies** (no silent resolutions)
+- [ ] **All threads resolved** (zero unresolved - verify with GraphQL)
+- [ ] Deferred items have tracking issue (if any)
+- [ ] Summary generated
+
+### Verification Query
+
+```bash
+# MUST return 0
+UNRESOLVED=$(gh api graphql -f query='
+query($owner: String!, $repo: String!, $pr: Int!) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $pr) {
+      reviewThreads(first: 100) {
+        nodes { isResolved }
+      }
+    }
+  }
+}' ... | jq '[.data...nodes[] | select(.isResolved == false)] | length')
+
+[ "$UNRESOLVED" -eq 0 ] && echo "✅ All resolved" || echo "❌ $UNRESOLVED unresolved"
+```
+
+---
+
+## Metadata
+
+**Version:** 1.1.0
+**Last Updated:** 2026-01-15
+**Related skills:** submit-pr, coderabbit, code-review

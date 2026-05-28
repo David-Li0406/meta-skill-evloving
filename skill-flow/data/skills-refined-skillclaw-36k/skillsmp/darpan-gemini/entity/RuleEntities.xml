@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <!-- ========================================================= -->
+    <!-- darpan.rule -->
+    <!-- ========================================================= -->
+
+    <entity entity-name="RuleSet" package="darpan.rule" use="configuration">
+        <description>A set of rules to be executed together.</description>
+        <field name="ruleSetId" type="id" is-pk="true"/>
+        <field name="ruleSetName" type="text-medium"/>
+        <field name="description" type="text-medium"/>
+        <field name="version" type="text-short"/>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastUpdatedDate" type="date-time"/>
+
+        <relationship type="many" related="darpan.rule.Rule" short-alias="rules">
+            <key-map field-name="ruleSetId"/>
+        </relationship>
+    </entity>
+
+    <entity entity-name="Rule" package="darpan.rule" use="configuration">
+        <description>A single rule definition within a RuleSet.</description>
+        <field name="ruleId" type="id" is-pk="true"/>
+        <field name="ruleSetId" type="id" not-null="true"/>
+        <field name="ruleText" type="text-long">
+            <description>Human readable rule definition</description>
+        </field>
+        <field name="ruleLogic" type="text-long">
+            <description>Compiled Drools DRL or expression</description>
+        </field>
+        <field name="sequenceNum" type="number-integer"/>
+        <field name="enabled" type="text-indicator"/>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastUpdatedDate" type="date-time"/>
+
+        <relationship type="one" related="darpan.rule.RuleSet">
+            <key-map field-name="ruleSetId"/>
+        </relationship>
+    </entity>
+
+</entities>

@@ -1,0 +1,264 @@
+#pragma once
+
+#include <juce_core/juce_core.h>
+#include <cmath>
+
+/**
+ * ADSREnvelope
+ *
+ * Classic ADSR (Attack-Decay-Sustain-Release) envelope generator.
+ * Uses exponential curves for natural-sounding envelopes.
+ */
+class ADSREnvelope
+{
+public:
+    enum class State
+    {
+        Idle,
+        Attack,
+        Decay,
+        Sustain,
+        Release
+    };
+
+    ADSREnvelope() = default;
+
+    //==========================================================================
+    void prepare(double sampleRate)
+    {
+        this->sampleRate = sampleRate;
+        updateCoefficients();
+    }
+
+    void reset()
+    {
+        state = State::Idle;
+        level = 0.0f;
+    }
+
+    //==========================================================================
+    void setAttack(float seconds)
+    {
+        attackTime = juce::jmax(0.001f, seconds);
+        updateCoefficients();
+    }
+
+    void setDecay(float seconds)
+    {
+        decayTime = juce::jmax(0.001f, seconds);
+        updateCoefficients();
+    }
+
+    void setSustain(float level)
+    {
+        sustainLevel = juce::jlimit(0.0f, 1.0f, level);
+    }
+
+    void setRelease(float seconds)
+    {
+        releaseTime = juce::jmax(0.001f, seconds);
+        updateCoefficients();
+    }
+
+    void setParameters(float attack, float decay, float sustain, float release)
+    {
+        attackTime = juce::jmax(0.001f, attack);
+        decayTime = juce::jmax(0.001f, decay);
+        sustainLevel = juce::jlimit(0.0f, 1.0f, sustain);
+        releaseTime = juce::jmax(0.001f, release);
+        updateCoefficients();
+    }
+
+    //==========================================================================
+    void noteOn()
+    {
+        state = State::Attack;
+        // Don't reset level for legato behavior
+        // For non-legato, uncomment: level = 0.0f;
+    }
+
+    void noteOff()
+    {
+        if (state != State::Idle)
+        {
+            state = State::Release;
+            releaseStartLevel = level;
+        }
+    }
+
+    void forceStop()
+    {
+        state = State::Idle;
+        level = 0.0f;
+    }
+
+    //==========================================================================
+    float process()
+    {
+        switch (state)
+        {
+            case State::Idle:
+                return 0.0f;
+
+            case State::Attack:
+                // Exponential attack toward overshoot target (1.2)
+                level += attackCoeff * (1.2f - level);
+                if (level >= 1.0f)
+                {
+                    level = 1.0f;
+                    state = State::Decay;
+                }
+                break;
+
+            case State::Decay:
+                // Exponential decay toward sustain
+                level += decayCoeff * (sustainLevel - level);
+                if (level <= sustainLevel + 0.0001f)
+                {
+                    level = sustainLevel;
+                    state = State::Sustain;
+                }
+                break;
+
+            case State::Sustain:
+                level = sustainLevel;
+                break;
+
+            case State::Release:
+                // Exponential release toward zero
+                level += releaseCoeff * (0.0f - level);
+                if (level <= 0.0001f)
+                {
+                    level = 0.0f;
+                    state = State::Idle;
+                }
+                break;
+        }
+
+        return level;
+    }
+
+    //==========================================================================
+    bool isActive() const
+    {
+        return state != State::Idle;
+    }
+
+    State getState() const
+    {
+        return state;
+    }
+
+    float getLevel() const
+    {
+        return level;
+    }
+
+private:
+    void updateCoefficients()
+    {
+        // Exponential time constants
+        // coefficient = 1 - exp(-1 / (time * sampleRate))
+        // This gives ~63% of target in 'time' seconds
+
+        if (sampleRate > 0.0)
+        {
+            attackCoeff = 1.0f - std::exp(-1.0f / (attackTime * static_cast<float>(sampleRate)));
+            decayCoeff = 1.0f - std::exp(-1.0f / (decayTime * static_cast<float>(sampleRate)));
+            releaseCoeff = 1.0f - std::exp(-1.0f / (releaseTime * static_cast<float>(sampleRate)));
+        }
+    }
+
+    //==========================================================================
+    double sampleRate = 44100.0;
+    State state = State::Idle;
+
+    float level = 0.0f;
+    float releaseStartLevel = 0.0f;
+
+    // Times in seconds
+    float attackTime = 0.01f;
+    float decayTime = 0.1f;
+    float sustainLevel = 0.7f;
+    float releaseTime = 0.3f;
+
+    // Coefficients
+    float attackCoeff = 0.0f;
+    float decayCoeff = 0.0f;
+    float releaseCoeff = 0.0f;
+};
+
+//==============================================================================
+/**
+ * SimpleAREnvelope
+ *
+ * Simple Attack-Release envelope for drone/ambient applications.
+ */
+class SimpleAREnvelope
+{
+public:
+    void prepare(double sampleRate)
+    {
+        this->sampleRate = sampleRate;
+        updateCoefficients();
+    }
+
+    void setAttack(float seconds)
+    {
+        attackTime = juce::jmax(0.001f, seconds);
+        updateCoefficients();
+    }
+
+    void setRelease(float seconds)
+    {
+        releaseTime = juce::jmax(0.001f, seconds);
+        updateCoefficients();
+    }
+
+    void noteOn()
+    {
+        attacking = true;
+    }
+
+    void noteOff()
+    {
+        attacking = false;
+    }
+
+    float process()
+    {
+        if (attacking)
+        {
+            level += attackCoeff * (1.0f - level);
+        }
+        else
+        {
+            level += releaseCoeff * (0.0f - level);
+        }
+
+        return level;
+    }
+
+    bool isActive() const
+    {
+        return level > 0.0001f || attacking;
+    }
+
+private:
+    void updateCoefficients()
+    {
+        if (sampleRate > 0.0)
+        {
+            attackCoeff = 1.0f - std::exp(-1.0f / (attackTime * static_cast<float>(sampleRate)));
+            releaseCoeff = 1.0f - std::exp(-1.0f / (releaseTime * static_cast<float>(sampleRate)));
+        }
+    }
+
+    double sampleRate = 44100.0;
+    float level = 0.0f;
+    bool attacking = false;
+    float attackTime = 2.0f;
+    float releaseTime = 5.0f;
+    float attackCoeff = 0.0f;
+    float releaseCoeff = 0.0f;
+};

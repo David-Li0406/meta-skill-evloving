@@ -1,0 +1,66 @@
+diff --git a/build.gradle b/build.gradle
+index eec1d034..4eada231 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -22,7 +22,13 @@ buildscript {
+ // Not needed for explicit use, causes problems when not from git repo: plugins { id 'org.ajoberstar.grgit' version 'x.y.z' }
+ 
+ // Run headless so GradleWorkerMain does not steal focus (mostly a macOS annoyance)
+-allprojects { tasks.withType(JavaForkOptions) { jvmArgs '-Djava.awt.headless=true' } }
++// Add exports needed by Spark on newer JDKs.
++allprojects {
++    tasks.withType(JavaForkOptions) {
++        jvmArgs '-Djava.awt.headless=true'
++        jvmArgs '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED'
++    }
++}
+ 
+ import org.ajoberstar.grgit.*
+ 
+@@ -621,14 +627,14 @@ task gitMergeAll {
+ 
+ task run(type: JavaExec) {
+     dependsOn checkRuntime, allBuildTasks, cleanTempDir
+-    workingDir = '.'; jvmArgs = ['-server', '-XX:-OmitStackTraceInFastThrow']
++    workingDir = '.'; jvmArgs '-server', '-XX:-OmitStackTraceInFastThrow'
+     systemProperties = ['moqui.conf':moquiConfDev, 'moqui.runtime':moquiRuntime]
+     // NOTE: this is a hack, using -jar instead of a class name, and then the first argument is the name of the jar file
+     main = '-jar'; args = [warName]
+ }
+ task runProduction(type: JavaExec) {
+     dependsOn checkRuntime, allBuildTasks, cleanTempDir
+-    workingDir = '.'; jvmArgs = ['-server', '-Xms1024M']
++    workingDir = '.'; jvmArgs '-server', '-Xms1024M'
+     systemProperties = ['moqui.conf':moquiConfProduction, 'moqui.runtime':moquiRuntime]
+     main = '-jar'; args = [warName]
+ }
+@@ -637,25 +643,25 @@ task load(type: JavaExec) {
+     description "Run Moqui to load data; to specify data types use something like: gradle load -Ptypes=seed,seed-initial,install"
+     dependsOn checkRuntime, allBuildTasks
+     systemProperties = ['moqui.conf':moquiConfDev, 'moqui.runtime':moquiRuntime]
+-    workingDir = '.'; jvmArgs = ['-server']; main = '-jar'
++    workingDir = '.'; jvmArgs '-server'; main = '-jar'
+     args = [warName, 'load', (project.properties.containsKey('types') ? "types=${types}" : "types=all")]
+ }
+ task loadSeed(type: JavaExec) {
+     dependsOn checkRuntime, allBuildTasks
+     systemProperties = ['moqui.conf':moquiConfProduction, 'moqui.runtime':moquiRuntime]
+-    workingDir = '.'; jvmArgs = ['-server']; main = '-jar'
++    workingDir = '.'; jvmArgs '-server'; main = '-jar'
+     args = [warName, 'load', (project.properties.containsKey('types') ? "types=${types}" : "types=seed")]
+ }
+ task loadSeedInitial(type: JavaExec) {
+     dependsOn checkRuntime, allBuildTasks
+     systemProperties = ['moqui.conf':moquiConfProduction, 'moqui.runtime':moquiRuntime]
+-    workingDir = '.'; jvmArgs = ['-server']; main = '-jar'
++    workingDir = '.'; jvmArgs '-server'; main = '-jar'
+     args = [warName, 'load', (project.properties.containsKey('types') ? "types=${types}" : "types=seed,seed-initial")]
+ }
+ task loadProduction(type: JavaExec) {
+     dependsOn checkRuntime, allBuildTasks
+     systemProperties = ['moqui.conf':moquiConfProduction, 'moqui.runtime':moquiRuntime]
+-    workingDir = '.'; jvmArgs = ['-server']; main = '-jar'
++    workingDir = '.'; jvmArgs '-server'; main = '-jar'
+     args = [warName, 'load', (project.properties.containsKey('types') ? "types=${types}" : "types=seed,seed-initial,install")]
+ }
+ 

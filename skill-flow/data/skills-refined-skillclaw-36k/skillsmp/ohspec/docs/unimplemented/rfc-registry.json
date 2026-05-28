@@ -1,0 +1,504 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "updated_at": "{{UPDATED_AT}}",
+    "total_count": 0,
+    "status_summary": {
+      "draft": 0,
+      "analyzing": 0,
+      "designing": 0,
+      "prechecking": 0,
+      "auditing": 0,
+      "approved": 0,
+      "rejected": 0,
+      "archived": 0
+    },
+    "priority_summary": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "complexity_summary": {
+      "simple": 0,
+      "medium": 0,
+      "complex": 0
+    }
+  },
+  "status_definitions": {
+    "draft": {
+      "label": "草稿",
+      "description": "RFC 已创建，等待分析",
+      "color": "#808080",
+      "transitions_to": [
+        "analyzing",
+        "rejected"
+      ]
+    },
+    "analyzing": {
+      "label": "分析中",
+      "description": "正在进行需求分析和代码扫描",
+      "color": "#FFA500",
+      "transitions_to": [
+        "designing",
+        "draft",
+        "rejected"
+      ]
+    },
+    "designing": {
+      "label": "设计中",
+      "description": "正在进行架构设计和接口定义",
+      "color": "#4169E1",
+      "transitions_to": [
+        "prechecking",
+        "analyzing",
+        "rejected"
+      ]
+    },
+    "prechecking": {
+      "label": "预检中",
+      "description": "进行结构完整性和覆盖度检查",
+      "color": "#9370DB",
+      "transitions_to": [
+        "auditing",
+        "designing",
+        "rejected"
+      ]
+    },
+    "auditing": {
+      "label": "审核中",
+      "description": "进行质量审查和合规性检查",
+      "color": "#FF6347",
+      "transitions_to": [
+        "approved",
+        "rejected",
+        "designing"
+      ]
+    },
+    "approved": {
+      "label": "已批准",
+      "description": "RFC 已通过审核，可进入实现阶段",
+      "color": "#228B22",
+      "transitions_to": [
+        "archived"
+      ]
+    },
+    "rejected": {
+      "label": "已拒绝",
+      "description": "RFC 未通过审核，需要重新设计或放弃",
+      "color": "#DC143C",
+      "transitions_to": [
+        "draft",
+        "archived"
+      ]
+    },
+    "archived": {
+      "label": "已归档",
+      "description": "RFC 已完成或已放弃，归档保存",
+      "color": "#A9A9A9",
+      "transitions_to": []
+    }
+  },
+  "tag_definitions": {
+    "domain": {
+      "label": "功能领域",
+      "description": "RFC 涉及的功能领域",
+      "values": [
+        {
+          "id": "audio",
+          "name": "音频处理",
+          "description": "音频编解码、效果处理、混音等"
+        },
+        {
+          "id": "video",
+          "name": "视频处理",
+          "description": "视频编解码、转码、滤镜等"
+        },
+        {
+          "id": "network",
+          "name": "网络通信",
+          "description": "网络传输、协议、连接管理等"
+        },
+        {
+          "id": "storage",
+          "name": "存储管理",
+          "description": "数据存储、缓存、持久化等"
+        },
+        {
+          "id": "ui",
+          "name": "用户界面",
+          "description": "UI 组件、交互、布局等"
+        },
+        {
+          "id": "security",
+          "name": "安全性",
+          "description": "认证、授权、加密等"
+        },
+        {
+          "id": "performance",
+          "name": "性能优化",
+          "description": "性能调优、资源管理等"
+        },
+        {
+          "id": "testing",
+          "name": "测试框架",
+          "description": "测试工具、测试策略等"
+        },
+        {
+          "id": "devops",
+          "name": "运维部署",
+          "description": "部署、监控、日志等"
+        },
+        {
+          "id": "api",
+          "name": "API 设计",
+          "description": "接口设计、SDK、文档等"
+        }
+      ]
+    },
+    "platform": {
+      "label": "目标平台",
+      "description": "RFC 适用的平台",
+      "values": [
+        {
+          "id": "ios",
+          "name": "iOS",
+          "description": "Apple iOS 平台"
+        },
+        {
+          "id": "android",
+          "name": "Android",
+          "description": "Google Android 平台"
+        },
+        {
+          "id": "windows",
+          "name": "Windows",
+          "description": "Microsoft Windows 平台"
+        },
+        {
+          "id": "macos",
+          "name": "macOS",
+          "description": "Apple macOS 平台"
+        },
+        {
+          "id": "linux",
+          "name": "Linux",
+          "description": "Linux 平台"
+        },
+        {
+          "id": "web",
+          "name": "Web",
+          "description": "Web 浏览器平台"
+        },
+        {
+          "id": "cross-platform",
+          "name": "跨平台",
+          "description": "多平台通用"
+        }
+      ]
+    },
+    "priority": {
+      "label": "优先级",
+      "description": "RFC 的优先级",
+      "values": [
+        {
+          "id": "critical",
+          "name": "紧急",
+          "description": "需要立即处理的关键问题"
+        },
+        {
+          "id": "high",
+          "name": "高",
+          "description": "重要功能或缺陷修复"
+        },
+        {
+          "id": "medium",
+          "name": "中",
+          "description": "常规功能或改进"
+        },
+        {
+          "id": "low",
+          "name": "低",
+          "description": "可选功能或优化"
+        }
+      ]
+    },
+    "complexity": {
+      "label": "复杂度",
+      "description": "RFC 的实现复杂度",
+      "values": [
+        {
+          "id": "simple",
+          "name": "简单",
+          "description": "单文件、<50 行代码、无依赖"
+        },
+        {
+          "id": "medium",
+          "name": "中等",
+          "description": "多文件、<200 行代码、少量依赖"
+        },
+        {
+          "id": "complex",
+          "name": "复杂",
+          "description": "架构级、>200 行代码、复杂依赖"
+        }
+      ]
+    },
+    "type": {
+      "label": "RFC 类型",
+      "description": "RFC 的类型分类",
+      "values": [
+        {
+          "id": "feature",
+          "name": "新功能",
+          "description": "新增功能特性"
+        },
+        {
+          "id": "enhancement",
+          "name": "功能增强",
+          "description": "现有功能的改进或优化"
+        },
+        {
+          "id": "bugfix",
+          "name": "缺陷修复",
+          "description": "修复已知问题或缺陷"
+        },
+        {
+          "id": "refactor",
+          "name": "代码重构",
+          "description": "代码结构优化或重组"
+        },
+        {
+          "id": "architecture",
+          "name": "架构设计",
+          "description": "系统架构或设计变更"
+        },
+        {
+          "id": "documentation",
+          "name": "文档更新",
+          "description": "文档编写或更新"
+        },
+        {
+          "id": "testing",
+          "name": "测试改进",
+          "description": "测试覆盖或测试框架改进"
+        }
+      ]
+    },
+    "dependency": {
+      "label": "依赖关系",
+      "description": "RFC 间的依赖关系",
+      "values": [
+        {
+          "id": "blocks",
+          "name": "阻塞",
+          "description": "此 RFC 阻塞其他 RFC"
+        },
+        {
+          "id": "blocked-by",
+          "name": "被阻塞",
+          "description": "此 RFC 被其他 RFC 阻塞"
+        },
+        {
+          "id": "related",
+          "name": "相关",
+          "description": "与其他 RFC 相关但不依赖"
+        },
+        {
+          "id": "duplicates",
+          "name": "重复",
+          "description": "与其他 RFC 重复"
+        }
+      ]
+    },
+    "risk": {
+      "label": "风险等级",
+      "description": "RFC 的风险评估",
+      "values": [
+        {
+          "id": "low-risk",
+          "name": "低风险",
+          "description": "影响范围小，风险可控"
+        },
+        {
+          "id": "medium-risk",
+          "name": "中风险",
+          "description": "影响范围中等，需要谨慎处理"
+        },
+        {
+          "id": "high-risk",
+          "name": "高风险",
+          "description": "影响范围大，需要充分评估"
+        },
+        {
+          "id": "breaking-change",
+          "name": "破坏性变更",
+          "description": "可能导致向后不兼容"
+        }
+      ]
+    }
+  },
+  "rfcs": [],
+  "analytics": {
+    "by_status": {},
+    "by_priority": {},
+    "by_complexity": {},
+    "by_platform": {},
+    "by_domain": {},
+    "by_type": {},
+    "timeline": {
+      "created_this_week": 0,
+      "created_this_month": 0,
+      "completed_this_week": 0,
+      "completed_this_month": 0,
+      "average_time_to_approval_days": 0
+    }
+  },
+  "queries": {
+    "predefined": [
+      {
+        "id": "active",
+        "name": "活跃 RFC",
+        "description": "所有进行中的 RFC",
+        "filter": {
+          "status": [
+            "analyzing",
+            "designing",
+            "prechecking",
+            "auditing"
+          ]
+        }
+      },
+      {
+        "id": "pending-review",
+        "name": "待审核",
+        "description": "等待审核的 RFC",
+        "filter": {
+          "status": [
+            "auditing"
+          ]
+        }
+      },
+      {
+        "id": "high-priority",
+        "name": "高优先级",
+        "description": "优先级为高或紧急的 RFC",
+        "filter": {
+          "tags.priority": [
+            "critical",
+            "high"
+          ]
+        }
+      },
+      {
+        "id": "blocked",
+        "name": "被阻塞",
+        "description": "被其他 RFC 阻塞的 RFC",
+        "filter": {
+          "tags.dependency": [
+            "blocked-by"
+          ]
+        }
+      },
+      {
+        "id": "breaking-changes",
+        "name": "破坏性变更",
+        "description": "包含破坏性变更的 RFC",
+        "filter": {
+          "tags.risk": [
+            "breaking-change"
+          ]
+        }
+      },
+      {
+        "id": "approved",
+        "name": "已批准",
+        "description": "已批准的 RFC",
+        "filter": {
+          "status": [
+            "approved"
+          ]
+        }
+      }
+    ]
+  },
+  "export": {
+    "formats": [
+      "json",
+      "csv",
+      "markdown",
+      "html"
+    ],
+    "reports": [
+      {
+        "id": "status-report",
+        "name": "状态报告",
+        "description": "RFC 执行状态总结",
+        "fields": [
+          "id",
+          "title",
+          "status",
+          "priority",
+          "created_at",
+          "updated_at",
+          "owner"
+        ]
+      },
+      {
+        "id": "timeline-report",
+        "name": "时间线报告",
+        "description": "RFC 创建和完成时间线",
+        "fields": [
+          "id",
+          "title",
+          "created_at",
+          "completed_at",
+          "duration_days"
+        ]
+      },
+      {
+        "id": "dependency-report",
+        "name": "依赖关系报告",
+        "description": "RFC 间的依赖关系",
+        "fields": [
+          "id",
+          "title",
+          "related_rfcs",
+          "blocking_rfcs",
+          "blocked_by_rfcs"
+        ]
+      },
+      {
+        "id": "risk-report",
+        "name": "风险评估报告",
+        "description": "RFC 风险评估汇总",
+        "fields": [
+          "id",
+          "title",
+          "risk_level",
+          "impact_scope",
+          "mitigation_plan"
+        ]
+      }
+    ]
+  },
+  "maintenance": {
+    "archival": {
+      "auto_archive_after_days": 90,
+      "archive_conditions": [
+        "status == 'approved' AND completed_at < 90 days ago",
+        "status == 'rejected' AND updated_at < 90 days ago"
+      ]
+    },
+    "cleanup": {
+      "remove_draft_after_days": 180,
+      "remove_conditions": [
+        "status == 'draft' AND created_at < 180 days ago AND no_activity"
+      ]
+    },
+    "backup": {
+      "frequency": "daily",
+      "retention_days": 30
+    }
+  }
+}

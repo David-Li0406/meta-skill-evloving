@@ -1,0 +1,159 @@
+{
+  "connector": "OneDrive for Business",
+  "id": "shared_onedriveforbusiness",
+  "docsUrl": "https://learn.microsoft.com/en-us/connectors/onedriveforbusiness/",
+  "throttling": { "calls": 300, "seconds": 60 },
+  "triggers": {
+    "OnNewFile": {
+      "name": "When a file is created",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "path": "/datasets/default/triggers/onnewfile",
+        "queries": { "folderId": "required|string|Folder ID" }
+      }
+    },
+    "OnUpdatedFile": {
+      "name": "When a file is modified",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "path": "/datasets/default/triggers/onupdatedfile",
+        "queries": { "folderId": "required|string|Folder ID" }
+      }
+    }
+  },
+  "actions": {
+    "CreateFile": {
+      "name": "Create file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/default/files",
+        "body": "binary|File content",
+        "queries": {
+          "folderPath": "required|string|/folder/subfolder",
+          "name": "required|string|filename.ext"
+        }
+      }
+    },
+    "GetFileContent": {
+      "name": "Get file content",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/default/files/@{encodeURIComponent(id)}/content"
+      }
+    },
+    "GetFileContentByPath": {
+      "name": "Get file content using path",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/default/GetFileContentByPath",
+        "queries": { "path": "required|string|/folder/file.docx" }
+      }
+    },
+    "GetFileMetadata": {
+      "name": "Get file metadata",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/default/files/@{encodeURIComponent(id)}"
+      }
+    },
+    "UpdateFile": {
+      "name": "Update file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "put",
+        "path": "/datasets/default/files/@{encodeURIComponent(id)}/content",
+        "body": "binary|Updated content"
+      }
+    },
+    "DeleteFile": {
+      "name": "Delete file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "delete",
+        "path": "/datasets/default/files/@{encodeURIComponent(id)}"
+      }
+    },
+    "CopyFile": {
+      "name": "Copy file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/default/files/@{encodeURIComponent(source)}/copy",
+        "queries": {
+          "destination": "required|string|/destination/folder/filename.ext"
+        }
+      }
+    },
+    "ListFolder": {
+      "name": "List files in folder",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/default/folders/@{encodeURIComponent(id)}"
+      }
+    },
+    "ListRootFolder": {
+      "name": "List files in root folder",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/default/foldersV2"
+      }
+    },
+    "ConvertFile": {
+      "name": "Convert file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/default/files/@{encodeURIComponent(id)}/convert",
+        "queries": { "type": "required|string|PDF,HTML,JPG,PNG" }
+      }
+    },
+    "ExtractArchiveToFolder": {
+      "name": "Extract archive to folder",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_onedriveforbusiness']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/default/extractarchive/@{encodeURIComponent(source)}",
+        "queries": { "destination": "required|string|/destination/folder" }
+      }
+    }
+  },
+  "connectionReference": {
+    "shared_onedriveforbusiness": {
+      "connectionName": "",
+      "source": "Invoker",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_onedriveforbusiness",
+      "tier": "NotSpecified"
+    }
+  },
+  "outputSchemas": {
+    "file": {
+      "Id": "string",
+      "Name": "string",
+      "Path": "string",
+      "Size": "integer",
+      "MediaType": "string",
+      "LastModified": "datetime",
+      "DisplayName": "string",
+      "IsFolder": "boolean"
+    }
+  }
+}

@@ -1,0 +1,299 @@
+# Landing Page Copy Template
+
+Use this template to create conversion-focused copy for your landing page.
+
+---
+
+## Template
+
+```markdown
+# Landing Page Copy: {Product Name}
+
+---
+
+## Hero Section
+
+### Headline
+{Main headline - 5-10 words, benefit-focused}
+
+### Subheadline
+{Supporting text - 15-25 words, clarify what it is and who it's for}
+
+### CTA Button
+{Primary action - 2-4 words}
+Example: "Get Started Free" | "Start Building" | "Try It Now"
+
+### Social Proof Snippet (optional)
+{Brief social proof under CTA}
+Example: "Trusted by 5,000+ makers" | "4.9/5 from 200+ reviews"
+
+---
+
+## Problem Section
+
+### Section Header
+{Frame the problem - make them feel understood}
+
+### Pain Points (3 max)
+
+**Pain Point 1:**
+{Specific frustration they experience}
+
+**Pain Point 2:**
+{Another frustration}
+
+**Pain Point 3:**
+{Third frustration}
+
+### Agitation (optional)
+{What happens if the problem isn't solved}
+
+---
+
+## Solution Section
+
+### Section Header
+{Introduce your solution}
+
+### Value Proposition
+{2-3 sentences on how you solve the problem differently}
+
+### Key Benefits (3-4)
+
+**Benefit 1: {Title}**
+{Short description of the benefit - focus on outcome, not feature}
+
+**Benefit 2: {Title}**
+{Short description}
+
+**Benefit 3: {Title}**
+{Short description}
+
+---
+
+## How It Works Section
+
+### Section Header
+"How It Works" | "Get Started in 3 Steps" | "Simple Process"
+
+### Step 1: {Action}
+{Brief description of first step}
+
+### Step 2: {Action}
+{Brief description of second step}
+
+### Step 3: {Action}
+{Brief description of third step + outcome}
+
+---
+
+## Features Section (optional)
+
+### Section Header
+"Features" | "Everything You Need" | "Packed With..."
+
+### Feature Grid
+
+| Feature | Description |
+|---------|-------------|
+| {Feature 1} | {One-line description} |
+| {Feature 2} | {One-line description} |
+| {Feature 3} | {One-line description} |
+| {Feature 4} | {One-line description} |
+| {Feature 5} | {One-line description} |
+| {Feature 6} | {One-line description} |
+
+---
+
+## Social Proof Section
+
+### Section Header
+"Loved by {Audience}" | "What Users Say" | "Join Thousands..."
+
+### Testimonials (2-3)
+
+**Testimonial 1:**
+> "{Quote - specific outcome achieved}"
+> — {Name}, {Title/Company}
+
+**Testimonial 2:**
+> "{Quote - emotional reaction + result}"
+> — {Name}, {Title/Company}
+
+**Testimonial 3:**
+> "{Quote - problem solved}"
+> — {Name}, {Title/Company}
+
+### Logos (if B2B)
+{List of company logos using product}
+
+### Metrics (if available)
+- {X}+ users
+- {Y}+ {things created}
+- {Z}% {improvement metric}
+
+---
+
+## Pricing Section
+
+### Section Header
+"Simple Pricing" | "Choose Your Plan" | "Start Free"
+
+### Pricing Philosophy (one line)
+{E.g., "No hidden fees. Cancel anytime."}
+
+### Tiers
+
+**{Tier 1 Name}** - ${X}/mo
+- {Feature}
+- {Feature}
+- {Feature}
+[CTA Button]
+
+**{Tier 2 Name}** - ${X}/mo (Most Popular)
+- Everything in {Tier 1}
+- {Feature}
+- {Feature}
+[CTA Button]
+
+**{Tier 3 Name}** - ${X}/mo
+- Everything in {Tier 2}
+- {Feature}
+- {Feature}
+[CTA Button]
+
+### Money-Back Guarantee
+{E.g., "30-day money-back guarantee. No questions asked."}
+
+---
+
+## FAQ Section
+
+### Section Header
+"Frequently Asked Questions"
+
+**Q: {Common question}?**
+A: {Clear, concise answer}
+
+**Q: {Common objection as question}?**
+A: {Answer that handles objection}
+
+**Q: {Technical/logistical question}?**
+A: {Helpful answer}
+
+**Q: {Pricing/value question}?**
+A: {Answer that reinforces value}
+
+---
+
+## Final CTA Section
+
+### Headline
+{Repeat value proposition or create urgency}
+
+### Subheadline
+{Reinforce benefit or reduce risk}
+
+### CTA Button
+{Same as hero or variation}
+
+### Trust Elements
+- {Guarantee}
+- {Security badge}
+- {Support availability}
+
+---
+
+## Footer Elements
+
+### Trust Badges
+- SSL secure
+- Money-back guarantee
+- {Industry certification}
+
+### Support
+- Email: {email}
+- Documentation: {link}
+- Status: {link}
+
+### Legal
+- Privacy Policy
+- Terms of Service
+```
+
+---
+
+## Copy Formulas
+
+### Headlines
+
+**Problem-focused:**
+- "Stop {doing frustrating thing}"
+- "Finally, {solution to common problem}"
+- "{Problem} solved"
+
+**Benefit-focused:**
+- "{Achieve outcome} without {common pain}"
+- "The {adjective} way to {achieve goal}"
+- "{Benefit} in {timeframe}"
+
+**Curiosity:**
+- "The {thing} that {impressive claim}"
+- "How {audience} are {achieving thing}"
+
+### CTAs
+
+**Low commitment:**
+- "Get Started Free"
+- "Try It Free"
+- "Start Free Trial"
+
+**Medium commitment:**
+- "Start Building"
+- "Create Your First {X}"
+- "See How It Works"
+
+**High commitment:**
+- "Buy Now"
+- "Start My Subscription"
+- "Upgrade to Pro"
+
+### Social Proof
+
+**Quantity:**
+- "Join 10,000+ {users}"
+- "Trusted by {X} teams"
+
+**Quality:**
+- "Used by teams at {Company}"
+- "4.9/5 from {X} reviews"
+
+**Outcome:**
+- "{Users} have created {X things}"
+- "{$X} generated by users"
+
+---
+
+## Conversion Optimization Tips
+
+### Above the Fold
+- Clear headline visible
+- Single primary CTA
+- Value prop understood in 5 seconds
+
+### Reducing Friction
+- Minimize form fields
+- Show pricing clearly
+- Offer free tier/trial
+- Display trust signals
+
+### Creating Urgency (authentically)
+- Limited time pricing
+- Limited spots
+- Launching soon waitlist
+
+### Handling Objections
+- FAQ section
+- Money-back guarantee
+- Testimonials addressing concerns
+- Comparison to alternatives

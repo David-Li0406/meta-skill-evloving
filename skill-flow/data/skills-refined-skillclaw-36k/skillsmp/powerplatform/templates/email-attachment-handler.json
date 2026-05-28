@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "_comment": "Template: Process email attachments - save to SharePoint, notify via Teams",
+  "triggers": {
+    "When_a_new_email_arrives": {
+      "type": "OpenApiConnectionNotification",
+      "inputs": {
+        "host": {
+          "connectionName": "shared_office365",
+          "operationId": "OnNewEmailV3",
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+        },
+        "parameters": {
+          "folderPath": "Inbox",
+          "importance": "Any",
+          "fetchOnlyWithAttachment": true,
+          "includeAttachments": true,
+          "subjectFilter": "SUBJECT_FILTER"
+        }
+      },
+      "splitOn": "@triggerOutputs()?['body/value']"
+    }
+  },
+  "actions": {
+    "Condition_-_Has_attachments": {
+      "type": "If",
+      "expression": {
+        "greater": [
+          "@length(triggerOutputs()?['body/attachments'])",
+          0
+        ]
+      },
+      "actions": {
+        "Apply_to_each_attachment": {
+          "type": "Foreach",
+          "foreach": "@triggerOutputs()?['body/attachments']",
+          "actions": {
+            "Create_file_in_SharePoint": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "CreateFile",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "SITE_URL",
+                  "folderPath": "/Shared Documents/Email Attachments",
+                  "name": "@{items('Apply_to_each_attachment')?['name']}",
+                  "body": "@base64ToBinary(items('Apply_to_each_attachment')?['contentBytes'])"
+                }
+              },
+              "runAfter": {}
+            }
+          },
+          "runAfter": {}
+        },
+        "Post_Teams_notification": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_teams",
+              "operationId": "PostMessageToConversation",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams"
+            },
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Chat with Flow bot",
+              "body/recipient": "NOTIFICATION_RECIPIENT",
+              "body/messageBody": "New email attachment(s) saved to SharePoint!\n\nFrom: @{triggerOutputs()?['body/from']}\nSubject: @{triggerOutputs()?['body/subject']}\nAttachments: @{length(triggerOutputs()?['body/attachments'])}"
+            }
+          },
+          "runAfter": {
+            "Apply_to_each_attachment": ["Succeeded"]
+          }
+        }
+      },
+      "else": {
+        "actions": {}
+      },
+      "runAfter": {}
+    }
+  }
+}

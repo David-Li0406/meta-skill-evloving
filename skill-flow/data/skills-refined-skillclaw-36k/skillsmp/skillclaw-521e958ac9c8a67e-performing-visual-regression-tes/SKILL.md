@@ -1,0 +1,47 @@
+---
+name: performing-visual-regression-testing
+description: Use this skill when you need to execute visual regression tests to detect unintended UI changes in web applications or components.
+---
+
+# Skill body
+
+## Overview
+
+This skill empowers Claude to automatically detect unintended UI changes by performing visual regression tests. It integrates with popular visual testing tools like Percy, Chromatic, and BackstopJS to streamline the process of capturing screenshots, comparing them against baselines, and identifying visual differences.
+
+## How It Works
+
+1. **Capture Screenshots**: Captures screenshots of specified components or pages using the configured visual testing tool.
+2. **Compare Against Baselines**: Compares the captured screenshots against established baseline images.
+3. **Analyze Visual Diffs**: Identifies and analyzes visual differences between the current screenshots and the baselines.
+
+## When to Use This Skill
+
+This skill activates when you need to:
+- Detect unintended UI changes introduced by recent code modifications.
+- Verify the visual consistency of a web application across different browsers or environments.
+- Automate visual regression testing as part of a CI/CD pipeline.
+
+## Examples
+
+### Example 1: Verifying UI Changes After a Feature Update
+
+User request: "Run a visual test on the homepage to check for any UI regressions after the latest feature update."
+
+The skill will:
+1. Capture a screenshot of the homepage.
+2. Compare the screenshot against the baseline image of the homepage.
+3. Report any visual differences detected, highlighting potential UI regressions.
+
+### Example 2: Checking Visual Consistency Across Browsers
+
+User request: "Perform a visual regression test on the product details page to ensure it renders correctly in Chrome and Firefox."
+
+The skill will:
+1. Capture screenshots of the product details page in both Chrome and Firefox.
+2. Compare the screenshots against the respective baseline images for each browser.
+3. Identify and report any visual inconsistencies detected between the browsers.
+
+## Best Practices
+
+- **Configuration**: Ensure the visual testing tool is properly configured with the correct API keys and project settings.

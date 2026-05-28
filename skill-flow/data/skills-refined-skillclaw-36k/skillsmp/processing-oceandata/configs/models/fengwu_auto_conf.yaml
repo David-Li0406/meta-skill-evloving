@@ -1,0 +1,42 @@
+# Fengwu Model Configuration - Autoregressive Version
+# For long-term prediction through iterative forecasting
+
+# Temporal configuration
+input_len: 7
+output_len: 1  # Always 1 for autoregressive mode
+in_channels: 2
+
+# Spatial configuration
+img_size: [240, 240]
+
+# Patch size
+patch_size: [4, 4]
+patch_size_3d: [2, 4, 4]
+
+# Window size
+window_size: [6, 12]
+window_size_3d: [2, 6, 12]
+
+# Pseudo-3D depth
+pseudo_3d_depth: 4
+
+# Model architecture - Same as Balanced
+embed_dim: 128
+num_heads: [4, 8, 8, 4]
+mlp_ratio: 4.0
+
+# Regularization
+drop_rate: 0.0
+attn_drop_rate: 0.0
+drop_path_rate: 0.15
+
+# Autoregressive specific settings
+rollout_steps: 10  # Number of autoregressive prediction steps
+                   # Can be overridden at inference time
+
+# Training recommendations
+# - Train with teacher forcing initially
+# - Use scheduled sampling for fine-tuning
+# - Monitor error accumulation across steps
+# - Consider curriculum learning (start with few steps)
+

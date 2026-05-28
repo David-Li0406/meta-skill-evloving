@@ -1,0 +1,184 @@
+# Validation: ${TASK_NAME}
+# Machine + human readable validation tracking
+#
+# This file tracks taxonomy coverage, clarification history, markers for
+# unresolved items, and SDD gates. Intended for both programmatic access
+# (dignity CLI, task-dispatch gate checks) and human review.
+
+metadata:
+  issue_type: ${ISSUE_TYPE}  # Initiative | Feature | Task
+  created: ${DATE}
+  questions_used: ${N}
+  questions_limit: ${LIMIT}  # Initiative/Feature: 5, Task: 3
+  approach: "${SELECTED_APPROACH}"
+  source: ${SOURCE}  # spec-validate | standalone
+
+# Ambiguity scan runs during spec-validate to identify gaps.
+# Status values: clear | partial | missing
+# No gaps = silent proceed (no confirmation required)
+ambiguity_scan:
+  scope:
+    status: ${STATUS}  # clear | partial | missing
+    gaps: []
+  behavior:
+    status: ${STATUS}
+    gaps: []
+  data_model:
+    status: ${STATUS}
+    gaps: []
+  constraints:
+    status: ${STATUS}
+    gaps: []
+  edge_cases:
+    status: ${STATUS}
+    gaps: []
+  integration:
+    status: ${STATUS}
+    gaps: []
+  terminology:
+    status: ${STATUS}
+    gaps: []
+
+# Taxonomy coverage tracks which requirement areas have been addressed.
+# Status values:
+#   - covered: Addressed via plan context or clarifications
+#   - gap: Identified but not addressed (may need /clarify)
+#   - n/a: Not applicable to this issue type
+taxonomy_coverage:
+  scope:
+    status: ${STATUS}  # covered | gap | n/a
+    source: ${SOURCE}  # plan_context | clarifications | null
+  behavior:
+    status: ${STATUS}
+    source: ${SOURCE}
+  data_model:
+    status: ${STATUS}
+    source: ${SOURCE}
+  constraints:
+    status: ${STATUS}
+    source: ${SOURCE}
+  edge_cases:
+    status: ${STATUS}
+    source: ${SOURCE}
+  integration:
+    status: ${STATUS}
+    source: ${SOURCE}
+  terminology:
+    status: ${STATUS}
+    source: ${SOURCE}
+
+# Clarification log records each question asked during validation.
+# impact_uncertainty: High | Medium | Low (Impact x Uncertainty score)
+# integration: Where the answer was incorporated (e.g., spec.md#scope)
+clarification_log:
+  - id: C001
+    area: ${TAXONOMY_AREA}
+    question: "${QUESTION}"
+    answer: "${ANSWER}"
+    impact_uncertainty: ${SCORE}
+    integration: ${TARGET_DOC_OR_SECTION}
+  # Additional clarifications follow same structure
+
+# Clarification sessions provide full resolution tracking with audit trail.
+# Each session groups related Q/A pairs and tracks document updates.
+# Used by clarify to record which sections were modified.
+clarification_sessions:
+  - id: S001
+    timestamp: ${TIMESTAMP}
+    questions:
+      - id: Q001
+        question: "${QUESTION}"
+        answer: "${ANSWER}"
+        area: ${TAXONOMY_AREA}
+        doc_updates:
+          - file: ${DOC_FILE}
+            section: ${SECTION}
+            action: ${ACTION}  # added | modified | removed
+          # Additional doc_updates follow same structure
+      # Additional questions follow same structure
+  # Additional sessions follow same structure
+
+# Markers track unresolved items requiring future clarification.
+# Created during spec-create when gaps are identified.
+# Resolved via /clarify command.
+markers:
+  - id: M001
+    area: ${TAXONOMY_AREA}
+    description: "${WHAT_NEEDS_CLARIFICATION}"
+    doc_ref: "${DOC}#${SECTION}"  # spec.md#section | context.md#section
+    status: open  # open | resolved
+    resolution: null  # Populated when resolved: "${HOW_RESOLVED}"
+  # Additional markers follow same structure
+
+# Complexity tracking documents justified gate violations.
+# Use when simplicity/anti-abstraction gates would fail but violation is necessary.
+# Initiative/Feature: Track violations; Task: Skip
+complexity_tracking:
+  - violation: "${WHAT_EXCEEDS_SIMPLICITY}"
+    justification: "${WHY_NEEDED}"
+    alternative_rejected: "${SIMPLER_APPROACH_AND_WHY_NOT}"
+  # Additional violations follow same structure
+
+# SDD gates enforce spec-driven development principles.
+# Initiative: All gates evaluated
+# Feature/Task: n/a (gates not applicable)
+gates:
+  simplicity:
+    status: ${STATUS}  # passed | failed | n/a
+    reason: "${EXPLANATION}"
+  anti_abstraction:
+    status: ${STATUS}
+    reason: "${EXPLANATION}"
+  integration_first:
+    status: ${STATUS}
+    reason: "${EXPLANATION}"
+
+# Deferred items were identified but not clarified due to question limit.
+# Candidates for future /clarify if needed.
+deferred:
+  - area: ${TAXONOMY_AREA}
+    question: "${QUESTION_NOT_ASKED}"
+  # Additional deferred items follow same structure
+
+# Design readiness checklist for programmatic gate checks.
+# All items must be true for implementation to proceed.
+readiness:
+  high_priority_areas_covered: ${BOOL}
+  success_criteria_measurable: ${BOOL}
+  scope_boundaries_clear: ${BOOL}
+  integration_points_identified: ${BOOL}
+  edge_cases_addressed: ${BOOL}
+
+# Loqui validation results (if input contained code blocks).
+# Validates code against language-specific guidelines.
+# Only present when resources/loqui-guide.md exists.
+loqui_check:
+  present: ${BOOL}  # true if code artifacts were extracted
+  language: ${LANG}  # python | rust | go | null
+  status: ${STATUS}  # passed | violations_found | skipped
+  violations:
+    - rule: "${RULE_NAME}"
+      location: "${CODE_LOCATION}"
+      suggestion: "${FIX_SUGGESTION}"
+    # Additional violations follow same structure
+  adherence_notes: |
+    ${NOTES_ON_CODE_QUALITY}
+
+# Review configuration for implementation batch reviews.
+# Used by task-dispatch to determine which reviewers to use.
+# Applies to: Initiative/Feature (Task: n/a)
+# Variant format: {reasoning_effort}-medium (verbosity fixed at medium)
+# Reasoning options: low | medium | high | xhigh (xhigh GPT-5.2 only)
+review_config:
+  reasoning_effort: ${REASONING_EFFORT}  # low | medium | high | xhigh (user-selected)
+  reviewers:
+    - type: claude
+      model: ${CLAUDE_MODEL}  # opus (user-selected)
+    - type: opencode
+      model: ${OPENCODE_MODEL_1}  # e.g., openai/gpt-5.2-pro
+    - type: opencode
+      model: ${OPENCODE_MODEL_2}  # e.g., google/gemini-3-pro-preview
+
+# Notes for additional context, assumptions, or decisions.
+notes: |
+  ${NOTES}

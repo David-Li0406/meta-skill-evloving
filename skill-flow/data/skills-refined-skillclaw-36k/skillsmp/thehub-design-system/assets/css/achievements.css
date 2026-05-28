@@ -1,0 +1,1079 @@
+/**
+ * TheHUB Achievements System
+ * Grid layout with large illustrated badges - Mobile First
+ *
+ * @version 3.0 - Grid Layout Redesign
+ * @author TheHUB Development Team
+ */
+
+/* ==========================================================================
+   CSS VARIABLES - Using TheHUB design system
+   ALL VARIABLES MOVED TO tokens.css AND theme.css - 2026-01-17
+   ========================================================================== */
+
+/* Variables now defined in:
+ * - tokens.css: Achievement colors, badge-hex-bg, badge-transition
+ * - theme.css: Achievement theme variables (card-bg, text colors, etc.)
+ *
+ * This centralization improves maintainability and ensures consistency.
+ */
+
+/* ==========================================================================
+   BADGES PAGE CONTAINER
+   ========================================================================== */
+
+.badges-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-md, 16px);
+}
+
+@media (min-width: 600px) {
+    .badges-page {
+        padding: var(--space-lg, 24px);
+    }
+}
+
+@media (min-width: 900px) {
+    .badges-page {
+        padding: var(--space-xl, 32px);
+    }
+}
+
+/* ==========================================================================
+   HEADER WITH PROGRESS
+   ========================================================================== */
+
+.badges-header {
+    margin-bottom: var(--space-lg, 24px);
+}
+
+@media (min-width: 600px) {
+    .badges-header {
+        margin-bottom: var(--space-xl, 32px);
+    }
+}
+
+.badges-header-content {
+    margin-bottom: var(--space-md, 16px);
+}
+
+.badges-header h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 var(--space-xs, 4px) 0;
+    color: var(--achievement-text-primary);
+}
+
+@media (min-width: 600px) {
+    .badges-header h1 {
+        font-size: 28px;
+    }
+}
+
+.badges-subtitle {
+    font-size: 13px;
+    color: var(--achievement-text-muted);
+    margin: 0;
+}
+
+@media (min-width: 600px) {
+    .badges-subtitle {
+        font-size: 14px;
+    }
+}
+
+/* Progress Container */
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md, 16px);
+}
+
+.progress-stats {
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--achievement-text-primary);
+}
+
+@media (min-width: 600px) {
+    .progress-stats {
+        font-size: 24px;
+    }
+}
+
+.progress-stats .earned {
+    color: var(--color-accent, #61CE70);
+}
+
+.progress-stats .total {
+    color: var(--achievement-text-muted);
+    font-weight: 500;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 10px;
+    background: var(--achievement-slider-inactive);
+    border-radius: var(--radius-full, 9999px);
+    overflow: hidden;
+}
+
+@media (min-width: 600px) {
+    .progress-bar {
+        height: 12px;
+    }
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #61CE70, #8BC34A);
+    border-radius: var(--radius-full, 9999px);
+    transition: width 0.5s ease;
+}
+
+/* ==========================================================================
+   TAB NAVIGATION
+   ========================================================================== */
+
+.badges-tabs {
+    display: flex;
+    gap: var(--space-sm, 8px);
+    margin-bottom: var(--space-lg, 24px);
+    border-bottom: 1px solid var(--achievement-border);
+    padding-bottom: var(--space-sm, 8px);
+}
+
+@media (min-width: 600px) {
+    .badges-tabs {
+        gap: var(--space-md, 16px);
+        margin-bottom: var(--space-xl, 32px);
+    }
+}
+
+.badge-tab {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs, 4px);
+    padding: var(--space-sm, 8px) var(--space-md, 16px);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md, 10px);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--achievement-text-muted);
+    cursor: pointer;
+    transition: all var(--badge-transition);
+}
+
+@media (min-width: 600px) {
+    .badge-tab {
+        font-size: 14px;
+        padding: var(--space-sm, 8px) var(--space-lg, 24px);
+    }
+}
+
+.badge-tab:hover {
+    color: var(--achievement-text-primary);
+    background: var(--achievement-badge-bg);
+}
+
+.badge-tab.active {
+    color: var(--color-accent, #61CE70);
+    background: var(--achievement-badge-bg);
+}
+
+.badge-tab svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+@media (min-width: 600px) {
+    .badge-tab svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.tab-count {
+    background: var(--achievement-border);
+    color: var(--achievement-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--radius-full, 9999px);
+    margin-left: var(--space-xs, 4px);
+}
+
+.badge-tab.active .tab-count {
+    background: var(--color-accent, #61CE70);
+    color: #fff;
+}
+
+/* Tab Content */
+.badge-tab-content {
+    display: none;
+}
+
+.badge-tab-content.active {
+    display: block;
+}
+
+/* ==========================================================================
+   BADGE CATEGORY
+   ========================================================================== */
+
+.badge-category {
+    margin-bottom: var(--space-xl, 32px);
+}
+
+@media (min-width: 600px) {
+    .badge-category {
+        margin-bottom: var(--space-2xl, 48px);
+    }
+}
+
+.category-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 var(--space-md, 16px) 0;
+    padding-bottom: var(--space-sm, 8px);
+    border-bottom: 2px solid var(--color-accent, #61CE70);
+    color: var(--achievement-text-primary);
+}
+
+@media (min-width: 600px) {
+    .category-title {
+        font-size: 18px;
+        margin-bottom: var(--space-lg, 24px);
+    }
+}
+
+/* ==========================================================================
+   BADGE GRID - CRITICAL!
+   ========================================================================== */
+
+.badge-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm, 8px);
+}
+
+@media (min-width: 480px) {
+    .badge-grid {
+        gap: var(--space-md, 16px);
+    }
+}
+
+@media (min-width: 600px) {
+    .badge-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-lg, 24px);
+    }
+}
+
+@media (min-width: 900px) {
+    .badge-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1100px) {
+    .badge-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* ==========================================================================
+   BADGE CARD - CRITICAL!
+   ========================================================================== */
+
+.badge-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-md, 16px) var(--space-sm, 8px);
+    background: var(--achievement-card-bg);
+    border-radius: var(--radius-lg, 16px);
+    border: 1px solid var(--achievement-border);
+    transition: transform var(--badge-transition), box-shadow var(--badge-transition);
+    cursor: pointer;
+}
+
+@media (min-width: 600px) {
+    .badge-card {
+        padding: var(--space-lg, 24px) var(--space-md, 16px) var(--space-md, 16px);
+    }
+}
+
+.badge-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.badge-card:active {
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   BADGE ICON WRAPPER
+   ========================================================================== */
+
+.badge-icon-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-sm, 8px);
+}
+
+@media (min-width: 600px) {
+    .badge-icon-wrapper {
+        margin-bottom: var(--space-md, 16px);
+    }
+}
+
+/* ==========================================================================
+   BADGE SVG - LARGE!
+   ========================================================================== */
+
+.badge-icon-wrapper .badge-svg {
+    width: 100%;
+    max-width: 100px;
+    height: auto;
+    aspect-ratio: 100 / 116;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    transition: transform var(--badge-transition);
+}
+
+@media (min-width: 480px) {
+    .badge-icon-wrapper .badge-svg {
+        max-width: 120px;
+    }
+}
+
+@media (min-width: 600px) {
+    .badge-icon-wrapper .badge-svg {
+        max-width: 130px;
+    }
+}
+
+@media (min-width: 900px) {
+    .badge-icon-wrapper .badge-svg {
+        max-width: 140px;
+    }
+}
+
+@media (min-width: 1100px) {
+    .badge-icon-wrapper .badge-svg {
+        max-width: 150px;
+    }
+}
+
+.badge-card:hover .badge-icon-wrapper .badge-svg {
+    transform: scale(1.05);
+}
+
+/* ==========================================================================
+   BADGE NAME - UNDER ICON
+   ========================================================================== */
+
+.badge-name {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--achievement-text-primary);
+    line-height: 1.3;
+}
+
+@media (min-width: 480px) {
+    .badge-name {
+        font-size: 12px;
+    }
+}
+
+@media (min-width: 600px) {
+    .badge-name {
+        font-size: 13px;
+        letter-spacing: 0.5px;
+    }
+}
+
+/* ==========================================================================
+   BADGE COUNTER - ON BADGE
+   ========================================================================== */
+
+.badge-counter {
+    position: absolute;
+    bottom: 5px;
+    right: calc(50% - 55px);
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    background: var(--color-accent, #61CE70);
+    color: #171717;
+    font-size: 12px;
+    font-weight: 800;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--achievement-card-bg);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+@media (min-width: 600px) {
+    .badge-counter {
+        right: calc(50% - 65px);
+        min-width: 28px;
+        height: 28px;
+        font-size: 13px;
+    }
+}
+
+@media (min-width: 900px) {
+    .badge-counter {
+        right: calc(50% - 70px);
+        min-width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+}
+
+/* ==========================================================================
+   LOCKED STATE
+   ========================================================================== */
+
+.badge-card.locked {
+    opacity: 1;
+}
+
+.badge-card.locked .badge-icon-wrapper .badge-svg {
+    filter: grayscale(100%) opacity(0.3);
+}
+
+.badge-card.locked .badge-name {
+    color: var(--achievement-text-muted);
+}
+
+.badge-card.locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.badge-card.locked .badge-counter {
+    display: none;
+}
+
+/* ==========================================================================
+   INFO SECTION
+   ========================================================================== */
+
+.badges-info {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm, 8px);
+    padding: var(--space-md, 16px);
+    background: var(--achievement-badge-bg);
+    border-radius: var(--radius-md, 10px);
+    margin-top: var(--space-xl, 32px);
+}
+
+.badges-info svg {
+    flex-shrink: 0;
+    color: var(--color-accent, #61CE70);
+}
+
+.badges-info p {
+    font-size: 13px;
+    color: var(--achievement-text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ==========================================================================
+   BADGE MODAL
+   ========================================================================== */
+
+.badge-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md, 16px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.badge-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.badge-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+}
+
+.badge-modal-content {
+    position: relative;
+    background: var(--achievement-card-bg);
+    border-radius: var(--radius-lg, 16px);
+    padding: var(--space-xl, 32px) var(--space-lg, 24px);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.badge-modal.active .badge-modal-content {
+    transform: scale(1);
+}
+
+.badge-modal-close {
+    position: absolute;
+    top: var(--space-md, 16px);
+    right: var(--space-md, 16px);
+    background: transparent;
+    border: none;
+    color: var(--achievement-text-muted);
+    cursor: pointer;
+    padding: var(--space-xs, 4px);
+    border-radius: var(--radius-sm, 6px);
+    transition: color var(--badge-transition), background var(--badge-transition);
+}
+
+.badge-modal-close:hover {
+    color: var(--achievement-text-primary);
+    background: var(--achievement-badge-bg);
+}
+
+.badge-modal-icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-md, 16px);
+}
+
+.badge-modal-icon .badge-svg {
+    width: 180px;
+    height: auto;
+    aspect-ratio: 100 / 116;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
+}
+
+@media (min-width: 600px) {
+    .badge-modal-icon .badge-svg {
+        width: 200px;
+    }
+}
+
+.badge-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--achievement-text-primary);
+    margin: 0 0 var(--space-sm, 8px) 0;
+}
+
+@media (min-width: 600px) {
+    .badge-modal-title {
+        font-size: 22px;
+    }
+}
+
+.badge-modal-requirement {
+    font-size: 14px;
+    color: var(--color-accent, #61CE70);
+    margin: 0 0 var(--space-md, 16px) 0;
+    font-weight: 500;
+}
+
+.badge-modal-description {
+    font-size: 14px;
+    color: var(--achievement-text-muted);
+    line-height: 1.5;
+    margin: 0 0 var(--space-md, 16px) 0;
+}
+
+.badge-modal-counter-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs, 4px);
+    font-size: 12px;
+    color: var(--achievement-text-muted);
+    background: var(--achievement-badge-bg);
+    padding: var(--space-sm, 8px) var(--space-md, 16px);
+    border-radius: var(--radius-full, 9999px);
+}
+
+.badge-modal-counter-info svg {
+    color: var(--color-accent, #61CE70);
+}
+
+/* ==========================================================================
+   LEGACY SUPPORT - For rider/club profile cards
+   ========================================================================== */
+
+/* Achievement card on profiles */
+.achievements-card {
+    background: var(--achievement-card-bg);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    border: 1px solid var(--achievement-border);
+    margin-bottom: var(--space-md);
+    overflow: hidden;
+}
+
+/* Badge grid inside sidebar - more compact */
+.content-sidebar .badge-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-xs, 4px);
+}
+
+.content-sidebar .badge-item .badge-svg {
+    width: 40px;
+    height: 40px;
+}
+
+.content-sidebar .badge-value {
+    font-size: 11px;
+}
+
+.content-sidebar .badge-label {
+    font-size: 7px;
+}
+
+@media (min-width: 600px) {
+    .achievements-card {
+        padding: var(--space-lg);
+        border-radius: var(--radius-lg);
+    }
+}
+
+.achievements-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    gap: var(--space-sm);
+}
+
+@media (min-width: 600px) {
+    .achievements-card-header {
+        margin-bottom: var(--space-md);
+    }
+}
+
+.achievements-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    color: var(--achievement-text-primary);
+    margin: 0;
+}
+
+.achievements-card-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: var(--color-accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+@media (min-width: 600px) {
+    .achievements-card-title {
+        font-size: 14px;
+    }
+
+    .achievements-card-title::before {
+        height: 16px;
+    }
+}
+
+.achievements-info-link {
+    font-size: 11px;
+    color: var(--color-accent);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    white-space: nowrap;
+    transition: opacity var(--badge-transition);
+}
+
+.achievements-info-link:hover {
+    opacity: 0.8;
+}
+
+/* Experience slider */
+.exp-section {
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--achievement-border);
+}
+
+@media (min-width: 600px) {
+    .exp-section {
+        margin-bottom: var(--space-lg);
+        padding-bottom: var(--space-md);
+    }
+}
+
+.exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    gap: var(--space-sm);
+}
+
+.exp-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.exp-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--achievement-yellow);
+    flex-shrink: 0;
+}
+
+@media (min-width: 600px) {
+    .exp-icon {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.exp-title {
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--achievement-text-primary);
+}
+
+@media (min-width: 600px) {
+    .exp-title {
+        font-size: 14px;
+    }
+}
+
+.exp-since {
+    font-size: 10px;
+    color: var(--achievement-text-muted);
+}
+
+@media (min-width: 600px) {
+    .exp-since {
+        font-size: 12px;
+    }
+}
+
+.exp-slider {
+    display: flex;
+    gap: 3px;
+    height: 5px;
+    margin-bottom: var(--space-xs);
+}
+
+@media (min-width: 600px) {
+    .exp-slider {
+        gap: 4px;
+        height: 6px;
+        margin-bottom: var(--space-sm);
+    }
+}
+
+.exp-step {
+    flex: 1;
+    background: var(--achievement-slider-inactive);
+    border-radius: var(--radius-full);
+    transition: background var(--badge-transition);
+}
+
+.exp-step.active {
+    background: var(--color-accent);
+}
+
+.exp-step.hidden {
+    display: none;
+}
+
+.exp-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    color: var(--color-text-secondary, #4b5563);
+    gap: 2px;
+}
+
+@media (min-width: 400px) {
+    .exp-labels {
+        font-size: 9px;
+    }
+}
+
+@media (min-width: 600px) {
+    .exp-labels {
+        font-size: 10px;
+    }
+}
+
+.exp-labels span {
+    transition: color var(--badge-transition);
+    text-align: center;
+    flex: 1;
+}
+
+.exp-labels span.active {
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.exp-labels span.locked {
+    color: #9ca3af;
+}
+
+/* Profile badge item grid */
+.badge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-sm);
+    background: var(--achievement-badge-bg);
+    border-radius: var(--radius-sm);
+    transition: transform var(--badge-transition), box-shadow var(--badge-transition);
+    cursor: pointer;
+    position: relative;
+}
+
+@media (min-width: 600px) {
+    .badge-item {
+        gap: var(--space-xs);
+        padding: var(--space-md) var(--space-sm);
+        border-radius: var(--radius-md);
+    }
+}
+
+.badge-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.badge-item:hover .badge-svg {
+    transform: scale(1.1);
+}
+
+.badge-item.clickable {
+    cursor: pointer;
+}
+
+.badge-item.clickable:hover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--color-accent);
+    pointer-events: none;
+}
+
+.badge-item.locked {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.badge-item.locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.badge-item.locked .badge-svg {
+    filter: grayscale(100%);
+}
+
+.badge-item.locked:hover .badge-svg {
+    transform: none;
+}
+
+/* Badge SVG in profile cards */
+.badge-item .badge-svg {
+    width: 48px;
+    height: 48px;
+    transition: transform var(--badge-transition);
+}
+
+@media (min-width: 400px) {
+    .badge-item .badge-svg {
+        width: 56px;
+        height: 56px;
+    }
+}
+
+@media (min-width: 600px) {
+    .badge-item .badge-svg {
+        width: 64px;
+        height: 64px;
+    }
+}
+
+.badge-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--achievement-text-primary);
+    line-height: 1;
+}
+
+@media (min-width: 600px) {
+    .badge-value {
+        font-size: 16px;
+    }
+}
+
+.badge-value.empty {
+    color: var(--achievement-text-muted);
+}
+
+.badge-label {
+    font-size: 8px;
+    color: var(--achievement-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+@media (min-width: 400px) {
+    .badge-label {
+        font-size: 9px;
+    }
+}
+
+@media (min-width: 600px) {
+    .badge-label {
+        font-size: 10px;
+        letter-spacing: 0.5px;
+    }
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes badgeUnlock {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.badge-card.just-unlocked,
+.badge-item.just-unlocked {
+    animation: badgeUnlock 0.6s ease-out;
+}
+
+@keyframes badgeGlow {
+    0%, 100% {
+        filter: drop-shadow(0 0 4px var(--glow-color, #61CE70));
+    }
+    50% {
+        filter: drop-shadow(0 0 8px var(--glow-color, #61CE70));
+    }
+}
+
+.badge-card.glowing .badge-svg,
+.badge-item.glowing .badge-svg {
+    animation: badgeGlow 2s ease-in-out infinite;
+}
+
+.badge-card[data-glow="gold"],
+.badge-item[data-glow="gold"] {
+    --glow-color: var(--achievement-gold);
+}
+
+.badge-card[data-glow="green"],
+.badge-item[data-glow="green"] {
+    --glow-color: var(--achievement-green);
+}
+
+/* ==========================================================================
+   PRINT STYLES
+   ========================================================================== */
+
+@media print {
+    .badges-page {
+        padding: 0;
+    }
+
+    .badge-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    .badge-card:hover {
+        transform: none;
+    }
+
+    .badge-card.locked {
+        opacity: 0.3;
+    }
+}
+
+/* Mobile Fullscreen Modal */
+@media (max-width: 767px) {
+    .badge-modal {
+        padding: 0;
+    }
+    .badge-modal-content {
+        max-width: 100%;
+        max-height: 100%;
+        height: 100%;
+        width: 100%;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-lg);
+    }
+    .badge-modal-close {
+        position: fixed;
+        top: var(--space-md);
+        right: var(--space-md);
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-bg-secondary);
+        border-radius: var(--radius-full);
+        z-index: 10;
+    }
+    .badge-modal-close svg {
+        width: 24px;
+        height: 24px;
+    }
+}

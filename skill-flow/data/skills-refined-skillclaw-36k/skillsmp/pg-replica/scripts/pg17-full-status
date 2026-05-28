@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Combined service + replication status for PostgreSQL 17 replica on hal9000
+set -euo pipefail
+
+ssh hal9000 "
+systemctl status postgresql-replica --no-pager 2>&1 | head -18
+echo '---'
+sudo -u postgres psql -h localhost -p 5432 -c \"SELECT pg_is_in_recovery() as is_replica, pg_last_wal_receive_lsn() as received_lsn, pg_last_wal_replay_lsn() as replayed_lsn, pg_last_xact_replay_timestamp() as last_replay_time;\"
+"

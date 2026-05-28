@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Write(*.md)",
+      "Write(*.json)",
+      "Edit(*.md)",
+      "Edit(*.json)",
+      "Glob(*)",
+      "Grep(*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(mkdir:*)",
+      "mcp__*"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(sudo:*)",
+      "Bash(chmod:*)",
+      "Bash(chown:*)",
+      "Write(/tmp/*)",
+      "Write(/etc/*)",
+      "Write(/root/*)"
+    ]
+  },
+  "_comment": {
+    "purpose": "OHSpec skill 权限预授权配置",
+    "allow_description": {
+      "Read(*)": "允许读取任何文件（代码扫描需要）",
+      "Write(*.md)": "允许写入 Markdown 文件（RFC、findings、progress）",
+      "Write(*.json)": "允许写入 JSON 文件（结构化数据）",
+      "Glob(*)": "允许文件模式匹配（查找相关文件）",
+      "Grep(*)": "允许内容搜索（代码扫描）",
+      "mcp__*": "允许所有 MCP 工具（context7、sequential-thinking 等）"
+    },
+    "deny_description": {
+      "Bash(rm:*)": "禁止删除文件",
+      "Write(/tmp/*)": "禁止写入临时目录（强制写入项目目录）"
+    }
+  }
+}

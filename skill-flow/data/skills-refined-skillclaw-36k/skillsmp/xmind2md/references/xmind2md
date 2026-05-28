@@ -1,0 +1,189 @@
+#!/usr/bin/env python
+"""
+xmind2md: Convert XMind (.xmind) files to a Markdown tree.
+
+Supports modern XMind files that store content in a zip with a JSON file such as:
+- content.json
+- root.json
+- metadata.json (not used)
+Older XMind "classic" formats may not be supported.
+
+Examples:
+  xmind2md file.xmind > file.md
+  xmind2md --numbers --max-depth 6 file.xmind
+"""
+
+from __future__ import annotations
+import argparse
+import json
+import sys
+import zipfile
+from typing import Any, Dict, List, Optional, Tuple
+
+
+def eprint(*args: object) -> None:
+    print(*args, file=sys.stderr)
+
+
+def read_json_from_xmind(path: str) -> Tuple[Dict[str, Any], str]:
+    """Return (json_obj, filename) from the first matching JSON entry."""
+    candidates = [
+        "content.json",
+        "root.json",
+        "document.json",
+    ]
+
+    with zipfile.ZipFile(path, "r") as z:
+        names = set(z.namelist())
+
+        # Prefer known filenames.
+        for c in candidates:
+            if c in names:
+                with z.open(c) as f:
+                    return json.load(f), c
+
+        # Fallback: pick the first top-level *.json that looks like content.
+        json_names = [n for n in z.namelist() if n.lower().endswith(".json") and "/" not in n]
+        for n in json_names:
+            try:
+                with z.open(n) as f:
+                    obj = json.load(f)
+                # Heuristic: XMind content often has "rootTopic" / "sheet" / "topic".
+                if isinstance(obj, (dict, list)):
+                    return obj, n
+            except Exception:
+                continue
+
+        raise FileNotFoundError("Could not find a supported JSON content file inside the .xmind container.")
+
+
+def get_topic_title(topic: Dict[str, Any]) -> str:
+    title = topic.get("title")
+    if isinstance(title, str) and title.strip():
+        return title.strip()
+    # Sometimes title stored in "labels"
+    labels = topic.get("labels")
+    if isinstance(labels, list) and labels:
+        s = str(labels[0]).strip()
+        if s:
+            return s
+    return "(untitled)"
+
+
+def iter_children(topic: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    XMind JSON varies, but children often appear under:
+      topic["children"]["attached"] -> list of topics
+      topic["children"]["detached"] -> list
+      topic["children"]["topics"]   -> list (some exports)
+    """
+    children = topic.get("children")
+    if not isinstance(children, dict):
+        return []
+    for key in ("attached", "topics", "detached"):
+        arr = children.get(key)
+        if isinstance(arr, list):
+            # Filter to dict topics
+            return [t for t in arr if isinstance(t, dict)]
+    return []
+
+
+def extract_root_topics(doc: Any) -> List[Dict[str, Any]]:
+    """
+    Handle common shapes:
+    - list of sheets: [{ "rootTopic": {...}, "title": ... }, ...]
+    - dict with "sheets" array
+    - dict with "rootTopic"
+    """
+    if isinstance(doc, list):
+        # Likely a list of sheets
+        sheets = [s for s in doc if isinstance(s, dict)]
+    elif isinstance(doc, dict):
+        if isinstance(doc.get("sheets"), list):
+            sheets = [s for s in doc["sheets"] if isinstance(s, dict)]
+        else:
+            sheets = [doc]
+    else:
+        return []
+
+    roots: List[Dict[str, Any]] = []
+    for sheet in sheets:
+        rt = sheet.get("rootTopic")
+        if isinstance(rt, dict):
+            roots.append(rt)
+        elif isinstance(sheet.get("topic"), dict):
+            # Some exports use "topic"
+            roots.append(sheet["topic"])
+    return roots
+
+
+def md_escape(text: str) -> str:
+    # Minimal escaping to keep bullets stable
+    return text.replace("\r", "").replace("\n", " ").strip()
+
+
+def render_topic(
+    topic: Dict[str, Any],
+    depth: int,
+    max_depth: Optional[int],
+    numbers: bool,
+    prefix_stack: List[int],
+) -> List[str]:
+    if max_depth is not None and depth > max_depth:
+        return []
+
+    title = md_escape(get_topic_title(topic))
+    indent = "  " * (depth - 1)
+
+    if numbers:
+        # prefix_stack holds numbering per depth
+        while len(prefix_stack) < depth:
+            prefix_stack.append(0)
+        prefix_stack[depth - 1] += 1
+        # reset deeper levels
+        for i in range(depth, len(prefix_stack)):
+            prefix_stack[i] = 0
+        num = ".".join(str(n) for n in prefix_stack[:depth] if n > 0)
+        line = f"{indent}- {num} {title}"
+    else:
+        line = f"{indent}- {title}"
+
+    out = [line]
+    kids = iter_children(topic)
+    for k in kids:
+        out.extend(render_topic(k, depth + 1, max_depth, numbers, prefix_stack))
+    return out
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Convert XMind (.xmind) to a Markdown tree.")
+    ap.add_argument("xmind", help="Path to .xmind file")
+    ap.add_argument("--max-depth", type=int, default=None, help="Limit depth (1 = root only)")
+    ap.add_argument("--numbers", action="store_true", help="Prefix bullets with hierarchical numbers (1.2.3)")
+    ap.add_argument("--sheet-sep", default="\n\n", help="Separator between sheets (default: blank line)")
+    args = ap.parse_args()
+
+    try:
+        doc, src = read_json_from_xmind(args.xmind)
+    except Exception as ex:
+        eprint(f"Error reading .xmind: {ex}")
+        return 2
+
+    roots = extract_root_topics(doc)
+    if not roots:
+        eprint(f"Could not find root topics in JSON ({src}). File may be an older XMind format.")
+        return 3
+
+    parts: List[str] = []
+    for idx, root in enumerate(roots, start=1):
+        # Root itself as first bullet; children underneath.
+        prefix_stack: List[int] = []
+        lines = render_topic(root, depth=1, max_depth=args.max_depth, numbers=args.numbers, prefix_stack=prefix_stack)
+        parts.append("\n".join(lines))
+
+    sys.stdout.write(args.sheet_sep.join(parts).rstrip() + "\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

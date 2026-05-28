@@ -1,0 +1,146 @@
+-- @group Maintenance
+
+-- @function authz.verify_integrity
+-- @brief Check for data corruption (circular memberships, broken hierarchies, partition issues)
+-- @returns Rows describing any issues found, empty if healthy
+-- @example -- Run as part of health checks
+-- @example SELECT * FROM authz.verify_integrity('default');
+CREATE OR REPLACE FUNCTION authz.verify_integrity(p_namespace text DEFAULT 'default')
+RETURNS TABLE (
+    resource_type text,
+    resource_id text,
+    status text,
+    details text
+)
+AS $$
+DECLARE
+    v_default_count bigint;
+BEGIN
+    -- Check for group membership cycles
+    RETURN QUERY
+    SELECT
+        'system'::text AS resource_type,
+        'group_cycles'::text AS resource_id,
+        'warning'::text AS status,
+        'Circular group membership detected: ' || array_to_string(cycle_path, ' -> ') AS details
+    FROM authz._detect_cycles(p_namespace);
+
+    -- Check for resource hierarchy cycles
+    RETURN QUERY
+    SELECT
+        'system'::text AS resource_type,
+        'resource_cycles'::text AS resource_id,
+        'warning'::text AS status,
+        'Circular resource hierarchy detected: ' || array_to_string(cycle_path, ' -> ') AS details
+    FROM authz._detect_resource_cycles(p_namespace);
+
+    -- Check for audit events in default partition (indicates partitioning problem)
+    SELECT COUNT(*) INTO v_default_count FROM authz.audit_events_default;
+    IF v_default_count > 0 THEN
+        RETURN QUERY
+        SELECT
+            'system'::text AS resource_type,
+            'audit_partitions'::text AS resource_id,
+            'error'::text AS status,
+            'Audit events in default partition: ' || v_default_count::text ||
+            ' rows. Run ensure_audit_partitions() to create missing partitions.' AS details;
+    END IF;
+
+    RETURN;
+END;
+$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = authz, pg_temp;
+
+-- @function authz.get_stats
+-- @brief Get namespace statistics for monitoring dashboards
+-- @returns tuple_count, hierarchy_rule_count, unique_users, unique_resources
+-- @example SELECT * FROM authz.get_stats('default');
+CREATE OR REPLACE FUNCTION authz.get_stats(p_namespace text DEFAULT 'default')
+RETURNS TABLE (
+    tuple_count bigint,
+    hierarchy_rule_count bigint,
+    unique_users bigint,
+    unique_resources bigint
+)
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        t.tuple_count,
+        h.hierarchy_count,
+        t.unique_users,
+        t.unique_resources
+    FROM
+        (SELECT COUNT(*)::bigint AS tuple_count,
+                COUNT(DISTINCT CASE WHEN subject_type = 'user' THEN subject_id END)::bigint AS unique_users,
+                COUNT(DISTINCT (resource_type, resource_id))::bigint AS unique_resources
+         FROM authz.tuples WHERE namespace = p_namespace) t,
+        -- Count hierarchies from both global (app defaults) and tenant namespace (org overrides)
+        (SELECT COUNT(*)::bigint AS hierarchy_count
+         FROM authz.permission_hierarchy WHERE namespace IN ('global', p_namespace)) h;
+END;
+$$ LANGUAGE plpgsql STABLE PARALLEL SAFE SECURITY INVOKER SET search_path = authz, pg_temp;
+
+-- @function authz.grant_to_resources_bulk
+-- @brief Grant same user/team access to many resources at once
+-- @param p_resource_ids Array of resource IDs to grant access on
+-- @returns Count of grants created
+-- @example -- Give alice read access to 100 docs in one call
+-- @example SELECT authz.grant_to_resources_bulk('doc', ARRAY['doc1', 'doc2', ...],
+-- @example   'read', 'user', 'alice', NULL, 'default');
+CREATE OR REPLACE FUNCTION authz.grant_to_resources_bulk (p_resource_type text, p_resource_ids text[], p_relation text, p_subject_type text, p_subject_id text, p_subject_relation text DEFAULT NULL, p_namespace text DEFAULT 'default')
+    RETURNS int
+    AS $$
+DECLARE
+    v_count int;
+BEGIN
+    -- Validate inputs once
+    PERFORM
+        authz._validate_namespace (p_namespace);
+    PERFORM
+        authz._validate_identifier (p_resource_type, 'resource_type');
+    PERFORM
+        authz._validate_identifier (p_relation, 'relation');
+    PERFORM
+        authz._validate_identifier (p_subject_type, 'subject_type');
+    PERFORM
+        authz._validate_id (p_subject_id, 'subject_id');
+    IF p_subject_relation IS NOT NULL THEN
+        PERFORM
+            authz._validate_identifier (p_subject_relation, 'subject_relation');
+    END IF;
+    -- Validate resource_ids array
+    PERFORM authz._validate_id_array(p_resource_ids, 'resource_ids');
+    -- Reject relations that require cycle detection (must use write_tuple instead)
+    IF p_relation = 'member' AND p_subject_type != 'user' THEN
+        RAISE EXCEPTION 'grant_to_resources_bulk cannot create group-to-group memberships; use write_tuple instead'
+            USING ERRCODE = 'feature_not_supported',
+                  HINT = 'postkit:authz:BIZ_BULK_GROUP_MEMBERSHIP';
+    END IF;
+    IF p_relation = 'parent' THEN
+        RAISE EXCEPTION 'grant_to_resources_bulk cannot create parent relations; use write_tuple instead'
+            USING ERRCODE = 'feature_not_supported',
+                  HINT = 'postkit:authz:BIZ_BULK_PARENT_RELATION';
+    END IF;
+    INSERT INTO authz.tuples (namespace, resource_type, resource_id, relation, subject_type, subject_id, subject_relation)
+    SELECT
+        p_namespace,
+        p_resource_type,
+        unnest(p_resource_ids),
+        p_relation,
+        p_subject_type,
+        p_subject_id,
+        p_subject_relation
+    ON CONFLICT (namespace,
+        resource_type,
+        resource_id,
+        relation,
+        subject_type,
+        subject_id,
+        COALESCE(subject_relation, ''))
+        DO NOTHING;
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RETURN v_count;
+END;
+$$
+LANGUAGE plpgsql SECURITY INVOKER
+SET search_path = authz, pg_temp;

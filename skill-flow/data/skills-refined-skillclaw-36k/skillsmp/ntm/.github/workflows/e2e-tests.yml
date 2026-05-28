@@ -1,0 +1,217 @@
+# E2E Tests for Usage Limit Detection System
+# Bead: bd-1xn3e
+#
+# These tests verify the robot mode commands work correctly with real tmux sessions.
+# In CI, tests run in mock mode. For local testing with real agents, omit E2E_MOCK_MODE.
+#
+# Local usage with real agents:
+#   go test -v ./e2e/... -timeout 10m
+#
+# CI mock mode:
+#   E2E_MOCK_MODE=1 CAUT_MOCK_FILE=e2e/fixtures/caut_mock.json go test -v ./e2e/... -short
+
+name: E2E Tests
+
+on:
+  # Manual trigger for full E2E testing
+  workflow_dispatch:
+    inputs:
+      mock_mode:
+        description: 'Run in mock mode (no real agents)'
+        required: false
+        default: 'true'
+        type: boolean
+      test_filter:
+        description: 'Test filter pattern (e.g., TestE2E_Working)'
+        required: false
+        default: ''
+        type: string
+
+  # Run on PRs that touch e2e or robot code
+  pull_request:
+    branches: ["main"]
+    paths:
+      - 'e2e/**'
+      - 'internal/robot/**'
+      - 'internal/caut/**'
+      - '.github/workflows/e2e-tests.yml'
+
+  # Nightly scheduled run
+  schedule:
+    - cron: '0 4 * * *'  # 4 AM UTC daily
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.25"
+
+jobs:
+  # ============================================================================
+  # E2E Tests - Mock Mode (CI)
+  # ============================================================================
+  e2e-mock:
+    name: E2E Tests (Mock Mode)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install tmux
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
+      - name: Build ntm
+        run: |
+          go build -o ntm ./cmd/ntm
+          sudo mv ntm /usr/local/bin/
+
+      - name: Verify ntm installed
+        run: ntm version
+
+      - name: Run E2E Tests (Mock Mode)
+        env:
+          E2E_MOCK_MODE: "1"
+          CAUT_MOCK_FILE: "e2e/fixtures/caut_mock.json"
+          E2E_LOG_DIR: "/tmp/e2e-logs"
+        run: |
+          # Create log directory
+          mkdir -p "$E2E_LOG_DIR"
+
+          # Run tests with -short flag (skips long-running tests without real agents)
+          go test -v ./e2e/... -short -timeout 5m \
+            ${{ inputs.test_filter && format('-run {0}', inputs.test_filter) || '' }} \
+            2>&1 | tee e2e-output.txt
+
+      - name: Upload E2E Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs-mock
+          path: |
+            /tmp/e2e-logs/
+            e2e-output.txt
+          retention-days: 7
+
+  # ============================================================================
+  # E2E Infrastructure Tests - Verify test suite compiles and runs basic checks
+  # ============================================================================
+  e2e-infra:
+    name: E2E Infrastructure Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install tmux
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
+      - name: Build and vet E2E tests
+        run: |
+          go build ./e2e/...
+          go vet ./e2e/...
+
+      - name: List E2E tests
+        run: go test ./e2e/... -list '.*' -count=1
+
+      - name: Run session-not-found test (no agents required)
+        run: |
+          go build -o ntm ./cmd/ntm
+          sudo mv ntm /usr/local/bin/
+          go test -v ./e2e/... -run TestE2E_SessionNotFoundError -timeout 2m
+
+  # ============================================================================
+  # E2E Robot Mode Validation
+  # ============================================================================
+  e2e-robot-mode:
+    name: Robot Mode Commands
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install tmux
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
+      - name: Build ntm
+        run: |
+          go build -o ntm ./cmd/ntm
+          sudo mv ntm /usr/local/bin/
+
+      - name: Create test tmux session
+        run: |
+          tmux new-session -d -s test_session -x 200 -y 50
+          # Give tmux time to initialize
+          sleep 2
+          tmux list-sessions
+
+      - name: Test --robot-is-working (empty session)
+        run: |
+          echo "Testing --robot-is-working on empty session..."
+          ntm --robot-is-working=test_session --panes=0 | jq .
+
+      - name: Test --robot-agent-health (empty session)
+        run: |
+          echo "Testing --robot-agent-health on empty session..."
+          ntm --robot-agent-health=test_session --panes=0 | jq .
+
+      - name: Test --robot-smart-restart dry-run
+        run: |
+          echo "Testing --robot-smart-restart with --dry-run..."
+          ntm --robot-smart-restart=test_session --panes=0 --dry-run | jq .
+
+      - name: Test error handling (non-existent session)
+        run: |
+          echo "Testing error handling for non-existent session..."
+          # Should return valid JSON with success=false
+          output=$(ntm --robot-is-working=nonexistent_session_xyz 2>&1 || true)
+          echo "$output" | jq -e '.success == false' || {
+            echo "Expected success=false for non-existent session"
+            echo "Output: $output"
+            exit 1
+          }
+
+      - name: Cleanup
+        if: always()
+        run: tmux kill-server 2>/dev/null || true
+
+  # ============================================================================
+  # Summary
+  # ============================================================================
+  e2e-success:
+    name: E2E Success
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [e2e-mock, e2e-infra, e2e-robot-mode]
+    if: always()
+    steps:
+      - name: Check all E2E jobs passed
+        run: |
+          if [ "${{ needs.e2e-mock.result }}" != "success" ] || \
+             [ "${{ needs.e2e-infra.result }}" != "success" ] || \
+             [ "${{ needs.e2e-robot-mode.result }}" != "success" ]; then
+            echo "One or more E2E jobs failed"
+            exit 1
+          fi
+          echo "All E2E checks passed!"

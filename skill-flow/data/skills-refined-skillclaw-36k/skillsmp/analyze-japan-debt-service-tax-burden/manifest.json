@@ -1,0 +1,96 @@
+{
+  "name": "analyze-japan-debt-service-tax-burden",
+  "version": "0.1.1",
+  "displayName": "分析日本債務利息負擔",
+  "description": "以日本公債殖利率變化為觸發，量化「政府利息支出 / 稅收」負擔（含情境壓力測試），並判斷是否進入債務利息螺旋風險區。",
+  "author": "Ricky Wang",
+  "license": "MIT",
+  "category": "interest-rates",
+  "tags": [
+    "日本",
+    "國債",
+    "債務",
+    "利息支出",
+    "稅收",
+    "壓力測試",
+    "財政風險",
+    "殖利率",
+    "JGB"
+  ],
+  "dataLevel": "free-nolimit",
+  "dependencies": {
+    "python": ">=3.8",
+    "packages": [
+      "pandas>=1.5.0",
+      "numpy>=1.20.0",
+      "requests>=2.28.0"
+    ],
+    "optional": [
+      "pandas_datareader>=0.10.0",
+      "scipy>=1.9.0",
+      "matplotlib>=3.5.0"
+    ]
+  },
+  "entryPoints": {
+    "skill": "SKILL.md",
+    "mainScript": "scripts/japan_debt_analyzer.py"
+  },
+  "workflows": [
+    {
+      "id": "quick-check",
+      "name": "快速檢查",
+      "description": "快速查看當前利息/稅收比與殖利率狀態",
+      "file": "workflows/quick-check.md"
+    },
+    {
+      "id": "full-analysis",
+      "name": "完整分析",
+      "description": "執行完整的財政壓力測試與風險評估",
+      "file": "workflows/full-analysis.md"
+    },
+    {
+      "id": "stress-test",
+      "name": "情境壓測",
+      "description": "自定義殖利率衝擊情境的壓力測試",
+      "file": "workflows/stress-test.md"
+    }
+  ],
+  "references": [
+    "references/data-sources.md",
+    "references/methodology.md",
+    "references/japan-fiscal-structure.md"
+  ],
+  "templates": [
+    "templates/output-json.md",
+    "templates/output-markdown.md"
+  ],
+  "examples": [
+    "examples/sample-output.json"
+  ],
+  "dataSources": [
+    {
+      "name": "日本財務省 (MOF)",
+      "type": "primary",
+      "url": "https://www.mof.go.jp/",
+      "api": "預算/決算統計、國債統計"
+    },
+    {
+      "name": "日本銀行 (BOJ)",
+      "type": "primary",
+      "url": "https://www.boj.or.jp/",
+      "api": "JGB 殖利率時間序列"
+    },
+    {
+      "name": "FRED",
+      "type": "secondary",
+      "url": "https://fred.stlouisfed.org/",
+      "api": "日本長期利率、經濟指標"
+    },
+    {
+      "name": "US Treasury TIC",
+      "type": "secondary",
+      "url": "https://ticdata.treasury.gov/",
+      "api": "日本持有美國證券數據"
+    }
+  ]
+}

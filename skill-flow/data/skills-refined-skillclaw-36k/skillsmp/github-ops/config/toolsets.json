@@ -1,0 +1,120 @@
+{
+  "version": "1.0.0",
+  "description": "GitHub Operations Skill Configuration - MCP Server Parity",
+  "toolsets": {
+    "enabled": [
+      "repos",
+      "issues",
+      "prs",
+      "actions",
+      "releases",
+      "code-security",
+      "discussions",
+      "notifications",
+      "search",
+      "users",
+      "orgs",
+      "gists",
+      "projects"
+    ],
+    "default": [
+      "repos",
+      "issues",
+      "prs",
+      "users"
+    ]
+  },
+  "settings": {
+    "confirm_destructive": true,
+    "max_attempts": 2,
+    "default_limit": 30,
+    "json_output": false
+  },
+  "mcp_parity": {
+    "repos": {
+      "mcp_tools": ["get_file_contents", "create_or_update_file", "push_files", "create_repository", "fork_repository", "create_branch", "list_commits", "get_commit"],
+      "script": "repos.sh",
+      "status": "full"
+    },
+    "issues": {
+      "mcp_tools": ["list_issues", "get_issue", "create_issue", "update_issue", "add_issue_comment", "list_issue_comments"],
+      "script": "issues.sh",
+      "status": "full"
+    },
+    "prs": {
+      "mcp_tools": ["list_pull_requests", "get_pull_request", "create_pull_request", "update_pull_request", "merge_pull_request", "get_pull_request_diff", "get_pull_request_files", "list_pull_request_reviews", "create_pull_request_review", "get_pull_request_status", "update_pull_request_branch", "get_pull_request_comments", "add_pull_request_review_comment"],
+      "script": "prs.sh",
+      "status": "full"
+    },
+    "actions": {
+      "mcp_tools": ["list_workflows", "list_workflow_runs", "get_workflow_run", "get_workflow_run_logs", "list_workflow_jobs", "get_job_logs", "rerun_workflow_run", "rerun_failed_jobs", "cancel_workflow_run", "run_workflow", "list_workflow_run_artifacts", "download_workflow_run_artifact", "delete_workflow_run_logs", "get_workflow_run_usage"],
+      "script": "actions.sh",
+      "status": "full"
+    },
+    "releases": {
+      "mcp_tools": ["list_releases", "get_release", "create_release", "delete_release", "get_release_asset", "upload_release_asset"],
+      "script": "releases.sh",
+      "status": "full"
+    },
+    "code_security": {
+      "mcp_tools": ["list_code_scanning_alerts", "get_code_scanning_alert"],
+      "script": "code-security.sh",
+      "status": "full"
+    },
+    "dependabot": {
+      "mcp_tools": ["list_dependabot_alerts", "get_dependabot_alert"],
+      "script": "code-security.sh",
+      "status": "full"
+    },
+    "secret_protection": {
+      "mcp_tools": ["list_secret_scanning_alerts", "get_secret_scanning_alert"],
+      "script": "code-security.sh",
+      "status": "full"
+    },
+    "discussions": {
+      "mcp_tools": ["list_discussions", "get_discussion", "get_discussion_comments", "list_discussion_categories"],
+      "script": "discussions.sh",
+      "status": "full"
+    },
+    "notifications": {
+      "mcp_tools": ["list_notifications", "get_notification_thread", "mark_notification_read", "mark_all_notifications_read", "get_repo_subscription", "set_repo_subscription", "delete_repo_subscription"],
+      "script": "notifications.sh",
+      "status": "full"
+    },
+    "search": {
+      "mcp_tools": ["search_repositories", "search_code", "search_issues", "search_users", "search_commits"],
+      "script": "search.sh",
+      "status": "full"
+    },
+    "users": {
+      "mcp_tools": ["get_me", "get_user"],
+      "script": "users.sh",
+      "status": "full"
+    },
+    "orgs": {
+      "mcp_tools": ["list_org_members", "get_org", "list_org_teams"],
+      "script": "orgs.sh",
+      "status": "full"
+    },
+    "gists": {
+      "mcp_tools": ["list_gists", "get_gist", "create_gist", "update_gist", "delete_gist", "fork_gist", "star_gist", "unstar_gist"],
+      "script": "gists.sh",
+      "status": "full"
+    },
+    "projects": {
+      "mcp_tools": ["list_projects", "get_project", "list_project_items", "get_project_item", "create_project_item", "update_project_item_field", "delete_project_item", "list_project_fields"],
+      "script": "projects.sh",
+      "status": "full"
+    },
+    "labels": {
+      "mcp_tools": ["list_labels", "get_label", "create_label", "update_label", "delete_label"],
+      "script": "issues.sh",
+      "status": "included_in_issues"
+    },
+    "git": {
+      "mcp_tools": ["get_tree", "get_blob", "get_reference", "create_reference", "update_reference", "delete_reference", "compare_commits", "get_tag"],
+      "script": "repos.sh",
+      "status": "included_in_repos"
+    }
+  }
+}

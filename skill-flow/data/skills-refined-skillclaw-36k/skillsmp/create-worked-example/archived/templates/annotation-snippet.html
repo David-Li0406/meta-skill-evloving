@@ -1,0 +1,138 @@
+<!--
+  ============================================================
+  ANNOTATION TEMPLATE - Calculate positions from DATA VALUES
+  ============================================================
+  Annotations must use the SAME pixel formula as the graph.
+  This ensures labels appear at the correct y-intercept positions.
+
+  PPTX LAYER SYSTEM - GRANULAR LAYERS FOR INDEPENDENT MANIPULATION
+  ================================================================
+  Each annotation element should have its OWN layer so it can be
+  independently selected and moved in the exported PPTX/Google Slides.
+
+  Instead of ONE combined layer:
+    <g data-pptx-layer="annotation">...all annotations...</g>
+
+  Use SEPARATE layers for each element:
+    <g data-pptx-layer="label-b0">...y-intercept label 1...</g>
+    <g data-pptx-layer="label-b20">...y-intercept label 2...</g>
+    <g data-pptx-layer="arrow-shift">...shift arrow...</g>
+    <g data-pptx-layer="eq-line-1">...equation label 1...</g>
+
+  NAMING CONVENTION:
+    - "label-X" for text labels (X = descriptive suffix like "b0", "shift20")
+    - "arrow-X" for arrows (X = descriptive suffix like "shift", "highlight")
+    - "eq-N" for equation labels (N = line number)
+    - "point-X" for point labels (X = coordinates like "3,9")
+
+  Export automatically crops each layer to its tight bounding box,
+  making small elements easy to select in PowerPoint/Google Slides.
+
+  STEP 1: Know your graph constants (from svg-graphs.md)
+    ORIGIN_Y = 170      (pixel y for data y=0)
+    PLOT_HEIGHT = 150   (pixels from y=0 to y=max)
+    Y_MAX = [your max]  (e.g., 50, 100, 200)
+
+  STEP 2: Calculate pixel positions from data values
+    pixelY = 170 - (dataY / Y_MAX) * 150
+
+  STEP 3: Wrap each annotation in its own layer group
+
+  FONT RULES (apply to ALL annotations):
+  - font-family="Arial"
+  - font-size="9"
+  - font-weight="normal" (NOT bold - too thick)
+  ============================================================
+-->
+
+
+<!-- ========== Y-INTERCEPT ANNOTATION EXAMPLE ========== -->
+<!--
+  Example: Two lines with y-intercepts at 0 and 20, Y_MAX = 50
+
+  Calculate pixel positions:
+  - y-intercept 0:  pixelY = 170 - (0/50)*150 = 170
+  - y-intercept 20: pixelY = 170 - (20/50)*150 = 110
+
+  Label positions: x=5 (left margin), y=pixelY
+  Arrow positions: x=25, from pixelY1 to pixelY2
+-->
+
+<!-- Arrow marker definition (add to <defs> section, use ONCE per SVG) -->
+<defs>
+  <marker id="annotation-arrow" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+    <polygon points="0 0, 6 2, 0 4" fill="#ef4444"/>
+  </marker>
+</defs>
+
+<!-- ===== GRANULAR ANNOTATION LAYERS - Each element is independently selectable ===== -->
+
+<!-- Y-intercept label for line 1 at y=0 (pixelY=170) -->
+<g data-pptx-layer="label-b0">
+  <text x="5" y="170" fill="#60a5fa" font-family="Arial" font-size="9" font-weight="normal">b = 0</text>
+</g>
+
+<!-- Y-intercept label for line 2 at y=20 (pixelY=110) -->
+<g data-pptx-layer="label-b20">
+  <text x="5" y="110" fill="#22c55e" font-family="Arial" font-size="9" font-weight="normal">b = 20</text>
+</g>
+
+<!-- Arrow showing shift from y=0 to y=20 -->
+<g data-pptx-layer="arrow-shift">
+  <line x1="25" y1="170" x2="25" y2="115" stroke="#ef4444" stroke-width="2" marker-end="url(#annotation-arrow)"/>
+</g>
+
+<!-- Arrow label showing shift amount (midpoint: (170+110)/2 = 140) -->
+<g data-pptx-layer="label-shift">
+  <text x="5" y="140" fill="#ef4444" font-family="Arial" font-size="9" font-weight="normal">+20</text>
+</g>
+
+
+<!-- ========== POSITION REFERENCE ========== -->
+<!--
+  X POSITIONS (fixed):
+  | Position     | X value | Use for              |
+  |--------------|---------|----------------------|
+  | Left margin  | 5       | Y-intercept labels   |
+  | Arrow line   | 25      | Vertical arrows      |
+  | Right margin | 265     | Line equation labels |
+
+  Y POSITIONS (calculated from data):
+  | Data Y | Y_MAX=50 | Y_MAX=100 | Y_MAX=200 |
+  |--------|----------|-----------|-----------|
+  | 0      | 170      | 170       | 170       |
+  | 10     | 140      | 155       | 162.5     |
+  | 20     | 110      | 140       | 155       |
+  | 25     | 95       | 132.5     | 151.25    |
+  | 40     | 50       | 110       | 140       |
+  | 50     | 20       | 95        | 132.5     |
+  | 100    | -        | 20        | 95        |
+  | 200    | -        | -         | 20        |
+
+  Formula: pixelY = 170 - (dataY / Y_MAX) * 150
+-->
+
+
+<!-- ========== LINE EQUATION LABELS (right margin) ========== -->
+<!--
+  Position at x=265, y = line's ending pixelY (or stacked if multiple)
+  Each equation label gets its own layer for independent manipulation
+-->
+<g data-pptx-layer="eq-line-1">
+  <text x="265" y="30" fill="#60a5fa" font-family="Arial" font-size="9" font-weight="normal">y = 5x</text>
+</g>
+<g data-pptx-layer="eq-line-2">
+  <text x="265" y="45" fill="#22c55e" font-family="Arial" font-size="9" font-weight="normal">y = 5x + 20</text>
+</g>
+
+
+<!-- ========== POINT LABELS (inside plot area) ========== -->
+<!--
+  - Upper half (pixelY < 95): label ABOVE at pixelY - 12
+  - Lower half (pixelY >= 95): label BELOW at pixelY + 15
+  - Use text-anchor="middle" for centering
+  - Each point label gets its own layer
+-->
+<g data-pptx-layer="point-4-20">
+  <text x="150" y="98" fill="#60a5fa" font-family="Arial" font-size="10" font-weight="normal" text-anchor="middle">(4, 20)</text>
+</g>

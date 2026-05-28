@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""
+简化版 Work Memo 命令接口
+
+用法: /memo <自然语言描述>
+
+示例:
+  /memo 紧急会议明天 #work @office
+  /memo 完成项目报告
+  /memo 修复登录bug
+"""
+
+import sys
+from pathlib import Path
+
+# 获取脚本所在目录
+SCRIPT_DIR = Path(__file__).resolve().parent
+MEMO_COMMAND_PATH = SCRIPT_DIR / "skills" / "scripts" / "memo_command.py"
+
+
+def record_memo(description: str) -> int:
+    """记录工作备忘录"""
+    if not MEMO_COMMAND_PATH.exists():
+        print(f"❌ 错误：找不到 memo_command.py: {MEMO_COMMAND_PATH}")
+        return 1
+
+    import subprocess
+    try:
+        result = subprocess.run(
+            [sys.executable, str(MEMO_COMMAND_PATH), description],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        print(result.stdout, end='')
+        if result.stderr:
+            print(result.stderr, file=sys.stderr)
+        return result.returncode
+    except subprocess.TimeoutExpired:
+        print("❌ 命令执行超时", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"❌ 错误: {e}", file=sys.stderr)
+        return 1
+
+
+def show_help():
+    """显示帮助信息"""
+    help_text = """
+📝 工作备忘录命令
+
+使用方式: /memo <自然语言描述>
+
+支持的自然语言语法:
+  - 标签: #work, #urgent, #bug 等
+  - 上下文: @office, @home, @phone 等
+  - 时间: 明天, 下周三, 今天等
+  - 优先级: 紧急, 重要, 非常紧急 等
+
+示例:
+  /memo 紧急会议明天 #work @office
+  /memo 完成项目报告
+  /memo 修复登录bug #urgent
+  /memo 团队例会 #meeting
+  /memo 重要电话明天 @phone
+
+高级用法:
+  /memo "任务描述" --urgency 5 --importance 4
+  /memo "任务描述" --type bugfix --tags urgent
+
+帮助:
+  /memo help
+"""
+    print(help_text)
+    return 0
+
+
+def main():
+    # 没有参数，显示帮助
+    if len(sys.argv) < 2:
+        return show_help()
+
+    # 检查是否是帮助命令
+    if sys.argv[1].lower() in ['help', '-h', '--help']:
+        return show_help()
+
+    # 获取完整的自然语言描述
+    description = ' '.join(sys.argv[1:])
+
+    # 记录备忘录
+    return record_memo(description)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

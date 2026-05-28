@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["status"],
+  "properties": {
+    "status": {
+      "enum": ["COMPLETED", "NEEDS_DECISION", "NEEDS_ACTION", "FAILED"]
+    },
+    "tasks_completed": { "type": "integer" },
+    "total_tasks": { "type": "integer" },
+    "commits": { "type": "array", "items": { "type": "string" } },
+    "files_modified": { "type": "array", "items": { "type": "string" } },
+    "summary_created": { "type": "string" },
+    "blocked_at": { "type": "integer" },
+    "decision": {
+      "type": "object",
+      "properties": {
+        "needed": { "type": "string" },
+        "options": { "type": "array" },
+        "context": { "type": "string" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "needed": { "type": "string" },
+        "instructions": { "type": "array" },
+        "verification": { "type": "string" }
+      }
+    },
+    "error": {
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" },
+        "output": { "type": "string" },
+        "retry_count": { "type": "integer" },
+        "partial_commits": { "type": "array" }
+      }
+    }
+  }
+}

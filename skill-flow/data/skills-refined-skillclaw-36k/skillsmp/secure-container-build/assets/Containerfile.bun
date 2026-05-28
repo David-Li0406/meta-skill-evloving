@@ -1,0 +1,98 @@
+# syntax=docker/dockerfile:1
+
+# Global ARG for runtime image selection
+# - latest: Production (no shell, minimal, most secure)
+# - latest-dev: Development/debugging (includes shell and basic tools)
+ARG RUNTIME_TAG=latest
+
+###############################
+# Builder stage
+###############################
+FROM docker.io/node:lts-slim AS builder
+
+# Install system dependencies first
+RUN <<EOT
+apt update -qqy
+DEBIAN_FRONTEND=noninteractive \
+  apt install -qyy --no-install-recommends --no-install-suggests \
+  tini curl \
+  ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOT
+
+# Install bun using official distroless image (best practice)
+COPY --from=docker.io/oven/bun:slim /usr/local/bin/bun /usr/local/bin/bun
+
+RUN <<EOT
+# Create app directory and set ownership
+mkdir /app && chmod -R 2755 /app && chown -R node:node /app
+# Create symlink for bunx (COPY will follow the symlink and copy actual file)
+ln -s /usr/local/bin/bun /usr/local/bin/bunx
+EOT
+
+# Add main project and install it
+COPY --chown=node:node package.json bun.lockb* /app/
+
+# Then, add the rest of the project source code and install it
+COPY --chown=node:node ./src /app/src
+
+# Cache mount speeds up repeated builds by caching Bun's package cache
+RUN --mount=type=cache,target=/home/node/.bun/install/cache,uid=1000,gid=1000 <<EOT
+su node -c 'cd /app \
+  && bun install --frozen-lockfile'
+
+# Optional: Compiling to standalone binary (including Bun runtime)
+# su node -c 'cd /app \
+#   && bun build ./src/index.ts --compile --outfile ./bin/app'
+EOT
+
+###############################
+# Runtime stage (Wolfi glibc-dynamic)
+###############################
+# Re-declare ARG for this stage
+ARG RUNTIME_TAG=latest
+FROM cgr.dev/chainguard/glibc-dynamic:${RUNTIME_TAG} AS runtime
+
+# Copy tini from builder (Wolfi doesn't include it)
+COPY --from=builder /usr/bin/tini-static /usr/bin/tini
+
+# Copy bun and bunx from builder (bunx symlink is followed by COPY, becomes full file)
+COPY --from=builder /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=builder /usr/local/bin/bunx /usr/local/bin/bunx
+
+# Copy the application from the builder
+COPY --from=builder --chown=65532:65532 /app /app
+
+# Switch to non-root user (Wolfi default: 65532)
+USER 65532:65532
+WORKDIR /app
+
+# Set environment variables
+ENV BUN_INSTALL="/home/nonroot/.bun" \
+    PATH="/usr/local/bin:/home/nonroot/.local/bin:${BUN_INSTALL}/bin:/app/bin:$PATH"
+
+# Optional: Health check (works with both latest and latest-dev)
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+#   CMD bun -e "fetch('http://localhost:3000/healthz').then(r => process.exit(r.ok ? 0 : 1))" || exit 1
+
+ENTRYPOINT ["tini", "--"]
+# Use direct file path instead of npm script to work without shell (required for latest)
+CMD ["bun", "run", "/app/src/index.ts"]
+
+# ==========================================================================
+# USAGE NOTES
+# ==========================================================================
+#
+# Default build (latest for production, no shell):
+#   podman build -t myapp:latest .
+#
+# Debug build (latest-dev with shell access):
+#   podman build --build-arg RUNTIME_TAG=latest-dev -t myapp:debug .
+#
+# Key differences:
+#   - latest: Minimal attack surface, no shell, most secure
+#   - latest-dev: Includes shell and basic tools for debugging
+#
+# IMPORTANT: CMD uses direct file path instead of npm script because
+# "bun run <script>" requires shell to parse package.json, which is
+# not available in the "latest" runtime tag.

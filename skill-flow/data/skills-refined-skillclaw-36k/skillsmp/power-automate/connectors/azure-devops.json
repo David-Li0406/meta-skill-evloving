@@ -1,0 +1,285 @@
+{
+  "connector": "Azure DevOps",
+  "id": "shared_visualstudioteamservices",
+  "docsUrl": "https://learn.microsoft.com/en-us/connectors/visualstudioteamservices/",
+  "throttling": { "calls": 300, "seconds": 60 },
+  "triggers": {
+    "OnWorkItemCreatedV2": {
+      "name": "When a work item is created",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "path": "/v2/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/Hooks/workItemCreatedSubscriptions"
+      },
+      "parameters": {
+        "account": { "type": "string", "required": true, "description": "Organization name" },
+        "project": { "type": "string", "required": true, "description": "Project name" },
+        "team": { "type": "string", "description": "Team name" },
+        "wiql__System_WorkItemType": { "type": "string", "description": "Work item type filter" },
+        "wiql__System_AssignedTo": { "type": "string", "description": "Assigned to filter" },
+        "wiql__System_AreaPath": { "type": "string", "description": "Area path filter" },
+        "wiql__Microsoft_VSTS_Common_Priority": { "type": "string", "description": "Priority filter" }
+      }
+    },
+    "OnWorkItemUpdatedV2": {
+      "name": "When a work item is updated",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "path": "/v2/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/Hooks/workItemUpdatedSubscriptions"
+      }
+    },
+    "OnWorkItemClosedV2": {
+      "name": "When a work item is closed",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "path": "/v2/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/Hooks/workItemClosedSubscriptions"
+      },
+      "parameters": {
+        "closedState": { "type": "string", "description": "Comma-separated: Done,Closed,Completed,Inactive" }
+      }
+    },
+    "OnWorkItemAssignedV2": {
+      "name": "When a work item is assigned",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "path": "/v2/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/@{encodeURIComponent(team)}/_apis/Hooks/workItemAssignedSubscriptions"
+      },
+      "parameters": {
+        "wiql__System_AssignedTo": { "type": "string", "required": true, "description": "User to monitor" }
+      }
+    },
+    "OnBuildCompleted": {
+      "name": "When a build completes",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/Hooks/buildCompletedSubscriptions"
+      },
+      "parameters": {
+        "resultFilter": { "type": "string", "enum": ["", "succeeded", "partiallySucceeded", "failed", "canceled"] },
+        "definitions": { "type": "string", "description": "Build definition ID filter" }
+      }
+    },
+    "OnGitPush": {
+      "name": "When code is pushed (Git)",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/@{encodeURIComponent(repository)}/_apis/Hooks/pushSubscriptions"
+      },
+      "parameters": {
+        "repository": { "type": "string", "required": true, "description": "Repository name" },
+        "refName": { "type": "string", "description": "Branch ref filter (e.g., refs/heads/main)" }
+      }
+    },
+    "OnGitPullCreated": {
+      "name": "When a pull request is created (Git)",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/@{encodeURIComponent(repository)}/_apis/Hooks/pullCreatedSubscriptions"
+      },
+      "parameters": {
+        "sourceRefName": { "type": "string", "description": "Source branch filter" },
+        "targetRefName": { "type": "string", "description": "Target branch filter" }
+      }
+    },
+    "OnGitPullClosed": {
+      "name": "When a pull request is closed (Git)",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/@{encodeURIComponent(repository)}/_apis/Hooks/pullClosedSubscriptions"
+      }
+    }
+  },
+  "actions": {
+    "CreateWorkItem": {
+      "name": "Create a work item",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "patch",
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/wit/workitems/$@{encodeURIComponent(type)}",
+        "body": "dynamic|Work item fields"
+      },
+      "parameters": {
+        "account": { "type": "string", "required": true },
+        "project": { "type": "string", "required": true },
+        "type": { "type": "string", "required": true, "examples": ["Bug", "Task", "User Story", "Feature", "Epic"] },
+        "workItem": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string", "required": true, "field": "System.Title" },
+            "description": { "type": "string", "field": "System.Description" },
+            "assignedTo": { "type": "string", "field": "System.AssignedTo" },
+            "areaPath": { "type": "string", "field": "System.AreaPath" },
+            "iterationPath": { "type": "string", "field": "System.IterationPath" },
+            "priority": { "type": "integer", "field": "Microsoft.VSTS.Common.Priority" },
+            "state": { "type": "string", "field": "System.State" }
+          }
+        }
+      }
+    },
+    "UpdateWorkItem": {
+      "name": "Update a work item",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "patch",
+        "path": "/@{encodeURIComponent(account)}/_apis/wit/workitems/@{encodeURIComponent(id)}",
+        "body": "dynamic|Fields to update"
+      },
+      "parameters": {
+        "id": { "type": "string", "required": true, "description": "Work item ID" }
+      }
+    },
+    "GetWorkItemDetails": {
+      "name": "Get work item details",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "get",
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/wit/workitems/@{encodeURIComponent(id)}"
+      },
+      "parameters": {
+        "typeName": { "type": "string", "required": true, "description": "Work item type for schema" }
+      }
+    },
+    "ListWorkItems": {
+      "name": "List work items",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "get",
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/wit/workitems",
+        "queries": {
+          "ids": "required|string|Comma-separated work item IDs",
+          "fields": "string|Comma-separated field names"
+        }
+      }
+    },
+    "GetQueryResultsV2": {
+      "name": "Get query results",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/wit/wiql/@{encodeURIComponent(queryId)}"
+      },
+      "parameters": {
+        "queryId": { "type": "string", "required": true, "description": "Saved query ID or path" },
+        "workItemsCount": { "type": "integer", "min": 1, "max": 20000 }
+      }
+    },
+    "QueueNewBuild": {
+      "name": "Queue a new build",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "post",
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/build/builds",
+        "body": {
+          "definition": { "id": "required|integer|Build definition ID" },
+          "sourceBranch": "optional|string|refs/heads/main",
+          "parameters": "optional|string|JSON dictionary of build parameters"
+        }
+      }
+    },
+    "CreateRelease": {
+      "name": "Create a new release",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "post",
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/release/releases",
+        "body": {
+          "definitionId": "required|integer|Release definition ID",
+          "description": "optional|string",
+          "isDraft": "optional|boolean",
+          "artifacts": "optional|array|Artifact overrides"
+        }
+      }
+    },
+    "ListProjects": {
+      "name": "List projects",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "get",
+        "path": "/@{encodeURIComponent(account)}/_apis/projects"
+      }
+    },
+    "ListGitRepositories": {
+      "name": "List Git repositories",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "get",
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/_apis/git/repositories"
+      }
+    },
+    "ListIterations": {
+      "name": "List iterations",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "get",
+        "path": "/@{encodeURIComponent(account)}/@{encodeURIComponent(project)}/@{encodeURIComponent(team)}/_apis/work/teamsettings/iterations"
+      }
+    },
+    "HttpRequest": {
+      "name": "Send an HTTP request to Azure DevOps",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_visualstudioteamservices']['connectionId']" } },
+        "method": "post",
+        "path": "/@{encodeURIComponent(account)}/httpRequest",
+        "body": {
+          "Method": "required|string|GET,POST,PUT,PATCH,DELETE",
+          "Uri": "required|string|Relative URI (e.g., /_apis/wit/workitems)",
+          "Headers": "optional|object",
+          "Body": "optional|string",
+          "IsBase64": "optional|boolean"
+        }
+      }
+    }
+  },
+  "connectionReference": {
+    "shared_visualstudioteamservices": {
+      "connectionName": "",
+      "source": "Invoker",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_visualstudioteamservices",
+      "tier": "NotSpecified"
+    }
+  },
+  "workItemTypes": ["Bug", "Task", "User Story", "Feature", "Epic", "Issue", "Test Case", "Test Plan", "Test Suite"],
+  "outputSchemas": {
+    "workItem": {
+      "id": "integer",
+      "rev": "integer",
+      "fields": {
+        "System.Title": "string",
+        "System.State": "string",
+        "System.AssignedTo": "object",
+        "System.AreaPath": "string",
+        "System.IterationPath": "string",
+        "System.WorkItemType": "string",
+        "Microsoft.VSTS.Common.Priority": "integer"
+      },
+      "url": "string"
+    },
+    "build": {
+      "id": "integer",
+      "buildNumber": "string",
+      "status": "string",
+      "result": "string",
+      "queueTime": "datetime",
+      "startTime": "datetime",
+      "finishTime": "datetime"
+    }
+  }
+}

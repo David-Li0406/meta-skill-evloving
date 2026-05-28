@@ -1,0 +1,29 @@
+# Workflow Template
+# Copy to: .claude/workflows/<your-workflow>.yaml
+
+name: custom-workflow
+description: Brief description of this workflow's purpose
+
+phases:
+  # Simple phase - direct prompt execution
+  - id: setup
+    prompt: |
+      Setup phase instructions.
+      Use {{sprint.id}} for sprint context.
+
+  # For-each phase - iterates over steps from SPRINT.yaml
+  - id: main
+    for-each: step
+    workflow: feature-standard  # Reference another workflow
+
+  # Simple phase
+  - id: finalize
+    prompt: |
+      Finalization instructions.
+
+# Template variables available:
+# {{step.prompt}} - Step description from SPRINT.yaml
+# {{step.id}} - Step identifier (e.g., step-1)
+# {{step.index}} - 0-based step index
+# {{phase.id}} - Current phase identifier
+# {{sprint.id}} - Sprint identifier

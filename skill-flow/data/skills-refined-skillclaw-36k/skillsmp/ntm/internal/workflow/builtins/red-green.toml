@@ -1,0 +1,46 @@
+[[workflows]]
+name = "red-green"
+description = "Test-Driven Development: write failing tests, then make them pass"
+coordination = "ping-pong"
+
+[[workflows.agents]]
+profile = "tester"
+role = "red"
+description = "Writes failing tests that define expected behavior"
+
+[[workflows.agents]]
+profile = "implementer"
+role = "green"
+description = "Implements code to make tests pass"
+
+[workflows.flow]
+initial = "red"
+
+[[workflows.flow.transitions]]
+from = "red"
+to = "green"
+[workflows.flow.transitions.trigger]
+type = "file_created"
+pattern = "*_test.go"
+
+[[workflows.flow.transitions]]
+from = "green"
+to = "red"
+[workflows.flow.transitions.trigger]
+type = "command_success"
+command = "go test ./..."
+
+[[workflows.prompts]]
+key = "feature"
+question = "What feature are you implementing?"
+required = true
+
+[[workflows.prompts]]
+key = "test_pattern"
+question = "Test file pattern?"
+default = "*_test.go"
+
+[workflows.error_handling]
+on_agent_error = "pause"
+stage_timeout_minutes = 30
+on_timeout = "notify"

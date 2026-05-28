@@ -1,0 +1,104 @@
+/* Shared layer panel styles */
+.layer-panel {
+    background: var(--color-surface);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.layer-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.layer-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, var(--layer-color) 0%, transparent 100%);
+    background-size: 200% 200%;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.layer-panel__title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--color-text);
+}
+
+.layer-panel__formula {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    background: var(--color-surface-elevated);
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+.layer-panel__content {
+    padding: 16px 20px;
+}
+
+.layer-panel__result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--color-surface-elevated);
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.layer-panel__result-label {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+}
+
+.layer-panel__result-value {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.layer-panel__result-value--positive {
+    color: var(--color-positive);
+}
+
+.layer-panel__result-value--negative {
+    color: var(--color-negative);
+}
+
+.layer-panel__result-value--near-zero {
+    color: var(--color-warning);
+}
+
+.layer-panel__status {
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-top: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.layer-panel__status--positive {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, transparent 100%);
+    color: var(--color-positive);
+}
+
+.layer-panel__status--negative {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, transparent 100%);
+    color: var(--color-negative);
+}
+
+.layer-panel__status--near-zero {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, transparent 100%);
+    color: var(--color-warning);
+}

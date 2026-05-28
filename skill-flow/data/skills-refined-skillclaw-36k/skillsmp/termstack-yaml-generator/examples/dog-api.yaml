@@ -1,0 +1,278 @@
+# Dog API Example
+# Browse dog breeds and facts from DogAPI.dog
+#
+# Usage: cargo run -- examples/dog-api.yaml
+#
+# This example demonstrates:
+# - HTTP adapter for REST API calls
+# - JSON:API format handling
+# - Multi-page navigation with context passing
+# - Detailed breed information
+# - No authentication required
+
+version: v1
+
+app:
+  name: "Dog Breeds Browser"
+  description: "Explore dog breeds and facts"
+  theme: "default"
+
+globals:
+  api_base: "https://dogapi.dog/api/v2"
+
+start: breeds
+
+pages:
+  breeds:
+    title: "Dog Breeds"
+    data:
+      adapter: http
+      url: "{{ api_base }}/breeds"
+      method: GET
+      headers:
+        Accept: "application/json"
+      items: "$.data[*]"
+      refresh_interval: "10m"
+    view:
+      type: table
+      columns:
+        - path: "$.attributes.name"
+          display: "Breed"
+          width: 30
+          style:
+            - default: true
+              color: cyan
+              bold: true
+        - path: "$.attributes.life.min"
+          display: "Min Life"
+          width: 10
+          style:
+            - default: true
+              color: green
+        - path: "$.attributes.life.max"
+          display: "Max Life"
+          width: 10
+          style:
+            - default: true
+              color: green
+        - path: "$.attributes.male_weight.min"
+          display: "Male Wt (kg)"
+          width: 12
+          style:
+            - default: true
+              color: blue
+        - path: "$.attributes.female_weight.min"
+          display: "Female Wt (kg)"
+          width: 14
+          style:
+            - default: true
+              color: magenta
+        - path: "$.attributes.hypoallergenic"
+          display: "Hypo"
+          width: 6
+          style:
+            - condition: "{{ value == 'true' }}"
+              color: yellow
+              bold: true
+            - default: true
+              color: gray
+      sort:
+        column: "$.attributes.name"
+        order: asc
+    next:
+      page: breed_detail
+      context:
+        breed_id: "$.id"
+        breed_name: "$.attributes.name"
+    actions:
+      - key: "f"
+        name: "View Facts"
+        description: "View random dog facts"
+        page: "facts"
+      - key: "g"
+        name: "View Groups"
+        description: "View breed groups"
+        page: "groups"
+
+  breed_detail:
+    title: "{{ breed_name }}"
+    data:
+      adapter: http
+      url: "{{ api_base }}/breeds/{{ breed_id }}"
+      method: GET
+      headers:
+        Accept: "application/json"
+      items: "$.data"
+    view:
+      type: table
+      columns:
+        - path: "$.attributes.name"
+          display: "Name"
+          width: 30
+          style:
+            - default: true
+              color: cyan
+              bold: true
+        - path: "$.attributes.description"
+          display: "Description"
+          width: 80
+        - path: "$.attributes.life.min"
+          display: "Min Life (yrs)"
+          width: 15
+          style:
+            - default: true
+              color: green
+        - path: "$.attributes.life.max"
+          display: "Max Life (yrs)"
+          width: 15
+          style:
+            - default: true
+              color: green
+        - path: "$.attributes.male_weight.min"
+          display: "Male Min (kg)"
+          width: 14
+          style:
+            - default: true
+              color: blue
+        - path: "$.attributes.male_weight.max"
+          display: "Male Max (kg)"
+          width: 14
+          style:
+            - default: true
+              color: blue
+        - path: "$.attributes.female_weight.min"
+          display: "Female Min (kg)"
+          width: 16
+          style:
+            - default: true
+              color: magenta
+        - path: "$.attributes.female_weight.max"
+          display: "Female Max (kg)"
+          width: 16
+          style:
+            - default: true
+              color: magenta
+        - path: "$.attributes.hypoallergenic"
+          display: "Hypoallergenic"
+          width: 15
+          style:
+            - condition: "{{ value == 'true' }}"
+              color: yellow
+              bold: true
+            - default: true
+              color: gray
+    actions:
+      - key: "f"
+        name: "View Facts"
+        description: "View random dog facts"
+        page: "facts"
+      - key: "y"
+        name: "View as YAML"
+        description: "View full JSON response"
+        page: "breed_yaml"
+
+  breed_yaml:
+    title: "{{ breed_name }} (YAML)"
+    data:
+      adapter: http
+      url: "{{ api_base }}/breeds/{{ breed_id }}"
+      method: GET
+      headers:
+        Accept: "application/json"
+    view:
+      type: text
+      syntax: yaml
+
+  facts:
+    title: "Dog Facts"
+    data:
+      adapter: http
+      url: "{{ api_base }}/facts"
+      method: GET
+      headers:
+        Accept: "application/json"
+      items: "$.data[*]"
+    view:
+      type: table
+      columns:
+        - path: "$.attributes.body"
+          display: "Fact"
+          width: 100
+          style:
+            - default: true
+              color: yellow
+    next:
+      page: fact_detail
+      context:
+        fact_id: "$.id"
+        fact_body: "$.attributes.body"
+
+  fact_detail:
+    title: "Dog Fact"
+    data:
+      adapter: http
+      url: "{{ api_base }}/facts/{{ fact_id }}"
+      method: GET
+      headers:
+        Accept: "application/json"
+    view:
+      type: text
+      syntax: yaml
+
+  groups:
+    title: "Breed Groups"
+    data:
+      adapter: http
+      url: "{{ api_base }}/groups"
+      method: GET
+      headers:
+        Accept: "application/json"
+      items: "$.data[*]"
+    view:
+      type: table
+      columns:
+        - path: "$.attributes.name"
+          display: "Group Name"
+          width: 50
+          style:
+            - default: true
+              color: cyan
+              bold: true
+    next:
+      page: group_detail
+      context:
+        group_id: "$.id"
+        group_name: "$.attributes.name"
+
+  group_detail:
+    title: "{{ group_name }}"
+    data:
+      adapter: http
+      url: "{{ api_base }}/groups/{{ group_id }}"
+      method: GET
+      headers:
+        Accept: "application/json"
+      items: "$.data"
+    view:
+      type: table
+      columns:
+        - path: "$.id"
+          display: "Group ID"
+          width: 40
+          style:
+            - default: true
+              color: blue
+        - path: "$.attributes.name"
+          display: "Group Name"
+          width: 40
+          style:
+            - default: true
+              color: cyan
+              bold: true
+        - path: "$.relationships.breeds.data"
+          display: "Breeds Count"
+          width: 15
+          transform: "{{ value | length }}"
+          style:
+            - default: true
+              color: green

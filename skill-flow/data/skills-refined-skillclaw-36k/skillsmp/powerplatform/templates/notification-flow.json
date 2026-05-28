@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "_comment": "Template: Event-triggered notification flow",
+  "_usage": "Replace TRIGGER_TYPE, TRIGGER_CONFIG, NOTIFICATION_ACTION, and NOTIFICATION_CONFIG",
+  "triggers": {
+    "TRIGGER_NAME": {
+      "type": "TRIGGER_TYPE",
+      "kind": "TRIGGER_KIND",
+      "inputs": {
+        "host": {
+          "connectionName": "CONNECTION_REF",
+          "operationId": "OPERATION_ID",
+          "apiId": "/providers/Microsoft.PowerApps/apis/CONNECTOR_NAME"
+        },
+        "parameters": {
+          "_comment": "Trigger-specific parameters go here"
+        }
+      },
+      "recurrence": {
+        "_comment": "For polling triggers only",
+        "frequency": "Minute",
+        "interval": 1
+      }
+    }
+  },
+  "actions": {
+    "Send_notification": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "connectionName": "CONNECTION_REF",
+          "operationId": "OPERATION_ID",
+          "apiId": "/providers/Microsoft.PowerApps/apis/CONNECTOR_NAME"
+        },
+        "parameters": {
+          "_comment": "Action parameters with dynamic content"
+        }
+      },
+      "runAfter": {}
+    }
+  }
+}

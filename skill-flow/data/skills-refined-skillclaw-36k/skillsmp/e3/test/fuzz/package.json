@@ -1,0 +1,29 @@
+{
+  "name": "e3-fuzz",
+  "version": "0.0.1-beta.0",
+  "private": true,
+  "type": "module",
+  "description": "Virtual Idiot - Fuzz testing for e3",
+  "main": "dist/index.js",
+  "bin": {
+    "e3-fuzz": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "test": "npm run fuzz -- -n 1 -v",
+    "fuzz": "npm run build && node --enable-source-maps dist/index.js",
+    "fuzz:quick": "npm run fuzz -- -n 1 -v",
+    "fuzz:stress": "npm run fuzz -- -n 50 --stop-on-failure",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@elaraai/e3": "*",
+    "@elaraai/e3-cli": "*",
+    "@elaraai/e3-core": "*",
+    "@elaraai/east": "^0.0.1-beta.31"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

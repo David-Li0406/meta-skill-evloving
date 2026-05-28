@@ -1,0 +1,74 @@
+.scenario-library {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 20px;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.scenario-library__header {
+    margin-bottom: 16px;
+}
+
+.scenario-library__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 12px 0;
+}
+
+.scenario-library__filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.scenario-library__filters::-webkit-scrollbar {
+    display: none;
+    /* Safari and Chrome */
+}
+
+.scenario-filter {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.scenario-filter:hover {
+    border-color: var(--color-text-muted);
+    color: var(--color-text);
+}
+
+.scenario-filter--active {
+    background: var(--color-cognitive);
+    border-color: var(--color-cognitive);
+    color: white;
+}
+
+.scenario-library__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 8px;
+}
+
+.scenario-library__list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.scenario-library__list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+}

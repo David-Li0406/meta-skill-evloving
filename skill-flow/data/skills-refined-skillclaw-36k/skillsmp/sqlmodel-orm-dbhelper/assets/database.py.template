@@ -1,0 +1,72 @@
+"""
+Database configuration and session management.
+
+Replace placeholders:
+- {{DATABASE_URL}}: Your database connection string
+- {{POOL_SIZE}}: Connection pool size (default: 5)
+- {{MAX_OVERFLOW}}: Max overflow connections (default: 10)
+"""
+import os
+from typing import Generator
+
+from sqlmodel import Session, SQLModel, create_engine
+from sqlalchemy.pool import QueuePool
+
+# Configuration from environment
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./database.db")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+
+def get_engine_config() -> dict:
+    """Get engine configuration based on environment."""
+    if "sqlite" in DATABASE_URL:
+        return {
+            "connect_args": {"check_same_thread": False},
+            "echo": ENVIRONMENT == "development",
+        }
+
+    # PostgreSQL/MySQL configuration
+    return {
+        "poolclass": QueuePool,
+        "pool_size": int(os.getenv("DB_POOL_SIZE", "5")),
+        "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "10")),
+        "pool_timeout": 30,
+        "pool_recycle": 1800,
+        "pool_pre_ping": True,
+        "echo": ENVIRONMENT == "development",
+    }
+
+
+# Create engine
+engine = create_engine(DATABASE_URL, **get_engine_config())
+
+
+def init_db() -> None:
+    """Initialize database tables.
+
+    Note: Use Alembic migrations in production instead of create_all().
+    """
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session() -> Generator[Session, None, None]:
+    """Get database session for FastAPI dependency injection.
+
+    Usage:
+        @app.get("/items")
+        def get_items(session: Session = Depends(get_session)):
+            return session.exec(select(Item)).all()
+    """
+    with Session(engine) as session:
+        yield session
+
+
+# For use outside FastAPI (scripts, CLI)
+def get_session_context():
+    """Context manager for session in non-FastAPI code.
+
+    Usage:
+        with get_session_context() as session:
+            user = session.get(User, 1)
+    """
+    return Session(engine)

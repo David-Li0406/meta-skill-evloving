@@ -1,0 +1,84 @@
+{
+  "release_date": "2025-01-10",
+  "report_title": "World Agricultural Supply and Demand Estimates - January 2025",
+  "success": true,
+  "commodities_processed": [
+    "wheat_us",
+    "wheat_world",
+    "corn_us",
+    "corn_world",
+    "rice_us",
+    "rice_world",
+    "soybeans_us",
+    "soybeans_world",
+    "soybean_oil_us",
+    "soybean_meal_us",
+    "cotton_us",
+    "cotton_world",
+    "beef_us",
+    "pork_us",
+    "broiler_us",
+    "sugar_us",
+    "sugar_mexico"
+  ],
+  "rows_written": {
+    "wheat_us": 3,
+    "wheat_world": 3,
+    "corn_us": 3,
+    "corn_world": 3,
+    "rice_us": 3,
+    "rice_world": 3,
+    "soybeans_us": 3,
+    "soybeans_world": 3,
+    "soybean_oil_us": 3,
+    "soybean_meal_us": 3,
+    "cotton_us": 3,
+    "cotton_world": 3,
+    "beef_us": 4,
+    "pork_us": 4,
+    "broiler_us": 4,
+    "sugar_us": 2,
+    "sugar_mexico": 2
+  },
+  "validation_summary": {
+    "total_tables": 17,
+    "passed": 17,
+    "failed": 0,
+    "warnings": 2
+  },
+  "warnings": [
+    {
+      "table": "rice_us",
+      "type": "range_warning",
+      "message": "ending_stocks (38.5) approaching historical low (35.0)"
+    },
+    {
+      "table": "cotton_world",
+      "type": "revision_detected",
+      "message": "Previous month ending_stocks revised from 76.2 to 76.8 MMT"
+    }
+  ],
+  "errors": [],
+  "timing_ms": {
+    "discover": 245,
+    "fetch": 3421,
+    "parse": 8932,
+    "normalize": 156,
+    "validate": 423,
+    "write": 1287,
+    "total": 14464
+  },
+  "output_paths": {
+    "raw": "./data/wasde/raw/2025-01-10",
+    "intermediate": "./data/wasde/intermediate/2025-01-10",
+    "curated": "./data/wasde/curated"
+  },
+  "files_created": [
+    "./data/wasde/curated/wheat_us_balance.parquet",
+    "./data/wasde/curated/wheat_world_balance.parquet",
+    "./data/wasde/curated/corn_us_balance.parquet",
+    "./data/wasde/curated/corn_world_balance.parquet",
+    "./data/wasde/curated/soybeans_us_balance.parquet",
+    "./data/wasde/curated/soybeans_world_balance.parquet"
+  ]
+}

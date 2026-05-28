@@ -1,0 +1,70 @@
+{
+  "name": "@devup-ui/components",
+  "description": "Zero Config, Zero FOUC, Zero Runtime, CSS in JS Preprocessor",
+  "repository": "https://github.com/dev-five-git/devup-ui",
+  "author": "devfive",
+  "license": "Apache-2.0",
+  "homepage": "https://devup-ui.com",
+  "bugs": {
+    "url": "https://github.com/dev-five-git/devup-ui/issues",
+    "email": "contact@devfive.kr"
+  },
+  "keywords": [
+    "css",
+    "css-in-js",
+    "css-in-js-preprocessor",
+    "css-in-js-framework",
+    "react"
+  ],
+  "version": "0.1.40",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint",
+    "build": "tsc && vite build",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "package": "bun pm pack --pack-destination \"../../dist\""
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "@devup-ui/react": "workspace:^",
+    "csstype-extra": "latest",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "clsx": "^2.1"
+  },
+  "devDependencies": {
+    "@devup-ui/vite-plugin": "workspace:^",
+    "@storybook/addon-docs": "^10.1",
+    "@storybook/addon-onboarding": "^10.1",
+    "@storybook/react-vite": "^10.1",
+    "@types/react": "^19.2",
+    "eslint-plugin-storybook": "^10.1",
+    "rollup-plugin-preserve-directives": "^0.4",
+    "storybook": "^10.1",
+    "typescript": "^5.9",
+    "vite": "^7.3",
+    "vite-plugin-dts": "^4.5"
+  },
+  "peerDependencies": {
+    "@devup-ui/react": "workspace:^",
+    "csstype-extra": "*",
+    "react": "*"
+  }
+}

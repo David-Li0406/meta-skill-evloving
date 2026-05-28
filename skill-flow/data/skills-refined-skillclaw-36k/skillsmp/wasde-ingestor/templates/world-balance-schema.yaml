@@ -1,0 +1,347 @@
+# World Supply and Demand Balance Sheet Schema
+# This template defines the standard schema for World commodity balance sheets
+
+schema_version: "1.0"
+scope: "world"
+
+# ============================================================
+# Common Fields (All World Commodities)
+# ============================================================
+common_fields:
+  # Metadata
+  release_date:
+    type: date
+    format: "YYYY-MM-DD"
+    description: "WASDE report release date"
+    required: true
+    primary_key: true
+
+  marketing_year:
+    type: string
+    format: "YYYY/YY"
+    example: "2024/25"
+    description: "Marketing year (varies by commodity)"
+    required: true
+    primary_key: true
+
+  commodity:
+    type: string
+    description: "Commodity name"
+    required: true
+    primary_key: true
+
+  unit:
+    type: string
+    description: "Unit of measurement (typically million metric tons)"
+    required: true
+    primary_key: true
+
+  region:
+    type: string
+    description: "Region or country (World, or specific country)"
+    default: "World"
+    required: true
+
+  # Supply Side
+  beginning_stocks:
+    type: float
+    description: "Stocks at beginning of marketing year"
+    required: true
+
+  production:
+    type: float
+    description: "Total production"
+    required: true
+
+  imports:
+    type: float
+    description: "Total imports (for country-level)"
+    required: true
+
+  # Demand Side
+  domestic_use:
+    type: float
+    description: "Domestic consumption"
+    required: true
+
+  exports:
+    type: float
+    description: "Total exports"
+    required: true
+
+  ending_stocks:
+    type: float
+    description: "Stocks at end of marketing year"
+    required: true
+
+  # Derived
+  stocks_to_use:
+    type: float
+    description: "Ending stocks / Total use ratio"
+    computed: true
+
+  # Tracking
+  content_hash:
+    type: string
+    format: "SHA256[:32]"
+    description: "Hash of data content for version tracking"
+    required: true
+
+  source_table:
+    type: string
+    description: "Original table name in WASDE report"
+    optional: true
+
+  source_page:
+    type: integer
+    description: "Page number in PDF"
+    optional: true
+
+# ============================================================
+# Grains Schema (World)
+# ============================================================
+grains:
+  base: common_fields
+  unit: "million_metric_tons"
+
+  commodities:
+    - wheat
+    - corn
+    - rice
+    - barley
+    - sorghum
+    - oats
+
+  additional_fields:
+    feed_use:
+      type: float
+      description: "Feed consumption"
+      optional: true
+
+    food_seed_industrial:
+      type: float
+      description: "Food, seed, and industrial use"
+      optional: true
+
+    total_use:
+      type: float
+      description: "Total use = domestic_use + exports"
+      computed: true
+
+  # Major countries tracked separately
+  major_regions:
+    wheat:
+      exporters:
+        - united_states
+        - canada
+        - european_union
+        - australia
+        - argentina
+        - russia
+        - ukraine
+        - kazakhstan
+      importers:
+        - egypt
+        - indonesia
+        - algeria
+        - philippines
+        - japan
+        - china
+
+    corn:
+      producers:
+        - united_states
+        - china
+        - brazil
+        - european_union
+        - argentina
+        - ukraine
+        - mexico
+
+    rice:
+      producers:
+        - china
+        - india
+        - indonesia
+        - bangladesh
+        - vietnam
+        - thailand
+        - united_states
+
+# ============================================================
+# Oilseeds Schema (World)
+# ============================================================
+oilseeds:
+  base: common_fields
+  unit: "million_metric_tons"
+
+  soybeans:
+    additional_fields:
+      crush:
+        type: float
+        description: "Crush/processing volume"
+        required: true
+
+      total_use:
+        type: float
+        computed: true
+
+    major_regions:
+      producers:
+        - united_states
+        - brazil
+        - argentina
+        - china
+        - india
+        - paraguay
+      exporters:
+        - brazil
+        - united_states
+        - argentina
+        - paraguay
+        - canada
+      importers:
+        - china  # 60%+ of world imports
+        - european_union
+        - mexico
+        - japan
+        - egypt
+
+  soybean_oil:
+    additional_fields:
+      total_use:
+        type: float
+        required: true
+
+  soybean_meal:
+    additional_fields:
+      total_use:
+        type: float
+        required: true
+
+    major_regions:
+      # China separately listed since 2021
+      - china
+      - argentina
+      - brazil
+      - united_states
+      - european_union
+
+# ============================================================
+# Cotton Schema (World)
+# ============================================================
+cotton:
+  base: common_fields
+  unit: "million_480lb_bales"
+
+  additional_fields:
+    mill_use:
+      type: float
+      description: "Mill consumption"
+      required: true
+
+    loss_adjustment:
+      type: float
+      description: "Loss and statistical discrepancy"
+      optional: true
+
+    total_use:
+      type: float
+      computed: true
+
+  major_regions:
+    producers:
+      - india
+      - china
+      - united_states
+      - brazil
+      - pakistan
+      - australia
+      - turkey
+      - uzbekistan
+
+    consumers:
+      - china  # largest
+      - india
+      - pakistan
+      - bangladesh
+      - vietnam
+      - turkey
+
+    exporters:
+      - united_states
+      - brazil
+      - australia
+      - india
+
+# ============================================================
+# Country-Level Schema
+# ============================================================
+# For commodities with country-level detail
+
+country_level:
+  fields:
+    country_code:
+      type: string
+      format: "ISO 3166-1 alpha-3"
+      example: "USA"
+      required: true
+
+    country_name:
+      type: string
+      example: "United States"
+      required: true
+
+    is_aggregate:
+      type: boolean
+      description: "True if this is an aggregate (e.g., 'Others')"
+      default: false
+
+  # Country name mappings (aliases)
+  country_aliases:
+    united_states: ["United States", "USA", "U.S.", "US"]
+    china: ["China", "China, Peoples Republic of", "PRC"]
+    european_union: ["European Union", "EU", "EU-27"]
+    russia: ["Russia", "Russian Federation"]
+    # ... etc
+
+# ============================================================
+# Marketing Year Reference
+# ============================================================
+marketing_years:
+  wheat:
+    us: "Jun-May"
+    world: "Jul-Jun"
+
+  corn:
+    us: "Sep-Aug"
+    world: "Oct-Sep"
+
+  soybeans:
+    us: "Sep-Aug"
+    world: "Oct-Sep"
+
+  rice:
+    us: "Aug-Jul"
+    world: "Jan-Dec"
+
+  cotton:
+    us: "Aug-Jul"
+    world: "Aug-Jul"
+
+# ============================================================
+# Validation Rules
+# ============================================================
+validation:
+  balance_formula: |
+    ending_stocks ≈ beginning_stocks + production - domestic_use - exports
+    (imports cancel out at world level)
+
+  world_total_check: |
+    sum(country_production) ≈ world_production
+    sum(country_exports) ≈ world_exports
+
+  tolerance:
+    grains: 1.0  # million metric tons
+    oilseeds: 1.0
+    cotton: 0.5  # million bales

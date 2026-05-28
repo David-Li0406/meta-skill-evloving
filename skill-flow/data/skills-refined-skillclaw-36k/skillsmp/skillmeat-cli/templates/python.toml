@@ -1,0 +1,89 @@
+# Python Development Template
+# Pre-curated artifact collection for Python projects (FastAPI, Django, Flask)
+
+[template]
+name = "python"
+display_name = "Python Development"
+description = "Essential skills for Python backend development with FastAPI, Django, or Flask"
+version = "1.0.0"
+tags = ["backend", "python", "api", "fastapi", "django"]
+
+# API Development & Documentation
+[[artifacts]]
+name = "openapi-expert"
+type = "skill"
+source = "anthropics/skills/openapi-expert"
+required = false
+description = "OpenAPI/Swagger schema design, validation, and API documentation"
+
+# Database Management
+[[artifacts]]
+name = "postgresql-psql"
+type = "skill"
+source = "anthropics/skills/postgresql-psql"
+required = false
+description = "PostgreSQL database design, queries, migrations, and optimization"
+
+# Python Testing
+[[artifacts]]
+name = "pytest-expert"
+type = "skill"
+source = "project:pytest-expert"
+required = false
+description = "Python testing with pytest, fixtures, mocking, and coverage"
+
+# Package Management
+[[artifacts]]
+name = "python-package-manager"
+type = "skill"
+source = "project:python-package-manager"
+required = false
+description = "Pip, Poetry, uv package management and virtual environments"
+
+# Data Processing (if needed)
+[[artifacts]]
+name = "data-processing"
+type = "skill"
+source = "project:data-processing"
+required = false
+description = "Pandas, NumPy data manipulation and CSV/JSON processing"
+
+[dependencies]
+python = ">=3.9"
+pip = ">=21.0"
+
+[recommendations]
+# Suggested project setup
+dev_dependencies = [
+    "black>=24.0.0",
+    "flake8>=7.0.0",
+    "mypy>=1.0.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+# Suggested pyproject.toml tools
+tools = [
+    "black: code formatting",
+    "flake8: linting",
+    "mypy: type checking",
+    "pytest: testing framework",
+]
+
+[notes]
+setup_guide = """
+This template is optimized for:
+- Python 3.9+ with type hints
+- FastAPI for REST APIs
+- SQLAlchemy for ORM
+- Alembic for migrations
+- pytest for testing
+- black + flake8 + mypy for code quality
+
+Quick start:
+1. Apply template: skillmeat template apply python
+2. Create virtual environment: python -m venv venv
+3. Activate: source venv/bin/activate (Unix) or venv\\Scripts\\activate (Windows)
+4. Install dependencies: pip install -e ".[dev]"
+5. Run tests: pytest -v --cov
+"""

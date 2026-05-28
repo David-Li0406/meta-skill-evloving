@@ -1,0 +1,43 @@
+# Fengwu Model Configuration - Full Version
+# Original architecture from references_models/Fengwu_improved.py
+# 适配海洋流速预测任务的Fengwu模型配置
+
+# 任务参数
+input_len: 7          # 输入帧数
+output_len: 1         # 输出帧数
+in_channels: 2        # 输入通道数 (u和v分量)
+
+# 图像尺寸
+img_size: [240, 240]  # H=240, W=240
+
+# Patch Size配置
+# 2D patch: 240/4 = 60个patches
+# 3D patch: depth/2, 240/4, 240/4
+patch_size: [4, 4]              # 2D patch size (H, W)
+patch_size_3d: [2, 4, 4]        # 3D patch size (D, H, W)
+
+# Window Size配置
+# 2D window: 60能被6和12整除 (60/6=10, 60/12=5)
+# 3D window: (2, 6, 12)
+window_size: [6, 12]            # 2D window size (适配60x60 patches)
+window_size_3d: [2, 6, 12]      # 3D window size
+
+# 伪3D深度（将2D数据扩展为3D时使用）
+pseudo_3d_depth: 4    # 必须能被patch_size_3d[0]=2整除
+
+# Transformer参数
+embed_dim: 192        # 嵌入维度
+num_heads: [6, 12, 12, 6]  # 每层的注意力头数 [layer1, layer2, layer3, layer4]
+mlp_ratio: 4.0        # MLP隐藏层倍数
+
+# 正则化
+drop_rate: 0.0        # Dropout率
+attn_drop_rate: 0.0   # Attention dropout率
+drop_path_rate: 0.2   # Stochastic depth率
+
+# 说明：
+# 1. patch_size=[4,4]: 240x240 -> 60x60 patches
+# 2. window_size=[6,12]: 60能被6和12整除，不会出现维度问题
+# 3. pseudo_3d_depth=4: 将2D数据复制4次创建伪3D，能被patch_size_3d[0]=2整除
+# 4. 模型同时使用2D和3D处理路径，然后融合特征
+

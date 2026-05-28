@@ -1,0 +1,82 @@
+<!--
+  ============================================================
+  SLIDE 2: BIG IDEA - Card-Based Design with Visual Impact
+  ============================================================
+  This slide introduces the Big Idea to students with:
+  - Grade/Unit/Lesson in dark text (visible on light background)
+  - A prominent card containing:
+    - Large "BIG IDEA" badge header
+    - The big idea statement in bold, dark text
+
+  Design: Card captures attention, text is bold and readable.
+  Position: 960x540 coordinate system (PPTX standard)
+
+  CRITICAL: Uses data-pptx-* attributes for proper export:
+  - data-pptx-region: Identifies the region type for element extraction
+  - data-pptx-x, y, w, h: Position in pixels (960x540 coordinate system)
+
+  The parser extracts these regions and converts them to native PPTX elements.
+  ============================================================
+-->
+
+<!-- FULL SLIDE TEMPLATE - Card Design -->
+<div data-pptx-slide="big-idea"
+     style="width: 960px; height: 540px; background: #f5f5f5; font-family: Arial, sans-serif; position: relative;">
+
+  <!-- Grade/Unit/Lesson - Dark text, top left -->
+  <div data-pptx-region="footnote"
+       data-pptx-x="20" data-pptx-y="16" data-pptx-w="300" data-pptx-h="24"
+       style="position: absolute; left: 20px; top: 16px; font-size: 14px; font-weight: 600; color: #374151; letter-spacing: 1px;">
+    Grade {{grade}} · Unit {{unit}} · Lesson {{lesson}}
+  </div>
+
+  <!-- Big Idea Card - Contains badge and statement -->
+  <div style="position: absolute; left: 80px; top: 70px; width: 800px; height: 400px; background: #FFFFFF; border-radius: 16px; border: 2px solid #e5e7eb;">
+
+    <!-- BIG IDEA Badge - Large, prominent, blue background -->
+    <div data-pptx-region="badge"
+         data-pptx-x="80" data-pptx-y="70" data-pptx-w="800" data-pptx-h="70"
+         style="width: 100%; padding: 20px 0; background: #1791e8; border-radius: 14px 14px 0 0; text-align: center;">
+      <span style="font-size: 28px; font-weight: bold; color: white; letter-spacing: 3px;">
+        BIG IDEA
+      </span>
+    </div>
+
+    <!-- Big Idea Statement - Bold, dark, centered in card -->
+    <div data-pptx-region="content"
+         data-pptx-x="100" data-pptx-y="160" data-pptx-w="760" data-pptx-h="290"
+         style="padding: 40px 40px; height: 310px; display: flex; align-items: center; justify-content: center; text-align: center;">
+      <p style="margin: 0; font-size: 32px; font-weight: 700; color: #111827; line-height: 1.5;">
+        {{bigIdea}}
+      </p>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!--
+  ============================================================
+  USAGE NOTES
+  ============================================================
+  Replace placeholders:
+  - {{grade}}: e.g., "8"
+  - {{unit}}: e.g., "4"
+  - {{lesson}}: e.g., "1"
+  - {{bigIdea}}: e.g., "Equations can be solved by keeping both sides balanced"
+
+  Design Notes:
+  - Card design draws the eye to the Big Idea content
+  - "BIG IDEA" badge is large (28px) and bold in the card header
+  - Big idea text is bold (700 weight) and very dark (#111827)
+  - Grade/Unit/Lesson is dark gray (#374151) for visibility
+  - Light gray background (#f5f5f5) makes the white card pop
+
+  PPTX Export Notes:
+  - The parser extracts elements with data-pptx-region attributes
+  - Card border/background will render as screenshot fallback
+  - Solid colors only (no gradients)
+  - Font: Arial (standard PPTX font)
+  ============================================================
+-->

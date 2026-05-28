@@ -1,0 +1,10 @@
+  String _getInitials(User? user) {
+    if (user == null) return 'G';
+    if (user.displayName.isNotEmpty) {
+      return user.displayName[0].toUpperCase();
+    }
+    if (user.email != null && user.email!.isNotEmpty) {
+      return user.email![0].toUpperCase();
+    }
+    return 'G';
+  }

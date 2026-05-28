@@ -1,0 +1,183 @@
+{
+  "description": "Canonical test cases for The Universal Axiom cross-language verification",
+  "formula": "Intelligence_n = E_n · (1 + F_n) · X · Y · Z · (A · B · C)",
+  "exponential_formula": "E_n = 2 * 3^n - 1",
+  "base_exponential": 3.0,
+  "fibonacci_indexing": "F(1) = 1, F(2) = 1, F(3) = 2, ...",
+  "test_cases": [
+    {
+      "name": "basic_n1",
+      "description": "Basic computation at n=1 with default parameters",
+      "inputs": {
+        "n": 1,
+        "impulses": 1.0,
+        "elements": 1.0,
+        "pressure": 1.0,
+        "subjectivity": 0.0,
+        "purpose": 1.0,
+        "time": 1.0
+      },
+      "expected": {
+        "E_n": 5.0,
+        "F_n": 1,
+        "dynamic_product": 10.0,
+        "foundation_product": 1.0,
+        "cognitive_product": 1.0,
+        "intelligence": 10.0
+      }
+    },
+    {
+      "name": "basic_n2",
+      "description": "Computation at n=2 with default parameters",
+      "inputs": {
+        "n": 2,
+        "impulses": 1.0,
+        "elements": 1.0,
+        "pressure": 1.0,
+        "subjectivity": 0.0,
+        "purpose": 1.0,
+        "time": 1.0
+      },
+      "expected": {
+        "E_n": 17.0,
+        "F_n": 2,
+        "dynamic_product": 51.0,
+        "foundation_product": 1.0,
+        "cognitive_product": 1.0,
+        "intelligence": 51.0
+      }
+    },
+    {
+      "name": "basic_n10",
+      "description": "Computation at n=10 with default parameters",
+      "inputs": {
+        "n": 10,
+        "impulses": 1.0,
+        "elements": 1.0,
+        "pressure": 1.0,
+        "subjectivity": 0.0,
+        "purpose": 1.0,
+        "time": 1.0
+      },
+      "expected": {
+        "E_n": 118097.0,
+        "F_n": 89,
+        "dynamic_product": 10628730.0,
+        "foundation_product": 1.0,
+        "cognitive_product": 1.0,
+        "intelligence": 10628730.0
+      }
+    },
+    {
+      "name": "evolved_10_steps",
+      "description": "Evolution from n=1 to n=11 (10 evolution steps)",
+      "inputs": {
+        "n": 11,
+        "impulses": 1.0,
+        "elements": 1.0,
+        "pressure": 1.0,
+        "subjectivity": 0.0,
+        "purpose": 1.0,
+        "time": 11.0
+      },
+      "expected": {
+        "E_n": 354293.0,
+        "F_n": 144,
+        "dynamic_product": 51372485.0,
+        "foundation_product": 1.0,
+        "cognitive_product": 11.0,
+        "intelligence": 565097335.0
+      }
+    },
+    {
+      "name": "with_subjectivity",
+      "description": "Test with partial subjectivity",
+      "inputs": {
+        "n": 1,
+        "impulses": 1.0,
+        "elements": 1.0,
+        "pressure": 1.0,
+        "subjectivity": 0.3,
+        "purpose": 1.0,
+        "time": 1.0
+      },
+      "expected": {
+        "E_n": 5.0,
+        "F_n": 1,
+        "dynamic_product": 10.0,
+        "foundation_product": 1.0,
+        "cognitive_product": 0.7,
+        "intelligence": 7.0
+      }
+    },
+    {
+      "name": "extreme_subjectivity",
+      "description": "Test with maximum subjectivity (zero objectivity)",
+      "inputs": {
+        "n": 1,
+        "impulses": 1.0,
+        "elements": 1.0,
+        "pressure": 1.0,
+        "subjectivity": 1.0,
+        "purpose": 1.0,
+        "time": 1.0
+      },
+      "expected": {
+        "E_n": 5.0,
+        "F_n": 1,
+        "dynamic_product": 10.0,
+        "foundation_product": 1.0,
+        "cognitive_product": 0.0,
+        "intelligence": 0.0
+      }
+    },
+    {
+      "name": "negative_impulses",
+      "description": "Test with negative impulses (A can be negative per PROMPT.md)",
+      "inputs": {
+        "n": 1,
+        "impulses": -1.0,
+        "elements": 1.0,
+        "pressure": 1.0,
+        "subjectivity": 0.0,
+        "purpose": 1.0,
+        "time": 1.0
+      },
+      "expected": {
+        "E_n": 5.0,
+        "F_n": 1,
+        "dynamic_product": 10.0,
+        "foundation_product": -1.0,
+        "cognitive_product": 1.0,
+        "intelligence": -10.0
+      }
+    },
+    {
+      "name": "complex_parameters",
+      "description": "Test with various non-default parameters",
+      "inputs": {
+        "n": 3,
+        "impulses": 2.0,
+        "elements": 3.0,
+        "pressure": 1.5,
+        "subjectivity": 0.2,
+        "purpose": 1.5,
+        "time": 2.0
+      },
+      "expected": {
+        "E_n": 53.0,
+        "F_n": 3,
+        "dynamic_product": 212.0,
+        "foundation_product": 9.0,
+        "cognitive_product": 2.4,
+        "intelligence": 4579.2
+      }
+    },
+    {
+      "name": "fibonacci_sequence_12",
+      "description": "Verify Fibonacci sequence generation",
+      "type": "sequence",
+      "expected_sequence": [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
+    }
+  ]
+}

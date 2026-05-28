@@ -1,0 +1,282 @@
+package cli
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+func TestDiscoverConfigs(t *testing.T) {
+	// Test that discoverConfigs returns at least the main config
+	locations := discoverConfigs(false)
+
+	if len(locations) == 0 {
+		t.Fatal("discoverConfigs should return at least the main config")
+	}
+
+	// First location should be the main config
+	if locations[0].Type != "main" {
+		t.Errorf("first location should be main config, got %s", locations[0].Type)
+	}
+}
+
+func TestDiscoverConfigsAll(t *testing.T) {
+	// Test that --all flag includes more locations
+	normalLocations := discoverConfigs(false)
+	allLocations := discoverConfigs(true)
+
+	if len(allLocations) < len(normalLocations) {
+		t.Error("--all should return at least as many locations as normal mode")
+	}
+}
+
+func TestValidateConfigFile_NonExistent(t *testing.T) {
+	loc := ConfigLocation{
+		Path:   "/nonexistent/path/config.toml",
+		Type:   "main",
+		Exists: false,
+	}
+
+	result := validateConfigFile(loc, false)
+
+	if !result.Valid {
+		t.Error("non-existent file should be valid (just informational)")
+	}
+	if len(result.Info) == 0 {
+		t.Error("non-existent file should have info message")
+	}
+}
+
+func TestValidateRecipesFile(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "ntm-validate-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	t.Run("valid recipes file", func(t *testing.T) {
+		recipePath := filepath.Join(tmpDir, "recipes.toml")
+		content := `[test-recipe]
+description = "A test recipe"
+steps = ["step1", "step2"]
+`
+		if err := os.WriteFile(recipePath, []byte(content), 0644); err != nil {
+			t.Fatalf("failed to write test file: %v", err)
+		}
+
+		result := &ValidationResult{Valid: true, Errors: []ValidationIssue{}}
+		validateRecipesFile(recipePath, result)
+
+		if !result.Valid || len(result.Errors) > 0 {
+			t.Errorf("valid recipes file should pass: errors=%v", result.Errors)
+		}
+	})
+
+	t.Run("invalid TOML syntax", func(t *testing.T) {
+		recipePath := filepath.Join(tmpDir, "bad-recipes.toml")
+		content := `[test-recipe
+description = "missing closing bracket"
+`
+		if err := os.WriteFile(recipePath, []byte(content), 0644); err != nil {
+			t.Fatalf("failed to write test file: %v", err)
+		}
+
+		result := &ValidationResult{Valid: true, Errors: []ValidationIssue{}}
+		validateRecipesFile(recipePath, result)
+
+		if len(result.Errors) == 0 {
+			t.Error("invalid TOML syntax should produce errors")
+		}
+	})
+
+	t.Run("missing required fields", func(t *testing.T) {
+		recipePath := filepath.Join(tmpDir, "incomplete-recipes.toml")
+		content := `[incomplete-recipe]
+# missing description and steps
+`
+		if err := os.WriteFile(recipePath, []byte(content), 0644); err != nil {
+			t.Fatalf("failed to write test file: %v", err)
+		}
+
+		result := &ValidationResult{Valid: true, Errors: []ValidationIssue{}, Warnings: []ValidationIssue{}}
+		validateRecipesFile(recipePath, result)
+
+		// Should have warnings for missing fields (but not errors since file is valid TOML)
+		if len(result.Warnings) == 0 {
+			t.Error("missing required fields should produce warnings")
+		}
+	})
+}
+
+func TestValidatePersonasFile(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "ntm-validate-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	t.Run("valid personas file", func(t *testing.T) {
+		personaPath := filepath.Join(tmpDir, "personas.toml")
+		content := `[developer]
+system_prompt = "You are a developer."
+`
+		if err := os.WriteFile(personaPath, []byte(content), 0644); err != nil {
+			t.Fatalf("failed to write test file: %v", err)
+		}
+
+		result := &ValidationResult{Valid: true, Errors: []ValidationIssue{}}
+		validatePersonasFile(personaPath, result)
+
+		if !result.Valid || len(result.Errors) > 0 {
+			t.Errorf("valid personas file should pass: errors=%v", result.Errors)
+		}
+	})
+
+	t.Run("missing system_prompt", func(t *testing.T) {
+		personaPath := filepath.Join(tmpDir, "incomplete-personas.toml")
+		content := `[incomplete-persona]
+# missing system_prompt
+name = "Test"
+`
+		if err := os.WriteFile(personaPath, []byte(content), 0644); err != nil {
+			t.Fatalf("failed to write test file: %v", err)
+		}
+
+		result := &ValidationResult{Valid: true, Errors: []ValidationIssue{}, Warnings: []ValidationIssue{}}
+		validatePersonasFile(personaPath, result)
+
+		if len(result.Warnings) == 0 {
+			t.Error("missing system_prompt should produce warnings")
+		}
+	})
+}
+
+func TestValidatePolicyFile(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "ntm-validate-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	t.Run("valid policy file", func(t *testing.T) {
+		policyPath := filepath.Join(tmpDir, "policy.yaml")
+		content := `version: 1
+rules:
+  - name: test-rule
+    action: allow
+`
+		if err := os.WriteFile(policyPath, []byte(content), 0644); err != nil {
+			t.Fatalf("failed to write test file: %v", err)
+		}
+
+		result := &ValidationResult{Valid: true, Errors: []ValidationIssue{}}
+		validatePolicyFile(policyPath, result)
+
+		if !result.Valid || len(result.Errors) > 0 {
+			t.Errorf("valid policy file should pass: errors=%v", result.Errors)
+		}
+	})
+
+	t.Run("invalid YAML syntax", func(t *testing.T) {
+		policyPath := filepath.Join(tmpDir, "bad-policy.yaml")
+		content := `version: 1
+rules:
+  - name: test
+    action: [invalid: yaml: syntax
+`
+		if err := os.WriteFile(policyPath, []byte(content), 0644); err != nil {
+			t.Fatalf("failed to write test file: %v", err)
+		}
+
+		result := &ValidationResult{Valid: true, Errors: []ValidationIssue{}}
+		validatePolicyFile(policyPath, result)
+
+		if len(result.Errors) == 0 {
+			t.Error("invalid YAML syntax should produce errors")
+		}
+	})
+
+	t.Run("missing expected fields", func(t *testing.T) {
+		policyPath := filepath.Join(tmpDir, "incomplete-policy.yaml")
+		content := `# empty policy
+custom_field: value
+`
+		if err := os.WriteFile(policyPath, []byte(content), 0644); err != nil {
+			t.Fatalf("failed to write test file: %v", err)
+		}
+
+		result := &ValidationResult{Valid: true, Errors: []ValidationIssue{}, Warnings: []ValidationIssue{}}
+		validatePolicyFile(policyPath, result)
+
+		if len(result.Warnings) == 0 {
+			t.Error("missing expected fields should produce warnings")
+		}
+	})
+}
+
+func TestValidationResult_Valid(t *testing.T) {
+	t.Run("valid when no errors", func(t *testing.T) {
+		result := ValidationResult{
+			Path:     "/test/path",
+			Type:     "main",
+			Errors:   []ValidationIssue{},
+			Warnings: []ValidationIssue{{Message: "some warning"}},
+		}
+		// Note: Valid is set by validateConfigFile, not auto-computed
+		result.Valid = len(result.Errors) == 0
+
+		if !result.Valid {
+			t.Error("result should be valid when there are no errors (warnings OK)")
+		}
+	})
+
+	t.Run("invalid when errors exist", func(t *testing.T) {
+		result := ValidationResult{
+			Path:   "/test/path",
+			Type:   "main",
+			Errors: []ValidationIssue{{Message: "some error"}},
+		}
+		result.Valid = len(result.Errors) == 0
+
+		if result.Valid {
+			t.Error("result should be invalid when there are errors")
+		}
+	})
+}
+
+func TestFileAndDirExists(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "ntm-validate-test")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create a test file
+	testFile := filepath.Join(tmpDir, "testfile.txt")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+
+	// Test fileExists (from safety.go - checks path existence, not file vs dir)
+	if !fileExists(testFile) {
+		t.Error("fileExists should return true for existing file")
+	}
+	if fileExists(filepath.Join(tmpDir, "nonexistent.txt")) {
+		t.Error("fileExists should return false for non-existent file")
+	}
+	// Note: fileExists in safety.go returns true for directories too (just checks existence)
+	if !fileExists(tmpDir) {
+		t.Error("fileExists should return true for existing paths (including directories)")
+	}
+
+	// Test dirExists (checks specifically for directories)
+	if !dirExists(tmpDir) {
+		t.Error("dirExists should return true for existing directory")
+	}
+	if dirExists(testFile) {
+		t.Error("dirExists should return false for files")
+	}
+	if dirExists(filepath.Join(tmpDir, "nonexistent")) {
+		t.Error("dirExists should return false for non-existent path")
+	}
+}

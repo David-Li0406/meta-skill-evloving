@@ -1,0 +1,118 @@
+﻿ID,Work Item Type,Title,Test Step,Step Action,Step Expected,Area Path,Assigned To,State
+,"Test Case","Verify Select Patient screen displays with all required elements",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Authenticate successfully with valid credentials","Authentication is successful",,,
+,,,"2","Choose Patient Consultation workflow option","Patient Consultation option is selected",,,
+,,,"3","Observe the Select Patient screen","Select Patient screen is displayed",,,
+,,,"4","Verify search form contains first name field","First name field is present",,,
+,,,"5","Verify search form contains last name field","Last name field is present",,,
+,,,"6","Verify search form contains date of birth field","Date of birth field is present",,,
+,,,"7","Verify search form contains Patient ID field","Patient ID field is present",,,
+,,,"8","Verify search form contains Alternative ID field","Alternative ID field is present",,,
+,,,"9","Verify search form contains clear button","Clear button is present",,,
+,,,"10","Verify search form contains search button","Search button is present",,,
+,,,"11","Verify search results area is displayed","Search results area is displayed",,,
+,,,"12","Verify navigation bar is at the top","Navigation bar is displayed at the top",,,
+,,,"13","Verify Include DICOM Worklist toggle is displayed","Include DICOM Worklist toggle is displayed",,,
+,,,"14","Verify Cancel button is displayed","Cancel button is displayed",,,
+,,,"15","Verify Continue button is displayed","Continue button is displayed",,,
+
+,"Test Case","Verify successful patient search with results displays patient information",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Enter search criteria in one or more fields","Search criteria is entered",,,
+,,,"3","Click the Search button","Search executes successfully",,,
+,,,"4","Observe the search results list","List of matching patients is displayed",,,
+,,,"5","Verify each patient shows patient name","Patient name is displayed for each result",,,
+,,,"6","Verify each patient shows DOB and Age","DOB and Age are displayed for each result",,,
+,,,"7","Verify each patient shows Gender","Gender is displayed for each result",,,
+,,,"8","Verify each patient shows generice profile avatar","""Generic"" Profile avatar is displayed for each result",,,
+,,,"9","Verify each patient shows dropdown arrow","Dropdown arrow is displayed for each result",,,
+
+,"Test Case","Verify search with no results displays appropriate message and create button",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Enter search criteria that matches no patients","Search criteria is entered",,,
+,,,"3","Click the Search button","Search executes",,,
+,,,"4","Observe the search results area","No results found message is displayed",,,
+,,,"5","Verify Create Patient button is displayed","Create Patient button is displayed",,,
+
+,"Test Case","Verify unsuccessful search handles error appropriately",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Perform search that triggers system error","Search fails to execute",,,
+,,,"3","Observe the error handling","No results found message is displayed",,,
+,,,"4","Verify Create Patient button is displayed","Create Patient button is displayed",,,
+
+,"Test Case","Verify First Name field input validation",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Enter invalid characters in First Name field","Invalid characters are entered (e.g. # or %)",,,
+,,,"3","Observe the validation error","Validation error message is displayed",,,
+,,,"4","Clear the field and enter valid characters","Valid characters matching regex are entered",,,
+,,,"5","Observe no validation error","No validation error is displayed",,,
+
+,"Test Case","Verify Last Name field input validation",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Enter invalid characters in Last Name field","Invalid characters are entered (e.g. # or %)",,,
+,,,"3","Observe the validation error","Validation error message is displayed",,,
+,,,"4","Clear the field and enter valid characters","Valid characters matching regex are entered",,,
+,,,"5","Observe no validation error","No validation error is displayed",,,
+
+,"Test Case","Verify Date of Birth field input validation",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Enter invalid date format in Date of Birth field","Invalid format is entered (e.g. DD/MM/YYYY or YYYY-MM-DD)",,,
+,,,"3","Observe the validation error","Validation error message is displayed",,,
+,,,"4","Clear the field and enter valid MM/DD/YYYY format","Valid format MM/DD/YYYY is entered",,,
+,,,"5","Observe no validation error","No validation error is displayed",,,
+
+,"Test Case","Verify Clear button clears all search fields",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Enter data in multiple search fields","Data is entered in first name, last name, and DOB fields",,,
+,,,"3","Click the Clear button","Clear button is clicked",,,
+,,,"4","Observe all search fields","All search fields are cleared and empty",,,
+
+,"Test Case","Verify patient selection and dropdown functionality",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen and perform search","Search results with multiple patients are displayed",,,
+,,,"2","Click on a patient in the results list","Patient is clicked",,,
+,,,"3","Observe the selected patient is marked/highlighted","Selected patient is marked in the list",,,
+,,,"4","Observe patient information dropdown","Patient information dropdown opens for selected patient",,,
+
+,"Test Case","Verify Select Patient action activates Continue button",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Search for patients and select a patient from results","Patient is selected and dropdown is open",,,
+,,,"2","Verify Continue button is inactive","Continue button is inactive/disabled",,,
+,,,"3","Click Select Patient option in the dropdown","Select Patient option is clicked",,,
+,,,"4","Observe the Continue button","Continue button becomes active/enabled",,,
+
+,"Test Case","Verify navigation stepper indicates Select Patient step",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Authenticate successfully with valid credentials","Authentication is successful",,,
+,,,"2","Choose Patient Consultation workflow","Patient Consultation workflow is chosen",,,
+,,,"3","Observe the navigation stepper","Navigation stepper is displayed",,,
+,,,"4","Verify current step indicator","Navigation stepper indicates Select Patient as current step",,,
+
+,"Test Case","Verify Cancel button returns to Let's Get Started screen",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Click the Cancel button in the navigation stepper","Cancel button is clicked",,,
+,,,"3","Observe the screen navigation","Application returns to Let's Get Started screen",,,
+,,,"4","Verify consult status","Consult is canceled",,,
+
+,"Test Case","Verify Continue button navigates to Enter Symptoms screen",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen and select a patient","Patient is selected and Continue button is active",,,
+,,,"2","Click the Continue button","Continue button is clicked",,,
+,,,"3","Observe the screen navigation","Application navigates to Enter Symptoms screen",,,
+,,,"4","Verify navigation is successful","Enter Symptoms screen is displayed",,,
+
+,"Test Case","Verify DICOM Worklist toggle replaces Alternative ID with Accession ID",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Observe the Alternative ID field is present","Alternative ID field is displayed in search form",,,
+,,,"3","Toggle ON the Use Dicom Worklist toggle","Use Dicom Worklist toggle is turned ON",,,
+,,,"4","Observe the field change","Alternative ID field is replaced with Accession ID field",,,
+,,,"5","Enter Accession ID and perform search","Search by Accession ID works and returns results",,,
+
+,"Test Case","Verify Accession number is optional in DICOM search",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen and toggle ON Use Dicom Worklist","Accession ID field is displayed",,,
+,,,"2","Leave Accession number field blank","Accession number field is empty",,,
+,,,"3","Enter other search criteria","Other search criteria is entered (e.g. first name, last name)",,,
+,,,"4","Click the Search button","Search executes successfully",,,
+,,,"5","Observe search results","Search works without Accession number as criteria",,,
+
+,"Test Case","Verify Create Patient button and message display on screen load",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Navigate to Select Patient screen","Select Patient screen is displayed",,,
+,,,"2","Observe the Patient Search Results area before searching","Patient Search Results area is visible",,,
+,,,"3","Verify Create Patient button is visible","Create Patient button is displayed",,,
+,,,"4","Verify message above results area","Message, 'Patient search results will appear here', is displayed",,,

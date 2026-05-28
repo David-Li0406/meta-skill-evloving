@@ -1,0 +1,31 @@
+# OneForecast Balanced Model Configuration - Optimal performance vs efficiency
+# Balanced parameters for good accuracy with reasonable memory usage
+
+# Temporal configuration - multi-frame input/output
+input_len: 7        # Number of input frames
+output_len: 1       # Number of output frames
+in_channels: 2      # u and v velocity components
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration (balanced)
+mesh_level: 4       # Moderate mesh refinement level
+multimesh: true     # Enable multi-mesh for better accuracy
+
+# Model architecture parameters (balanced)
+hidden_dim: 384     # Balanced hidden dimension
+num_layers: 1       # Number of layers in MLPs
+processor_layers: 12  # Moderate processor layers
+
+# Feature processing options
+use_dual_path: true        # Enable dual-path for better features
+use_temporal_processing: false  # Disable to save memory
+
+# Training optimization hints
+# - This balanced version provides:
+#   - Good trade-off between accuracy and efficiency
+#   - Suitable for GPUs with 12-16GB memory
+#   - Batch size: 1-2 depending on GPU memory
+#   - ~50M parameters (between light and standard)
+# - Recommended as starting point for fine-tuning

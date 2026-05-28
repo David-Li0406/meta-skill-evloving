@@ -1,0 +1,48 @@
+---
+name: performing-penetration-testing
+description: Use this skill when you need to conduct automated penetration testing of web applications to identify vulnerabilities and generate comprehensive reports.
+---
+
+# Skill body
+
+## Overview
+
+This skill automates the process of penetration testing for web applications, identifying vulnerabilities and suggesting exploitation techniques. It leverages the penetration-tester plugin to assess web application security posture.
+
+## How It Works
+
+1. **Target Identification**: Analyzes the user's request to identify the target web application or API endpoint.
+2. **Vulnerability Scanning**: Executes automated scans to discover potential vulnerabilities, covering OWASP Top 10 risks.
+3. **Reporting**: Generates a detailed penetration test report, including identified vulnerabilities, risk ratings, and remediation recommendations.
+
+## When to Use This Skill
+
+This skill activates when you need to:
+- Perform a penetration test on a web application.
+- Identify vulnerabilities in a web application or API.
+- Assess the security posture of a web application.
+- Generate a report detailing security flaws and remediation steps.
+
+## Examples
+
+### Example 1: Performing a Full Penetration Test
+
+User request: "Run a penetration test on example.com"
+
+The skill will:
+1. Initiate a comprehensive penetration test on the specified domain.
+2. Generate a detailed report outlining identified vulnerabilities, including SQL injection, XSS, and CSRF.
+
+### Example 2: Assessing API Security
+
+User request: "Perform vulnerability assessment on the /api/users endpoint"
+
+The skill will:
+1. Target the specified API endpoint for vulnerability scanning.
+2. Identify potential security flaws in the API, such as authentication bypass or authorization issues, and provide remediation advice.
+
+## Best Practices
+
+- **Authorization**: Always ensure you have explicit authorization before performing penetration testing on any system.
+- **Scope Definition**: Clearly define the scope of the penetration test to avoid unintended consequences.
+- **Safe Exploitation**: Use exploitation techniques carefully to demonstrate vulnerabilities without causing damage.

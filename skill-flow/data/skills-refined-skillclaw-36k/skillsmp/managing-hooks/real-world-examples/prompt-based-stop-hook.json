@@ -1,0 +1,70 @@
+{
+  "description": "Real-world example: Intelligent Stop hook using prompt-based decision making",
+  "scenario": "Prevent Claude from stopping prematurely by analyzing task completion status",
+  "implementation": "prompt-based-stop-hook",
+  "configuration": {
+    "hooks": {
+      "Stop": [
+        {
+          "hooks": [
+            {
+              "type": "prompt",
+              "prompt": "You are Claude Code's task completion analyzer. Your job is to decide whether Claude should stop working or continue.\n\nAnalyze the conversation context below:\n$ARGUMENTS\n\nEvaluation checklist:\n1. **User Request Analysis**:\n   - What specific task or request did the user make?\n   - Did they use words like \"done\", \"finished\", \"completed\"?\n   - Did they say \"thanks\" or similar completion signals?\n\n2. **Work Completion**:\n   - Has Claude finished the requested task?\n   - Are all subtasks completed?\n   - Did the user ask for something that wasn't delivered?\n\n3. **Error Resolution**:\n   - Are there any errors or problems mentioned?\n   - Did Claude say something needs to be fixed?\n   - Were there tool failures or exceptions?\n\n4. **Follow-up Opportunities**:\n   - Did the user ask \"what's next?\" or mention follow-up work?\n   - Are there partially done tasks that should continue?\n   - Did the user mention multiple phases of work?\n\nDecision Rules:\nAPPROVE (allow Claude to stop) if:\n- User explicitly said \"done\" or \"that's it\"\n- Task is complete and user seems satisfied\n- All requested work is finished\n- No outstanding errors\n\nBLOCK (force Claude to continue) if:\n- Task incomplete\n- User mentioned more work needed\n- Unresolved errors present\n- Stop hook is already active (check stop_hook_active in context)\n\nRespond with ONLY valid JSON (no additional text):\n{\"decision\": \"approve\" or \"block\", \"reason\": \"Brief explanation (1-2 sentences)\"}",
+              "timeout": 30
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "behavior_examples": [
+    {
+      "scenario": "User asked to write function and says 'looks good'",
+      "decision": "approve",
+      "reason": "Task complete and user indicated satisfaction"
+    },
+    {
+      "scenario": "User asked for function, Claude wrote it, user says 'also fix the tests'",
+      "decision": "block",
+      "reason": "Additional work requested (fix tests)"
+    },
+    {
+      "scenario": "Claude created file but mentions 'error on line 42'",
+      "decision": "block",
+      "reason": "Unresolved error needs fixing"
+    },
+    {
+      "scenario": "User asks 'what about error handling?'",
+      "decision": "block",
+      "reason": "Follow-up question indicates more work needed"
+    }
+  ],
+  "testing_steps": [
+    "Add configuration to .claude/settings.json",
+    "Restart Claude Code",
+    "Run /hooks to verify Stop hook registered",
+    "Create a conversation asking for a specific task",
+    "When Claude finishes, the Stop hook will evaluate",
+    "Check that Claude stops only when task is complete",
+    "Try asking for follow-up work to verify block behavior"
+  ],
+  "benefits": [
+    "Prevents premature stopping",
+    "Respects user's actual completion criteria",
+    "Adapts to different task contexts",
+    "No hardcoded rules to maintain",
+    "Learns from conversation flow"
+  ],
+  "limitations": [
+    "Adds 1-3 second latency before stopping",
+    "LLM decisions are non-deterministic (99% consistent)",
+    "Requires good conversation context in transcript",
+    "Can be fooled by ambiguous language"
+  ],
+  "customization_options": {
+    "timeout": "Increase to 45s for complex conversations, decrease to 15s for simple",
+    "prompt_refinement": "Add domain-specific language if for specialized tasks",
+    "decision_criteria": "Adjust evaluation checklist for your workflow",
+    "safety_net": "Check stop_hook_active to prevent infinite loops"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "manifest_version": "0.1",
+  "name": "robynn-rory",
+  "display_name": "Robynn AI - Rory",
+  "version": "1.0.0",
+  "description": "Your CMO in the terminal. AI-powered marketing assistant for content creation, company research, competitive intelligence, and advertising automation.",
+  "author": {
+    "name": "Robynn AI",
+    "url": "https://robynn.ai"
+  },
+  "homepage": "https://robynn.ai/rory",
+  "repository": "https://github.com/robynnai/robynn-claude-cmo",
+  "icon": "icon.png",
+  "server": {
+    "type": "python",
+    "entry_point": "mcp_server.py",
+    "mcp_config": {
+      "command": "python",
+      "args": ["mcp_server.py"]
+    }
+  },
+  "user_config": {
+    "ROBYNN_API_KEY": {
+      "type": "string",
+      "title": "Robynn API Key",
+      "description": "Your Robynn AI API key. Get one at https://robynn.ai/settings/api-keys",
+      "required": false,
+      "sensitive": true
+    }
+  }
+}

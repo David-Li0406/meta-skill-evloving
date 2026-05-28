@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# List databases on PostgreSQL 17 replica on hal9000
+set -euo pipefail
+
+ssh hal9000 "sudo -u postgres psql -h localhost -p 5432 -c \"SELECT datname, pg_size_pretty(pg_database_size(datname)) as size FROM pg_database WHERE datistemplate = false ORDER BY pg_database_size(datname) DESC;\""

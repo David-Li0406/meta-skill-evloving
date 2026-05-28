@@ -1,0 +1,24 @@
+# {{tool_name}}
+
+{{description}}
+
+## Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+{{#each parameters}}
+| {{name}} | {{type}} | {{#if required}}Yes{{else}}No{{/if}} | {{description}} |
+{{/each}}
+
+## Example
+
+```bash
+node ./scripts/mcp-caller.mjs call {{tool_name}} '{{example_args}}'
+```
+
+Expected output:
+```json
+{
+  "content": [{"type": "text", "text": "..."}]
+}
+```

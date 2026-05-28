@@ -1,0 +1,139 @@
+# =============================================================================
+# Security Workflow - Audit de Sécurité
+# =============================================================================
+# Déclenché sur: quotidien (cron), push main, PRs
+# Actions: audit npm, scan dépendances, analyse code
+# =============================================================================
+
+name: Security
+
+on:
+  schedule:
+    # Tous les jours à 6h UTC
+    - cron: '0 6 * * *'
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  # ===========================================================================
+  # Audit des dépendances npm
+  # ===========================================================================
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run npm audit
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: Check for critical vulnerabilities
+        run: |
+          CRITICAL=$(pnpm audit --json 2>/dev/null | jq '.metadata.vulnerabilities.critical // 0')
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "::error::Found $CRITICAL critical vulnerabilities!"
+            exit 1
+          fi
+
+  # ===========================================================================
+  # Scan avec Trivy
+  # ===========================================================================
+  trivy:
+    name: Trivy Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ===========================================================================
+  # Détection de secrets
+  # ===========================================================================
+  secrets:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===========================================================================
+  # CodeQL Analysis
+  # ===========================================================================
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # ===========================================================================
+  # Notification (optionnel)
+  # ===========================================================================
+  notify:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [audit, trivy, secrets, codeql]
+    if: failure() && github.ref == 'refs/heads/main'
+    steps:
+      - name: Send notification
+        run: |
+          echo "::warning::Security scan failed! Check the workflow results."
+          # Ajouter ici: Slack, Discord, email notification

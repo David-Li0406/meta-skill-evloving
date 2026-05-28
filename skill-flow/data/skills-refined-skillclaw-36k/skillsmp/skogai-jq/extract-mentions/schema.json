@@ -1,0 +1,41 @@
+{
+  "name": "extract-mentions",
+  "description": "Extract @mentions from a string at a specified path",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'message', 'user.comment')"
+    }
+  },
+  "output": {
+    "type": "array",
+    "description": "Array of @mentions found in the string (e.g., ['@user1', '@user2']). Returns empty array if no mentions, field doesn't exist, or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Extract single mention",
+      "input": {"message": "Hello @skogix"},
+      "args": {"path": "message"},
+      "output": ["@skogix"]
+    },
+    {
+      "description": "Extract multiple mentions",
+      "input": {"comment": "@alice and @bob, please review"},
+      "args": {"path": "comment"},
+      "output": ["@alice", "@bob"]
+    },
+    {
+      "description": "No mentions returns empty array",
+      "input": {"text": "No mentions here"},
+      "args": {"path": "text"},
+      "output": []
+    }
+  ],
+  "tags": ["string", "regex", "mentions", "extract", "social"]
+}

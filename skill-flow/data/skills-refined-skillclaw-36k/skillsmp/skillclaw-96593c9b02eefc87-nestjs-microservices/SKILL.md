@@ -1,0 +1,40 @@
+---
+name: nestjs-microservices
+description: Use this skill when implementing microservices in NestJS with gRPC and RabbitMQ, focusing on transport standards and monorepo architecture.
+---
+
+# Microservices & Transport Standards
+
+## Transport Strategies
+
+- **Synchronous (RPC)**: Use **gRPC** for low-latency, internal service-to-service calls.
+  - **Why**: 10x faster than REST/JSON, centralized `.proto` contracts.
+- **Asynchronous (Events)**: Use **RabbitMQ** or **Kafka** for decoupling domains.
+  - **Pattern**: Fire-and-forget (`emit()`) for side effects (e.g., "UserCreated" -> "SendEmail").
+
+## Monorepo Architecture
+
+- **Contracts**:
+  - **Pattern**: Store all DTOs, `.proto` files, and Interfaces in a **Shared Library** (`libs/contracts`).
+  - **Rule**: Services never import code from other services. They only import from `contracts`.
+- **Versioning**: Semantic versioning of messages is mandatory. Never change a field type; add a new field.
+
+## Exception Handling
+
+- **Propagation**: Standard `HttpException` is lost over Rpc/Tcp.
+- **Standard**: Use `RpcException` and generic Filters.
+
+  ```typescript
+  // Global RPC Filter
+  @Catch()
+  export class RpcExceptionFilter implements RpcExceptionFilter<RpcException> {
+    catch(exception: RpcException, host: ArgumentsHost): Observable<any> {
+      return throwError(() => exception.getError());
+    }
+  }
+  ```
+
+## Serialization
+
+- **Message DTOs**: Use `class-validator` just like HTTP.
+  - **Config**: Apply `useGlobalPipes(new ValidationPipe({ transform: true }))` in the `MicroserviceOptions` setup, not just HTTP app setup.

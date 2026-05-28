@@ -1,0 +1,71 @@
+# LocalAV Transcriber Requirements
+# Pinned for Windows 11, Python 3.12, CUDA 12.1, RTX 4080 SUPER
+
+# Core ML/AI frameworks (CUDA 12.1 builds)
+--index-url https://download.pytorch.org/whl/cu121
+torch==2.3.1+cu121
+torchaudio==2.3.1+cu121
+
+# Reset to default PyPI for other packages
+--index-url https://pypi.org/simple
+
+# Core dependencies
+numpy>=1.24.0,<2.0.0
+ctranslate2==4.3.1
+
+# Audio/Video processing
+ffmpeg-python>=0.2.0
+pydub==0.25.1
+librosa==0.10.2.post1
+soundfile==0.12.1
+
+# ASR
+faster-whisper==1.0.0
+
+# VAD
+silero-vad>=5.0
+
+# Diarization & Speaker processing
+speechbrain==0.5.16
+
+# Speaker embeddings & vector search (commented - optional)
+# faiss-cpu>=1.7.4  # Uncomment for faster speaker matching
+scikit-learn>=1.3.0
+
+# Database
+sqlalchemy>=2.0.0
+
+# CLI
+typer[all]>=0.9.0
+rich>=13.0.0
+
+# UI
+streamlit>=1.28.0
+plotly>=5.17.0
+streamlit-webrtc>=0.47.0
+
+# Config & utilities
+pyyaml==6.0.2
+python-dotenv>=1.0.0
+watchdog>=3.0.0
+tqdm==4.66.4
+joblib>=1.3.0
+psutil>=5.9.0
+
+# Data processing
+pandas==2.2.2
+scipy>=1.11.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+
+# Development
+black>=23.0.0
+ruff>=0.1.0
+mypy>=1.7.0
+
+# Optional dependencies (install separately if needed):
+# pip install faiss-cpu  # For faster speaker vector search
+# pip install pyannote.audio  # For advanced diarization (requires HF_TOKEN)

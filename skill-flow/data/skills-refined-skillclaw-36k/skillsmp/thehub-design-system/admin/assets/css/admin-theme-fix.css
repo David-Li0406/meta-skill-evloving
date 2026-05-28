@@ -1,0 +1,513 @@
+/**
+ * ADMIN THEME FIX
+ * Åsidosätter hårdkodade färger i admin.css med CSS-variabler
+ * Ladda EFTER admin.css
+ */
+
+/* ========================================================================
+   ADMIN HEADER - Fix hårdkodad bakgrund
+   ======================================================================== */
+.admin-header {
+    background: var(--color-bg-surface) !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+/* ========================================================================
+   SIDEBAR - Enhetlig design för BÅDE admin och publik
+   Sidebar använder .sidebar-link med .is-active klass
+   ======================================================================== */
+
+/* Sidebar container - samma för alla */
+.sidebar,
+.admin-sidebar {
+    background: var(--color-bg-card) !important;
+    border-right: 1px solid var(--color-border) !important;
+}
+
+/* Sidebar link - grundstil */
+.sidebar-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: var(--space-sm) var(--space-xs);
+    color: var(--color-text-secondary) !important;
+    text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.sidebar-link:hover {
+    background: var(--color-bg-hover) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.sidebar-link:hover .sidebar-icon-svg,
+.sidebar-link:hover svg {
+    color: var(--color-text-primary) !important;
+}
+
+/* Active state - .is-active klass */
+.sidebar-link.is-active,
+.sidebar-link[aria-current="page"] {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent-text) !important;
+}
+
+.sidebar-link.is-active .sidebar-icon-svg,
+.sidebar-link.is-active svg,
+.sidebar-link[aria-current="page"] .sidebar-icon-svg,
+.sidebar-link[aria-current="page"] svg {
+    color: var(--color-accent-text) !important;
+}
+
+/* Active indicator bar */
+.sidebar-link.is-active::before,
+.sidebar-link[aria-current="page"]::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    background: var(--color-accent) !important;
+    border-radius: 0 2px 2px 0;
+}
+
+/* Sidebar icon */
+.sidebar-icon,
+.sidebar-icon-svg {
+    width: 22px;
+    height: 22px;
+    color: inherit;
+}
+
+/* Sidebar label */
+.sidebar-label {
+    display: block;
+    font-size: 10px;
+    font-weight: var(--weight-medium);
+    line-height: 1.2;
+    text-align: center;
+    color: inherit;
+}
+
+/* Section title */
+.sidebar-section-title {
+    font-size: 9px;
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: var(--space-xs) var(--space-sm);
+    text-align: center;
+}
+
+/* Divider */
+.sidebar-divider {
+    height: 1px;
+    background: var(--color-border) !important;
+    margin: var(--space-xs) var(--space-sm);
+}
+
+/* Admin link accent color */
+.sidebar-link--admin {
+    color: var(--color-accent-text) !important;
+}
+
+/* ========================================================================
+   LEGACY: .nav-item stöd (för bakåtkompatibilitet)
+   ======================================================================== */
+.nav-item {
+    color: var(--color-text-secondary) !important;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.nav-item:hover {
+    background: var(--color-bg-hover) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.nav-item:hover svg {
+    color: var(--color-text-primary) !important;
+}
+
+.nav-item.active {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent-text) !important;
+}
+
+.nav-item.active svg {
+    color: var(--color-accent-text) !important;
+}
+
+.nav-item.active::before {
+    background: var(--color-accent) !important;
+}
+
+.nav-label {
+    color: inherit;
+}
+
+.nav-separator {
+    background: var(--color-border) !important;
+}
+
+.nav-item--public {
+    opacity: 0.7;
+}
+
+.nav-item--public:hover {
+    opacity: 1;
+}
+
+/* ========================================================================
+   STATS CARDS - Fix blå till cyan
+   ======================================================================== */
+.stat-card-primary,
+.stat-card--primary {
+    border-left-color: var(--color-accent) !important;
+}
+
+.stat-card-primary .stat-icon,
+.stat-card--primary .stat-icon {
+    color: var(--color-accent) !important;
+}
+
+/* Fix alla hårdkodade blå färger (#3b82f6, #3B82F6, #1D4ED8) */
+[style*="#3b82f6"],
+[style*="#3B82F6"],
+[style*="#1D4ED8"],
+.text-blue-600,
+.text-blue-500,
+.border-blue-500 {
+    color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+}
+
+/* ========================================================================
+   BUTTONS - Använd CSS-variabler
+   ======================================================================== */
+.btn-primary,
+.admin-btn-primary {
+    background: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-text-inverse) !important;
+}
+
+.btn-primary:hover,
+.admin-btn-primary:hover {
+    background: var(--color-accent-hover) !important;
+    border-color: var(--color-accent-hover) !important;
+    box-shadow: var(--shadow-glow);
+}
+
+/* ========================================================================
+   LINKS - Fix blå länkar
+   ======================================================================== */
+a.text-primary,
+.admin-link-primary {
+    color: var(--color-accent) !important;
+}
+
+a.text-primary:hover,
+.admin-link-primary:hover {
+    color: var(--color-accent-hover) !important;
+}
+
+/* ========================================================================
+   BADGES & LABELS
+   ======================================================================== */
+.badge-primary,
+.label-primary {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+}
+
+/* ========================================================================
+   TABLES - Fix borders
+   ======================================================================== */
+.admin-table th {
+    background: var(--color-bg-sunken);
+    border-bottom-color: var(--color-border);
+}
+
+.admin-table td {
+    border-bottom-color: var(--color-border);
+}
+
+.admin-table tbody tr:hover {
+    background: var(--color-bg-hover);
+}
+
+/* ========================================================================
+   FORMS - Input fields
+   ======================================================================== */
+.admin-input,
+.admin-select,
+.admin-textarea {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+}
+
+.admin-input:focus,
+.admin-select:focus,
+.admin-textarea:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-light), var(--shadow-glow);
+}
+
+/* ========================================================================
+   CARDS - Fix bakgrunder
+   ======================================================================== */
+.admin-card {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+}
+
+.admin-card-header {
+    border-bottom-color: var(--color-border);
+}
+
+/* ========================================================================
+   ALERTS - Fix färger
+   ======================================================================== */
+.alert-info,
+.admin-alert-info {
+    background: var(--color-info-bg);
+    color: var(--color-info);
+    border-color: var(--color-info);
+}
+
+.alert-success,
+.admin-alert-success {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+    border-color: var(--color-success);
+}
+
+.alert-warning,
+.admin-alert-warning {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+    border-color: var(--color-warning);
+}
+
+.alert-error,
+.alert-danger,
+.admin-alert-error {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+    border-color: var(--color-error);
+}
+
+/* ========================================================================
+   TABS - Fix active state
+   ======================================================================== */
+.admin-tab.is-active {
+    color: var(--color-accent) !important;
+    border-bottom-color: var(--color-accent) !important;
+}
+
+.admin-tab:hover {
+    color: var(--color-text-primary);
+}
+
+/* ========================================================================
+   DROPDOWNS
+   ======================================================================== */
+.admin-dropdown {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-lg);
+}
+
+.admin-dropdown-item:hover {
+    background: var(--color-bg-hover);
+}
+
+/* ========================================================================
+   MODALS
+   ======================================================================== */
+.admin-modal {
+    background: var(--color-bg-surface);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-lg);
+}
+
+.admin-modal-header {
+    border-bottom-color: var(--color-border);
+}
+
+.admin-modal-footer {
+    border-top-color: var(--color-border);
+}
+
+/* ========================================================================
+   PAGINATION
+   ======================================================================== */
+.pagination-item.is-active {
+    background: var(--color-accent) !important;
+    border-color: var(--color-accent) !important;
+    color: var(--color-text-inverse) !important;
+}
+
+.pagination-item:hover:not(.is-active) {
+    background: var(--color-bg-hover);
+    border-color: var(--color-border-strong);
+}
+
+/* ========================================================================
+   CHARTS & VISUALIZATIONS - Fix blå till cyan
+   ======================================================================== */
+.chart-bar-primary {
+    fill: var(--color-accent) !important;
+}
+
+.chart-line-primary {
+    stroke: var(--color-accent) !important;
+}
+
+/* ========================================================================
+   SYNTAX HIGHLIGHTING (om det finns)
+   ======================================================================== */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link {
+    color: var(--color-accent) !important;
+}
+
+/* ========================================================================
+   SCROLLBARS
+   ======================================================================== */
+.admin-main::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+}
+
+.admin-main::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+}
+
+/* ========================================================================
+   FIX GRADIENT BACKGROUNDS
+   ======================================================================== */
+.admin-gradient-primary {
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%) !important;
+}
+
+/* ========================================================================
+   SPECIFIC ADMIN COMPONENTS
+   ======================================================================== */
+
+/* Admin submenu */
+.admin-submenu-item.is-active {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+}
+
+/* Status indicators */
+.status-active,
+.status-published {
+    color: var(--color-success);
+}
+
+.status-pending,
+.status-draft {
+    color: var(--color-warning);
+}
+
+.status-inactive,
+.status-unpublished {
+    color: var(--color-error);
+}
+
+/* Admin page header */
+.admin-page-header {
+    border-bottom-color: var(--color-border);
+}
+
+/* Quick actions */
+.quick-action-card:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-glow);
+}
+
+/* ========================================================================
+   RESPONSIVE FIXES
+   ======================================================================== */
+@media (max-width: 768px) {
+    .admin-sidebar.is-open {
+        background: var(--color-bg-surface);
+        box-shadow: var(--shadow-lg);
+    }
+}
+
+/* ========================================================================
+   THEME SWITCHER I ADMIN DROPDOWN
+   ======================================================================== */
+.admin-dropdown-theme {
+    padding: var(--space-sm, 8px) var(--space-md, 16px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md, 16px);
+}
+
+.theme-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm, 8px);
+    font-size: var(--text-sm, 14px);
+    color: var(--color-text-primary);
+}
+
+.theme-label svg {
+    color: var(--color-text-muted);
+}
+
+.theme-options {
+    display: flex;
+    gap: 4px;
+}
+
+.theme-option-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    border-radius: var(--radius-md, 8px);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.theme-option-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.theme-option-btn:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-strong);
+}
+
+.theme-option-btn.is-active,
+.theme-btn.is-active {
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-glow);
+}

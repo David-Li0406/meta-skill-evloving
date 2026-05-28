@@ -1,0 +1,41 @@
+{
+  "name": "array-unique",
+  "description": "Remove duplicate values from an array",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing an array field to deduplicate"
+  },
+  "args": {
+    "array": {
+      "type": "string",
+      "required": false,
+      "description": "Name of the array field in the input object (defaults to 'items')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with the same structure, but with deduplicated array"
+  },
+  "examples": [
+    {
+      "description": "Remove duplicate numbers",
+      "input": {"items": [1, 2, 2, 3, 1, 4, 3]},
+      "args": {},
+      "output": {"items": [1, 2, 3, 4]}
+    },
+    {
+      "description": "Remove duplicate strings",
+      "input": {"items": ["apple", "banana", "apple", "cherry", "banana"]},
+      "args": {},
+      "output": {"items": ["apple", "banana", "cherry"]}
+    },
+    {
+      "description": "Remove duplicate objects",
+      "input": {"users": [{"id": 1, "name": "alice"}, {"id": 2, "name": "bob"}, {"id": 1, "name": "alice"}]},
+      "args": {"array": "users"},
+      "output": {"users": [{"id": 1, "name": "alice"}, {"id": 2, "name": "bob"}]}
+    }
+  ],
+  "tags": ["array", "unique", "deduplicate", "distinct"]
+}

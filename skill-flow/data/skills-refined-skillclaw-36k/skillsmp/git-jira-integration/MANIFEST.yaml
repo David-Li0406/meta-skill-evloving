@@ -1,0 +1,94 @@
+# Skill Manifest - Progressive Disclosure Index
+# Token estimation: 1 token ≈ 0.75 words (or ~4 characters)
+# Content multipliers: prose 1.0x, code 1.2x, tables 1.3x, templates 1.2x
+
+skill: git-jira-integration
+version: "1.0"
+specification: agentskills.io/v1
+
+progressive_disclosure:
+  # ---------------------------------------------------------------------------
+  # LEVEL 1: METADATA (~120 tokens)
+  # Range: 80-150 | We use: 120
+  # Rationale: name (~10) + description (~100) + YAML overhead (~10)
+  # ---------------------------------------------------------------------------
+  metadata:
+    estimated_tokens: 120
+    fields: [name, description]
+
+  # ---------------------------------------------------------------------------
+  # LEVEL 2: INSTRUCTIONS (~1800 tokens)
+  # Range: 1000-2500 | We use: 1800
+  # Rationale: Main skill file with tool reference table and examples
+  # ---------------------------------------------------------------------------
+  instructions:
+    estimated_tokens: 1800
+    file: SKILL.md
+
+  resources:
+    # -------------------------------------------------------------------------
+    # BRANCH-CONVENTIONS.md (~1200 tokens)
+    # Range: 900-1500 | We use: 1200
+    # Rationale:
+    #   - Branch type definitions and examples
+    #   - Naming patterns and rules
+    #   - Tables for type mappings
+    # -------------------------------------------------------------------------
+    - path: references/BRANCH-CONVENTIONS.md
+      purpose: Complete branch naming conventions and patterns
+      estimated_tokens: 1200
+      load_when:
+        - Creating a new branch
+        - User asks about branch naming
+        - Need to understand branch types
+      keywords: [branch, naming, feature, fix, hotfix, pattern]
+
+    # -------------------------------------------------------------------------
+    # COMMIT-MESSAGE-FORMAT.md (~1400 tokens)
+    # Range: 1100-1700 | We use: 1400
+    # Rationale:
+    #   - Conventional commits specification
+    #   - Examples for each commit type
+    #   - Rules and validation criteria
+    # -------------------------------------------------------------------------
+    - path: references/COMMIT-MESSAGE-FORMAT.md
+      purpose: Conventional commits format and examples
+      estimated_tokens: 1400
+      load_when:
+        - Writing a commit message
+        - Validating commit format
+        - User asks about commit conventions
+      keywords: [commit, message, conventional, feat, fix, breaking]
+
+    # -------------------------------------------------------------------------
+    # PR-TEMPLATES.md (~1600 tokens)
+    # Range: 1300-1900 | We use: 1600
+    # Rationale:
+    #   - PR body templates for different scenarios
+    #   - Testing checklists
+    #   - Jira linking patterns
+    # -------------------------------------------------------------------------
+    - path: references/PR-TEMPLATES.md
+      purpose: PR templates with Jira integration
+      estimated_tokens: 1600
+      load_when:
+        - Creating a pull request
+        - Need PR body template
+        - User asks for PR format
+      keywords: [pr, pull request, template, checklist, review]
+
+loading_strategy:
+  recommendation: |
+    1. Start with SKILL.md for tool overview and quick reference
+    2. Load BRANCH-CONVENTIONS.md when generating branch names
+    3. Load COMMIT-MESSAGE-FORMAT.md when validating commits
+    4. Load PR-TEMPLATES.md when creating pull requests
+
+  fallback: |
+    SKILL.md contains essential tool usage and quick examples.
+    Reference files provide comprehensive conventions and templates.
+
+token_summary:
+  metadata_only: 120
+  with_instructions: 1920
+  with_all_resources: 6120

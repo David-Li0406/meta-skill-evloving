@@ -1,0 +1,84 @@
+.scenario-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.scenario-card:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-text-muted);
+    transform: translateX(4px);
+}
+
+.scenario-card--active {
+    border-color: var(--color-cognitive);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%);
+}
+
+.scenario-card__icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.scenario-card__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.scenario-card__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 0 2px 0;
+}
+
+.scenario-card__subtitle {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+.scenario-card__arrow {
+    font-size: 1rem;
+    color: var(--color-text-muted);
+    transition: transform 0.2s ease;
+}
+
+.scenario-card:hover .scenario-card__arrow {
+    transform: translateX(4px);
+    color: var(--color-cognitive);
+}
+
+/* Category variants */
+.scenario-card--educational .scenario-card__icon {
+    filter: hue-rotate(0deg);
+}
+
+.scenario-card--real-world .scenario-card__icon {
+    filter: hue-rotate(30deg);
+}
+
+.scenario-card--dynamic {
+    background: linear-gradient(135deg, var(--color-surface) 0%, rgba(249, 115, 22, 0.05) 100%);
+}
+
+.scenario-card--dynamic .scenario-card__icon {
+    animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}

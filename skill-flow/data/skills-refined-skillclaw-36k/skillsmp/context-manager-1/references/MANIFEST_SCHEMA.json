@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CMS Manifest",
+  "description": "Context Manager Skill manifest for tracking compiled context artifacts",
+  "type": "object",
+  "required": ["compiled_at", "mode", "baseline", "inputs", "outputs"],
+  "properties": {
+    "compiled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp of when context was compiled"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["compile", "update"],
+      "description": "Whether this was a full compile or incremental update"
+    },
+    "baseline": {
+      "type": "object",
+      "required": ["git_commit", "dirty"],
+      "properties": {
+        "git_commit": {
+          "type": "string",
+          "description": "Git commit hash at time of compile"
+        },
+        "dirty": {
+          "type": "boolean",
+          "description": "Whether working directory had uncommitted changes"
+        },
+        "branch": {
+          "type": "string",
+          "description": "Git branch name"
+        }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "description": "Source files that were considered during compilation",
+      "properties": {
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "description": "SHA256 hash of the file contents"
+          }
+        }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "description": "Compiled artifacts and their hashes",
+      "additionalProperties": {
+        "type": "string",
+        "description": "SHA256 hash of the output file"
+      }
+    },
+    "features": {
+      "type": "object",
+      "description": "Feature bundle definitions",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Files belonging to this feature"
+          },
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Keywords associated with this feature"
+          },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Other features this depends on"
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "description": "Statistics about the compiled context",
+      "properties": {
+        "boot_tokens": {
+          "type": "integer",
+          "description": "Estimated token count of BOOT_CONTEXT"
+        },
+        "delta_tokens": {
+          "type": "integer",
+          "description": "Estimated token count of DELTA_CONTEXT"
+        },
+        "feature_count": {
+          "type": "integer",
+          "description": "Number of feature bundles"
+        },
+        "files_tracked": {
+          "type": "integer",
+          "description": "Total files tracked across all features"
+        }
+      }
+    }
+  }
+}

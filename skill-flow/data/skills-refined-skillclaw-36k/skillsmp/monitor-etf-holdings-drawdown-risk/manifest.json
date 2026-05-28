@@ -1,0 +1,117 @@
+{
+  "name": "monitor-etf-holdings-drawdown-risk",
+  "version": "0.1.0",
+  "displayName": "監控實物 ETF 持倉下滑風險",
+  "description": "偵測「商品價格上漲、但對應實物 ETF/信託持倉卻下滑」的背離現象，並用多指標交叉驗證，評估是否存在實物供給緊張/交割壓力風險",
+  "author": "Ricky Wang",
+  "license": "MIT",
+  "category": "indicator-monitoring",
+  "tags": [
+    "ETF",
+    "持倉監控",
+    "背離分析",
+    "實物短缺",
+    "白銀",
+    "黃金",
+    "交割風險",
+    "供需分析",
+    "宏觀經濟"
+  ],
+  "dataLevel": "free-limit",
+  "dependencies": {
+    "python": ">=3.8",
+    "packages": [
+      "pandas>=1.5.0",
+      "numpy>=1.20.0",
+      "yfinance>=0.2.0",
+      "requests>=2.28.0",
+      "selenium>=4.0.0",
+      "webdriver-manager>=4.0.0",
+      "beautifulsoup4>=4.12.0"
+    ],
+    "optional": [
+      "matplotlib>=3.5.0",
+      "lxml>=4.9.0"
+    ]
+  },
+  "entryPoints": {
+    "skill": "SKILL.md",
+    "mainScript": "scripts/divergence_detector.py"
+  },
+  "workflows": [
+    {
+      "id": "analyze",
+      "name": "背離分析",
+      "description": "執行完整的價格-庫存背離分析",
+      "file": "workflows/analyze.md"
+    },
+    {
+      "id": "monitor",
+      "name": "監控模式",
+      "description": "持續監控背離狀態與風險警報",
+      "file": "workflows/monitor.md"
+    },
+    {
+      "id": "cross-validate",
+      "name": "交叉驗證",
+      "description": "使用多指標交叉驗證背離訊號",
+      "file": "workflows/cross-validate.md"
+    }
+  ],
+  "references": [
+    "references/data-sources.md",
+    "references/methodology.md",
+    "references/input-schema.md"
+  ],
+  "templates": [
+    "templates/output-json.md",
+    "templates/output-markdown.md"
+  ],
+  "examples": [],
+  "dataSources": [
+    {
+      "name": "ETF 發行方官網",
+      "type": "primary",
+      "url": "各 ETF 官網",
+      "api": "Web scraping (Selenium)",
+      "tickers": [
+        "SLV",
+        "PSLV",
+        "GLD",
+        "PHYS"
+      ]
+    },
+    {
+      "name": "Yahoo Finance",
+      "type": "primary",
+      "url": "https://finance.yahoo.com",
+      "api": "yfinance package",
+      "tickers": [
+        "XAGUSD=X",
+        "XAUUSD=X",
+        "SI=F",
+        "GC=F"
+      ]
+    },
+    {
+      "name": "COMEX",
+      "type": "secondary",
+      "url": "https://www.cmegroup.com",
+      "api": "Web scraping",
+      "data": "Registered/Eligible inventory"
+    }
+  ],
+  "modelConfig": {
+    "defaultParams": {
+      "decade_low_window_days": 3650,
+      "divergence_window_days": 180,
+      "min_price_return_pct": 0.15,
+      "min_inventory_drawdown_pct": 0.10
+    },
+    "stressScoreWeights": {
+      "divergence_severity": 0.6,
+      "decade_low_bonus": 0.2,
+      "ratio_extreme_bonus": 0.2
+    }
+  }
+}

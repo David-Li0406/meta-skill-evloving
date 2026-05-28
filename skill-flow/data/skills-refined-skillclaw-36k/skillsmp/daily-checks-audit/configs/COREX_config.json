@@ -1,0 +1,64 @@
+{
+    "customer_name": "COREX",
+    "description": "COREX customer threshold configuration - derived from 13 daily check files (Jan 1-19, 2026)",
+    "thresholds": {
+        "response_time_smlg": {
+            "max": 1000,
+            "warning": 500,
+            "description": "SMLG response time in ms (observed range: 0-385ms)"
+        },
+        "response_time_st03n": {
+            "max": 1000,
+            "warning": 800,
+            "description": "ST03N Dialog/RFC response time in ms"
+        },
+        "dumps_today": {
+            "max": 25,
+            "warning": 15,
+            "description": "ABAP dumps today (observed range: 0-13, avg 2.4)"
+        },
+        "dumps_yesterday": {
+            "max": 50,
+            "warning": 30,
+            "description": "ABAP dumps yesterday (observed range: 0-25, avg 4.4)"
+        },
+        "failed_jobs": {
+            "max": 5,
+            "warning": 3,
+            "description": "Failed BASIS jobs (observed range: 0-4, avg 1.3)"
+        },
+        "failed_updates": {
+            "max": 0,
+            "warning": 0,
+            "description": "Failed updates (observed: 0-2, should be 0)"
+        },
+        "old_locks": {
+            "max": 100,
+            "warning": 50,
+            "description": "Old locks older than 1 day (observed range: 8-814 - high variance, needs review)"
+        },
+        "trfc_errors": {
+            "max": 0,
+            "warning": 0,
+            "description": "tRFC errors (CPICERR/SYSFAIL)"
+        },
+        "buffer_swaps": {
+            "max": 10000,
+            "warning": 5000,
+            "description": "Buffer swaps per day"
+        }
+    },
+    "validation_rules": {
+        "require_justification_for_n": true,
+        "min_justification_length": 10,
+        "check_old_locks_explanation": true
+    },
+    "systems": [
+        "ECP",
+        "BP1",
+        "GP1",
+        "TP1",
+        "XP1"
+    ],
+    "notes": "COREX old_locks has high variance (8-814), may need per-system thresholds"
+}

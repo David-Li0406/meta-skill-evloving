@@ -1,0 +1,62 @@
+{# git/commit_message.j2 - Commit Message Template #}
+{# Variables: subject, body, timestamp, commit_hash, file_count, verified_by, security_status, workflow_id, commit_type, commit_scope #}
+
+{%- if status == "committed" -%}
+## ✅ Commit Successful!
+
+**{{ commit_type }}({{ commit_scope }}): {{ subject }}**
+
+{{ body }}
+
+---
+
+📅 Date: {{ timestamp }}
+📁 Files: {{ file_count }} files changed
+
+{% if workflow_id %}🗃️ Workflow ID \`{{ workflow_id }}\` completed.{% endif %}
+
+🛡️ **Verified by**: {{ verified_by }}
+🔒 **Security Detection**: {{ security_status }}
+
+{%- elif status == "security_violation" -%}
+## ⚠️ Security Issue Detected
+
+**{{ subject }}**
+
+{{ body }}
+
+---
+
+📅 Date: {{ timestamp }}
+
+🔒 **Security Issues**: {{ security_issues|join(", ") }}
+
+**Action Required**: Fix security issues before committing.
+
+{%- elif status == "error" -%}
+## ❌ Error Occurred
+
+**{{ subject }}**
+
+{{ body }}
+
+---
+
+📅 Date: {{ timestamp }}
+
+**Error**: {{ error }}
+
+{%- elif status == "failed" -%}
+## ❌ Commit Failed
+
+**{{ subject }}**
+
+{{ body }}
+
+---
+
+📅 Date: {{ timestamp }}
+
+**Error**: {{ error }}
+
+{%- endif -%}

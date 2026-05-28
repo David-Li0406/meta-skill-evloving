@@ -1,0 +1,66 @@
+#!/bin/bash
+# Fake ms tool for testing
+# Supports MODE environment variable: normal (default), timeout, error
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        exec sleep 3600
+        ;;
+    error)
+        echo "ms: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version|-v|version)
+        echo "ms 0.1.0"
+        exit 0
+        ;;
+    search)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"id": "test-skill", "name": "Test Skill", "score": 0.95}]'
+        else
+            echo "test-skill  Test Skill (0.95)"
+        fi
+        exit 0
+        ;;
+    suggest)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"id": "test-skill", "name": "Test Skill", "relevance": 0.9}]'
+        else
+            echo "Suggested: test-skill"
+        fi
+        exit 0
+        ;;
+    list)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[{"id": "test-skill", "name": "Test Skill", "category": "testing"}]'
+        else
+            echo "test-skill  Test Skill  testing"
+        fi
+        exit 0
+        ;;
+    show)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"id": "test-skill", "name": "Test Skill", "description": "A test skill"}'
+        else
+            echo "# Test Skill"
+            echo "A test skill"
+        fi
+        exit 0
+        ;;
+    help|--help|-h|*)
+        echo "ms - Meta Skill (fake for testing)"
+        echo "Usage: ms <command>"
+        echo "  version     Show version"
+        echo "  search      Search for skills"
+        echo "  suggest     Suggest skills for a task"
+        echo "  list        List all skills"
+        echo "  show        Show skill details"
+        exit 0
+        ;;
+esac

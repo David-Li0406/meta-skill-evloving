@@ -1,0 +1,41 @@
+{
+  "_comment": "Human Extractor Configuration Template",
+  "_version": "1.0",
+
+  "mode": "extract_humans",
+
+  "roots": [
+    "G:\\My Drive\\PROJECTS\\INVESTIGATION\\DASHCAM\\Park_R\\20251006"
+  ],
+
+  "confidence": 0.35,
+  "iou": 0.50,
+  "yolo_batch": 64,
+
+  "clip_filter": {
+    "enabled": false,
+    "threshold": 0.80,
+    "batch": 384
+  },
+
+  "nvdec": true,
+  "gpu_id": 0,
+
+  "save_full_frame": false,
+  "full_frame_maxw": 1280,
+  "draw_boxes": true,
+
+  "single_output_dir": "parsed\\ALL_CROPS",
+  "filename_version": "v1",
+
+  "dedup": {
+    "enabled": true,
+    "ssim": 0.92,
+    "rate_cap_per_track_per_min": 12
+  },
+
+  "parallel": {
+    "dates": ["20251006"],
+    "max_workers": 3
+  }
+}

@@ -1,0 +1,109 @@
+# eNcounter Refresh: Welcome/Log In Screen - Forms Based Authentication Test Plan
+
+## Requirements Analysis
+
+| Scenario Name | Requirement | Test Case |
+|---------------|-------------|-----------|
+| Scenario 1: Default authentication method (forms based) 
+|  | 1.1 Application should be configurable for forms based authentication | 1.1.1 Verify application is configured for forms based authentication |
+|  | 1.2 Welcome screen should be visible when application loads | 1.2.1 Verify welcome screen is visible at application startup |
+|  | 1.3 Username field should be present on welcome screen | 1.3.1 Verify username field is displayed on welcome screen |
+|  | 1.4 Password field should be present on welcome screen | 1.4.1 Verify password field is displayed on welcome screen |
+|  | 1.5 Sign-in Log-in button should be present on welcome screen | 1.5.1 Verify Sign-in Log-in button is displayed on welcome screen |
+|  | 1.6 'Forgot your password?' button should be present on welcome screen | 1.6.1 Verify 'Forgot your password?' button is displayed on welcome screen |
+|  | 1.7 'Sign in with Microsoft' button should be present on welcome screen | 1.7.1 Verify 'Sign in with Microsoft' button is displayed on welcome screen |
+|  | 1.8 Message "Please ensure you have cleared all devices of previous patient data." should be displayed | 1.8.1 Verify device clearing message is displayed on welcome screen |
+|  | 1.9 'Is this an Emergency?' button should be present on welcome screen | 1.9.1 Verify 'Is this an Emergency?' button is displayed on welcome screen |
+|  | 1.10 Copyright text should be displayed on welcome screen | 1.10.1 Verify copyright text is displayed on welcome screen |
+|
+| Scenario 2: User authenticates successfully (forms based) 
+|  | 2.1 User should be able to enter valid username | 2.1.1 Verify user can enter username in username field |
+|  | 2.2 User should be able to enter valid password | 2.2.1 Verify user can enter password in password field |
+|  | 2.3 Sign-In button should be clickable | 2.3.1 Verify Sign-In button is clickable |
+|  | 2.4 Application should navigate to patient intake screen after successful authentication | 2.4.1 Verify application navigates to patient intake screen after clicking Sign-In with valid credentials |
+|
+| Scenario 3: User authenticates unsuccessfully (forms based) 
+|  | 3.1 Application should display error message for invalid credentials | 3.1.1 Verify error message is displayed when invalid credentials are entered |
+|  | 3.2 Username field should be highlighted red with alert icon on authentication failure | 3.2.1 Verify username field is highlighted red with alert icon after failed authentication |
+|  | 3.3 Password field should be highlighted red with alert icon on authentication failure | 3.3.1 Verify password field is highlighted red with alert icon after failed authentication |
+|  | 3.4 Error message should have a close button "x" | 3.4.1 Verify error message can be closed by selecting "x" |
+|
+| Scenario 4: User forgot password (forms based) 
+|  | 4.1 'Forgot your password?' button should be clickable | 4.1.1 Verify 'Forgot your password?' button is clickable |
+|  | 4.2 Application should navigate to forgot/change password screen when button is clicked | 4.2.1 Verify application navigates to forgot/change password screen after clicking 'Forgot your password?' |
+|
+| Scenario 5: Not Licensed (Default to ClearSteth Listen-Only) 
+   | 5.1 Application should detect when no license is activated | 5.1.1 Verify application detects no license on host machine |
+|  | 5.2 Application should open as ClearSteth with listen-only functionality when unlicensed | 5.2.1 Verify application opens as ClearSteth with listen-only functionality when no license is activated |
+|
+| Scenario 6: eNcounter License 
+|  | 6.1 Application should detect when eNcounter license is activated | 6.1.1 Verify application detects eNcounter license on host machine |
+|  | 6.2 Application should display eNcounter variant of welcome/log in screen when licensed | 6.2.1 Verify eNcounter variant of welcome/log in screen is displayed when eNcounter license is activated |
+|
+| Scenario 7: ClearSteth License 
+|  | 7.1 Application should detect when ClearSteth license is activated | 7.1.1 Verify application detects ClearSteth license on host machine |
+|  | 7.2 Application should display ClearSteth variant of welcome/log in screen when licensed | 7.2.1 Verify ClearSteth variant of welcome/log in screen is displayed when ClearSteth license is activated |
+|
+| Scenario 8: Ensure Devices are Cleared of Previous Data 
+|  | 8.1 eNcounter user should be able to launch the eNcounter system | 8.1.1 Verify eNcounter licensed user can launch the eNcounter system |
+|  | 8.2 Device clearing message should be visible on eNcounter Welcome/Log In screen | 8.2.1 Verify message "Please ensure you have cleared all devices of previous patient data." is visible on eNcounter Welcome/Log In screen |
+|
+| Scenario 9: Sign in with Microsoft 
+|  | 9.1 'Sign in With Microsoft' option should be available on eNcounter Welcome/Log In screen | 9.1.1 Verify 'Sign in With Microsoft' option is available on eNcounter Welcome/Log In screen |
+|
+| Scenario 10: Is this an emergency? 
+|  | 10.1 'Is this an emergency' option should be available on eNcounter Welcome/Log In screen | 10.1.1 Verify 'Is this an emergency' option is available on eNcounter Welcome/Log In screen |
+|
+| Scenario 11: Copyright Text 
+|  | 11.1 Copyright text should be displayed at the bottom of eNcounter Welcome/Log In screen | 11.1.1 Verify copyright text is displayed at the bottom of eNcounter Welcome/Log In screen |
+
+## Detailed Test Cases
+
+| Test Case ID | Test Scenario | Expected Result | Test Data |
+|--------------|---------------|-----------------|-----------|
+| 1.1.1 | Verify application configuration for forms based authentication | Application is configured for forms based authentication | Forms based authentication enabled in config |
+| 1.2.1 | Launch application with forms based authentication | Welcome screen is visible at application startup | Forms based authentication enabled |
+| 1.3.1 | Verify username field on welcome screen | Username field is displayed on welcome screen | Welcome screen displayed |
+| 1.4.1 | Verify password field on welcome screen | Password field is displayed on welcome screen | Welcome screen displayed |
+| 1.5.1 | Verify Sign-in Log-in button on welcome screen | Sign-in Log-in button is displayed on welcome screen | Welcome screen displayed |
+| 1.6.1 | Verify 'Forgot your password?' button on welcome screen | 'Forgot your password?' button is displayed on welcome screen | Welcome screen displayed |
+| 1.7.1 | Verify 'Sign in with Microsoft' button on welcome screen | 'Sign in with Microsoft' button is displayed on welcome screen | Welcome screen displayed |
+| 1.8.1 | Verify device clearing message on welcome screen | Message "Please ensure you have cleared all devices of previous patient data." is displayed on welcome screen | Welcome screen displayed |
+| 1.9.1 | Verify 'Is this an Emergency?' button on welcome screen | 'Is this an Emergency?' button is displayed on welcome screen | Welcome screen displayed |
+| 1.10.1 | Verify copyright text on welcome screen | Copyright text is displayed at the bottom of welcome screen | Welcome screen displayed |
+| 2.1.1 | Enter valid username in username field | Username is accepted in the username field | Valid username |
+| 2.2.1 | Enter valid password in password field | Password is accepted in the password field (masked) | Valid password |
+| 2.3.1 | Click Sign-In button with valid credentials | Sign-In button responds to click action | Valid username and password |
+| 2.4.1 | Complete sign-in process with valid credentials | Application navigates to patient intake screen | Valid username and password |
+| 3.1.1 | Enter invalid credentials and click Sign-In | Error message is displayed | Invalid username and/or password |
+| 3.2.1 | Observe username field after failed authentication | Username field is highlighted red with alert icon | Invalid credentials used |
+| 3.3.1 | Observe password field after failed authentication | Password field is highlighted red with alert icon | Invalid credentials used |
+| 3.4.1 | Click "x" on error message | Error message closes when "x" is clicked | Error message displayed |
+| 4.1.1 | Click 'Forgot your password?' button | 'Forgot your password?' button responds to click action | Welcome screen displayed |
+| 4.2.1 | Navigate via 'Forgot your password?' button | Application navigates to forgot/change password screen | Welcome screen displayed |
+| 5.1.1 | Launch application with no license | Application detects no license on host machine | No license activated |
+| 5.2.1 | Verify application behavior with no license | Application opens as ClearSteth with listen-only functionality | No license activated |
+| 6.1.1 | Launch application with eNcounter license | Application detects eNcounter license on host machine | eNcounter license activated |
+| 6.2.1 | Verify eNcounter welcome screen variant | eNcounter variant of welcome/log in screen is displayed | eNcounter license activated |
+| 7.1.1 | Launch application with ClearSteth license | Application detects ClearSteth license on host machine | ClearSteth license activated |
+| 7.2.1 | Verify ClearSteth welcome screen variant | ClearSteth variant of welcome/log in screen is displayed | ClearSteth license activated |
+| 8.1.1 | Launch eNcounter system with eNcounter license | eNcounter licensed user successfully launches the eNcounter system | eNcounter license activated |
+| 8.2.1 | Verify device clearing message on eNcounter screen | Message "Please ensure you have cleared all devices of previous patient data." is visible | eNcounter Welcome/Log In screen displayed |
+| 9.1.1 | Verify 'Sign in With Microsoft' option on eNcounter screen | 'Sign in With Microsoft' option is available and visible | eNcounter Welcome/Log In screen displayed |
+| 10.1.1 | Verify 'Is this an emergency' option on eNcounter screen | 'Is this an emergency' option is available and visible | eNcounter Welcome/Log In screen displayed |
+| 11.1.1 | Verify copyright text placement on eNcounter screen | Copyright text is displayed at the bottom of the screen | eNcounter Welcome/Log In screen displayed |
+
+## Test Coverage Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Scenarios | 11 |
+| Total Requirements | 35 |
+| Total Test Cases | 35 |
+| CSV Test Cases | 11 |
+
+**Notes:**
+- Each scenario has been analyzed and broken down into specific, testable requirements
+- 35 individual test case IDs were defined (1.1.1 through 11.1.1) during requirement analysis
+- Related test case IDs were logically grouped into 11 CSV test cases for efficient test execution
+- Complete traceability maintained between scenarios → requirements → test case IDs → CSV test cases

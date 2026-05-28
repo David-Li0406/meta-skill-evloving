@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <title>Server Error - {{SITE_NAME}}</title>
+  <meta name="description" content="An unexpected error occurred."/>
+  <meta name="robots" content="noindex, nofollow"/>
+
+  <!-- Inline critical CSS for reliability -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background: {{THEME_COLOR}};
+      padding: 1rem 2rem;
+    }
+    header a { color: #fff; text-decoration: none; font-weight: 600; font-size: 1.25rem; }
+    main {
+      flex: 1;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+    h1 { font-size: 2rem; margin-bottom: 1rem; }
+    p { margin-bottom: 2rem; color: #6b7280; }
+    a.button {
+      display: inline-block;
+      background: {{THEME_COLOR}};
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+    footer {
+      background: #f3f4f6;
+      padding: 1rem 2rem;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">{{SITE_NAME}}</a>
+  </header>
+
+  <main id="main">
+    <h1>Something Went Wrong</h1>
+    <p>We apologize for the inconvenience. An unexpected error occurred on our server. Please try again later.</p>
+
+    <a href="/" class="button">Return to Homepage</a>
+
+    <p>If this problem persists, please contact us at <a href="mailto:{{SITE_EMAIL}}">{{SITE_EMAIL}}</a>.</p>
+  </main>
+
+  <footer>
+    <p>&copy; <time datetime="{{CURRENT_YEAR}}">{{CURRENT_YEAR}}</time> {{SITE_NAME}}</p>
+  </footer>
+</body>
+</html>

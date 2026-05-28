@@ -1,0 +1,108 @@
+---
+name: codex-configuration
+description: Use this skill when configuring the Codex CLI, setting up profiles, or when dealing with "config.toml", "sandbox mode", "Codex config", or "approval policy".
+---
+
+# Codex Configuration Management
+
+This skill manages configuration files for the OpenAI Codex CLI, including model settings, sandbox policies, MCP servers, and profiles.
+
+## Configuration Location
+
+**Primary Config:** `~/.codex/config.toml`
+
+**Skills Paths (precedence, highest first):**
+1. `$CWD/.codex/skills/` - Current directory
+2. `$CWD/../.codex/skills/` - Parent directory
+3. `$REPO_ROOT/.codex/skills/` - Repository root
+4. `~/.codex/skills/` - User-level
+5. `/etc/codex/skills/` - System/admin level
+6. Built-in skills - Bundled with Codex
+
+## Basic config.toml
+
+```toml
+# Model settings
+model = "gpt-5.2-codex"
+model_verbosity = "medium"  # high | medium | low
+model_reasoning_effort = "high"  # low | high | xhigh
+
+# Permissions
+approval_policy = "on-failure"  # untrusted | on-failure | on-request | never
+sandbox_mode = "workspace-write"  # read-only | workspace-write | danger-full-access
+exec_timeout_ms = 300000  # 5 minutes
+
+# Misc
+file_opener = "cursor"  # Editor for opening files
+```
+
+## Profiles
+
+Define named profiles for different workflows:
+
+```toml
+[profiles.max]
+model = "gpt-5.1-codex-max"
+model_verbosity = "high"
+model_reasoning_effort = "xhigh"
+
+[profiles.fast]
+model = "gpt-5.1-codex-mini"
+model_verbosity = "low"
+model_reasoning_effort = "low"
+```
+
+**Usage:**
+
+```bash
+codex -p max "complex refactoring task"
+codex -p fast "quick fix"
+```
+
+## MCP Servers
+
+```toml
+[mcp_servers.server-name]
+command = "npx"
+args = ["-y", "@package/mcp-server"]
+enabled = true
+tool_timeout_sec = 60.0
+
+[mcp_servers.server-name.env]
+API_KEY = "your-key"
+```
+
+## Skills
+
+### Invoking Skills
+
+```bash
+# Explicit invocation
+codex "$plan implement authentication"
+codex "$skill-creator new skill for testing"
+
+# Implicit (Codex decides based on context)
+codex "plan out the implementation"
+```
+
+### Built-in Skills
+
+- `$plan` - Research and create implementation plans
+- `$skill-creator` - Bootstrap new skills
+- `$skill-installer` - Download skills from GitHub
+
+## CLI Override
+
+Override any config value at runtime:
+
+```bash
+codex -c model="o3"
+codex -c 'sandbox_permissions=["disk-full-read-access"]'
+codex -c shell_environment_policy.inherit=all
+```
+
+## Convenience Flags
+
+| Flag | Equivalent |
+|------|------------|
+| ...  | ...        |

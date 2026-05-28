@@ -1,0 +1,100 @@
+# Dependency Graph Schema
+# Used for machine-readable dependency graph outputs
+
+dependency_graph:
+  type: object
+  required:
+    - nodes
+    - edges
+  properties:
+    sprint_name:
+      type: string
+      description: Associated sprint identifier
+
+    nodes:
+      type: array
+      items:
+        type: object
+        required:
+          - id
+          - type
+        properties:
+          id:
+            type: string
+            description: Node identifier (e.g., TASK-101, int/phase1)
+          type:
+            type: string
+            enum: [task, integration, milestone]
+            description: Node type
+          phase:
+            type: integer
+            description: Phase number this node belongs to
+          title:
+            type: string
+            description: Human-readable title
+          status:
+            type: string
+            enum: [pending, in_progress, completed, blocked]
+          owner:
+            type: string
+            description: Assigned engineer/agent
+
+    edges:
+      type: array
+      items:
+        type: object
+        required:
+          - from
+          - to
+          - type
+        properties:
+          from:
+            type: string
+            description: Source node ID
+          to:
+            type: string
+            description: Target node ID
+          type:
+            type: string
+            enum: [depends_on, conflicts_with, merge_group]
+            description: Edge type
+          reason:
+            type: string
+            description: Why this relationship exists
+
+    phases:
+      type: array
+      items:
+        type: object
+        properties:
+          number:
+            type: integer
+          name:
+            type: string
+          nodes:
+            type: array
+            items:
+              type: string
+          integration_node:
+            type: string
+
+# Edge type definitions:
+#
+# depends_on:
+#   - Task B cannot start until Task A completes
+#   - Creates sequencing constraint
+#
+# conflicts_with:
+#   - Tasks touch same code/contracts
+#   - Cannot run in parallel without integration branch
+#
+# merge_group:
+#   - Tasks that merge together
+#   - Used for hierarchical integration patterns
+
+# Validation rules:
+#
+# 1. No circular dependencies (depends_on cycles)
+# 2. All nodes must have at least one edge
+# 3. Integration nodes must have inbound edges from all phase tasks
+# 4. conflicts_with edges in same phase require resequencing or integration branches

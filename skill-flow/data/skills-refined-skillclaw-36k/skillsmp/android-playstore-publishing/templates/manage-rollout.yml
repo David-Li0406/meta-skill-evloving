@@ -1,0 +1,143 @@
+name: Manage Production Rollout
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Rollout action'
+        required: true
+        type: choice
+        options:
+          - increase
+          - halt
+          - resume
+          - complete
+        default: 'increase'
+      percentage:
+        description: 'New rollout percentage (if increasing)'
+        required: false
+        type: choice
+        options:
+          - '10'
+          - '20'
+          - '50'
+          - '100'
+        default: '20'
+
+jobs:
+  manage-rollout:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Validate action
+        run: |
+          echo "Action: ${{ github.event.inputs.action }}"
+          if [ "${{ github.event.inputs.action }}" == "increase" ]; then
+            echo "New percentage: ${{ github.event.inputs.percentage }}%"
+          fi
+      
+      - name: Increase rollout
+        if: github.event.inputs.action == 'increase'
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: {PACKAGE_NAME}
+          track: production
+          status: inProgress
+          userFraction: ${{ github.event.inputs.percentage }}
+      
+      - name: Halt rollout
+        if: github.event.inputs.action == 'halt'
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: {PACKAGE_NAME}
+          track: production
+          status: halted
+      
+      - name: Resume rollout
+        if: github.event.inputs.action == 'resume'
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: {PACKAGE_NAME}
+          track: production
+          status: inProgress
+      
+      - name: Complete rollout
+        if: github.event.inputs.action == 'complete'
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: {PACKAGE_NAME}
+          track: production
+          status: completed
+          userFraction: '100'
+      
+      - name: Summary
+        run: |
+          echo "### 📊 Rollout Management" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          case "${{ github.event.inputs.action }}" in
+            increase)
+              echo "✅ Rollout increased to ${{ github.event.inputs.percentage }}%" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Action taken:** Increased production rollout" >> $GITHUB_STEP_SUMMARY
+              echo "**New percentage:** ${{ github.event.inputs.percentage }}%" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Next steps:**" >> $GITHUB_STEP_SUMMARY
+              echo "1. Monitor crash-free rate for 24-48 hours" >> $GITHUB_STEP_SUMMARY
+              echo "2. Review user feedback and ratings" >> $GITHUB_STEP_SUMMARY
+              echo "3. If stable, increase further or complete rollout" >> $GITHUB_STEP_SUMMARY
+              ;;
+            halt)
+              echo "⏸️  Rollout halted" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Action taken:** Production rollout stopped immediately" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**What this means:**" >> $GITHUB_STEP_SUMMARY
+              echo "- No new users will receive the update" >> $GITHUB_STEP_SUMMARY
+              echo "- Users who already have it keep the update" >> $GITHUB_STEP_SUMMARY
+              echo "- Cannot roll back automatically" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Next steps:**" >> $GITHUB_STEP_SUMMARY
+              echo "1. Investigate the issue that prompted the halt" >> $GITHUB_STEP_SUMMARY
+              echo "2. If fixable: Resume rollout when ready" >> $GITHUB_STEP_SUMMARY
+              echo "3. If critical: Deploy hotfix with higher version code" >> $GITHUB_STEP_SUMMARY
+              ;;
+            resume)
+              echo "▶️  Rollout resumed" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Action taken:** Production rollout resumed" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Next steps:**" >> $GITHUB_STEP_SUMMARY
+              echo "1. Monitor closely for the issue that caused the halt" >> $GITHUB_STEP_SUMMARY
+              echo "2. Review crash-free rate" >> $GITHUB_STEP_SUMMARY
+              echo "3. Proceed cautiously with rollout increases" >> $GITHUB_STEP_SUMMARY
+              ;;
+            complete)
+              echo "✅ Rollout completed (100%)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Action taken:** Rolled out to all users (100%)" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**What this means:**" >> $GITHUB_STEP_SUMMARY
+              echo "- All users will receive this update" >> $GITHUB_STEP_SUMMARY
+              echo "- Update will appear for everyone within 24 hours" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Next steps:**" >> $GITHUB_STEP_SUMMARY
+              echo "1. Continue monitoring crash-free rate" >> $GITHUB_STEP_SUMMARY
+              echo "2. Watch for any uptick in negative reviews" >> $GITHUB_STEP_SUMMARY
+              echo "3. Be prepared with hotfix if needed" >> $GITHUB_STEP_SUMMARY
+              ;;
+          esac
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Monitoring:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Check [Play Console](https://play.google.com/console/) for real-time metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- Review crash reports and ANRs" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor user reviews and ratings" >> $GITHUB_STEP_SUMMARY

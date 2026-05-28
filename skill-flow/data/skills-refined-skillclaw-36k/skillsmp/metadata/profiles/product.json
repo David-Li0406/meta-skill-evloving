@@ -1,0 +1,60 @@
+{
+  "name": "product",
+  "description": "Metadata profile for product detail pages",
+  "extends": "default",
+  "required": [
+    {
+      "element": "meta",
+      "attributes": { "property": "og:type", "content": "product" },
+      "message": "og:type must be 'product' for product pages"
+    }
+  ],
+  "recommended": [
+    {
+      "element": "meta",
+      "attributes": { "property": "product:price:amount" },
+      "message": "product:price:amount enables price display in social shares"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "product:price:currency" },
+      "message": "product:price:currency (e.g., USD, EUR) accompanies price"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "product:availability" },
+      "constraints": {
+        "enum": ["in stock", "out of stock", "preorder", "backorder"]
+      },
+      "message": "product:availability shows stock status"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "product:condition" },
+      "constraints": {
+        "enum": ["new", "refurbished", "used"]
+      },
+      "message": "product:condition indicates item condition"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "product:brand" },
+      "message": "product:brand provides brand attribution"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "twitter:card", "content": "summary_large_image" },
+      "message": "summary_large_image card showcases product images"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "twitter:label1", "content": "Price" },
+      "message": "Twitter label1 can show price"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "twitter:data1" },
+      "message": "Twitter data1 shows price value"
+    }
+  ]
+}

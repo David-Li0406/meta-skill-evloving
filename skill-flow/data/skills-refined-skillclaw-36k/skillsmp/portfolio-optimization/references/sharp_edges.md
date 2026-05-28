@@ -1,0 +1,197 @@
+# Portfolio Optimization - Sharp Edges
+
+## Sample Covariance Is Unstable
+
+### **Id**
+covariance-instability
+### **Severity**
+critical
+### **Summary**
+Raw covariance matrix leads to extreme weights
+### **Symptoms**
+  - Optimizer puts 100% in few assets
+  - Small data changes flip entire portfolio
+  - Out-of-sample performance terrible
+### **Why**
+  Sample covariance from limited data has huge estimation error.
+  With 50 assets and 250 days, you're estimating 1275 parameters
+  from 250 observations. The matrix is nearly singular and
+  optimization exploits estimation errors.
+  
+### **Gotcha**
+  # Raw sample covariance
+  cov_matrix = returns.cov() * 252
+  
+  # Optimization exploits estimation errors
+  result = minimize(neg_sharpe, weights, ...)
+  # -> Puts 80% in one asset due to noise
+  
+### **Solution**
+  # Use Ledoit-Wolf shrinkage
+  from sklearn.covariance import LedoitWolf
+  lw = LedoitWolf().fit(returns)
+  cov_matrix = lw.covariance_ * 252
+  
+  # Or shrink to diagonal
+  shrinkage = 0.5
+  diag_cov = np.diag(np.diag(sample_cov))
+  cov_matrix = shrinkage * diag_cov + (1 - shrinkage) * sample_cov
+  
+
+## Expected Returns Are Nearly Impossible to Estimate
+
+### **Id**
+return-estimation-error
+### **Severity**
+high
+### **Summary**
+Return estimates drive optimization but have huge error bars
+### **Symptoms**
+  - Portfolio changes dramatically with small return changes
+  - Optimizer chases noise in return estimates
+  - Consistent underperformance vs equal weight
+### **Why**
+  Estimating expected returns requires decades of data to achieve
+  statistical significance. A 1% annual return estimate has a
+  standard error of about 5% with 5 years of data. The optimizer
+  treats these noisy estimates as truth.
+  
+### **Gotcha**
+  # Historical mean as expected return
+  expected_returns = returns.mean() * 252  # Huge estimation error!
+  
+  # Optimize based on unreliable estimates
+  weights = maximize_sharpe(expected_returns, cov_matrix)
+  
+### **Solution**
+  # Option 1: Shrink returns toward equal (or zero)
+  raw_returns = returns.mean() * 252
+  global_mean = raw_returns.mean()
+  shrinkage = 0.5
+  expected_returns = shrinkage * global_mean + (1 - shrinkage) * raw_returns
+  
+  # Option 2: Use Black-Litterman with market equilibrium
+  market_weights = market_caps / market_caps.sum()
+  equilibrium_returns = risk_aversion * cov_matrix @ market_weights
+  
+  # Option 3: Skip returns entirely - use risk parity
+  weights = risk_parity(cov_matrix)
+  
+
+## In-Sample Optimal ≠ Out-of-Sample Optimal
+
+### **Id**
+in-sample-overfitting
+### **Severity**
+high
+### **Summary**
+Optimization overfits to historical patterns
+### **Symptoms**
+  - Perfect Sharpe ratio in backtest
+  - Terrible real-world performance
+  - Strategy 'finds' patterns that don't persist
+### **Why**
+  Mean-variance optimization finds weights that maximize Sharpe
+  in the optimization window. This exploits idiosyncratic patterns
+  that don't persist. The more degrees of freedom (assets), the
+  worse the overfitting.
+  
+### **Gotcha**
+  # Optimize on full history
+  weights = optimize(returns)  # 5 years of data
+  
+  # Backtest on same data
+  performance = backtest(weights, returns)  # Sharpe 2.5!
+  
+  # Live trading: Sharpe 0.3
+  
+### **Solution**
+  # Walk-forward validation
+  from sklearn.model_selection import TimeSeriesSplit
+  
+  tscv = TimeSeriesSplit(n_splits=5)
+  results = []
+  
+  for train_idx, test_idx in tscv.split(returns):
+      # Optimize on train period only
+      weights = optimize(returns.iloc[train_idx])
+      # Evaluate on unseen test period
+      perf = evaluate(weights, returns.iloc[test_idx])
+      results.append(perf)
+  
+  # Average across folds is realistic estimate
+  
+
+## 1/N Often Beats Complex Optimization
+
+### **Id**
+equal-weight-benchmark
+### **Severity**
+medium
+### **Summary**
+Simple equal weight outperforms in practice
+### **Symptoms**
+  - Spent months on optimization
+  - Can't beat equal weight out-of-sample
+  - Transaction costs from rebalancing hurt further
+### **Why**
+  DeMiguel et al. (2009) showed 1/N beats most optimization
+  strategies out-of-sample. Why? Equal weight has no estimation
+  error. The 'optimal' portfolio has so much estimation error
+  that the simpler approach wins on net.
+  
+### **Gotcha**
+  # Complex optimization
+  weights = black_litterman(views, cov_matrix, ...)
+  
+  # Compare to...
+  equal_weight = np.ones(n) / n
+  
+  # Equal weight wins 60% of the time out-of-sample
+  
+### **Solution**
+  # Always compare to 1/N benchmark
+  equal_weight_sharpe = calculate_sharpe(equal_weight_returns)
+  optimized_sharpe = calculate_sharpe(optimized_returns)
+  
+  print(f"1/N Sharpe: {equal_weight_sharpe:.2f}")
+  print(f"Optimized Sharpe: {optimized_sharpe:.2f}")
+  
+  # If you can't beat 1/N, use 1/N
+  # Consider: HRP as middle ground
+  
+
+## High Turnover Eats Returns
+
+### **Id**
+turnover-ignored
+### **Severity**
+medium
+### **Summary**
+Frequent rebalancing costs more than it adds
+### **Symptoms**
+  - Portfolio changes 50%+ at each rebalance
+  - Trading costs exceed optimization gains
+  - Net-of-cost returns negative
+### **Why**
+  Optimal weights change with each new data point. But trading
+  costs are real - spreads, market impact, commissions.
+  A 1% monthly turnover with 0.1% cost is 1.2% annual drag.
+  
+### **Gotcha**
+  # Monthly reoptimization
+  for month in months:
+      new_weights = optimize(data[:month])
+      execute_trades(current_weights, new_weights)  # 40% turnover!
+  
+### **Solution**
+  # Add turnover constraint
+  def objective_with_turnover(w, current_w, turnover_penalty=0.01):
+      sharpe = calculate_sharpe(w)
+      turnover = np.sum(np.abs(w - current_w))
+      return -(sharpe - turnover_penalty * turnover)
+  
+  # Or use threshold rebalancing
+  if np.max(np.abs(current_weights - target_weights)) > 0.05:
+      rebalance()
+  

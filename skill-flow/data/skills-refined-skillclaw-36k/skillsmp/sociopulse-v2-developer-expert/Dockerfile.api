@@ -1,0 +1,96 @@
+# =============================================================================
+# SOCIOPULSE / MEDICOPULSE - NestJS API Backend
+# Production-Ready Dockerfile with Multi-Stage Build
+# =============================================================================
+#
+# Usage:
+#   docker build -f Dockerfile.api -t pulse-api .
+#
+# =============================================================================
+
+# =============================================================================
+# STAGE 1: BASE
+# =============================================================================
+FROM node:20-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
+
+# =============================================================================
+# STAGE 2: DEPS
+# =============================================================================
+FROM base AS deps
+WORKDIR /app
+
+COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+COPY packages ./packages
+COPY apps/api/package.json ./apps/api/package.json
+
+RUN \
+    if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install --frozen-lockfile; \
+    elif [ -f yarn.lock ]; then corepack enable && yarn --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then npm ci --legacy-peer-deps; \
+    else echo "Lockfile not found." && exit 1; \
+    fi
+
+# =============================================================================
+# STAGE 3: BUILDER
+# =============================================================================
+FROM base AS builder
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages ./packages
+COPY . .
+
+# Install NestJS CLI for build
+RUN npm install -g @nestjs/cli
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build shared-types then API
+RUN cd packages/shared-types && npm run build
+RUN npm run api:build
+
+# Prune dev dependencies
+RUN npm prune --omit=dev
+
+# =============================================================================
+# STAGE 4: RUNNER (Production)
+# =============================================================================
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=4000
+
+# IMPORTANT: Install curl for Coolify healthcheck
+RUN apk add --no-cache curl openssl
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nestjs
+
+# Install runtime tools
+RUN npm install -g prisma tsx
+
+# Copy production artifacts
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nestjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./apps/api/package.json
+COPY --from=builder --chown=nestjs:nodejs /app/packages/shared-types ./packages/shared-types
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./dist
+
+# IMPORTANT: Copy Prisma and seeds for production migrations/seeding
+COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nestjs:nodejs /app/seeds ./seeds
+COPY --from=builder --chown=nestjs:nodejs /app/scripts ./scripts
+
+USER nestjs
+
+EXPOSE 4000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:4000/ || exit 1
+
+CMD ["node", "dist/main"]

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code Usage Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4"></script>
+    <style>
+        body { background-color: #0f1117; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; transition: transform 0.2s; }
+        .card:hover { border-color: #60a5fa; transform: translateY(-2px); }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
+        .stat-label { font-size: 0.875rem; color: #94a3b8; }
+        .highlight-blue { color: #60a5fa; }
+        .highlight-purple { color: #c084fc; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-blue { background-color: #1e40af; color: #dbeafe; }
+        .badge-green { background-color: #065f46; color: #d1fae5; }
+        .tab-btn { cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent; }
+        .tab-btn.active { border-bottom-color: #60a5fa; color: #60a5fa; }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Header -->
+    <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white">VS Code Usage Dashboard</h1>
+            <p class="text-gray-400">
+                Tracking <span class="text-blue-400 font-semibold">Stable</span> & <span class="text-green-400 font-semibold">Insiders</span>
+            </p>
+        </div>
+        <div class="text-right">
+            <div class="text-sm text-gray-500">Dashboard Updated</div>
+            <div class="font-mono text-xl text-white">{{TIMESTAMP}}</div>
+        </div>
+    </header>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="card p-4">
+            <div class="stat-label">Total Sessions</div>
+            <div class="stat-value">{{TOTAL_SESSIONS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Total Duration</div>
+            <div class="stat-value highlight-blue">{{TOTAL_DURATION}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Total Projects</div>
+            <div class="stat-value text-green-400">{{TOTAL_PROJECTS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Installed Extensions</div>
+            <div class="stat-value highlight-purple">{{TOTAL_EXTENSIONS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Unique Publishers</div>
+            <div class="stat-value">{{UNIQUE_PUBLISHERS}}</div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-4">
+            <h3 class="text-lg font-semibold mb-4 text-gray-300">Daily Sessions</h3>
+            <canvas id="sessionsChart"></canvas>
+        </div>
+        <div class="card p-4">
+            <h3 class="text-lg font-semibold mb-4 text-gray-300">Session Duration Distribution (Minutes)</h3>
+            <canvas id="durationChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Extensions & Projects Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-4">
+            <h3 class="text-lg font-semibold mb-4 text-gray-300">Top Extension Publishers</h3>
+            <div class="h-64">
+                <canvas id="publishersChart"></canvas>
+            </div>
+        </div>
+        <div class="card p-4">
+            <h3 class="text-lg font-semibold mb-4 text-gray-300">Project Locations</h3>
+            <div class="h-64 flex justify-center">
+                <canvas id="projectsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="card p-6 overflow-hidden mb-8">
+        <h3 class="text-xl font-bold mb-4 text-white">Recent Projects</h3>
+        <div class="overflow-x-auto max-h-64 overflow-y-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-gray-400 border-b border-gray-700 sticky top-0 bg-[#1e293b]">
+                        <th class="p-3">Name</th>
+                        <th class="p-3">Location</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-gray-300">
+                    {{PROJECTS_ROWS}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Sessions Table -->
+    <div class="card p-6 overflow-hidden mb-8">
+        <h3 class="text-xl font-bold mb-4 text-white">Recent Sessions</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-gray-400 border-b border-gray-700">
+                        <th class="p-3">Source</th>
+                        <th class="p-3">Start Time</th>
+                        <th class="p-3">Duration</th>
+                        <th class="p-3">Log ID</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-gray-300">
+                    {{RECENT_SESSIONS_ROWS}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Extensions Table -->
+    <div class="card p-6 overflow-hidden">
+        <h3 class="text-xl font-bold mb-4 text-white">Installed Extensions</h3>
+        <div class="overflow-x-auto max-h-96 overflow-y-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-gray-400 border-b border-gray-700 sticky top-0 bg-[#1e293b]">
+                        <th class="p-3">Name</th>
+                        <th class="p-3">Publisher</th>
+                        <th class="p-3">Version</th>
+                        <th class="p-3">Source</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm text-gray-300">
+                    {{EXTENSIONS_ROWS}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Data injected from Python
+        const dates = {{CHART_DATES}};
+        const sessionCounts = {{CHART_SESSIONS}};
+        const durations = {{CHART_DURATIONS}};
+        const publisherLabels = {{CHART_PUB_LABELS}};
+        const publisherCounts = {{CHART_PUB_COUNTS}};
+        const projectLabels = {{CHART_PROJ_LABELS}};
+        const projectCounts = {{CHART_PROJ_COUNTS}};
+        const yAxisMax = {{Y_AXIS_MAX}};
+
+        // Common Chart Options
+        const commonOptions = {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#9ca3af' } } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#9ca3af' } },
+                x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+            }
+        };
+
+        // Sessions Chart
+        new Chart(document.getElementById('sessionsChart'), {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Sessions',
+                    data: sessionCounts,
+                    borderColor: '#60a5fa',
+                    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Duration Boxplot Chart
+        new Chart(document.getElementById('durationChart'), {
+            type: 'boxplot',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Duration (Minutes)',
+                    data: durations,
+                    backgroundColor: 'rgba(192, 132, 252, 0.2)',
+                    borderColor: 'rgba(192, 132, 252, 1)',
+                    borderWidth: 1,
+                    outlierColor: '#999999',
+                    padding: 10,
+                    itemRadius: 0
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const v = context.parsed;
+                                return `Min: ${v.min.toFixed(1)}, Q1: ${v.q1.toFixed(1)}, Median: ${v.median.toFixed(1)}, Q3: ${v.q3.toFixed(1)}, Max: ${v.max.toFixed(1)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#334155' },
+                        ticks: { color: '#9ca3af' },
+                        max: yAxisMax
+                    },
+                    x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                }
+            }
+        });
+
+        // Publishers Chart
+        new Chart(document.getElementById('publishersChart'), {
+            type: 'bar',
+            data: {
+                labels: publisherLabels,
+                datasets: [{
+                    label: 'Extensions Count',
+                    data: publisherCounts,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: { legend: { display: false } },
+                maintainAspectRatio: false
+            }
+        });
+
+        // Projects Chart
+        new Chart(document.getElementById('projectsChart'), {
+            type: 'doughnut',
+            data: {
+                labels: projectLabels,
+                datasets: [{
+                    data: projectCounts,
+                    backgroundColor: [
+                        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: '#9ca3af', boxWidth: 12 }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

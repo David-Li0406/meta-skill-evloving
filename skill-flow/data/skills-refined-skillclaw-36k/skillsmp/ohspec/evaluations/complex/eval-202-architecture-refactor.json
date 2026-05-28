@@ -1,0 +1,46 @@
+{
+  "id": "eval-202",
+  "name": "架构级重构",
+  "complexity": "complex",
+  "description": "系统架构级别的重构",
+  "requirement": "将音频服务从单进程架构重构为多进程架构，分离音频策略服务、音频处理服务、音频硬件抽象层，支持进程隔离、IPC 通信、故障隔离、性能优化",
+  "context": {
+    "project_type": "音频服务",
+    "files_involved": 25,
+    "estimated_lines": 800,
+    "dependencies": ["IPC 框架", "进程管理", "性能监控", "日志系统"]
+  },
+  "expected_output": {
+    "rfc_sections": ["§1", "§2", "§3", "§4", "§5"],
+    "scenarios": {
+      "normal": 4,
+      "exception": 5,
+      "boundary": 4
+    },
+    "dfx_dimensions": 8
+  },
+  "acceptance_criteria": {
+    "execution_time_max": 2400,
+    "token_budget_max": 80000,
+    "user_interactions_max": 6,
+    "first_pass_rate": 0.75,
+    "quality_score_min": 85
+  },
+  "validation": {
+    "must_have": [
+      "新架构设计图",
+      "进程划分和职责定义",
+      "IPC 接口定义",
+      "进程生命周期管理",
+      "故障隔离和恢复机制",
+      "性能对比分析",
+      "迁移方案和时间表",
+      "回滚方案"
+    ],
+    "should_have": [
+      "灰度发布策略",
+      "性能基准测试",
+      "兼容性保证"
+    ]
+  }
+}

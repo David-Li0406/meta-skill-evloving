@@ -1,0 +1,36 @@
+{
+  "$schema": "../../agents/schemas/agent.schema.json",
+  "version": "1.0.0",
+  "name": "{{AGENT_NAME}}",
+  "displayName": "{{DISPLAY_NAME}}",
+  "description": "{{DESCRIPTION}}",
+
+  "behavior": {
+    "systemPromptPath": "prompts/system.md",
+    "completionType": "{{COMPLETION_TYPE}}",
+    "completionConfig": {
+      "maxIterations": 50
+    },
+    "allowedTools": ["Read", "Write", "Edit", "Bash", "Glob", "Grep"],
+    "permissionMode": "bypassPermissions"
+  },
+
+  "parameters": {
+    "issue": {
+      "type": "number",
+      "description": "GitHub Issue number",
+      "required": false,
+      "cli": "--issue"
+    }
+  },
+
+  "prompts": {
+    "registry": "steps_registry.json",
+    "fallbackDir": "prompts/"
+  },
+
+  "logging": {
+    "directory": "tmp/logs/agents/{{AGENT_NAME}}",
+    "format": "jsonl"
+  }
+}

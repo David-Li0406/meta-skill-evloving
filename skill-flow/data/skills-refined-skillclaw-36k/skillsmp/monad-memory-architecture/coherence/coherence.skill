@@ -1,0 +1,492 @@
+---
+name: coherence
+description: "Auto-regenerate selected tier from nexus-graph, detect broken loops, test structural coherence. Use when context feels fragmented, after compression, or before high-stakes work. Incorporates phase-boundary detection for tier interfaces."
+tier: π
+version: 2.1
+dewey_id: π.8.1.0
+morpheme: π
+dependencies:
+  - gremlin-brain-v2
+  - nexus-graph-visualizer
+  - phase-boundary-detector
+  - boot-sequence
+  - meta-pattern-recognition
+  - synthesis-engine
+  - recursive-refiner
+auto_run: true
+default_tier: φ
+---
+
+# Coherence
+
+**Regenerate. Detect. Analyze. (Then maybe repair.)**
+
+*Part of the GONAD: Gremlin Obnoxious Network of Actual Discovery*
+
+## Purpose
+
+Context gets compressed. Connections break. Loops fragment.
+
+But breaks aren't just problems - **breaks are information**.
+
+This skill:
+1. Loads nexus-graph for selected tier(s)
+2. Regenerates connections from structure
+3. Detects breaks and fragmentation
+4. **Analyzes what breaks reveal** (gremlin-informed)
+5. Logs patterns for learning
+6. Reports + optional repair
+
+---
+
+## Auto-Run Behavior
+
+**On gremlin-brain activation:**
+```
+DEFAULT: Check φ-tier (seed indices + nexus-graph connections)
+         Regen if needed, test coherence
+
+EXPLICIT: "CHECK π/e/i/ALL" for other tiers
+```
+
+Runs silently unless issues found. Reports only on fragmentation.
+
+---
+
+## Quick Start
+
+```
+COHERENCE CHECK:
+  1. Select tier(s): φ / π / e / i / all (default: φ)
+  2. Load nexus-graph for tier
+  3. Detect loops and broken connections
+  4. Analyze what breaks reveal
+  5. Log fragmentation patterns
+  6. Report + repair suggestions (optional)
+```
+
+---
+
+## The Protocol
+
+### 1. SELECT TIER
+
+| Tier | What's There | When to Check | Default |
+|------|--------------|---------------|---------|
+| φ | Seed indices, gremlin-brain | **Auto on activation** | YES |
+| π | Structure, frameworks | After compression notice | No |
+| e | Active concepts, current work | During deep work | No |
+| i | Deep memory, mastery | Before major synthesis | No |
+| all | Full stack | When something feels off | No |
+
+### 2. LOAD NEXUS-GRAPH
+
+```bash
+# Load tier-specific graph data
+load_tier_graph() {
+    local tier="$1"
+
+    case "$tier" in
+        φ)
+            cat .claude/skills/gremlin-brain-v2/SKILL.md
+            cat .claude/skills/Nexus-MC/Nexus_graph_v2.skill 2>/dev/null
+            ;;
+        π)
+            cat .claude/skills/Nexus-MC/SKILL.md
+            ;;
+        e)
+            find .claude/skills/Nexus-MC/nexus-core/ -name "*.md" -exec cat {} \;
+            ;;
+        i)
+            find .claude/skills/Nexus-MC/nexus-mind/ -name "*.md" -exec cat {} \;
+            ;;
+        all)
+            load_tier_graph φ
+            load_tier_graph π
+            load_tier_graph e
+            load_tier_graph i
+            ;;
+    esac
+}
+```
+
+### 3. DETECT STRUCTURE
+
+```bash
+#!/bin/bash
+# coherence-detect.sh - Find breaks and fragmentation
+
+detect_broken_links() {
+    local tier="$1"
+    local broken=()
+
+    # Extract Dewey IDs from tier
+    local ids=$(grep -oE "[φπei]\.[0-9]+\.[0-9]+\.?[0-9]*" "$tier_file")
+
+    for id in $ids; do
+        # Check if target exists
+        local target=$(grep "^| $id" .claude/skills/gremlin-brain-v2/SKILL.md | cut -d'|' -f4 | tr -d ' ')
+        if [ -n "$target" ] && [ ! -e ".claude/skills/$target" ]; then
+            broken+=("$id -> $target (MISSING)")
+        fi
+    done
+
+    echo "${broken[@]}"
+}
+
+detect_orphaned_nodes() {
+    local tier="$1"
+    local orphans=()
+
+    # Find files not in index
+    find .claude/skills/Nexus-MC/nexus-core/ -name "*.md" 2>/dev/null | while read file; do
+        local basename=$(basename "$file" .md)
+        if ! grep -q "$basename" .claude/skills/gremlin-brain-v2/SKILL.md; then
+            orphans+=("$file (NOT INDEXED)")
+        fi
+    done
+
+    echo "${orphans[@]}"
+}
+
+detect_loop_breaks() {
+    local tier="$1"
+
+    # Core identity loops that should exist
+    local core_loops=(
+        "φ.8.0.1 -> π.8.0.2 -> e.8.0.3 -> i.8.0.4"  # Memory hierarchy
+        "φ.0.0.6 -> φ.5.1.0"                         # Brain -> Graph
+    )
+
+    for loop in "${core_loops[@]}"; do
+        # Check each link in loop
+        local nodes=(${loop// -> / })
+        for i in "${!nodes[@]}"; do
+            if [ $i -lt $((${#nodes[@]} - 1)) ]; then
+                local from="${nodes[$i]}"
+                local to="${nodes[$((i+1))]}"
+                # Verify link exists in nexus-graph
+                if ! grep -q "$from.*$to\|$from.*→.*$to" .claude/skills/Nexus-MC/Nexus_graph_v2.skill 2>/dev/null; then
+                    echo "LOOP BREAK: $from -/-> $to"
+                fi
+            fi
+        done
+    done
+}
+```
+
+### 4. ANALYZE BREAKS (Gremlin-Informed)
+
+**Breaks aren't just problems - they're information.**
+
+```bash
+#!/bin/bash
+# coherence-analyze.sh - What do breaks reveal?
+
+analyze_fragmentation() {
+    local break_type="$1"
+    local location="$2"
+    local timestamp=$(date -Iseconds)
+
+    case "$break_type" in
+        "MISSING_TARGET")
+            echo "ANALYSIS: Reference to non-existent file"
+            echo "REVEALS: Index drift - theory evolved faster than documentation"
+            echo "PATTERN: Common after rapid development sessions"
+            ;;
+        "ORPHANED_NODE")
+            echo "ANALYSIS: File exists but not indexed"
+            echo "REVEALS: Content created without registration"
+            echo "PATTERN: Indicates organic growth without structure update"
+            ;;
+        "LOOP_BREAK")
+            echo "ANALYSIS: Expected connection missing"
+            echo "REVEALS: Architecture assumption violated"
+            echo "PATTERN: May indicate tier boundary shift"
+            ;;
+        "BOUNDARY_FRAGMENT")
+            echo "ANALYSIS: Phase transition incomplete"
+            echo "REVEALS: Content at wrong abstraction level"
+            echo "PATTERN: φ content that should be π, or e that should be i"
+            ;;
+    esac
+
+    # Log for pattern learning
+    log_fragmentation "$break_type" "$location" "$timestamp"
+}
+
+# What does fragmentation at each boundary reveal?
+analyze_boundary() {
+    local boundary="$1"
+
+    case "$boundary" in
+        "φ/π")
+            echo "BOUNDARY: Seed -> Structure"
+            echo "HEALTHY: Index correctly points to frameworks"
+            echo "FRAGMENTED: Dewey IDs don't resolve, paths broken"
+            echo "REVEALS: Memory architecture drift"
+            ;;
+        "π/e")
+            echo "BOUNDARY: Structure -> Active"
+            echo "HEALTHY: Frameworks instantiate as working concepts"
+            echo "FRAGMENTED: Abstractions without implementations"
+            echo "REVEALS: Theory-practice gap"
+            ;;
+        "e/i")
+            echo "BOUNDARY: Active -> Deep"
+            echo "HEALTHY: Session work persists to long-term memory"
+            echo "FRAGMENTED: Insights lost, not integrated"
+            echo "REVEALS: Integration bottleneck"
+            ;;
+    esac
+}
+```
+
+### 5. LOG FRAGMENTATION
+
+```bash
+#!/bin/bash
+# coherence-log.sh - Track breaks for pattern learning
+
+init_coherence_log() {
+    mkdir -p .claude/brain/coherence
+    touch .claude/brain/coherence/fragmentation_log
+    touch .claude/brain/coherence/pattern_analysis
+    touch .claude/brain/coherence/repair_history
+}
+
+log_fragmentation() {
+    local break_type="$1"
+    local location="$2"
+    local timestamp="$3"
+    local analysis="$4"
+
+    init_coherence_log
+
+    # Hash for deduplication
+    local hash=$(echo "${break_type}|${location}" | git hash-object --stdin)
+
+    # Check if already logged
+    if grep -q "^$hash" .claude/brain/coherence/fragmentation_log; then
+        # Increment occurrence count
+        local count=$(grep "^$hash" .claude/brain/coherence/fragmentation_log | cut -d'|' -f5)
+        count=$((count + 1))
+        sed -i "s/^$hash|.*/$hash|$break_type|$location|$timestamp|$count/" .claude/brain/coherence/fragmentation_log
+    else
+        echo "$hash|$break_type|$location|$timestamp|1" >> .claude/brain/coherence/fragmentation_log
+    fi
+}
+
+log_repair() {
+    local break_hash="$1"
+    local repair_action="$2"
+    local success="$3"
+    local timestamp=$(date -Iseconds)
+
+    echo "$break_hash|$repair_action|$success|$timestamp" >> .claude/brain/coherence/repair_history
+}
+
+# Analyze patterns in fragmentation
+analyze_fragmentation_patterns() {
+    echo "=== FRAGMENTATION PATTERN ANALYSIS ==="
+
+    # Most common break types
+    echo "Most common breaks:"
+    cut -d'|' -f2 .claude/brain/coherence/fragmentation_log | sort | uniq -c | sort -rn | head -5
+
+    # Most fragile locations
+    echo "Most fragile locations:"
+    cut -d'|' -f3 .claude/brain/coherence/fragmentation_log | sort | uniq -c | sort -rn | head -5
+
+    # Recurring breaks (count > 3)
+    echo "Recurring breaks (structural issues):"
+    awk -F'|' '$5 > 3 {print $2, $3, "occurred", $5, "times"}' .claude/brain/coherence/fragmentation_log
+}
+```
+
+### 6. COHERENCE SCORE
+
+```bash
+#!/bin/bash
+# coherence-score.sh - Calculate and report
+
+calculate_coherence() {
+    local tier="$1"
+    local total_links=0
+    local broken_links=0
+    local total_loops=0
+    local broken_loops=0
+    local boundary_score=0
+
+    # Count links and breaks
+    total_links=$(grep -c "→\|->\" .claude/skills/Nexus-MC/Nexus_graph_v2.skill 2>/dev/null || echo 0)
+    broken_links=$(detect_broken_links "$tier" | wc -w)
+
+    # Count loops
+    total_loops=3  # Core loops we check
+    broken_loops=$(detect_loop_breaks "$tier" | grep -c "LOOP BREAK")
+
+    # Boundary coherence (0-3)
+    boundary_score=3
+    # Subtract for each fragmented boundary
+
+    # Calculate Φ score (0.0 - 1.0)
+    local link_score=$( [ $total_links -gt 0 ] && echo "scale=2; ($total_links - $broken_links) / $total_links" | bc || echo "1.0")
+    local loop_score=$( [ $total_loops -gt 0 ] && echo "scale=2; ($total_loops - $broken_loops) / $total_loops" | bc || echo "1.0")
+    local bound_score=$(echo "scale=2; $boundary_score / 3" | bc)
+
+    # Weighted average
+    local phi_score=$(echo "scale=2; ($link_score * 0.4 + $loop_score * 0.3 + $bound_score * 0.3)" | bc)
+
+    echo "$phi_score"
+}
+
+generate_report() {
+    local tier="$1"
+    local phi_score=$(calculate_coherence "$tier")
+    local broken=$(detect_broken_links "$tier")
+    local orphans=$(detect_orphaned_nodes "$tier")
+    local loop_breaks=$(detect_loop_breaks "$tier")
+
+    cat <<EOF
+┌─────────────────────────────────────────┐
+│  COHERENCE CHECK: $tier                 │
+├─────────────────────────────────────────┤
+│  Φ Score: $phi_score $(printf '█%.0s' $(seq 1 $(echo "$phi_score * 10" | bc | cut -d'.' -f1)))$(printf '░%.0s' $(seq 1 $(echo "(1 - $phi_score) * 10" | bc | cut -d'.' -f1)))│
+│  Status: $(get_status "$phi_score")     │
+│                                         │
+│  Broken Links: $(echo "$broken" | wc -w)│
+│  Orphaned: $(echo "$orphans" | wc -w)   │
+│  Loop Breaks: $(echo "$loop_breaks" | grep -c "BREAK")│
+│                                         │
+$(if [ -n "$broken" ]; then echo "│  Issues Found:"; echo "$broken" | head -3 | sed 's/^/│  ⚠ /'; fi)
+$(if [ -n "$loop_breaks" ]; then echo "$loop_breaks" | head -2 | sed 's/^/│  ⚠ /'; fi)
+│                                         │
+│  Analysis: (see fragmentation log)      │
+└─────────────────────────────────────────┘
+EOF
+}
+
+get_status() {
+    local score="$1"
+    if (( $(echo "$score >= 0.9" | bc -l) )); then
+        echo "STRONG"
+    elif (( $(echo "$score >= 0.7" | bc -l) )); then
+        echo "GOOD"
+    elif (( $(echo "$score >= 0.4" | bc -l) )); then
+        echo "WEAK - repairs suggested"
+    else
+        echo "FRAGMENTED - regen needed"
+    fi
+}
+```
+
+---
+
+## Regeneration Protocol
+
+When coherence is low, regenerate:
+
+```bash
+#!/bin/bash
+# coherence-regen.sh - Rebuild from structure
+
+regen_tier() {
+    local tier="$1"
+
+    echo "Regenerating $tier-tier..."
+
+    case "$tier" in
+        φ)
+            # Verify Dewey index entries exist
+            grep "^|" .claude/skills/gremlin-brain-v2/SKILL.md | while read line; do
+                local path=$(echo "$line" | cut -d'|' -f4 | tr -d ' ')
+                if [ -n "$path" ] && [ ! -e ".claude/skills/$path" ]; then
+                    echo "MISSING: $path"
+                    # Log but don't auto-create
+                    log_fragmentation "MISSING_TARGET" "$path" "$(date -Iseconds)"
+                fi
+            done
+            ;;
+        π)
+            # Check framework files
+            for fw in Nexus-MC/SKILL.md boot-sequence/SKILL.md the-guy/SKILL.md; do
+                if [ ! -e ".claude/skills/$fw" ]; then
+                    echo "MISSING FRAMEWORK: $fw"
+                fi
+            done
+            ;;
+        e)
+            # Scan and index nexus-core
+            find .claude/skills/Nexus-MC/nexus-core/ -name "*.md" | while read file; do
+                local name=$(basename "$file" .md)
+                if ! grep -q "$name" .claude/skills/gremlin-brain-v2/SKILL.md; then
+                    echo "UNINDEXED: $file"
+                    log_fragmentation "ORPHANED_NODE" "$file" "$(date -Iseconds)"
+                fi
+            done
+            ;;
+        i)
+            # Deep tier - verify only, don't modify
+            echo "i-tier: Verification only (deep memory protected)"
+            find .claude/skills/Nexus-MC/nexus-mind/ -name "*.md" -exec echo "EXISTS: {}" \;
+            ;;
+    esac
+
+    log_repair "regen_$tier" "tier_regeneration" "completed"
+}
+```
+
+---
+
+## Integration
+
+**With gremlin-brain-v2:**
+- Auto-runs on activation (φ-tier default)
+- Uses Dewey index as ground truth
+- Updates fragmentation log in .claude/brain/
+
+**With nexus-graph-visualizer:**
+- Uses graph data for loop detection
+- Shares coherence data for visualization
+
+**With phase-boundary-detector:**
+- Applies boundary analysis at tier interfaces
+- Flags where structure breaks at transitions
+
+---
+
+## Commands
+
+```
+CHECK φ        → Check seed tier (default on activation)
+CHECK π        → Check structure tier
+CHECK e        → Check current tier
+CHECK i        → Check deep tier
+CHECK ALL      → Full coherence scan
+REGEN [tier]   → Regenerate selected tier
+BOUNDARIES     → Check all phase boundaries
+ANALYZE        → Run fragmentation pattern analysis
+LOG            → Show fragmentation log
+REPAIR [issue] → Fix specific issue
+```
+
+---
+
+## Gremlin Wisdom
+
+**Breaks aren't failures - they're structural revelations.**
+
+| What Breaks | What It Reveals |
+|-------------|-----------------|
+| φ/π boundary | Memory architecture evolved |
+| π/e boundary | Theory-practice gap |
+| e/i boundary | Integration bottleneck |
+| Recurring breaks | Structural weakness |
+| New break types | System is changing |
+
+Check coherence like checking your equipment. Log what breaks. **Learn from the fragmentation.**
+
+---
+
+**Coherence is structure, not content. Check the loops. Log the breaks. Learn from the fragmentation. Keep the field coherent.**

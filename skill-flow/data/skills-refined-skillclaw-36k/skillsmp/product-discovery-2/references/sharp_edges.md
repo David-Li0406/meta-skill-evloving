@@ -1,0 +1,388 @@
+# Product Discovery - Sharp Edges
+
+## Leading The Witness
+
+### **Id**
+leading-the-witness
+### **Summary**
+Biasing customer responses
+### **Severity**
+high
+### **Situation**
+Customers tell you what you want to hear
+### **Why**
+  Questions suggest the answer.
+  Enthusiasm influences responses.
+  Showing solution too early.
+  
+### **Solution**
+  ## Unbiased Customer Research
+  
+  ### Leading Question Detection
+  
+  | Leading | Neutral |
+  |---------|---------|
+  | "Wouldn't it be great if..." | "How do you handle X today?" |
+  | "Do you have trouble with X?" | "Tell me about the last time..." |
+  | "Most people find X difficult..." | "What's your experience with X?" |
+  | "Would you use a product that..." | "What would change if X were solved?" |
+  
+  ### Enthusiasm Management
+  
+  ```
+  Your excitement can bias responses:
+  
+  DON'T:
+  - "We're building something amazing..."
+  - Nodding enthusiastically at positive feedback
+  - "That's exactly what we hoped!"
+  
+  DO:
+  - Neutral demeanor
+  - Follow-up on both positive and negative
+  - "Tell me more" regardless of answer
+  ```
+  
+  ### The 5-Second Rule
+  
+  After asking a question:
+  - Stay silent for 5 seconds
+  - Don't fill the pause
+  - Let them think and elaborate
+  - Resist the urge to clarify
+  
+  ### Solution Showing Timing
+  
+  ```
+  Early: Talk about their world
+  Middle: Explore problems
+  Late (if at all): Show concepts
+  
+  Never show solution until you've exhausted
+  problem exploration.
+  ```
+  
+  ### Post-Interview Check
+  
+  Ask yourself:
+  - Did I hear anything surprising?
+  - Did they ever disagree with me?
+  - Did I talk less than 30% of the time?
+  - Did I follow up on negative signals?
+  
+### **Symptoms**
+  - All feedback is positive
+  - No surprises from interviews
+  - Building what you expected
+### **Detection Pattern**
+interview|customer feedback|research
+
+## Wrong Sample
+
+### **Id**
+wrong-sample
+### **Summary**
+Talking to unrepresentative customers
+### **Severity**
+high
+### **Situation**
+Research doesn't reflect actual market
+### **Why**
+  Convenience sampling.
+  Too friendly to target.
+  Missing key segments.
+  
+### **Solution**
+  ## Representative Research
+  
+  ### Sampling Mistakes
+  
+  | Mistake | Result |
+  |---------|--------|
+  | Only friends/network | Overly positive feedback |
+  | Only power users | Miss adoption barriers |
+  | Only complainers | Miss happy silent majority |
+  | Only accessible | Miss time-constrained targets |
+  
+  ### Customer Segmentation for Research
+  
+  ```
+  Interview across:
+  - Usage level (none, light, heavy)
+  - Lifecycle stage (prospect, new, established, churned)
+  - Segment (enterprise, SMB, prosumer)
+  - Outcome (successful, struggling, failed)
+  ```
+  
+  ### Recruiting Mix
+  
+  | Segment | % of Interviews | Why |
+  |---------|-----------------|-----|
+  | Target prospects | 30% | Acquisition insights |
+  | New users | 25% | Onboarding insights |
+  | Power users | 20% | Deep usage insights |
+  | Churned users | 15% | Failure insights |
+  | Non-target | 10% | Boundary testing |
+  
+  ### Recruiting Channels
+  
+  ```
+  Avoid over-reliance on one:
+  - Email to user list
+  - In-app prompts
+  - Social media outreach
+  - Paid recruiting services
+  - Sales/support referrals
+  ```
+  
+  ### The "Surprising Interview" Test
+  
+  If your last 5 interviews all confirmed beliefs,
+  you're probably sampling wrong.
+  
+  Actively seek interviews that might prove you wrong.
+  
+### **Symptoms**
+  - All interviews confirm beliefs
+  - No disagreement or pushback
+  - Insights match expectations
+### **Detection Pattern**
+sample|recruit|who to talk to
+
+## Discovery Delivery Disconnect
+
+### **Id**
+discovery-delivery-disconnect
+### **Summary**
+Discovery insights not reaching delivery
+### **Severity**
+medium
+### **Situation**
+Team builds different from what was learned
+### **Why**
+  Discovery separate from delivery.
+  Handoff losses.
+  Teams siloed.
+  
+### **Solution**
+  ## Connecting Discovery to Delivery
+  
+  ### Integration Models
+  
+  **Co-located Discovery**
+  ```
+  Same people do discovery and delivery.
+  Learning transfers naturally.
+  Best for small teams.
+  ```
+  
+  **Discovery Trio**
+  ```
+  Product + Design + Engineering
+  All participate in discovery.
+  Shared understanding.
+  ```
+  
+  **Discovery Demos**
+  ```
+  Regular sharing of discovery findings.
+  Team watches interview clips.
+  Delivery team asks questions.
+  ```
+  
+  ### Artifact Sharing
+  
+  | Artifact | Purpose | Access |
+  |----------|---------|--------|
+  | Interview recordings | Raw data | All team members |
+  | Insight summaries | Digestible learnings | Shared weekly |
+  | Opportunity map | Visual priorities | Always visible |
+  | Assumption tracker | Risk awareness | Reviewed in planning |
+  
+  ### Decision Connection
+  
+  ```
+  For each feature:
+  - What discovery led to this?
+  - Which interviews informed it?
+  - What assumptions are we making?
+  - How will we validate after shipping?
+  ```
+  
+  ### Anti-Handoff Practices
+  
+  DON'T:
+  - Write discovery docs nobody reads
+  - Do discovery then throw over wall
+  - Let PM be only discovery holder
+  
+  DO:
+  - Involve delivery team in interviews
+  - Share clips, not just summaries
+  - Connect specs to discovery evidence
+  
+### **Symptoms**
+  - Delivery team unaware of research
+  - Why are we building this?
+  - Research docs unread
+### **Detection Pattern**
+handoff|disconnect|delivery
+
+## Analysis Paralysis
+
+### **Id**
+analysis-paralysis
+### **Summary**
+Too much discovery, never shipping
+### **Severity**
+medium
+### **Situation**
+Endless research, no decisions
+### **Why**
+  Seeking certainty in uncertain domain.
+  Fear of building wrong thing.
+  No clear decision criteria.
+  
+### **Solution**
+  ## Decisive Discovery
+  
+  ### Discovery Time-Boxing
+  
+  ```
+  For each opportunity:
+  - Discovery sprint: 1-2 weeks max
+  - Decision point: Clear deadline
+  - Evidence threshold: "Good enough" defined
+  
+  Not: "Keep researching until certain"
+  ```
+  
+  ### Decision Criteria Upfront
+  
+  ```
+  Before starting discovery, define:
+  - What would make us proceed?
+  - What would make us kill it?
+  - What's "enough" evidence?
+  
+  Example:
+  - Proceed if: 6+ of 10 interviews confirm problem
+  - Kill if: <3 interviews show interest
+  - Good enough: Clear patterns in 10 interviews
+  ```
+  
+  ### Evidence Thresholds
+  
+  | Decision | Evidence Needed |
+  |----------|-----------------|
+  | Explore further | Directional signal (5 interviews) |
+  | Build prototype | Clear problem pattern (10 interviews) |
+  | Build feature | Validated solution + business case |
+  | Major investment | Quantitative validation |
+  
+  ### The 70% Rule
+  
+  ```
+  Decide when you have 70% confidence.
+  Waiting for 100% means:
+  - Too slow
+  - Opportunity missed
+  - Can always learn from shipping
+  ```
+  
+  ### Ship to Learn
+  
+  Sometimes the best discovery is shipping:
+  - Build smallest version
+  - Measure actual behavior
+  - Learn from real usage
+  
+### **Symptoms**
+  - Months of research, no shipping
+  - "Need more data" repeatedly
+  - Fear of being wrong
+### **Detection Pattern**
+analysis paralysis|enough research|decide
+
+## Discovery Amnesia
+
+### **Id**
+discovery-amnesia
+### **Summary**
+Not retaining or using discovery learnings
+### **Severity**
+medium
+### **Situation**
+Repeating research already done
+### **Why**
+  No central repository.
+  Findings not documented.
+  Team turnover loses knowledge.
+  
+### **Solution**
+  ## Discovery Knowledge Management
+  
+  ### Repository Structure
+  
+  ```
+  Discovery Repository
+  ├── Interviews
+  │   ├── Recordings
+  │   ├── Transcripts
+  │   └── Summaries
+  ├── Insights
+  │   ├── By theme
+  │   └── By segment
+  ├── Opportunities
+  │   └── Opportunity map
+  └── Experiments
+      ├── Completed
+      └── In progress
+  ```
+  
+  ### Interview Documentation
+  
+  ```
+  Minimum per interview:
+  - Date and participant type
+  - Key quotes (verbatim)
+  - Problems mentioned
+  - Current solutions
+  - Surprises
+  
+  Best: Recording + transcript + summary
+  ```
+  
+  ### Insight Tagging
+  
+  Tag insights by:
+  - Theme/topic
+  - Segment
+  - Confidence level
+  - Related opportunity
+  - Date (freshness)
+  
+  ### Making Knowledge Findable
+  
+  ```
+  Before new discovery:
+  1. Search existing repository
+  2. Find related past interviews
+  3. Build on what's known
+  4. Identify gaps to fill
+  ```
+  
+  ### Regular Synthesis
+  
+  | Cadence | Activity |
+  |---------|----------|
+  | Weekly | Add new insights |
+  | Monthly | Synthesize patterns |
+  | Quarterly | Prune stale insights |
+  
+### **Symptoms**
+  - Repeating same research
+  - I think we looked at this before...
+  - Knowledge walking out the door
+### **Detection Pattern**
+repository|documentation|track insights

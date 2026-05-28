@@ -1,0 +1,267 @@
+# ⚠️ DEPRECATED: This template uses r0adkll/upload-google-play which is deprecated.
+# Use /devtools:android-workflow-production instead, which uses Gradle Play Publisher (GPP).
+# GPP is the recommended solution for Play Store publishing.
+
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      rollout-percentage:
+        description: 'Initial rollout percentage'
+        required: true
+        type: choice
+        options:
+          - '5'
+          - '10'
+          - '20'
+          - '50'
+          - '100'
+        default: '5'
+
+jobs:
+  validate:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+      
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      
+      - name: Decode signing keystore
+        run: |
+          echo "${{ secrets.SIGNING_KEY_STORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/release.jks
+          chmod 600 ${{ github.workspace }}/release.jks
+      
+      - name: Build release artifacts
+        run: |
+          ./gradlew clean
+          ./gradlew bundleRelease --stacktrace
+          ./gradlew assembleRelease --stacktrace
+        env:
+          SIGNING_KEY_STORE_PATH: ${{ github.workspace }}/release.jks
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      
+      - name: Verify build artifacts
+        run: |
+          echo "Verifying build outputs..."
+          
+          # Check AAB
+          if [ ! -f "app/build/outputs/bundle/release/app-release.aab" ]; then
+            echo "❌ AAB not found"
+            exit 1
+          fi
+          
+          # Check APK
+          if [ ! -f "app/build/outputs/apk/release/app-release.apk" ]; then
+            echo "❌ APK not found"
+            exit 1
+          fi
+          
+          # Check ProGuard mapping
+          if [ ! -f "app/build/outputs/mapping/release/mapping.txt" ]; then
+            echo "❌ ProGuard mapping not found"
+            exit 1
+          fi
+          
+          if [ ! -s "app/build/outputs/mapping/release/mapping.txt" ]; then
+            echo "❌ ProGuard mapping is empty"
+            exit 1
+          fi
+          
+          echo "✅ All build artifacts verified"
+          echo ""
+          echo "Artifact sizes:"
+          du -h app/build/outputs/bundle/release/app-release.aab
+          du -h app/build/outputs/apk/release/app-release.apk
+          du -h app/build/outputs/mapping/release/mapping.txt
+      
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-production-api-30
+      
+      - name: Create AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: echo "Generated AVD snapshot"
+      
+      - name: Run E2E tests on release build
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            echo "Running E2E tests on release build..."
+            ./gradlew connectedReleaseAndroidTest --stacktrace || {
+              echo "❌ E2E tests failed on release build"
+              echo "This usually means ProGuard broke something!"
+              exit 1
+            }
+            echo "✅ All E2E tests passed on release build"
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-release-${{ github.run_number }}
+          path: |
+            app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/mapping/release/mapping.txt
+          retention-days: 365
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.run_number }}
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          retention-days: 90
+      
+      - name: Clean up keystore
+        if: always()
+        run: rm -f ${{ github.workspace }}/release.jks
+  
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://play.google.com/store/apps/details?id={PACKAGE_NAME}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: production-release-${{ github.run_number }}
+          path: build-outputs
+      
+      - name: Determine rollout percentage
+        id: rollout
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "percentage=${{ github.event.inputs.rollout-percentage }}" >> $GITHUB_OUTPUT
+          else
+            echo "percentage=5" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "Using rollout percentage: $(cat $GITHUB_OUTPUT | grep percentage | cut -d'=' -f2)%"
+      
+      - name: Upload to Play Store (Production)
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: {PACKAGE_NAME}
+          releaseFiles: build-outputs/app/build/outputs/bundle/release/app-release.aab
+          track: production
+          status: inProgress
+          inAppUpdatePriority: 3
+          userFraction: ${{ steps.rollout.outputs.percentage }}
+          whatsNewDirectory: src/main/play/release-notes
+          mappingFile: build-outputs/app/build/outputs/mapping/release/mapping.txt
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            build-outputs/app/build/outputs/apk/release/app-release.apk
+            build-outputs/app/build/outputs/mapping/release/mapping.txt
+          body: |
+            ## 🚀 Production Release
+            
+            This release has been deployed to Google Play Store with a ${{ steps.rollout.outputs.percentage }}% staged rollout.
+            
+            ### What's New
+            
+            See the Play Store listing for user-facing release notes.
+            
+            ### Artifacts
+            
+            - **AAB**: Uploaded to Play Store
+            - **APK**: Attached to this release for reference
+            - **ProGuard Mapping**: Attached - keep secure for crash deobfuscation
+            
+            ### Deployment Details
+            
+            - **Track**: Production
+            - **Initial Rollout**: ${{ steps.rollout.outputs.percentage }}%
+            - **Build**: `${{ github.sha }}`
+            - **Workflow Run**: #${{ github.run_number }}
+            
+            ### Monitoring
+            
+            Monitor the rollout in [Play Console](https://play.google.com/console/).
+            
+            ### Next Steps
+            
+            1. Monitor crash-free rate in Play Console (target: >99%)
+            2. Review user feedback and ratings
+            3. If stable for 24-48 hours, increase rollout percentage
+            4. Use "Manage Production Rollout" workflow to increase/halt/complete
+          generate_release_notes: false
+      
+      - name: Deployment summary
+        run: |
+          echo "### 🚀 Production Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Successfully deployed to production!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment Details:**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Track**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rollout**: ${{ steps.rollout.outputs.percentage }}%" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+            echo "- **Version**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "- **Build**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run**: #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. 📊 Monitor crash-free rate in [Play Console](https://play.google.com/console/)" >> $GITHUB_STEP_SUMMARY
+          echo "2. 👀 Review user feedback and ratings" >> $GITHUB_STEP_SUMMARY
+          echo "3. ⏱️  Wait 24-48 hours to ensure stability" >> $GITHUB_STEP_SUMMARY
+          echo "4. 📈 Increase rollout using 'Manage Production Rollout' workflow" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Rollout Schedule (recommended):**" >> $GITHUB_STEP_SUMMARY
+          echo "- Day 1: ${{ steps.rollout.outputs.percentage }}% (current)" >> $GITHUB_STEP_SUMMARY
+          echo "- Day 2-3: Increase to 20% if stable" >> $GITHUB_STEP_SUMMARY
+          echo "- Day 4-5: Increase to 50% if stable" >> $GITHUB_STEP_SUMMARY
+          echo "- Day 6-7: Complete to 100%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Emergency Procedures:**" >> $GITHUB_STEP_SUMMARY
+          echo "- If critical issues detected, use 'Manage Production Rollout' → Halt" >> $GITHUB_STEP_SUMMARY
+          echo "- Prepare hotfix and deploy with higher rollout percentage" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,590 @@
+/**
+ * Results Page CSS
+ * Migrated from inline styles in pages/results.php
+ *
+ * @since 2025-12-14
+ */
+
+/* ==========================================================================
+   PAGE HEADER
+   ========================================================================== */
+
+.page-header {
+  margin-bottom: var(--space-xl);
+}
+
+/* NOTE: .page-title is now defined in components.css */
+
+.page-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--color-accent);
+}
+
+.page-subtitle {
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* ==========================================================================
+   FILTERS BAR
+   ========================================================================== */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  flex: 1;
+  min-width: 140px;
+  max-width: 200px;
+}
+
+.filter-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  font-weight: var(--weight-medium);
+}
+
+.filter-select {
+  padding: var(--space-sm) var(--space-md);
+  padding-right: var(--space-xl);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M3 4.5L6 7.5L9 4.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color var(--transition-fast);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(59, 158, 255, 0.1);
+}
+
+/* ==========================================================================
+   EVENTS LIST
+   ========================================================================== */
+
+.mb-lg { margin-bottom: var(--space-lg); }
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Year divider */
+.year-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
+  margin: var(--space-sm) 0;
+}
+
+.year-divider:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.year-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.year-divider-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   EVENT ROW - Matching calendar design
+   ========================================================================== */
+
+/* Event Row - Inline layout: Logo | Date | Series | Name | Location | Riders | Arrow */
+.event-row {
+  --event-accent: #61CE70;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.event-row:hover {
+  border-color: var(--event-accent);
+  box-shadow: var(--shadow-md);
+  transform: translateX(2px);
+}
+
+/* Color Accent Bar */
+.event-accent-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--event-accent);
+}
+
+/* Series Logo - Larger */
+.event-logo {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.event-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+
+.event-logo-placeholder {
+  color: var(--color-text-muted);
+}
+
+.event-logo-placeholder i,
+.event-logo-placeholder svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Date - Inline */
+.event-date-inline {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+/* Series Badge */
+.event-series-badge {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  background: rgba(97, 206, 112, 0.15);
+  color: var(--event-accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Title - Takes remaining space */
+.event-title {
+  flex: 1;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Location - Inline */
+.event-location-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.event-location-inline i,
+.event-location-inline svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.6;
+}
+
+/* Riders count */
+.event-riders {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Arrow */
+.event-arrow {
+  color: var(--color-text-muted);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.event-arrow i,
+.event-arrow svg {
+  width: 24px;
+  height: 24px;
+}
+
+.event-row:hover .event-arrow {
+  color: var(--event-accent);
+  transform: translateX(4px);
+}
+
+/* Legacy styles kept for backwards compatibility */
+.event-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 56px;
+}
+
+.event-month-abbr {
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  color: var(--event-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.event-day-num {
+  font-size: 32px;
+  font-weight: var(--weight-bold);
+  color: var(--event-accent);
+  line-height: 1;
+  margin: 2px 0;
+}
+
+.event-day-name {
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+.event-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-details {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.event-series {
+  font-weight: var(--weight-medium);
+  color: var(--event-accent);
+}
+
+.event-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.event-location i,
+.event-location svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0.6;
+}
+
+.event-stats {
+  display: flex;
+  gap: var(--space-lg);
+  padding-right: var(--space-sm);
+}
+
+.event-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 60px;
+}
+
+.stat-value {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--color-text-muted);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-md);
+}
+
+/* ==========================================================================
+   YEAR SECTION & DIVIDER (Large prominent headers - matching series page)
+   ========================================================================== */
+
+.results-events {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.results-year-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Year Divider - LARGE and prominent (matching series page) */
+.results-year-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+}
+
+.results-year-label {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.results-year-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-border) 0%, transparent 100%);
+}
+
+.results-year-count {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   CALENDAR/EVENT LIST STYLES (Legacy support)
+   ========================================================================== */
+
+.calendar-events {
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-month {
+  margin-bottom: var(--space-xl);
+}
+
+/* Year Divider - Large and prominent */
+.calendar-month-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-text);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-md);
+}
+
+.event-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* ==========================================================================
+   RESPONSIVE - TABLET & MOBILE
+   ========================================================================== */
+
+/* Desktop - Larger elements */
+@media (min-width: 1024px) {
+  .event-logo {
+    width: 72px;
+    height: 72px;
+  }
+
+  .event-title {
+    font-size: var(--text-xl);
+  }
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .event-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .event-riders {
+    display: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  /* Results year divider mobile */
+  .results-events {
+    gap: var(--space-lg);
+  }
+
+  .results-year-divider {
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+  }
+
+  .results-year-label {
+    font-size: 1.75rem;
+  }
+
+  /* Filter bar - edge-to-edge on mobile */
+  .filter-bar {
+    flex-direction: column;
+    background: var(--color-bg-card);
+    padding: var(--space-sm) var(--container-padding, 16px);
+    gap: var(--space-sm);
+    margin-left: calc(-1 * var(--container-padding, 16px));
+    margin-right: calc(-1 * var(--container-padding, 16px));
+    width: calc(100% + var(--container-padding, 16px) * 2);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .filter-group {
+    width: 100%;
+    max-width: none;
+  }
+
+  .filter-label {
+    display: block;
+    margin-bottom: var(--space-xs);
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+
+  .event-list {
+    margin-left: calc(-1 * var(--container-padding));
+    margin-right: calc(-1 * var(--container-padding));
+    width: calc(100% + var(--container-padding) * 2);
+    gap: 0;
+  }
+
+  .event-row {
+    gap: var(--space-md);
+    padding: var(--space-md) var(--container-padding);
+    padding-left: calc(var(--container-padding) + 8px);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .event-row:first-child {
+    border-top: none;
+  }
+
+  .event-row:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .event-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .event-logo-placeholder i,
+  .event-logo-placeholder svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .event-title {
+    font-size: var(--text-base);
+  }
+
+  /* Hide extra info on mobile */
+  .event-series-badge,
+  .event-location-inline,
+  .event-riders {
+    display: none;
+  }
+
+  .event-arrow {
+    position: absolute;
+    right: var(--container-padding);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .event-row:hover .event-arrow {
+    transform: translateY(-50%);
+  }
+
+  .calendar-month-title {
+    padding-left: var(--container-padding);
+  }
+}
+
+/* Very small screens */
+@media (max-width: 400px) {
+  .results-year-label {
+    font-size: 1.5rem;
+  }
+
+  .results-year-count {
+    display: none;
+  }
+}

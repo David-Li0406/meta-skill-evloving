@@ -1,0 +1,164 @@
+{
+  "branchName": "main",
+  "projectName": "comms",
+  "description": "Eve→Comms migration: Add threads, attachments, conversations, analysis framework, and embeddings",
+  "specFiles": [
+    "docs/SCHEMA_DESIGN_ANALYSIS.md"
+  ],
+  "userStories": [
+    {
+      "id": "US-016",
+      "title": "Add threads table to schema",
+      "acceptanceCriteria": [
+        "threads table created in schema.sql with: id, channel, name, source_adapter, source_id, parent_thread_id, created_at, updated_at",
+        "UNIQUE constraint on (source_adapter, source_id)",
+        "Indexes on channel, parent_thread_id, name",
+        "Schema version incremented",
+        "go build succeeds",
+        "comms init applies new schema without error"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "See docs/SCHEMA_DESIGN_ANALYSIS.md section 2. No is_group field - derived from event_participants."
+    },
+    {
+      "id": "US-017",
+      "title": "Add attachments table to schema",
+      "acceptanceCriteria": [
+        "attachments table created with: id, event_id, filename, mime_type, size_bytes, media_type, storage_uri, storage_type, content_hash, source_id, metadata_json, created_at",
+        "Foreign key to events(id) with ON DELETE CASCADE",
+        "Indexes on event_id, mime_type, media_type, content_hash",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "See docs/SCHEMA_DESIGN_ANALYSIS.md section 4"
+    },
+    {
+      "id": "US-018",
+      "title": "Add conversation abstraction tables to schema",
+      "acceptanceCriteria": [
+        "conversation_definitions table: id, name (UNIQUE), channel, strategy, config_json, description, created_at, updated_at",
+        "conversations table: id, definition_id (FK), channel, thread_id (FK to threads), start_time, end_time, event_count, first_event_id, last_event_id, created_at",
+        "conversation_events table: conversation_id (FK), event_id (FK), position, PRIMARY KEY (conversation_id, event_id)",
+        "Indexes on definition_id, channel, thread_id, time range, event_id",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "See docs/SCHEMA_DESIGN_ANALYSIS.md section 5. Events do NOT get conversation_id FK."
+    },
+    {
+      "id": "US-019",
+      "title": "Add analysis framework tables to schema",
+      "acceptanceCriteria": [
+        "analysis_types table: id, name (UNIQUE), version, description, output_type, facets_config_json, prompt_template, model, created_at, updated_at",
+        "analysis_runs table: id, analysis_type_id (FK), conversation_id (FK), status, started_at, completed_at, output_text, error_message, blocked_reason, retry_count, created_at, UNIQUE(analysis_type_id, conversation_id)",
+        "facets table: id, analysis_run_id (FK CASCADE), conversation_id (FK CASCADE), facet_type, value, person_id (FK), confidence, metadata_json, created_at",
+        "Indexes on type, conversation, status, facet_type+value, person_id",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "See docs/SCHEMA_DESIGN_ANALYSIS.md section 6"
+    },
+    {
+      "id": "US-020",
+      "title": "Add embeddings table to schema",
+      "acceptanceCriteria": [
+        "embeddings table: id, entity_type, entity_id, model, embedding_blob (BLOB), dimension, source_text_hash, created_at",
+        "UNIQUE constraint on (entity_type, entity_id, model)",
+        "Indexes on entity_type+entity_id, model",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "See docs/SCHEMA_DESIGN_ANALYSIS.md section 7"
+    },
+    {
+      "id": "US-021",
+      "title": "Eve adapter creates threads from chats",
+      "acceptanceCriteria": [
+        "Eve adapter creates thread records from Eve chats table",
+        "Thread name from Eve chat_name or chat_identifier",
+        "source_adapter='imessage', source_id=chat_identifier",
+        "Events linked to threads via thread_id field",
+        "Incremental sync maintains thread references",
+        "go build succeeds",
+        "comms sync --adapter imessage creates threads"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "First step of Eve direct ETL. Thread metadata now captured."
+    },
+    {
+      "id": "US-022",
+      "title": "Eve adapter imports attachment metadata",
+      "acceptanceCriteria": [
+        "Eve adapter reads from Eve attachments table",
+        "Creates attachment records with filename, mime_type, size_bytes",
+        "media_type derived from mime_type (image/video/audio/document/sticker)",
+        "storage_uri points to file path from Eve",
+        "storage_type='local'",
+        "content_hash from Eve if available",
+        "go build succeeds",
+        "comms sync --adapter imessage populates attachments table"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Preserves attachment metadata that was previously lost"
+    },
+    {
+      "id": "US-023",
+      "title": "Eve adapter syncs reactions as events",
+      "acceptanceCriteria": [
+        "Eve adapter reads from Eve reactions table",
+        "Creates event records with content_types=['reaction']",
+        "content field contains the reaction emoji/type",
+        "reply_to field references the reacted event's ID",
+        "direction determined by is_from_me",
+        "go build succeeds",
+        "comms sync --adapter imessage imports reactions"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Reactions are events with special content_type. See schema design section 3."
+    },
+    {
+      "id": "US-024",
+      "title": "Time-gap conversation chunking for iMessage",
+      "acceptanceCriteria": [
+        "internal/chunk package created with Chunker interface",
+        "TimeGapChunker implements chunking with configurable gap threshold",
+        "Default conversation_definition created: 'imessage_3hr' with 10800 second gap",
+        "comms chunk command runs chunking for a definition",
+        "Creates conversation records with event_count, time bounds",
+        "Creates conversation_events mapping records",
+        "go build succeeds",
+        "comms chunk --definition imessage_3hr creates conversations"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Port from Eve internal/etl/conversations.go. Strategy='time_gap', scope by thread."
+    },
+    {
+      "id": "US-025",
+      "title": "Thread-based conversation chunking for Gmail",
+      "acceptanceCriteria": [
+        "ThreadChunker implements chunking using events.thread_id",
+        "Default conversation_definition created: 'gmail_thread' with strategy='thread'",
+        "Each unique thread_id in gmail channel becomes one conversation",
+        "Events ordered by timestamp within conversation",
+        "go build succeeds",
+        "comms chunk --definition gmail_thread creates conversations"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "Gmail already has thread_id from API. One conversation per thread."
+    }
+  ]
+}

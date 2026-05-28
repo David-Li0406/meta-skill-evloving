@@ -1,0 +1,81 @@
+# Lefthook Git hooks configuration
+# https://github.com/evilmartians/lefthook
+
+# Commit message validation
+commit-msg:
+  commands:
+    commitlint:
+      run: npx commitlint --edit {1}
+
+# Pre-commit: Run on staged files only (fast feedback)
+pre-commit:
+  parallel: true
+  commands:
+    # TypeScript/JavaScript
+    ts-format:
+      glob: "*.{js,ts,jsx,tsx,json,md,yml,yaml}"
+      run: npx prettier --write {staged_files}
+      stage_fixed: true
+
+    ts-lint:
+      glob: "*.{js,ts,jsx,tsx}"
+      run: npx eslint --fix {staged_files}
+      stage_fixed: true
+
+    # Alternative: Use Biome instead of ESLint + Prettier
+    # biome-check:
+    #   glob: "*.{js,ts,jsx,tsx,json}"
+    #   run: npx biome check --apply {staged_files}
+    #   stage_fixed: true
+
+    # Rust
+    rust-fmt:
+      glob: "*.rs"
+      run: cargo fmt -- {staged_files}
+      stage_fixed: true
+
+    rust-clippy:
+      glob: "*.rs"
+      run: cargo clippy --fix --allow-dirty --allow-staged
+      stage_fixed: true
+
+    # Python
+    py-format:
+      glob: "*.py"
+      run: ruff format {staged_files} && ruff check --fix {staged_files}
+      stage_fixed: true
+
+# Pre-push: Full validation (comprehensive checks)
+pre-push:
+  commands:
+    validate-all:
+      run: |
+        echo "🔍 Running full validation before push..."
+
+        # TypeScript/JavaScript validation
+        if [ -f "package.json" ]; then
+          echo "📘 TypeScript/JavaScript validation"
+          npm run lint || exit 1
+          npm run type-check || exit 1
+          npm test || exit 1
+          npm run build || exit 1
+        fi
+
+        # Rust validation
+        if [ -f "Cargo.toml" ]; then
+          echo "🦀 Rust validation"
+          cargo fmt -- --check || exit 1
+          cargo clippy --all-targets --all-features -- -D warnings || exit 1
+          cargo test --all-features || exit 1
+          cargo build --release || exit 1
+        fi
+
+        # Python validation
+        if [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
+          echo "🐍 Python validation"
+          ruff check . || exit 1
+          mypy . || exit 1
+          pytest || exit 1
+        fi
+
+        echo "✅ All validations passed!"
