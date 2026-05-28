@@ -1,0 +1,13 @@
+    <!-- Connection Status Indicator -->
+    <div class="fixed bottom-4 right-4 flex items-center gap-2 px-3 py-2 rounded-full text-sm backdrop-blur-sm border transition-all duration-300"
+         :class="connected
+           ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+           : 'bg-red-500/10 border-red-500/30 text-red-400'">
+        <span class="relative flex h-2 w-2">
+            <span class="absolute inline-flex h-full w-full rounded-full opacity-75"
+                  :class="connected ? 'bg-emerald-400 animate-ping-slow' : 'bg-red-400'"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2"
+                  :class="connected ? 'bg-emerald-500' : 'bg-red-500'"></span>
+        </span>
+        <span x-text="connected ? 'Connected' : 'Reconnecting...'"></span>
+    </div>

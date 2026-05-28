@@ -1,0 +1,78 @@
+{
+  "task_id": "visual_creation_task3",
+  "task_name": "Artisan Café Social Media Image Set",
+  "description": "Create a professional social media image set for a fictional artisan café, including food photography, interior shots, a promotional graphic, and a composite preview grid.",
+  "skills": [
+    "generate-image",
+    "media-processing"
+  ],
+  "prompt": "I am a small café owner, and I need a professional social media content pack for my artisan café \"Ember & Bloom\". Please generate the following 4 images and 1 composite:\n\n1. latte_art.png — An overhead top-down shot of a beautifully crafted latte art on a wooden table, warm natural lighting, square format.\n2. pastry_display.png — A styled flat-lay of artisan pastries (croissants, tarts, muffins) on a marble surface with coffee beans scattered around, portrait format.\n3. cafe_interior.png — A cozy café interior scene with warm Edison-bulb lighting, exposed brick walls, plants, and comfortable seating, landscape format.\n4. promo_story.png — A promotional graphic for \"Weekend Brunch Special\" with appetizing food imagery and bold text overlay, story format.\n5. preview_grid.png — A 2×2 grid layout compositing all 4 images above as a social media preview, with thin white borders between panels.\n\nAll images should have a warm, inviting aesthetic with a consistent earth-tone color palette (browns, creams, warm golds).",
+  "outputs": [
+    "latte_art.png",
+    "pastry_display.png",
+    "cafe_interior.png",
+    "promo_story.png",
+    "preview_grid.png"
+  ],
+  "category": "visual_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "latte_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that latte_art.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "latte_art.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pastry_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that pastry_display.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "pastry_display.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "interior_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that cafe_interior.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "cafe_interior.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "promo_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that promo_story.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "promo_story.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "grid_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that preview_grid.png composite exists",
+      "weight": 2,
+      "op_args": {
+        "path": "preview_grid.png",
+        "min_size": 1
+      }
+    }
+  ]
+}

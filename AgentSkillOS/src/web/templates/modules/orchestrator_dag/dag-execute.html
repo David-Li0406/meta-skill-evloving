@@ -1,0 +1,167 @@
+        <!-- Phase: PLANNING/EXECUTING - Orchestration View (shows in execute mode always, or full mode during planning/executing) -->
+        <div x-show="executionMode === 'dag' && (mode === 'execute' || phase === 'planning' || phase === 'executing' || phase === 'complete' || phase === 'error')" x-transition>
+            <!-- Skill Legend (floating on mobile) -->
+            <div class="lg:hidden fixed top-20 right-4 z-30" x-show="uniqueSkills.length > 0" x-transition>
+                <div class="bento-card p-3 bg-opacity-95 backdrop-blur-sm">
+                    <div class="text-xs text-gray-400 dark:text-gray-500 mb-2 font-medium">Skills</div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <template x-for="skill in uniqueSkills" :key="skill.name">
+                            <span class="px-2 py-0.5 rounded-full text-xs text-white font-medium" :style="'background:' + skill.color">
+                                <span x-text="skill.name"></span>
+                            </span>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+                <!-- DAG Visualization (shown for graph execution visual, or when nodes are available) -->
+                <section x-show="(uiHints.execution_visual === 'graph' || uiHints.has_planning) && (waitingForNodes || (orchestrator && orchestrator.nodes && orchestrator.nodes.length > 0) || phase === 'complete' || phase === 'error')" x-transition class="lg:col-span-8 lg:row-span-2 bento-card" style="min-height: 320px;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-gray-900 dark:text-gray-100 font-semibold flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Execution Flow
+                            <span class="text-sm font-normal text-gray-500 bg-surface-tertiary px-2 py-0.5 rounded" x-text="'Phase ' + (orchestrator?.current_phase || 0)"></span>
+                        </h2>
+                        <!-- Zoom Controls -->
+                        <div class="flex items-center gap-2 text-sm">
+                            <button @click="dagZoom = Math.max(0.3, dagZoom - 0.1)"
+                                    class="p-1.5 rounded-lg bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                </svg>
+                            </button>
+                            <span class="text-gray-500 dark:text-gray-400 font-mono tabular-nums w-12 text-center text-xs" x-text="Math.round(dagZoom * 100) + '%'"></span>
+                            <button @click="dagZoom = Math.min(3, dagZoom + 0.1)"
+                                    class="p-1.5 rounded-lg bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                            </button>
+                            <button @click="resetDagView()"
+                                    class="p-1.5 rounded-lg bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-64 lg:h-80 overflow-hidden rounded-lg bg-surface-primary/50 p-2"
+                         @wheel="handleWheel($event)"
+                         @mousedown="startDrag($event)"
+                         @mousemove="drag($event)"
+                         @mouseup="endDrag()"
+                         @mouseleave="endDrag()"
+                         :class="isDragging ? 'cursor-grabbing' : 'cursor-grab'">
+                        <div x-show="orchestrator && orchestrator.nodes && orchestrator.nodes.length > 0 && !waitingForNodes"
+                             :style="`transform: translate(${panX}px, ${panY}px) scale(${dagZoom}); transform-origin: top left; transition: ${isDragging ? 'none' : 'transform 0.2s ease'};`"
+                             x-html="renderDag()"></div>
+                        <div x-show="waitingForNodes" class="text-gray-500 h-full flex flex-col items-center justify-center gap-2">
+                            <svg class="w-8 h-8 text-purple-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                            </svg>
+                            <span class="text-sm">Awaiting plan (usually takes 1-2 minutes)...</span>
+                        </div>
+                        <div x-show="!waitingForNodes && (!orchestrator || !orchestrator.nodes || orchestrator.nodes.length === 0)" class="text-gray-500 h-full flex flex-col items-center justify-center gap-2">
+                            <svg class="w-8 h-8 text-gray-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                            </svg>
+                            <span class="text-sm">Waiting for nodes...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Status Table (shown for graph execution visual, or when nodes are available) -->
+                <section x-show="(uiHints.execution_visual === 'graph' || uiHints.has_planning) && (waitingForNodes || (orchestrator && orchestrator.nodes && orchestrator.nodes.length > 0) || phase === 'complete' || phase === 'error')" x-transition class="lg:col-span-4 lg:row-span-2 bento-card flex flex-col" style="min-height: 280px;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-gray-900 dark:text-gray-100 font-semibold flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+                            Task Status
+                        </h2>
+                        <!-- Skills Legend (desktop only) -->
+                        <div class="hidden lg:flex flex-wrap gap-1.5" x-show="uniqueSkills.length > 0">
+                            <template x-for="skill in uniqueSkills.slice(0, 4)" :key="skill.name">
+                                <span class="px-2 py-0.5 rounded-full text-xs text-white font-medium" :style="'background:' + skill.color">
+                                    <span x-text="skill.name"></span>
+                                </span>
+                            </template>
+                            <span x-show="uniqueSkills.length > 4" class="text-xs text-gray-500" x-text="'+' + (uniqueSkills.length - 4)"></span>
+                        </div>
+                    </div>
+                    <div x-show="orchestrator && orchestrator.nodes && orchestrator.nodes.length > 0" class="flex-1 overflow-auto">
+                        <table class="w-full text-sm">
+                            <thead class="text-gray-500 text-xs uppercase tracking-wider sticky top-0 bg-surface-secondary">
+                                <tr>
+                                    <th class="text-left py-2 px-2">Node</th>
+                                    <th class="text-left py-2 px-2">Status</th>
+                                    <th class="text-left py-2 px-2 hidden sm:table-cell">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-border-muted">
+                                <template x-for="node in orchestrator?.nodes || []" :key="node.id">
+                                    <tr class="hover:bg-surface-tertiary/50 transition-colors cursor-pointer" @click="selectedNodeId = node.id">
+                                        <td class="py-2.5 px-2">
+                                            <div class="font-medium text-gray-700 dark:text-gray-200" x-text="node.name"></div>
+                                            <div class="text-xs text-gray-500 truncate max-w-[150px]" x-text="node.purpose"></div>
+                                        </td>
+                                        <td class="py-2.5 px-2">
+                                            <span class="inline-flex items-center gap-1.5" :class="'status-' + node.status">
+                                                <span x-html="getStatusIconSvg(node.status)"></span>
+                                                <span class="text-xs capitalize" x-text="node.status"></span>
+                                            </span>
+                                        </td>
+                                        <td class="py-2.5 px-2 text-gray-500 dark:text-gray-400 font-mono text-xs hidden sm:table-cell" x-text="node.time || '-'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div x-show="waitingForNodes && (!orchestrator || !orchestrator.nodes || orchestrator.nodes.length === 0)" class="flex-1 flex flex-col items-center justify-center text-gray-500 gap-2">
+                        <svg class="w-8 h-8 text-purple-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                        </svg>
+                        <span class="text-sm">Awaiting plan (usually takes 1-2 minutes)...</span>
+                    </div>
+                    <div x-show="!waitingForNodes && (!orchestrator || !orchestrator.nodes || orchestrator.nodes.length === 0)" class="flex-1 flex items-center justify-center text-gray-500 text-sm">
+                        <span>Waiting for nodes...</span>
+                    </div>
+                </section>
+
+                <!-- INCLUDE:core/log-panel.html -->
+
+                <!-- Sub Agents Panel -->
+                <section x-show="waitingForNodes || activeNodeIds().length > 0" x-transition
+                         class="lg:col-span-4 bento-card" style="min-height: 100px;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-gray-900 dark:text-gray-100 font-semibold flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                            Task Log
+                        </h2>
+                        <span class="text-xs text-gray-500 bg-surface-tertiary px-2 py-1 rounded" x-text="activeNodeIds().length + ' active'"></span>
+                    </div>
+                    <div x-show="waitingForNodes && activeNodeIds().length === 0" class="text-gray-500 h-32 flex flex-col items-center justify-center gap-2">
+                        <svg class="w-8 h-8 text-purple-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                        </svg>
+                        <span class="text-sm">Awaiting plan (usually takes 1-2 minutes)...</span>
+                    </div>
+                    <div class="space-y-2">
+                        <template x-for="nodeId in activeNodeIds()" :key="'sub-' + nodeId">
+                            <div @click="selectedNodeId = nodeId"
+                                 class="bg-surface-primary rounded-lg border px-3 py-2.5 flex items-center gap-3 cursor-pointer hover:bg-surface-tertiary/50 transition-all"
+                                 :class="getNodeBorderClass(getNodeStatus(nodeId))">
+                                <!-- Status + Node Name -->
+                                <span class="flex items-center gap-2 shrink-0" :class="getNodeTextClass(getNodeStatus(nodeId))">
+                                    <span x-html="getStatusIconSvg(getNodeStatus(nodeId))"></span>
+                                    <span class="font-medium text-sm" x-text="nodeId"></span>
+                                </span>
+                                <!-- Latest Log -->
+                                <span class="font-mono text-xs text-gray-500 truncate flex-1" x-text="getLatestLog(nodeId)"></span>
+                                <!-- Log Count Badge -->
+                                <span class="text-xs text-gray-500 bg-surface-tertiary px-2 py-0.5 rounded-full whitespace-nowrap" x-text="getNodeLogs(nodeId).length"></span>
+                            </div>
+                        </template>
+                    </div>
+                </section>
+            </div>
+        </div>

@@ -1,0 +1,103 @@
+{
+  "task_id": "visual_creation_task2",
+  "task_name": "Knowledge Management Software Visual Design Research",
+  "description": "Research the visual design language of existing knowledge management products, write a comparative analysis report, and generate design concept images synthesizing insights from the research.",
+  "skills": [
+    "dev-browser",
+    "generate-image",
+    "docx"
+  ],
+  "prompt": "I am a product designer, and our company is planning to build a knowledge management software product. I need you to research multiple related products, specifically Notion, Confluence, and Obsidian, and produce a visual design style research report about them. Browse their official websites, capture a screenshot of each product's key interface (1 screenshot per product). Save the screenshots with these exact filenames: notion.png, confluence.png, obsidian.png. The visual style research report should be saved as report.docx and must include: the captured screenshots, a comparative analysis table covering layout style, color palette, typography, and icon design for each product, as well as a synthesis section with design recommendations. Then, based on the analysis, synthesize the design characteristics of these products and generate three design concept images for a knowledge management software to provide design inspiration. The design concept images should be saved as fusion_design_1.png, fusion_design_2.png, and fusion_design_3.png, respectively.",
+  "outputs": [
+    "notion.png",
+    "confluence.png",
+    "obsidian.png",
+    "report.docx",
+    "fusion_design_1.png",
+    "fusion_design_2.png",
+    "fusion_design_3.png"
+  ],
+  "category": "visual_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "report_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that report.docx exists",
+      "weight": 1,
+      "op_args": {
+        "path": "report.docx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "fusion_design_1_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that fusion_design_1.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "fusion_design_1.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "fusion_design_2_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that fusion_design_2.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "fusion_design_2.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "fusion_design_3_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that fusion_design_3.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "fusion_design_3.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "notion_screenshot_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that notion.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "notion.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "confluence_screenshot_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that confluence.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "confluence.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "obsidian_screenshot_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that obsidian.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "obsidian.png",
+        "min_size": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "motion_video_task6",
+  "task_name": "Calculus Derivatives Teaching Animation and Handout",
+  "description": "Create an animation demonstrating derivative concepts and a companion teaching handout.",
+  "skills": [
+    "manim",
+    "scientific-slides"
+  ],
+  "prompt": "I am a calculus instructor, and I want to produce a teaching materials package on the concept of derivatives for my introductory calculus students. (1) Create an animation derivatives_animation.mp4 showing: the function f(x)=x² at the point x=1, where a secant line progressively approaches the tangent line as h decreases from 2 down to 0.01. Dynamically display the slope value as it changes, and annotate the final derivative f'(1)=2. Then show f(x)=sin(x) with its derivative f'(x)=cos(x) overlaid on the same axes. (2) Create a companion teaching handout derivatives_slides.pdf (at least 8 pages) covering: definition of a derivative, limit formula, geometric interpretation, common derivative formulas table, chain rule, and application examples.",
+  "outputs": [
+    "derivatives_slides.pdf",
+    "derivatives_animation.mp4"
+  ],
+  "category": "motion_video",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "video_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that derivatives_animation.mp4 exists",
+      "weight": 5,
+      "op_args": {
+        "path": "derivatives_animation.mp4",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pdf_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that derivatives_slides.pdf exists",
+      "weight": 5,
+      "op_args": {
+        "path": "derivatives_slides.pdf",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pdf_page_count",
+      "type": "objective_usability",
+      "op_func": "pdf_page_count",
+      "description": "Verify PDF has at least 8 pages",
+      "weight": 5,
+      "op_args": {
+        "path": "derivatives_slides.pdf",
+        "operator": ">=",
+        "expected": 8
+      },
+      "depends_on": [
+        "pdf_exists"
+      ]
+    }
+  ]
+}

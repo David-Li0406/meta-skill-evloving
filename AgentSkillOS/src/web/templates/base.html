@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><!-- TITLE --></title>
+    <!-- Google Fonts: Fira Code + Fira Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Fira Sans', 'system-ui', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        surface: {
+                            primary: 'var(--surface-primary)',
+                            secondary: 'var(--surface-secondary)',
+                            tertiary: 'var(--surface-tertiary)',
+                        },
+                        border: {
+                            default: 'var(--border-default)',
+                            muted: 'var(--border-muted)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Light mode (default) */
+        :root {
+            --surface-primary: #FFFFFF;
+            --surface-secondary: #F8FAFC;
+            --surface-tertiary: #F1F5F9;
+            --border-default: #E2E8F0;
+            --border-muted: #F1F5F9;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+        }
+        /* Dark mode */
+        .dark {
+            --surface-primary: #0D1117;
+            --surface-secondary: #161B22;
+            --surface-tertiary: #21262D;
+            --border-default: #30363D;
+            --border-muted: #21262D;
+            --text-primary: #F3F4F6;
+            --text-secondary: #9CA3AF;
+            --text-muted: #6B7280;
+        }
+    </style>
+    <script>
+        // Theme initialization - runs before page render to prevent flash
+        (function() {
+            const stored = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = stored || (prefersDark ? 'dark' : 'light');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <!-- HEAD_EXTRA -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/dag-renderer.js"></script>
+    <!-- SCRIPTS -->
+</head>
+<body class="bg-surface-primary text-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-200" x-data="<!-- APP_DATA -->" @keydown.escape="<!-- ESCAPE_HANDLER -->">
+    <!-- CONTENT -->
+
+    <!-- INCLUDE:core/connection-status.html -->
+
+    <!-- APP_SCRIPT -->
+</body>
+</html>

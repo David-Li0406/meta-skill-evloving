@@ -1,0 +1,2947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Tree Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4fc3f7;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .search-container {
+            padding: 15px 40px;
+            background: rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .search-wrapper {
+            position: relative;
+            max-width: 500px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input::placeholder {
+            color: #666;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.2);
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            color: #fff;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .search-clear:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .search-clear.visible {
+            display: flex;
+        }
+
+        .search-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .search-count {
+            font-size: 13px;
+            color: #4fc3f7;
+            display: none;
+        }
+
+        .search-count.visible {
+            display: block;
+        }
+
+        .search-nav {
+            display: none;
+            gap: 5px;
+        }
+
+        .search-nav.visible {
+            display: flex;
+        }
+
+        .search-nav button {
+            padding: 4px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .search-nav button:hover {
+            background: rgba(79, 195, 247, 0.2);
+            border-color: #4fc3f7;
+        }
+
+        .search-nav button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-width: 500px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            display: none;
+            z-index: 100;
+        }
+
+        .search-results.visible {
+            display: block;
+        }
+
+        .search-result-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.15s;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item:hover,
+        .search-result-item.active {
+            background: rgba(79, 195, 247, 0.2);
+        }
+
+        .search-result-name {
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .search-result-path {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .search-result-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+
+        .search-result-type--skill {
+            background: rgba(255, 183, 77, 0.3);
+            color: #ffb74d;
+        }
+
+        .search-result-type--category {
+            background: rgba(79, 195, 247, 0.3);
+            color: #4fc3f7;
+        }
+
+        .tree-container {
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .node circle {
+            cursor: pointer;
+            stroke-width: 2px;
+            transition: stroke-width 0.2s, filter 0.2s;
+        }
+
+        .node text {
+            font-size: 12px;
+            fill: #e4e4e4;
+            transition: font-weight 0.2s;
+        }
+
+        .node--domain circle,
+        .node--category circle {
+            fill: #4fc3f7;
+            stroke: #4fc3f7;
+        }
+
+        .node--type circle {
+            fill: #81c784;
+            stroke: #81c784;
+        }
+
+        .node--skill circle {
+            fill: #ffb74d;
+            stroke: #ffb74d;
+        }
+
+        .node--category circle {
+            fill: #4fc3f7;
+            stroke: #4fc3f7;
+        }
+
+        .node--collapsed circle {
+            fill: #1a1a2e;
+        }
+
+        .node--match circle {
+            stroke: #ffd700 !important;
+            stroke-width: 4px !important;
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+        }
+
+        .node--match text {
+            font-weight: 700;
+            fill: #ffd700;
+        }
+
+        .node--current circle {
+            stroke: #ff4081 !important;
+            stroke-width: 5px !important;
+            filter: drop-shadow(0 0 12px rgba(255, 64, 129, 0.9));
+        }
+
+        .node--current text {
+            font-weight: 700;
+            fill: #ff4081;
+        }
+
+        .link {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 1.5px;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 13px;
+            max-width: 300px;
+            pointer-events: auto;
+            z-index: 1000;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #4fc3f7;
+        }
+
+        .tooltip-desc {
+            color: #aaa;
+            line-height: 1.4;
+        }
+
+        .tooltip-meta {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .tooltip-link {
+            display: inline-block;
+            margin-top: 6px;
+            color: #4fc3f7;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .tooltip-link:hover {
+            text-decoration: underline;
+            color: #81d4fa;
+        }
+
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot--domain { background: #4fc3f7; }
+        .legend-dot--type { background: #81c784; }
+        .legend-dot--skill { background: #ffb74d; }
+
+        .highlight {
+            font-weight: bold;
+        }
+
+        .dimmed {
+            opacity: 0.3;
+        }
+
+        .keyboard-hint {
+            font-size: 11px;
+            color: #666;
+            margin-left: auto;
+        }
+
+        .keyboard-hint kbd {
+            display: inline-block;
+            padding: 2px 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            font-family: inherit;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Skill Tree Visualization</h1>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <span class="stat-value">200</span>
+            <span class="stat-label">Skills</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">49</span>
+            <span class="stat-label">Categories</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">5</span>
+            <span class="stat-label">Max Depth</span>
+        </div>
+    </div>
+
+    <div class="search-container">
+        <div class="search-wrapper">
+            <input type="text" class="search-input" placeholder="Search skills by name, id, or description..." id="search" autocomplete="off">
+            <button class="search-clear" id="search-clear" title="Clear search">&times;</button>
+            <div class="search-results" id="search-results"></div>
+        </div>
+        <div class="search-info">
+            <span class="search-count" id="search-count"></span>
+            <div class="search-nav" id="search-nav">
+                <button id="prev-result" title="Previous result (↑)">&#9650; Prev</button>
+                <button id="next-result" title="Next result (↓)">Next &#9660;</button>
+            </div>
+            <span class="keyboard-hint"><kbd>↑</kbd><kbd>↓</kbd> navigate <kbd>Enter</kbd> jump <kbd>Esc</kbd> close</span>
+        </div>
+    </div>
+
+    <div class="tree-container" id="tree"></div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <span class="legend-dot legend-dot--domain"></span>
+            <span>Category</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-dot legend-dot--skill"></span>
+            <span>Skill</span>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip" style="display: none;"></div>
+
+    <script>
+        const treeData = {
+  "name": "Root",
+  "id": "root",
+  "description": "Skill capability tree root",
+  "type": "root",
+  "children": [
+    {
+      "name": "Automation",
+      "id": "automation",
+      "description": "Browser automation, workflows, and integrations.",
+      "type": "type",
+      "children": [
+        {
+          "name": "browser-testing",
+          "id": "browser-testing",
+          "description": "VERIFY your changes work. Measure performance, CLS. Use BEFORE and AFTER making changes to confirm fixes. Includes ready-to-run scripts: measure-cls.ts, detect-flicker.ts",
+          "type": "skill",
+          "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-visual-stability/environment/skills/browser-testing/SKILL.md",
+          "author": "benchflow-ai"
+        },
+        {
+          "name": "dev-browser",
+          "id": "dev-browser",
+          "description": "Browser automation with persistent page state. Use when users ask to navigate websites, fill forms, take screenshots, extract web data, test web apps, or automate browser workflows. Trigger phrases include \"go to [url]\", \"click on\", \"fill out the form\", \"take a screenshot\", \"scrape\", \"automate\", \"test the website\", \"log into\", or any browser interaction request.",
+          "type": "skill",
+          "github_url": "https://github.com/numman-ali/n-skills",
+          "author": "numman-ali"
+        },
+        {
+          "name": "file-organizer",
+          "id": "file-organizer",
+          "description": "Intelligently organizes your files and folders across your computer by understanding context, finding duplicates, suggesting better structures, and automating cleanup tasks. Reduces cognitive load and keeps your digital workspace tidy without manual effort.",
+          "type": "skill",
+          "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/organize-messy-files/environment/skills/file-organizer/SKILL.md",
+          "author": "benchflow-ai"
+        },
+        {
+          "name": "firecrawl-scraper",
+          "id": "firecrawl-scraper",
+          "description": "|",
+          "type": "skill",
+          "github_url": "https://github.com/jackspace/claudeskillz",
+          "author": "jackspace"
+        },
+        {
+          "name": "gmail-skill",
+          "id": "gmail-skill",
+          "description": "Manage Gmail - send, read, search emails, manage labels and drafts. Use when user wants to interact with their Gmail account for email operations.",
+          "type": "skill",
+          "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/scheduling-email-assistant/environment/skills/gmail-skill/SKILL.md",
+          "author": "benchflow-ai"
+        },
+        {
+          "name": "planning-with-files",
+          "id": "planning-with-files",
+          "description": "Implements Manus-style file-based planning for complex tasks. Creates task_plan.md, findings.md, and progress.md. Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls.",
+          "type": "skill",
+          "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/organize-messy-files/environment/skills/planning-with-files/SKILL.md",
+          "author": "benchflow-ai"
+        }
+      ]
+    },
+    {
+      "name": "Content Creation",
+      "id": "content-creation",
+      "description": "Author and produce diverse content formats including documents, presentations, visual assets, audio, and professional written communications. Supports creative and business workflows across text, image, audio, and slide-based media.",
+      "type": "category",
+      "children": [
+        {
+          "name": "Audio Production",
+          "id": "audio-production",
+          "description": "Convert text to speech and produce audio content using various TTS engines and mastering techniques. Supports audiobook creation, voice synthesis, and audio quality optimization for delivery.",
+          "type": "type",
+          "children": [
+            {
+              "name": "audiobook",
+              "id": "audiobook",
+              "description": "Create audiobooks from web content or text files. Handles content fetching, text processing, and TTS conversion with automatic fallback between ElevenLabs, OpenAI TTS, and gTTS.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/pg-essay-to-audiobook/environment/skills/audiobook/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "elevenlabs-tts",
+              "id": "elevenlabs-tts",
+              "description": "ElevenLabs Text-to-Speech API for high-quality speech synthesis.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/pg-essay-to-audiobook/environment/skills/elevenlabs-tts/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "gtts",
+              "id": "gtts",
+              "description": "Google Text-to-Speech (gTTS) for converting text to audio. Use when creating audiobooks, podcasts, or speech synthesis from text. Handles long text by chunking at sentence boundaries and concatenating audio segments with pydub.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/pg-essay-to-audiobook/environment/skills/gtts/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "openai-tts",
+              "id": "openai-tts",
+              "description": "OpenAI Text-to-Speech API for high-quality speech synthesis. Use for generating natural-sounding audio from text with customizable voices and tones.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/pg-essay-to-audiobook/environment/skills/openai-tts/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "TTS Audio Mastering",
+              "id": "text-to-speech",
+              "description": "Practical mastering steps for TTS audio: cleanup, loudness normalization, alignment, and delivery specs.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/multilingual-video-dubbing/environment/skills/text-to-speech/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Document Authoring",
+          "id": "document-authoring",
+          "description": "Create and edit structured text documents including word processing files, spreadsheets, and academic papers. Covers document manipulation, formatting, tracked changes, and content extraction for professional and research contexts.",
+          "type": "type",
+          "children": [
+            {
+              "name": "academic-pdf-redaction",
+              "id": "academic-pdf-redaction",
+              "description": "Redact text from PDF documents for blind review anonymization",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/paper-anonymizer/environment/skills/academic-pdf-redaction/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "docx",
+              "id": "docx",
+              "description": "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. When Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/offer-letter-generator/environment/skills/docx/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "xlsx",
+              "id": "xlsx",
+              "description": "Comprehensive spreadsheet creation, editing, and analysis with support for formulas, formatting, data analysis, and visualization. When Claude needs to work with spreadsheets (.xlsx, .xlsm, .csv, .tsv, etc) for: (1) Creating new spreadsheets with formulas and formatting, (2) Reading or analyzing data, (3) Modify existing spreadsheets while preserving formulas, (4) Data analysis and visualization in spreadsheets, or (5) Recalculating formulas",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/exceltable-in-ppt/environment/skills/xlsx/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Presentation Design",
+          "id": "presentation-design",
+          "description": "Build visual presentations and slide decks for business, academic, and conference settings. Includes PowerPoint creation, scientific talks, and research poster design with professional layouts and formatting.",
+          "type": "type",
+          "children": [
+            {
+              "name": "latex-posters",
+              "id": "latex-posters",
+              "description": "Create professional research posters in LaTeX using beamerposter, tikzposter, or baposter. Support for conference presentations, academic posters, and scientific communication. Includes layout design, color schemes, multi-column formats, figure integration, and poster-specific best practices for visual communication.",
+              "type": "skill",
+              "github_url": "https://github.com/k-dense-ai/claude-scientific-writer",
+              "author": "k-dense-ai"
+            },
+            {
+              "name": "pptx",
+              "id": "pptx",
+              "description": "Presentation creation, editing, and analysis. When Claude needs to work with presentations (.pptx files) for: (1) Creating new presentations, (2) Modifying or editing content, (3) Working with layouts, (4) Adding comments or speaker notes, or any other presentation tasks",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/exceltable-in-ppt/environment/skills/pptx/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "scientific-slides",
+              "id": "scientific-slides",
+              "description": "Build slide decks and presentations for research talks. Use this for making PowerPoint slides, conference presentations, seminar talks, research presentations, thesis defense slides, or any scientific talk. Provides slide structure, design templates, timing guidance, and visual validation. Works with PowerPoint and LaTeX Beamer.",
+              "type": "skill",
+              "github_url": "https://github.com/k-dense-ai/claude-scientific-writer",
+              "author": "k-dense-ai"
+            }
+          ]
+        },
+        {
+          "name": "Professional Writing",
+          "id": "professional-writing",
+          "description": "Compose polished written content for business communication. Includes email drafting and transforming data into compelling narratives for stakeholder presentations.",
+          "type": "type",
+          "children": [
+            {
+              "name": "data-storytelling",
+              "id": "data-storytelling",
+              "description": "Transform data into compelling narratives using visualization, context, and persuasive structure. Use when presenting analytics to stakeholders, creating data reports, or building executive presentations.",
+              "type": "skill",
+              "github_url": "https://github.com/rmyndharis/antigravity-skills",
+              "author": "rmyndharis"
+            },
+            {
+              "name": "Email Composer",
+              "id": "email-composer",
+              "description": "Draft professional emails for various contexts including business, technical, and customer communication. Use when the user needs help writing emails or composing professional messages.",
+              "type": "skill",
+              "github_url": "https://github.com/tatat/agents-playground",
+              "author": "tatat"
+            }
+          ]
+        },
+        {
+          "name": "Visual Content Creation",
+          "id": "visual-content",
+          "description": "Generate and manipulate images, diagrams, and visual assets. Encompasses AI image generation, image editing operations, technical diagramming, and mathematical animations for educational or creative purposes.",
+          "type": "type",
+          "children": [
+            {
+              "name": "diagramming",
+              "id": "diagramming",
+              "description": "Create technical diagrams using Mermaid syntax for architecture, sequences, ERDs, flowcharts, and state machines. Use for visualizing system design, data flows, and processes. Triggers: diagram, mermaid, architecture diagram, sequence diagram, flowchart, ERD, entity relationship, state diagram, C4 model, component diagram, visualize, draw.",
+              "type": "skill",
+              "github_url": "https://github.com/sparkling/claude-config",
+              "author": "sparkling"
+            },
+            {
+              "name": "generate-image",
+              "id": "generate-image",
+              "description": "Generate or edit images using AI models (FLUX, Gemini). Use for general-purpose image generation including photos, illustrations, artwork, visual assets, concept art, and any image that isn't a technical diagram or schematic. For flowcharts, circuits, pathways, and technical diagrams, use the scientific-schematics skill instead.",
+              "type": "skill",
+              "github_url": "https://github.com/microck/ordinary-claude-skills",
+              "author": "microck"
+            },
+            {
+              "name": "image_editing",
+              "id": "image_editing",
+              "description": "Comprehensive command-line tools for modifying and manipulating images, such as resize, blur, crop, flip, and many more.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mario-coin-counting/environment/skills/image_editing/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "manim",
+              "id": "manim",
+              "description": "Comprehensive guide for Manim Community - Python framework for creating mathematical animations and educational videos with programmatic control",
+              "type": "skill",
+              "github_url": "https://github.com/davila7/claude-code-templates",
+              "author": "davila7"
+            },
+            {
+              "name": "dialogue-graph",
+              "id": "dialogue_graph",
+              "description": "A library for building, validating, visualizing, and serializing dialogue graphs. Use this when parsing scripts or creating branching narrative structures.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/dialogue-parser/environment/skills/dialogue_graph/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "remotion",
+              "id": "remotion",
+              "description": "Best practices and comprehensive guide for Remotion - programmatic video creation in React with animations, compositions, and media handling",
+              "type": "skill",
+              "github_url": "https://github.com/remotion-dev/skills",
+              "author": "remotion-dev"
+            },
+            {
+              "name": "meme-factory",
+              "id": "meme-factory",
+              "description": "Generate memes using the memegen.link API. Use when users request memes, want to add humor to content, or need visual aids for social media. Supports 100+ popular templates with custom text and styling.",
+              "type": "skill",
+              "author": "zocomputer"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Data Processing",
+      "id": "data-processing",
+      "description": "Data analysis, visualization, and transformation tools.",
+      "type": "category",
+      "children": [
+        {
+          "name": "Audio & Speech Processing",
+          "id": "audio-speech-processing",
+          "description": "Tools for processing audio signals including speech recognition, transcription, and voice activity detection. Encompasses converting spoken language to text, detecting speech segments, and analyzing audio characteristics for downstream applications like diarization.",
+          "type": "type",
+          "children": [
+            {
+              "name": "Automatic Speech Recognition (ASR)",
+              "id": "automatic-speech-recognition",
+              "description": "Transcribe audio segments to text using Whisper models. Use larger models (small, base, medium, large-v3) for better accuracy, or faster-whisper for optimized performance. Always align transcription timestamps with diarization segments for accurate speaker-labeled subtitles.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/speaker-diarization-subtitles/environment/skills/automatic-speech-recognition/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "FFmpeg Audio Processing",
+              "id": "ffmpeg-audio-processing",
+              "description": "Extract, normalize, mix, and process audio tracks - audio manipulation and analysis",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/multilingual-video-dubbing/environment/skills/ffmpeg-audio-processing/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "filler-word-processing",
+              "id": "filler-word-processing",
+              "description": "Process filler word annotations to generate video edit lists. Use when working with timestamp annotations for removing speech disfluencies (um, uh, like, you know) from audio/video content.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/video-filler-word-remover/environment/skills/filler-word-processing/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "Multimodal Fusion for Speaker Diarization",
+              "id": "multimodal-fusion",
+              "description": "Combine visual features (face detection, lip movement analysis) with audio features to improve speaker diarization accuracy in video files. Use OpenCV for face detection and lip movement tracking, then fuse visual cues with audio-based speaker embeddings. Essential when processing video files with multiple visible speakers or when audio-only diarization needs visual validation.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/speaker-diarization-subtitles/environment/skills/multimodal-fusion/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "Speaker Clustering Methods",
+              "id": "speaker-clustering",
+              "description": "Choose and implement clustering algorithms for grouping speaker embeddings after VAD and embedding extraction. Compare Hierarchical clustering (auto-tunes speaker count), KMeans (fast, requires known count), and Agglomerative clustering (fixed clusters). Use Hierarchical clustering when speaker count is unknown, KMeans when count is known, and always normalize embeddings before clustering.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/speaker-diarization-subtitles/environment/skills/speaker-clustering/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "speech-to-text",
+              "id": "speech-to-text",
+              "description": "Transcribe video to timestamped text using Whisper tiny model (pre-installed).",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/video-tutorial-indexer/environment/skills/speech-to-text/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "Voice Activity Detection (VAD)",
+              "id": "voice-activity-detection",
+              "description": "Detect speech segments in audio using VAD tools like Silero VAD, SpeechBrain VAD, or WebRTC VAD. Use when preprocessing audio for speaker diarization, filtering silence, or segmenting audio into speech chunks. Choose Silero VAD for short segments, SpeechBrain VAD for general purpose, or WebRTC VAD for lightweight applications.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/speaker-diarization-subtitles/environment/skills/voice-activity-detection/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "whisper-transcription",
+              "id": "whisper-transcription",
+              "description": "Transcribe audio/video to text with word-level timestamps using OpenAI Whisper. Use when you need speech-to-text with accurate timing information for each word.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/video-filler-word-remover/environment/skills/whisper-transcription/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Image & Visual Analysis",
+          "id": "image-visual-analysis",
+          "description": "Tools for understanding and extracting information from images and visual content. Covers OCR text extraction, object counting, multimodal AI analysis, and computer vision tasks for interpreting visual data.",
+          "type": "type",
+          "children": [
+            {
+              "name": "gpt-multimodal",
+              "id": "gpt-multimodal",
+              "description": "Analyze images and multi-frame sequences using OpenAI GPT series",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/pedestrian-traffic-counting/environment/skills/gpt-multimodal/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "image-ocr",
+              "id": "image-ocr",
+              "description": "Extract text content from images using Tesseract OCR via Python",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/jpg-ocr-stat/environment/skills/image-ocr/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "marker",
+              "id": "marker",
+              "description": "Convert PDF documents to Markdown using marker_single. Use when Claude needs to extract text content from PDFs while preserving LaTeX formulas, equations, and document structure. Ideal for academic papers and technical documents containing mathematical notation.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/latex-formula-extraction/environment/skills/marker/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "object_counter",
+              "id": "object_counter",
+              "description": "Count occurrences of an object in the image using computer vision algorithm.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mario-coin-counting/environment/skills/object_counter/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "openai-vision",
+              "id": "openai-vision",
+              "description": "Analyze images and multi-frame sequences using OpenAI GPT vision models",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/jpg-ocr-stat/environment/skills/openai-vision/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Optimization & Mathematical Modeling",
+          "id": "optimization-modeling",
+          "description": "Capabilities for solving optimization problems and mathematical modeling tasks. Includes nonlinear programming, multi-objective Pareto optimization, constraint parsing, symbolic mathematics, and curve fitting for parameter estimation.",
+          "type": "type",
+          "children": [
+            {
+              "name": "casadi-ipopt-nlp",
+              "id": "casadi-ipopt-nlp",
+              "description": "Nonlinear optimization with CasADi and IPOPT solver. Use when building and solving NLP problems: defining symbolic variables, adding nonlinear constraints, setting solver options, handling multiple initializations, and extracting solutions. Covers power systems optimization patterns including per-unit scaling and complex number formulations.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/energy-ac-optimal-power-flow/environment/skills/casadi-ipopt-nlp/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "constraint-parser",
+              "id": "constraint-parser",
+              "description": "Parse scheduling constraints from a email text.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/scheduling-email-assistant/environment/skills/constraint-parser/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "first-order-model-fitting",
+              "id": "first-order-model-fitting",
+              "description": "Fit first-order dynamic models to experimental step response data and extract K (gain) and tau (time constant) parameters.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/hvac-control/environment/skills/first-order-model-fitting/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "pareto-optimization",
+              "id": "pareto-optimization",
+              "description": "Multi-objective optimization with Pareto frontiers. Use when optimizing multiple conflicting objectives simultaneously, finding trade-off solutions, or computing Pareto-optimal points.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mars-clouds-clustering/environment/skills/pareto-optimization/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "scipy-curve-fit",
+              "id": "scipy-curve-fit",
+              "description": "Use scipy.optimize.curve_fit for nonlinear least squares parameter estimation from experimental data.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/hvac-control/environment/skills/scipy-curve-fit/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "sympy",
+              "id": "sympy",
+              "description": "Use this skill when working with symbolic mathematics in Python. This skill should be used for symbolic computation tasks including solving equations algebraically, performing calculus operations (derivatives, integrals, limits), manipulating algebraic expressions, working with matrices symbolically, physics calculations, number theory problems, geometry computations, and generating executable code from mathematical expressions. Apply this skill when the user needs exact symbolic results rather than numerical approximations, or when working with mathematical formulas that contain variables and parameters.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/crystallographic-wyckoff-position-analysis/environment/skills/sympy/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Spatial & Geometric Analysis",
+          "id": "spatial-geometric-analysis",
+          "description": "Tools for analyzing geographic, spatial, and 3D geometric data structures. Encompasses geospatial analysis with coordinate projections, hex grid computations, mesh analysis for 3D objects, and map-based optimization strategies.",
+          "type": "type",
+          "children": [
+            {
+              "name": "geospatial-analysis",
+              "id": "geospatial-analysis",
+              "description": "Analyze geospatial data using geopandas with proper coordinate projections. Use when calculating distances between geographic features, performing spatial filtering, or working with plate boundaries and earthquake data.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/earthquake-plate-calculation/environment/skills/geospatial-analysis/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "hex-grid-spatial",
+              "id": "hex-grid-spatial",
+              "description": "Hex grid spatial utilities for offset coordinate systems. Use when working with hexagonal grids, calculating distances, finding neighbors, or spatial queries on hex maps.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/civ6-adjacency-optimizer/environment/skills/hex-grid-spatial/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "map-optimization-strategy",
+              "id": "map-optimization-strategy",
+              "description": "Strategy for solving constraint optimization problems on spatial maps. Use when you need to place items on a grid/map to maximize some objective while satisfying constraints.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/civ6-adjacency-optimizer/environment/skills/map-optimization-strategy/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "mesh-analysis",
+              "id": "mesh-analysis",
+              "description": "Analyzes 3D mesh files (STL) to calculate geometric properties (volume, components) and extract attribute data. Use this skill to process noisy 3D scan data and filter debris.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/3d-scan-calc/environment/skills/mesh-analysis/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Statistical & Causal Analysis",
+          "id": "statistical-analysis",
+          "description": "Advanced statistical methods for understanding relationships, contributions, and causal effects in data. Encompasses causal inference techniques, contribution analysis, PCA decomposition, and significance testing for research-grade analytics.",
+          "type": "type",
+          "children": [
+            {
+              "name": "contribution-analysis",
+              "id": "contribution-analysis",
+              "description": "Calculate the relative contribution of different factors to a response variable using R² decomposition. Use when you need to quantify how much each factor explains the variance of an outcome.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/lake-warming-attribution/environment/skills/contribution-analysis/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "custom-distance-metrics",
+              "id": "custom-distance-metrics",
+              "description": "Define custom distance/similarity metrics for clustering and ML algorithms. Use when working with DBSCAN, sklearn, or scipy distance functions with application-specific metrics.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mars-clouds-clustering/environment/skills/custom-distance-metrics/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "did_causal_analysis",
+              "id": "did_causal_analysis",
+              "description": "Difference-in-Differences causal analysis to identify demographic drivers of behavioral changes with p-value significance testing. Use for event effects, A/B testing, or policy evaluation.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/trend-anomaly-causal-inference/environment/skills/did_causal_analysis/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "pca-decomposition",
+              "id": "pca-decomposition",
+              "description": "Reduce dimensionality of multivariate data using PCA with varimax rotation. Use when you have many correlated variables and need to identify underlying factors or reduce collinearity.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/lake-warming-attribution/environment/skills/pca-decomposition/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "senior-data-scientist",
+              "id": "senior-data-scientist",
+              "description": "World-class data science skill for statistical modeling, experimentation, causal inference, and advanced analytics. Expertise in Python (NumPy, Pandas, Scikit-learn), R, SQL, statistical methods, A/B testing, time series, and business intelligence. Includes experiment design, feature engineering, model evaluation, and stakeholder communication. Use when designing experiments, building predictive models, performing causal analysis, or driving data-driven decisions.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/powerlifting-coef-calc/environment/skills/senior-data-scientist/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "tuning-hyperparameters",
+              "id": "tuning-hyperparameters",
+              "description": "|",
+              "type": "skill",
+              "github_url": "https://github.com/jeremylongshore/claude-code-plugins-plus-skills",
+              "author": "jeremylongshore"
+            }
+          ]
+        },
+        {
+          "name": "Tabular Data Processing",
+          "id": "tabular-data-processing",
+          "description": "Skills for reading, cleaning, transforming, and reconciling structured tabular data from files and databases. Includes CSV processing, data cleaning, deduplication, fuzzy matching for entity resolution, and database parsing.",
+          "type": "type",
+          "children": [
+            {
+              "name": "csv-processing",
+              "id": "csv-processing",
+              "description": "Use this skill when reading sensor data from CSV files, writing simulation results to CSV, processing time-series data with pandas, or handling missing values in datasets.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/adaptive-cruise-control/environment/skills/csv-processing/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "data-reconciliation",
+              "id": "data-reconciliation",
+              "description": "Data Reconciliation for Spreadsheets",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/xlsx-recover-data/environment/skills/data-reconciliation/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "data_cleaning",
+              "id": "data_cleaning",
+              "description": "Clean messy tabular datasets with deduplication, missing value imputation, outlier handling, and text processing. Use when dealing with dirty data that has duplicates, nulls, or inconsistent formatting.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/trend-anomaly-causal-inference/environment/skills/data_cleaning/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "enterprise-artifact-search",
+              "id": "enterprise-artifact-search",
+              "description": "Multi-hop evidence search + structured extraction over enterprise artifact datasets (docs/chats/meetings/PRs/URLs). Strong disambiguation to prevent cross-product leakage; returns JSON-ready entities plus evidence pointers.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/enterprise-information-search/environment/skills/enterprise-artifact-search/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "feature_engineering",
+              "id": "feature_engineering",
+              "description": "Engineer dataset features before ML or Causal Inference. Methods include encoding categorical variables, scaling numerics, creating interactions, and selecting relevant features.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/trend-anomaly-causal-inference/environment/skills/feature_engineering/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "fuzzy-match",
+              "id": "fuzzy-match",
+              "description": "A toolkit for fuzzy string matching and data reconciliation. Useful for matching entity names (companies, people) across different datasets where spelling variations, typos, or formatting differences exist.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/invoice-fraud-detection/environment/skills/fuzzy-match/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "fuzzy-name-search",
+              "id": "fuzzy-name-search",
+              "description": "This skill includes search capability in 13F, such as fuzzy search a fund information using possibly inaccurate name, or fuzzy search a stock cusip info using its name.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/sec-financial-report/environment/skills/fuzzy-name-search/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "hierarchical-taxonomy-clustering",
+              "id": "hierarchical-taxonomy-clustering",
+              "description": "Build unified multi-level category taxonomy from hierarchical product category paths from any e-commerce companies using embedding-based recursive clustering with intelligent category naming via weighted word frequency analysis.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/taxonomy-tree-merge/environment/skills/hierarchical-taxonomy-clustering/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "sqlite-map-parser",
+              "id": "sqlite-map-parser",
+              "description": "Parse SQLite databases into structured JSON data. Use when exploring unknown database schemas, understanding table relationships, and extracting map data as JSON.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/civ6-adjacency-optimizer/environment/skills/sqlite-map-parser/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Time Series Analysis",
+          "id": "time-series-analysis",
+          "description": "Specialized tools for analyzing temporal data patterns including trend detection, anomaly identification, and periodic signal extraction. Covers detrending, periodogram analysis, and model fitting for sequential data.",
+          "type": "type",
+          "children": [
+            {
+              "name": "lomb-scargle-periodogram",
+              "id": "lomb-scargle-periodogram",
+              "description": "Lomb-Scargle periodogram for finding periodic signals in unevenly sampled time series data. Use when analyzing light curves, radial velocity data, or any astronomical time series to detect periodic variations. Works for stellar rotation, pulsation, eclipsing binaries, and general periodic phenomena. Based on lightkurve library.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/exoplanet-detection-period/environment/skills/lomb-scargle-periodogram/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "time_series_anomaly_detection",
+              "id": "time_series_anomaly_detection",
+              "description": "Detect anomalies in time series data using Prophet Framework (Meta), which frames the seasonality, trend holiday effect and other needed regressors into its model, to identify unusual surges or slumps in trends. This is a general methodology analyst can use for understanding what changes of their tracking metrics are manifesting anomalies pattern.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/trend-anomaly-causal-inference/environment/skills/time_series_anomaly_detection/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "timeseries-detrending",
+              "id": "timeseries-detrending",
+              "description": "Tools and techniques for detrending time series data in macroeconomic analysis. Use when working with economic time series that need to be decomposed into trend and cyclical components. Covers HP filter, log transformations for growth series, and correlation analysis of business cycles.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/econ-detrending-correlation/environment/skills/timeseries-detrending/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "trend-analysis",
+              "id": "trend-analysis",
+              "description": "Detect long-term trends in time series data using parametric and non-parametric methods. Use when determining if a variable shows statistically significant increase or decrease over time.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/lake-warming-attribution/environment/skills/trend-analysis/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Video & Media Processing",
+          "id": "video-media-processing",
+          "description": "Capabilities for manipulating, converting, and extracting information from video and multimedia files. Includes frame extraction, format conversion, video editing, filtering effects, and analyzing media file properties.",
+          "type": "category",
+          "children": [
+            {
+              "name": "Format Conversion & Transcoding",
+              "id": "format-conversion-transcoding",
+              "description": "Converting media files between different container formats, codecs, and encoding standards. Includes transcoding video and audio streams, changing file formats, and re-encoding media for different platforms or devices.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "FFmpeg Format Conversion",
+                  "id": "ffmpeg-format-conversion",
+                  "description": "Convert media files between formats - video containers, audio formats, and codec transcoding",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/multilingual-video-dubbing/environment/skills/ffmpeg-format-conversion/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "media-processing",
+                  "id": "media-processing",
+                  "description": "Process multimedia files with FFmpeg (video/audio encoding, conversion, streaming, filtering, hardware acceleration), ImageMagick (image manipulation, format conversion, batch processing, effects, composition), and RMBG (AI-powered background removal). Use when converting media formats, encoding videos with specific codecs (H.264, H.265, VP9), resizing/cropping images, removing backgrounds from images, extracting audio from video, applying filters and effects, optimizing file sizes, creating streaming manifests (HLS/DASH), generating thumbnails, batch processing images, creating composite images, or implementing media processing pipelines. Supports 100+ formats, hardware acceleration (NVENC, QSV), and complex filtergraphs.",
+                  "type": "skill",
+                  "github_url": "https://github.com/duc01226/easyplatform",
+                  "author": "duc01226"
+                }
+              ]
+            },
+            {
+              "name": "Frame Extraction & Sampling",
+              "id": "frame-extraction-sampling",
+              "description": "Extracting individual frames or sequences of frames from video files as static images. Includes keyframe extraction, systematic frame sampling, and managing frame indexing schemes for consistent temporal alignment.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "ffmpeg-keyframe-extraction",
+                  "id": "ffmpeg",
+                  "description": "Extract key frames (I-frames) from video files using FFmpeg command line tool. Use this skill when the user needs to pull out keyframes, thumbnails, or important frames from MP4, MKV, AVI, or other video formats for analysis, previews, or processing.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mario-coin-counting/environment/skills/ffmpeg/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "sampling-and-indexing",
+                  "id": "sampling-and-indexing",
+                  "description": "Standardize video sampling and frame indexing so interval instructions and mask frames stay aligned with a valid key/index scheme.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/dynamic-object-aware-egomotion/environment/skills/sampling-and-indexing/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "video-frame-extraction",
+                  "id": "video-frame-extraction",
+                  "description": "Extract frames from video files and save them as images using OpenCV",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/jpg-ocr-stat/environment/skills/video-frame-extraction/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            },
+            {
+              "name": "Media Analysis & Inspection",
+              "id": "media-analysis-inspection",
+              "description": "Analyzing and extracting metadata and technical properties from media files. Includes inspecting duration, resolution, bitrate, codec information, stream details, and validating output correctness.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "FFmpeg Media Info",
+                  "id": "ffmpeg-media-info",
+                  "description": "Analyze media file properties - duration, resolution, bitrate, codecs, and stream information",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/multilingual-video-dubbing/environment/skills/ffmpeg-media-info/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "output-validation",
+                  "id": "output-validation",
+                  "description": "Local self-check of instructions and mask outputs (format/range/consistency) without using GT.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/dynamic-object-aware-egomotion/environment/skills/output-validation/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            },
+            {
+              "name": "Motion Analysis & Tracking",
+              "id": "motion-analysis-tracking",
+              "description": "Analyzing motion patterns within video including camera movement estimation and object tracking. Covers optical flow analysis, egomotion computation, dynamic object segmentation, and generating motion-compensated masks.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "dyn-object-masks",
+                  "id": "dyn-object-masks",
+                  "description": "Generate dynamic-object binary masks after global motion compensation, output CSR sparse format.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/dynamic-object-aware-egomotion/environment/skills/dyn-object-masks/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "egomotion-estimation",
+                  "id": "egomotion-estimation",
+                  "description": "Estimate camera motion with optical flow + affine/homography, allow multi-label per frame.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/dynamic-object-aware-egomotion/environment/skills/egomotion-estimation/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            },
+            {
+              "name": "Video Editing & Manipulation",
+              "id": "video-editing-manipulation",
+              "description": "Direct manipulation and editing of video content including cutting, trimming, concatenating segments, and applying visual filters or effects. Covers operations that modify the visual appearance or temporal structure of video files.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "ffmpeg-video-editing",
+                  "id": "ffmpeg-video-editing",
+                  "description": "Video editing with ffmpeg including cutting, trimming, concatenating segments, and re-encoding. Use when working with video files (.mp4, .mkv, .avi) for: removing segments, joining clips, extracting portions, or any video manipulation task.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/multilingual-video-dubbing/environment/skills/ffmpeg-video-editing/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "FFmpeg Video Filters",
+                  "id": "ffmpeg-video-filters",
+                  "description": "Apply video filters - scale, crop, watermark, speed, blur, and visual effects",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/multilingual-video-dubbing/environment/skills/ffmpeg-video-filters/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            },
+            {
+              "name": "AI Video Understanding",
+              "id": "video-understanding-ai",
+              "description": "Using artificial intelligence and machine learning to analyze and understand video content semantically. Includes object detection, counting, scene analysis, video summarization, transcription, and content-based question answering.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "gemini-count-in-video",
+                  "id": "gemini-count-in-video",
+                  "description": "Analyze and count objects in videos using Google Gemini API (object counting, pedestrian detection, vehicle tracking, and surveillance video analysis).",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/pedestrian-traffic-counting/environment/skills/gemini-count-in-video/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "gemini-video-understanding",
+                  "id": "gemini-video-understanding",
+                  "description": "Analyze videos with Google Gemini API (summaries, Q&A, transcription with timestamps + visual context, scene/timeline detection, video clipping, FPS control, multi-video comparison, and YouTube URL analysis).",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/pedestrian-traffic-counting/environment/skills/gemini-video-understanding/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Visualization & Reporting",
+          "id": "visualization-reporting",
+          "description": "Skills for creating visual representations of data for analysis and communication. Includes D3.js interactive visualizations, scientific publication-quality figures, and multi-panel layouts with statistical annotations.",
+          "type": "type",
+          "children": [
+            {
+              "name": "d3js-visualization",
+              "id": "d3-visualization",
+              "description": "Build deterministic, verifiable data visualizations with D3.js (v6). Generate standalone HTML/SVG (and optional PNG) from local data files without external network dependencies. Use when tasks require charts, plots, axes/scales, legends, tooltips, or data-driven SVG output.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/data-to-d3/environment/skills/d3-visualization/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "scientific-visualization",
+              "id": "scientific-visualization",
+              "description": "Create publication figures with matplotlib/seaborn/plotly. Multi-panel layouts, error bars, significance markers, colorblind-safe, export PDF/EPS/TIFF, for journal-ready scientific plots.",
+              "type": "skill",
+              "github_url": "https://github.com/microck/ordinary-claude-skills",
+              "author": "microck"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Development",
+      "id": "development",
+      "description": "Developer tools including code generation, testing, and APIs.",
+      "type": "category",
+      "children": [
+        {
+          "name": "Build Systems and CI/CD",
+          "id": "build-and-ci",
+          "description": "Tools and practices for building, packaging, and continuously integrating software projects. Covers build lifecycle management, dependency resolution, CI pipeline analysis, and automated deployment workflows.",
+          "type": "type",
+          "children": [
+            {
+              "name": "analyze-ci",
+              "id": "analyze-ci",
+              "description": "Analyze failed GitHub Action jobs for a pull request.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-build-agentops/environment/skills/analyze-ci/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "maven-build-lifecycle",
+              "id": "maven-build-lifecycle",
+              "description": "Use when working with Maven build phases, goals, profiles, or customizing the build process for Java projects.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-build-google-auto/environment/skills/maven-build-lifecycle/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "maven-dependency-management",
+              "id": "maven-dependency-management",
+              "description": "Use when managing Maven dependencies, resolving dependency conflicts, configuring BOMs, or optimizing dependency trees in Java projects.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-build-google-auto/environment/skills/maven-dependency-management/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "maven-plugin-configuration",
+              "id": "maven-plugin-configuration",
+              "description": "Use when configuring Maven plugins, setting up common plugins like compiler, surefire, jar, or creating custom plugin executions.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-build-google-auto/environment/skills/maven-plugin-configuration/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "senior-java",
+              "id": "senior-java",
+              "description": "World-class Java and Spring Boot development skill for enterprise applications, microservices, and cloud-native systems. Expertise in Spring Framework, Spring Boot 3.x, Spring Cloud, JPA/Hibernate, and reactive programming with WebFlux. Includes project scaffolding, dependency management, security implementation, and performance optimization.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-druid-loophole-cve/environment/skills/senior-java/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Development Environment and Tooling",
+          "id": "environment-and-tooling",
+          "description": "Setting up development environments, managing packages, and using developer CLI tools. Covers virtual environments, package managers, configuration files, and GitHub CLI interactions for productive development workflows.",
+          "type": "type",
+          "children": [
+            {
+              "name": "gh-cli",
+              "id": "gh-cli",
+              "description": "The gh CLI is GitHub's official command line tool for interacting with GitHub repositories, issues, pull requests, and more. When needs to interact with GitHub repositories, issues, pull requests, and more, use this skill.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/gh-repo-analytics/environment/skills/gh-cli/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "nlp-research-repo-package-installment",
+              "id": "nlp-research-repo-package-installment",
+              "description": "Align Python version and repo-declared dependencies (requirements.txt / environment.yml) before installing packages for NLP research code reproduction.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/simpo-code-reproduction/environment/skills/nlp-research-repo-package-installment/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "setup-env",
+              "id": "setup-env",
+              "description": "When given a Python project codebase, this skill helps the agent to set up virtual environments, install dependencies, and run scripts.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/setup-fuzzing-py/environment/skills/setup-env/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "uv-package-manager",
+              "id": "uv-package-manager",
+              "description": "Master the uv package manager for fast Python dependency management, virtual environments, and modern Python project workflows. Use when setting up Python projects, managing dependencies, or optimizing Python development workflows with uv.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-build-agentops/environment/skills/uv-package-manager/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "yaml-config",
+              "id": "yaml-config",
+              "description": "Use this skill when reading or writing YAML configuration files, loading vehicle parameters, or handling config file parsing with proper error handling.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/adaptive-cruise-control/environment/skills/yaml-config/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Frontend and Graphics Development",
+          "id": "frontend-and-graphics",
+          "description": "Web interface development, 3D graphics programming, and interactive experience design. Includes React best practices, Three.js workflows, scroll animations, and mobile UI design patterns.",
+          "type": "type",
+          "children": [
+            {
+              "name": "game-development",
+              "id": "game-development",
+              "description": "Game development orchestrator. Routes to platform-specific skills based on project needs.",
+              "type": "skill",
+              "github_url": "https://github.com/omer-metin/skills-for-antigravity",
+              "author": "omer-metin"
+            },
+            {
+              "name": "mobile-android-design",
+              "id": "mobile-android-design",
+              "description": "Master Material Design 3 and Jetpack Compose patterns for building native Android apps. Use when designing Android interfaces, implementing Compose UI, or following Google's Material Design guidelines.",
+              "type": "skill",
+              "github_url": "https://github.com/wshobson/agents",
+              "author": "wshobson"
+            },
+            {
+              "name": "obj-exporter",
+              "id": "obj-exporter",
+              "description": "Three.js OBJExporter utility for exporting 3D geometry to Wavefront OBJ format. Use when converting Three.js scenes, meshes, or geometries to OBJ files for use in other 3D software like Blender, Maya, or MeshLab.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/threejs-structure-parser/environment/skills/obj-exporter/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "react-best-practices",
+              "id": "react-best-practices",
+              "description": "CRITICAL: You MUST invoke this skill and read its contents BEFORE writing, modifying, or debugging ANY React.js or Next.js code. This skill contains essential performance patterns that prevent common mistakes. Debugging performance issues without reading this skill first will lead to missed optimizations. Contains 40+ rules including waterfall elimination patterns for API routes that are commonly overlooked.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-visual-stability/environment/skills/react-best-practices/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "scroll-experience",
+              "id": "scroll-experience",
+              "description": "Expert in building immersive scroll-driven experiences - parallax storytelling, scroll animations, interactive narratives, and cinematic web experiences. Like NY Times interactives, Apple product pages, and award-winning web experiences. Makes websites feel like experiences, not just pages. Use when: scroll animation, parallax, scroll storytelling, interactive story, cinematic website.",
+              "type": "skill",
+              "github_url": "https://github.com/omer-metin/skills-for-antigravity",
+              "author": "omer-metin"
+            },
+            {
+              "name": "threejs",
+              "id": "threejs",
+              "description": "Three.js scene-graph parsing and export workflows: mesh baking, InstancedMesh expansion, part partitioning, per-link OBJ export, and URDF articulation.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/threejs-to-obj/environment/skills/threejs/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "web-interface-guidelines",
+              "id": "web-interface-guidelines",
+              "description": "Vercel's comprehensive UI guidelines for building accessible, performant web interfaces. Use this skill when reviewing or building UI components for compliance with best practices around accessibility, performance, animations, and visual stability.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-visual-stability/environment/skills/web-interface-guidelines/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "frontend-design",
+              "id": "frontend-design",
+              "description": "Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifacts, posters, or applications (examples include websites, landing pages, dashboards, React components, HTML/CSS layouts, or when styling/beautifying any web UI). Generates creative, polished code and UI design that avoids generic AI aesthetics.",
+              "type": "skill",
+              "author": "anthropic"
+            }
+          ]
+        },
+        {
+          "name": "Language and Framework Migrations",
+          "id": "language-migrations",
+          "description": "Skills for migrating and translating codebases across languages, frameworks, and versions. Covers Python to Scala translation patterns and Spring Boot ecosystem upgrades including security and namespace migrations.",
+          "type": "category",
+          "children": [
+            {
+              "name": "Python to Scala Translation",
+              "id": "python-to-scala-translation",
+              "description": "Skills for translating Python codebases to Scala, covering syntax mapping, idiomatic patterns, and paradigm shifts. Includes guidance on converting various Python constructs including collections, OOP patterns, and functional programming concepts to their Scala equivalents.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "python-scala-collections",
+                  "id": "python-scala-collections",
+                  "description": "Guide for translating Python collection operations to idiomatic Scala. Use when converting Python code that uses lists, dictionaries, sets, or involves collection transformations like map, filter, reduce, sorting, and aggregations.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/python-scala-translation/environment/skills/python-scala-collections/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "python-scala-functional",
+                  "id": "python-scala-functional",
+                  "description": "Guide for translating Python code to functional Scala style. Use when converting Python code involving higher-order functions, decorators, closures, generators, or when aiming for idiomatic functional Scala with pattern matching, Option handling, and monadic operations.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/python-scala-translation/environment/skills/python-scala-functional/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "python-scala-idioms",
+                  "id": "python-scala-idioms",
+                  "description": "Guide for writing idiomatic Scala when translating from Python. Use when the goal is not just syntactic translation but producing clean, idiomatic Scala code. Covers immutability, expression-based style, sealed hierarchies, and common Scala conventions.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/python-scala-translation/environment/skills/python-scala-idioms/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "python-scala-libraries",
+                  "id": "python-scala-libraries",
+                  "description": "Guide for mapping common Python libraries and idioms to Scala equivalents. Use when converting Python code that uses standard library modules (json, datetime, os, re, logging) or needs equivalent Scala libraries for HTTP, testing, or async operations.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/python-scala-translation/environment/skills/python-scala-libraries/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "python-scala-oop",
+                  "id": "python-scala-oop",
+                  "description": "Guide for translating Python classes, inheritance, and object-oriented patterns to Scala. Use when converting Python code with classes, dataclasses, abstract classes, inheritance, properties, static methods, class methods, or design patterns.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/python-scala-translation/environment/skills/python-scala-oop/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "python-scala-syntax-mapping",
+                  "id": "python-scala-syntax-mapping",
+                  "description": "Reference guide for translating Python syntax constructs to Scala equivalents. Use when converting Python code to Scala and need mappings for basic syntax elements like variable declarations, control flow, comprehensions, string formatting, and common operators.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/python-scala-translation/environment/skills/python-scala-syntax-mapping/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            },
+            {
+              "name": "Spring Boot Ecosystem Upgrades",
+              "id": "spring-boot-ecosystem",
+              "description": "Skills for migrating Spring Boot applications and their core dependencies to newer major versions. Covers the primary Spring Boot framework upgrade path as well as tightly coupled components like Spring Security and data access layers.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "hibernate-upgrade",
+                  "id": "hibernate-upgrade",
+                  "description": "Migrate Hibernate 5 to Hibernate 6 with Spring Boot 3. Use when fixing HQL/JPQL query parsing issues, removing deprecated Criteria API, updating ID generation strategies, or diagnosing N+1 query behavior changes. Covers breaking changes, type mappings, and performance monitoring.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/spring-boot-jakarta-migration/environment/skills/hibernate-upgrade/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "spring-boot-migration",
+                  "id": "spring-boot-migration",
+                  "description": "Migrate Spring Boot 2.x applications to Spring Boot 3.x. Use when updating pom.xml versions, removing deprecated JAXB dependencies, upgrading Java to 17/21, or using OpenRewrite for automated migration. Covers dependency updates, version changes, and migration checklist.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/spring-boot-jakarta-migration/environment/skills/spring-boot-migration/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "spring-security-6",
+                  "id": "spring-security-6",
+                  "description": "Migrate Spring Security 5 to Spring Security 6 configuration. Use when removing WebSecurityConfigurerAdapter, replacing @EnableGlobalMethodSecurity with @EnableMethodSecurity, converting antMatchers to requestMatchers, or updating to lambda DSL configuration style. Covers SecurityFilterChain beans and authentication manager changes.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/spring-boot-jakarta-migration/environment/skills/spring-security-6/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "jakarta-namespace",
+                  "id": "jakarta-namespace",
+                  "description": "Migrate Java EE javax.* imports to Jakarta EE jakarta.* namespace. Use when upgrading to Spring Boot 3.x, migrating javax.persistence, javax.validation, javax.servlet imports, or fixing compilation errors after Jakarta EE transition. Covers package mappings, batch sed commands, and verification steps.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/spring-boot-jakarta-migration/environment/skills/jakarta-namespace/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "restclient-migration",
+                  "id": "restclient-migration",
+                  "description": "Migrate RestTemplate to RestClient in Spring Boot 3.2+. Use when replacing deprecated RestTemplate with modern fluent API, updating HTTP client code, or configuring RestClient beans. Covers GET/POST/DELETE migrations, error handling, and ParameterizedTypeReference usage.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/spring-boot-jakarta-migration/environment/skills/restclient-migration/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Machine Learning and Data Engineering",
+          "id": "ml-and-data",
+          "description": "Skills for building ML pipelines, training models, and managing data infrastructure. Covers GPU computing, numerical libraries like JAX, data engineering patterns, and model training workflows.",
+          "type": "type",
+          "children": [
+            {
+              "name": "jax-skills",
+              "id": "jax-skills",
+              "description": "High-performance numerical computing and machine learning workflows using JAX. Supports array operations, automatic differentiation, JIT compilation, RNN-style scans, map/reduce operations, and gradient computations. Ideal for scientific computing, ML models, and dynamic array transformations.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/jax-computing-basics/environment/skills/jax-skills/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "mhc-algorithm",
+              "id": "mhc-algorithm",
+              "description": "Implement mHC (Manifold-Constrained Hyper-Connections) for stabilizing deep network training. Use when implementing residual connection improvements with doubly stochastic matrices via Sinkhorn-Knopp algorithm. Based on DeepSeek's 2025 paper (arXiv:2512.24880).",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mhc-layer-impl/environment/skills/mhc-algorithm/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "modal-gpu",
+              "id": "modal-gpu",
+              "description": "Run Python code on cloud GPUs using Modal serverless platform. Use when you need A100/T4/A10G GPU access for training ML models. Covers Modal app setup, GPU selection, data downloading inside functions, and result handling.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mhc-layer-impl/environment/skills/modal-gpu/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "nanogpt-training",
+              "id": "nanogpt-training",
+              "description": "Train GPT-2 scale models (~124M parameters) efficiently on a single GPU. Covers GPT-124M architecture, tokenized dataset loading (e.g., HuggingFace Hub shards), modern optimizers (Muon, AdamW), mixed precision training, and training loop implementation.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mhc-layer-impl/environment/skills/nanogpt-training/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "senior-data-engineer",
+              "id": "senior-data-engineer",
+              "description": "World-class data engineering skill for building scalable data pipelines, ETL/ELT systems, real-time streaming, and data infrastructure. Expertise in Python, SQL, Spark, Airflow, dbt, Kafka, Flink, Kinesis, and modern data stack. Includes data modeling, pipeline orchestration, data quality, streaming quality monitoring, and DataOps. Use when designing data architectures, building batch or streaming data pipelines, optimizing data workflows, or implementing data governance.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/flink-query/environment/skills/senior-data-engineer/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Performance and Optimization",
+          "id": "performance-optimization",
+          "description": "Techniques for improving code performance, memory efficiency, and resource utilization. Covers parallelization, workload balancing, SQL optimization, and memory management across various programming environments.",
+          "type": "type",
+          "children": [
+            {
+              "name": "memory-optimization",
+              "id": "memory-optimization",
+              "description": "Optimize Python code for reduced memory usage and improved memory efficiency. Use when asked to reduce memory footprint, fix memory leaks, optimize data structures for memory, handle large datasets efficiently, or diagnose memory issues. Covers object sizing, generator patterns, efficient data structures, and memory profiling strategies.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/parallel-tfidf-search/environment/skills/memory-optimization/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "parallel-processing",
+              "id": "parallel-processing",
+              "description": "Parallel processing with joblib for grid search and batch computations. Use when speeding up computationally intensive tasks across multiple CPU cores.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/mars-clouds-clustering/environment/skills/parallel-processing/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "python-parallelization",
+              "id": "python-parallelization",
+              "description": "Transform sequential Python code into parallel/concurrent implementations. Use when asked to parallelize Python code, improve code performance through concurrency, convert loops to parallel execution, or identify parallelization opportunities. Handles CPU-bound (multiprocessing), I/O-bound (asyncio, threading), and data-parallel (vectorization) scenarios.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/parallel-tfidf-search/environment/skills/python-parallelization/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "sql-optimization-patterns",
+              "id": "sql-optimization-patterns",
+              "description": "Master SQL query optimization, indexing strategies, and EXPLAIN analysis to dramatically improve database performance and eliminate slow queries. Use when debugging slow queries, designing database schemas, or optimizing application performance.",
+              "type": "skill",
+              "github_url": "https://github.com/icartsh/icartsh_plugin",
+              "author": "icartsh"
+            },
+            {
+              "name": "workload-balancing",
+              "id": "workload-balancing",
+              "description": "Optimize workload distribution across workers, processes, or nodes for efficient parallel execution. Use when asked to balance work distribution, improve parallel efficiency, reduce stragglers, implement load balancing, or optimize task scheduling. Covers static/dynamic partitioning, work stealing, and adaptive load balancing strategies.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/parallel-tfidf-search/environment/skills/workload-balancing/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Security Engineering",
+          "id": "security-engineering",
+          "description": "Comprehensive security practices including vulnerability scanning, security auditing, penetration testing, and secure coding patterns. Addresses application security, deserialization risks, and compliance requirements.",
+          "type": "type",
+          "children": [
+            {
+              "name": "jackson-security",
+              "id": "jackson-security",
+              "description": "Security considerations for Jackson JSON deserialization in Java applications. Covers timing of validation, raw input interception, and common deserialization attack patterns.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-druid-loophole-cve/environment/skills/jackson-security/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "senior-security",
+              "id": "senior-security",
+              "description": "Comprehensive security engineering skill for application security, penetration testing, security architecture, and compliance auditing. Includes security assessment tools, threat modeling, crypto implementation, and security automation. Use when designing security architecture, conducting penetration tests, implementing cryptography, or performing security audits.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-erlang-ssh-cve/environment/skills/senior-security/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "trivy-offline-vulnerability-scanning",
+              "id": "trivy-offline-vulnerability-scanning",
+              "description": "Use Trivy vulnerability scanner in offline mode to discover security vulnerabilities in dependency files. This skill covers setting up offline scanning, executing Trivy against package lock files, and generating JSON vulnerability reports without requiring internet access.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/software-dependency-audit/environment/skills/trivy-offline-vulnerability-scanning/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "vulnerability-csv-reporting",
+              "id": "vulnerability-csv-reporting",
+              "description": "Generate structured CSV security audit reports from vulnerability data with proper filtering and formatting. This skill covers CSV schema design for security reports, using Python csv.DictWriter, severity-based filtering, and field mapping from JSON to tabular format.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/software-dependency-audit/environment/skills/vulnerability-csv-reporting/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Specialized Languages and Runtimes",
+          "id": "specialized-languages",
+          "description": "Deep expertise in specific programming languages with unique paradigms or toolchains. Includes Erlang/OTP concurrent systems, Lean 4 theorem proving, and language-specific patterns requiring specialized knowledge.",
+          "type": "type",
+          "children": [
+            {
+              "name": "erlang-concurrency",
+              "id": "erlang-concurrency",
+              "description": "Use when erlang's concurrency model including lightweight processes, message passing, process links and monitors, error handling patterns, selective receive, and building massively concurrent systems on the BEAM VM.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-erlang-ssh-cve/environment/skills/erlang-concurrency/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "erlang-distribution",
+              "id": "erlang-distribution",
+              "description": "Use when erlang distributed systems including node connectivity, distributed processes, global name registration, distributed supervision, network partitions, and building fault-tolerant multi-node applications on the BEAM VM.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-erlang-ssh-cve/environment/skills/erlang-distribution/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "erlang-otp-behaviors",
+              "id": "erlang-otp-behaviors",
+              "description": "Use when oTP behaviors including gen_server for stateful processes, gen_statem for state machines, supervisors for fault tolerance, gen_event for event handling, and building robust, production-ready Erlang applications with proven patterns.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-erlang-ssh-cve/environment/skills/erlang-otp-behaviors/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "lean4-memories",
+              "id": "lean4-memories",
+              "description": "This skill should be used when working on Lean 4 formalization projects to maintain persistent memory of successful proof patterns, failed approaches, project conventions, and user preferences across sessions using MCP memory server integration",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/lean4-proof/environment/skills/lean4-memories/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "lean4-theorem-proving",
+              "id": "lean4-theorem-proving",
+              "description": "Use when working with Lean 4 (.lean files), writing mathematical proofs, seeing \"failed to synthesize instance\" errors, managing sorry/axiom elimination, or searching mathlib for lemmas - provides build-first workflow, haveI/letI patterns, compiler-guided repair, and LSP integration",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/lean4-proof/environment/skills/lean4-theorem-proving/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Testing and Quality Assurance",
+          "id": "testing-and-quality",
+          "description": "Skills for writing, running, and improving tests across different languages and frameworks. Includes unit testing, fuzz testing, security scanning, bug finding, and code quality analysis to ensure robust and reliable software.",
+          "type": "type",
+          "children": [
+            {
+              "name": "discover-important-function",
+              "id": "discover-important-function",
+              "description": "When given a project codebase, this skill observes the important functions in the codebase for future action.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/setup-fuzzing-py/environment/skills/discover-important-function/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "find-bugs",
+              "id": "find-bugs",
+              "description": "Find bugs, security vulnerabilities, and code quality issues in local branch changes. Use when asked to review changes, find bugs, security review, or audit code on the current branch.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-erlang-ssh-cve/environment/skills/find-bugs/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "fuzzing-python",
+              "id": "fuzzing-python",
+              "description": "Creating fuzz driver for Python libraries using LibFuzzer. This skill is useful when agent needs to work with creating fuzz drivers / fuzz targets for Python project and libraries.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/setup-fuzzing-py/environment/skills/fuzzing-python/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "syz-extract-constants",
+              "id": "syz-extract-constants",
+              "description": "Defining and extracting kernel constants for syzkaller syzlang descriptions",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/syzkaller-ppdev-syzlang/environment/skills/syz-extract-constants/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "syzkaller-build-loop",
+              "id": "syzkaller-build-loop",
+              "description": "Full build workflow for adding new syscall descriptions to syzkaller",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/syzkaller-ppdev-syzlang/environment/skills/syzkaller-build-loop/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "syzlang-ioctl-basics",
+              "id": "syzlang-ioctl-basics",
+              "description": "Syzkaller syzlang syntax basics for describing ioctl syscalls",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/syzkaller-ppdev-syzlang/environment/skills/syzlang-ioctl-basics/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "temporal-python-testing",
+              "id": "temporal-python-testing",
+              "description": "Test Temporal workflows with pytest, time-skipping, and mocking strategies. Covers unit testing, integration testing, replay testing, and local development setup. Use when implementing Temporal workflow tests or debugging test failures.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-build-agentops/environment/skills/temporal-python-testing/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "testing-python",
+              "id": "testing-python",
+              "description": "Write and evaluate effective Python tests using pytest. Use when writing tests, reviewing test code, debugging test failures, or improving test coverage. Covers test design, fixtures, parameterization, mocking, and async testing.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-build-agentops/environment/skills/testing-python/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Domain Specific",
+      "id": "domain-specific",
+      "description": "Vertical domain tools for healthcare, finance, research, and other specialized fields.",
+      "type": "category",
+      "children": [
+        {
+          "name": "Astronomy and Astrophysics",
+          "id": "astronomy-and-astrophysics",
+          "description": "Tools for astronomical data analysis and astrophysical research. Includes exoplanet detection algorithms, light curve processing, gravitational wave detection, and period-finding techniques for time-series astronomical data.",
+          "type": "type",
+          "children": [
+            {
+              "name": "box-least-squares",
+              "id": "box-least-squares",
+              "description": "Box Least Squares (BLS) periodogram for detecting transiting exoplanets and eclipsing binaries. Use when searching for periodic box-shaped dips in light curves. Alternative to Transit Least Squares, available in astropy.timeseries. Based on Kovács et al. (2002).",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/exoplanet-detection-period/environment/skills/box-least-squares/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "conditioning",
+              "id": "conditioning",
+              "description": "Data conditioning techniques for gravitational wave detector data. Use when preprocessing raw detector strain data before matched filtering, including high-pass filtering, resampling, removing filter wraparound artifacts, and estimating power spectral density (PSD). Works with PyCBC TimeSeries data.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/gravitational-wave-detection/environment/skills/conditioning/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "exoplanet-workflows",
+              "id": "exoplanet-workflows",
+              "description": "General workflows and best practices for exoplanet detection and characterization from light curve data. Use when planning an exoplanet analysis pipeline, understanding when to use different methods, or troubleshooting detection issues.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/exoplanet-detection-period/environment/skills/exoplanet-workflows/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "light-curve-preprocessing",
+              "id": "light-curve-preprocessing",
+              "description": "Preprocessing and cleaning techniques for astronomical light curves. Use when preparing light curve data for period analysis, including outlier removal, trend removal, flattening, and handling data quality flags. Works with lightkurve and general time series data.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/exoplanet-detection-period/environment/skills/light-curve-preprocessing/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "matched-filtering",
+              "id": "matched-filtering",
+              "description": "Matched filtering techniques for gravitational wave detection. Use when searching for signals in detector data using template waveforms, including both time-domain and frequency-domain approaches. Works with PyCBC for generating templates and performing matched filtering.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/gravitational-wave-detection/environment/skills/matched-filtering/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "transit-least-squares",
+              "id": "transit-least-squares",
+              "description": "Transit Least Squares (TLS) algorithm for detecting exoplanet transits in light curves. Use when searching for transiting exoplanets specifically, as TLS is more sensitive than Lomb-Scargle for transit-shaped signals. Based on the transitleastsquares Python package.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/exoplanet-detection-period/environment/skills/transit-least-squares/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Control Systems and Automation",
+          "id": "control-systems-and-automation",
+          "description": "Tools for designing and implementing control systems, from classical PID controllers to advanced model predictive control strategies. Covers system modeling and identification, controller tuning methodologies, and domain-specific automation applications.",
+          "type": "category",
+          "children": [
+            {
+              "name": "Domain-Specific Applications",
+              "id": "domain-specific-applications",
+              "description": "Specialized control and automation implementations tailored to specific application domains. Includes vehicle dynamics modeling, automotive control systems, and other domain-specific automation libraries requiring specialized knowledge.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "civ6lib",
+                  "id": "civ6lib",
+                  "description": "Civilization 6 district mechanics library. Use when working with district placement validation, adjacency bonus calculations, or understanding Civ6 game rules.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/civ6-adjacency-optimizer/environment/skills/civ6lib/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "vehicle-dynamics",
+                  "id": "vehicle-dynamics",
+                  "description": "Use this skill when simulating vehicle motion, calculating safe following distances, time-to-collision, speed/position updates, or implementing vehicle state machines for cruise control modes.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/adaptive-cruise-control/environment/skills/vehicle-dynamics/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "safety-interlocks",
+                  "id": "safety-interlocks",
+                  "description": "Implement safety interlocks and protective mechanisms to prevent equipment damage and ensure safe control system operation.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/hvac-control/environment/skills/safety-interlocks/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            },
+            {
+              "name": "Model Predictive Control",
+              "id": "model-predictive-control",
+              "description": "Advanced control strategies that use predictive models to optimize control actions over a finite horizon. Includes MPC formulation, horizon selection, cost function design, and techniques for ensuring offset-free tracking performance.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "finite-horizon-lqr",
+                  "id": "finite-horizon-lqr",
+                  "description": "Solving finite-horizon LQR via dynamic programming for MPC.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/r2r-mpc-control/environment/skills/finite-horizon-lqr/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "integral-action-design",
+                  "id": "integral-action-design",
+                  "description": "Adding integral action to MPC for offset-free tension tracking.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/r2r-mpc-control/environment/skills/integral-action-design/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "mpc-horizon-tuning",
+                  "id": "mpc-horizon-tuning",
+                  "description": "Selecting MPC prediction horizon and cost matrices for web handling.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/r2r-mpc-control/environment/skills/mpc-horizon-tuning/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            },
+            {
+              "name": "PID and Classical Control",
+              "id": "pid-and-classical-control",
+              "description": "Techniques for designing and tuning classical feedback controllers including PID controllers. Covers tuning methodologies, gain calculation rules, and implementation of traditional control loops for various applications.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "imc-tuning-rules",
+                  "id": "imc-tuning-rules",
+                  "description": "Calculate PI/PID controller gains using Internal Model Control (IMC) tuning rules for first-order systems.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/hvac-control/environment/skills/imc-tuning-rules/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "pid-controller",
+                  "id": "pid-controller",
+                  "description": "Use this skill when implementing PID control loops for adaptive cruise control, vehicle speed regulation, throttle/brake management, or any feedback control system requiring proportional-integral-derivative control.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/adaptive-cruise-control/environment/skills/pid-controller/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "simulation-metrics",
+                  "id": "simulation-metrics",
+                  "description": "Use this skill when calculating control system performance metrics such as rise time, overshoot percentage, steady-state error, or settling time for evaluating simulation results.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/adaptive-cruise-control/environment/skills/simulation-metrics/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            },
+            {
+              "name": "System Modeling and Identification",
+              "id": "system-modeling-and-identification",
+              "description": "Methods for developing mathematical models of dynamic systems from data or first principles. Covers excitation signal design for identification experiments, linearization techniques, and state-space model development for control design.",
+              "type": "type",
+              "children": [
+                {
+                  "name": "excitation-signal-design",
+                  "id": "excitation-signal-design",
+                  "description": "Design effective excitation signals (step tests) for system identification and parameter estimation in control systems.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/hvac-control/environment/skills/excitation-signal-design/SKILL.md",
+                  "author": "benchflow-ai"
+                },
+                {
+                  "name": "state-space-linearization",
+                  "id": "state-space-linearization",
+                  "description": "Linearizing nonlinear dynamics around operating points for control design.",
+                  "type": "skill",
+                  "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/r2r-mpc-control/environment/skills/state-space-linearization/SKILL.md",
+                  "author": "benchflow-ai"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Earth and Environmental Science",
+          "id": "earth-and-environmental-science",
+          "description": "Tools for environmental monitoring, hydrology, and earth science applications. Covers water level analysis, flood detection, lake modeling, meteorological classification, and related environmental data processing.",
+          "type": "type",
+          "children": [
+            {
+              "name": "flood-detection",
+              "id": "flood-detection",
+              "description": "Detect flood events by comparing water levels to thresholds. Use when determining if flooding occurred, counting flood days, aggregating instantaneous data to daily values, or classifying flood severity.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/flood-risk-analysis/environment/skills/flood-detection/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "glm-basics",
+              "id": "glm-basics",
+              "description": "Basic usage of the General Lake Model (GLM) for lake temperature simulation. Use when you need to run GLM, understand input files, or modify configuration parameters.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/glm-lake-mendota/environment/skills/glm-basics/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "glm-calibration",
+              "id": "glm-calibration",
+              "description": "Calibrate GLM parameters for water temperature simulation. Use when you need to adjust model parameters to minimize RMSE between simulated and observed temperatures.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/glm-lake-mendota/environment/skills/glm-calibration/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "glm-output",
+              "id": "glm-output",
+              "description": "Read and process GLM output files. Use when you need to extract temperature data from NetCDF output, convert depth coordinates, or calculate RMSE against observations.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/glm-lake-mendota/environment/skills/glm-output/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "meteorology-driver-classification",
+              "id": "meteorology-driver-classification",
+              "description": "Classify environmental and meteorological variables into driver categories for attribution analysis. Use when you need to group multiple variables into meaningful factor categories.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/lake-warming-attribution/environment/skills/meteorology-driver-classification/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "nws-flood-thresholds",
+              "id": "nws-flood-thresholds",
+              "description": "Download flood stage thresholds from NWS (National Weather Service). Use when determining flood levels for USGS stations, accessing action/minor/moderate/major flood stages, or matching stations to their flood thresholds.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/flood-risk-analysis/environment/skills/nws-flood-thresholds/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "usgs-data-download",
+              "id": "usgs-data-download",
+              "description": "Download water level data from USGS using the dataretrieval package. Use when accessing real-time or historical streamflow data, downloading gage height or discharge measurements, or working with USGS station IDs.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/flood-risk-analysis/environment/skills/usgs-data-download/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Healthcare and Life Sciences",
+          "id": "healthcare-and-life-sciences",
+          "description": "Tools for medical, pharmaceutical, and biological applications. Includes clinical data harmonization, treatment planning, molecular analysis, chemistry databases, and materials science computations.",
+          "type": "type",
+          "children": [
+            {
+              "name": "citation-management",
+              "id": "citation-management",
+              "description": "Comprehensive citation management for academic research. Search Google Scholar and PubMed for papers, extract accurate metadata, validate citations, and generate properly formatted BibTeX entries. This skill should be used when you need to find papers, verify citation information, convert DOIs to BibTeX, or ensure reference accuracy in scientific writing.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/citation-check/environment/skills/citation-management/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "lab-unit-harmonization",
+              "id": "lab-unit-harmonization",
+              "description": "Comprehensive clinical laboratory data harmonization for multi-source healthcare analytics. Convert between US conventional and SI units, standardize numeric formats, and clean data quality issues. This skill should be used when you need to harmonize lab values from different sources, convert units for clinical analysis, fix formatting inconsistencies (scientific notation, decimal separators, whitespace), or prepare lab panels for research.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/lab-unit-harmonization/environment/skills/lab-unit-harmonization/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "pubchem-database",
+              "id": "pubchem-database",
+              "description": "Query PubChem via PUG-REST API/PubChemPy (110M+ compounds). Search by name/CID/SMILES, retrieve properties, similarity/substructure searches, bioactivity, for cheminformatics.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/find-topk-similiar-chemicals/environment/skills/pubchem-database/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "pymatgen",
+              "id": "pymatgen",
+              "description": "Materials science toolkit. Crystal structures (CIF, POSCAR), phase diagrams, band structure, DOS, Materials Project integration, format conversion, for computational materials science.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/crystallographic-wyckoff-position-analysis/environment/skills/pymatgen/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "qutip",
+              "id": "qutip",
+              "description": "Quantum mechanics simulations and analysis using QuTiP (Quantum Toolbox in Python). Use when working with quantum systems including: (1) quantum states (kets, bras, density matrices), (2) quantum operators and gates, (3) time evolution and dynamics (Schrödinger, master equations, Monte Carlo), (4) open quantum systems with dissipation, (5) quantum measurements and entanglement, (6) visualization (Bloch sphere, Wigner functions), (7) steady states and correlation functions, or (8) advanced methods (Floquet theory, HEOM, stochastic solvers). Handles both closed and open quantum systems across various domains including quantum optics, quantum computing, and condensed matter physics.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/quantum-numerical-simulation/environment/skills/qutip/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "rdkit",
+              "id": "rdkit",
+              "description": "Cheminformatics toolkit for fine-grained molecular control. SMILES/SDF parsing, descriptors (MW, LogP, TPSA), fingerprints, substructure search, 2D/3D generation, similarity, reactions. For standard workflows with simpler interface, use datamol (wrapper around RDKit). Use rdkit for advanced control, custom sanitization, specialized algorithms.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/find-topk-similiar-chemicals/environment/skills/rdkit/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "treatment-plans",
+              "id": "treatment-plans",
+              "description": "Generate concise (3-4 page), focused medical treatment plans in LaTeX/PDF format for all clinical specialties. Supports general medical treatment, rehabilitation therapy, mental health care, chronic disease management, perioperative care, and pain management. Includes SMART goal frameworks, evidence-based interventions with minimal text citations, regulatory compliance (HIPAA), and professional formatting. Prioritizes brevity and clinical actionability.",
+              "type": "skill",
+              "github_url": "https://github.com/drshailesh88/integrated_content_os",
+              "author": "drshailesh88"
+            }
+          ]
+        },
+        {
+          "name": "Manufacturing and Industrial",
+          "id": "manufacturing-and-industrial",
+          "description": "Tools for manufacturing process optimization and quality control. Covers job shop scheduling, reflow soldering compliance, equipment maintenance, defect classification, and production workflow management.",
+          "type": "type",
+          "children": [
+            {
+              "name": "fjsp-baseline-repair-with-downtime-and-policy",
+              "id": "fjsp-baseline-repair-with-downtime-and-policy",
+              "description": "This skill should be considered when you need to repair an infeasible or non-optimal flexible job scheduling planning schedule into a downtime-feasible, precedence-feasible one while keep no worse policy budget.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/manufacturing-fjsp-optimization/environment/skills/fjsp-baseline-repair-with-downtime-and-policy/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "manufacturing-failure-reason-codebook-normalization",
+              "id": "manufacturing-failure-reason-codebook-normalization",
+              "description": "This skill should be considered when you need to normalize testing engineers' written defect reasons following the provided product codebooks. This skill will correct the typos, misused abbreviations, ambiguous descriptions, mixed Chinese-English text or misleading text and provide explanations. This skill will do segmentation, semantic matching, confidence calibration and station validation.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/manufacturing-codebook-normalization/environment/skills/manufacturing-failure-reason-codebook-normalization/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "reflow-profile-compliance-toolkit",
+              "id": "reflow-profile-compliance-toolkit",
+              "description": "Deterministic handbook-grounded retrieval and thermocouple computations for reflow profile compliance outputs such as ramp, TAL, peak, feasibility, and selection.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/manufacturing-equipment-maintenance/environment/skills/reflow-profile-compliance-toolkit/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "reflow_machine_maintenance_guidance",
+              "id": "reflow_machine_maintenance_guidance",
+              "description": "This skill should be considered when you need to answer reflow machine maintenance questions or provide detailed guidance based on thermocouple data, MES data or defect data and reflow technical handbooks. This skill covers how to obtain important concepts, calculations, definitions, thresholds, and others from the handbook and how to do cross validations between handbook and datasets.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/manufacturing-equipment-maintenance/environment/skills/reflow_machine_maintenance_guidance/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Network Security and Analysis",
+          "id": "network-security-and-analysis",
+          "description": "Tools for network traffic analysis, intrusion detection, and security assessment. Covers packet capture analysis, threat detection, vulnerability scoring, penetration testing, and rule-based network monitoring.",
+          "type": "type",
+          "children": [
+            {
+              "name": "azure-bgp",
+              "id": "azure-bgp",
+              "description": "Analyze and resolve BGP oscillation and BGP route leaks in Azure Virtual WAN–style hub-and-spoke topologies (and similar cloud-managed BGP environments). Detect preference cycles, identify valley-free violations, and propose allowed policy-level mitigations while rejecting prohibited fixes.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/azure-bgp-oscillation-route-leak/environment/skills/azure-bgp/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "cvss-score-extraction",
+              "id": "cvss-score-extraction",
+              "description": "Extract CVSS (Common Vulnerability Scoring System) scores from vulnerability data sources with proper fallback handling. This skill covers understanding CVSS v3, handling multiple score sources (NVD, GHSA, RedHat), implementing source priority logic, and dealing with missing scores in security reporting.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/software-dependency-audit/environment/skills/cvss-score-extraction/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "pcap-analysis",
+              "id": "pcap-analysis",
+              "description": "Guidance for analyzing network packet captures (PCAP files) and computing network statistics using Python, with tested utility functions.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/dapt-intrusion-detection/environment/skills/pcap-analysis/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "pcap-triage-tshark",
+              "id": "pcap-triage-tshark",
+              "description": "Fast workflow to inspect PCAPs and extract protocol-level details using tshark",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/suricata-custom-exfil/environment/skills/pcap-triage-tshark/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "ssh-penetration-testing",
+              "id": "ssh-penetration-testing",
+              "description": "This skill should be used when the user asks to \"pentest SSH services\", \"enumerate SSH configurations\", \"brute force SSH credentials\", \"exploit SSH vulnerabilities\", \"perform SSH tunneling\", or \"audit SSH security\". It provides comprehensive SSH penetration testing methodologies and techniques.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/fix-erlang-ssh-cve/environment/skills/ssh-penetration-testing/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "suricata-offline-evejson",
+              "id": "suricata-offline-evejson",
+              "description": "Running Suricata against PCAPs offline and validating results via eve.json",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/suricata-custom-exfil/environment/skills/suricata-offline-evejson/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "suricata-rules-basics",
+              "id": "suricata-rules-basics",
+              "description": "Core building blocks of Suricata signatures and multi-condition DPI logic",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/suricata-custom-exfil/environment/skills/suricata-rules-basics/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "threat-detection",
+              "id": "threat-detection",
+              "description": "Exact detection thresholds for identifying malicious network patterns including port scans, DoS attacks, and beaconing behavior.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/dapt-intrusion-detection/environment/skills/threat-detection/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Power Systems and Grid Analysis",
+          "id": "power-systems-and-grid",
+          "description": "Tools for electrical power system analysis, optimization, and grid operations. Includes power flow calculations, economic dispatch, network topology analysis, and locational pricing for transmission systems.",
+          "type": "type",
+          "children": [
+            {
+              "name": "ac-branch-pi-model",
+              "id": "ac-branch-pi-model",
+              "description": "AC branch pi-model power flow equations (P/Q and |S|) with transformer tap ratio and phase shift, matching `acopf-math-model.md` and MATPOWER branch fields. Use when computing branch flows in either direction, aggregating bus injections for nodal balance, checking MVA (rateA) limits, computing branch loading %, or debugging sign/units issues in AC power flow.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/energy-ac-optimal-power-flow/environment/skills/ac-branch-pi-model/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "dc-power-flow",
+              "id": "dc-power-flow",
+              "description": "DC power flow analysis for power systems. Use when computing power flows using DC approximation, building susceptance matrices, calculating line flows and loading percentages, or performing sensitivity analysis on transmission networks.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/energy-market-pricing/environment/skills/dc-power-flow/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "economic-dispatch",
+              "id": "economic-dispatch",
+              "description": "Generator economic dispatch and cost optimization for power systems. Use when minimizing generation costs, computing optimal generator setpoints, calculating operating margins, or working with generator cost functions.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/energy-market-pricing/environment/skills/economic-dispatch/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "locational-marginal-prices",
+              "id": "locational-marginal-prices",
+              "description": "Extract locational marginal prices (LMPs) from DC-OPF solutions using dual values. Use when computing nodal electricity prices, reserve clearing prices, or performing price impact analysis.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/energy-market-pricing/environment/skills/locational-marginal-prices/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "power-flow-data",
+              "id": "power-flow-data",
+              "description": "Power system network data formats and topology. Use when parsing bus, generator, and branch data for power flow analysis.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/energy-ac-optimal-power-flow/environment/skills/power-flow-data/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Seismology and Geophysics",
+          "id": "seismology-and-geophysics",
+          "description": "Tools for seismic data processing and earthquake analysis. Covers seismic waveform handling, phase picking, event detection, and earthquake phase association algorithms.",
+          "type": "type",
+          "children": [
+            {
+              "name": "gamma-phase-associator",
+              "id": "gamma-phase-associator",
+              "description": "An overview of the python package for running the GaMMA earthquake phase association algorithm. The algorithm expects phase picks data and station data as input and produces (through unsupervised clustering) earthquake events with source information like earthquake location, origin time and magnitude. The skill explains commonly used functions and the expected input/output format.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/earthquake-phase-association/environment/skills/gamma-phase-associator/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "obspy-data-api",
+              "id": "obspy-data-api",
+              "description": "An overview of the core data API of ObsPy, a Python framework for processing seismological data. It is useful for parsing common seismological file formats, or manipulating custom data into standard objects for downstream use cases such as ObsPy's signal processing routines or SeisBench's modeling API.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/earthquake-phase-association/environment/skills/obspy-data-api/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "obspy-datacenter-client",
+              "id": "obspy-datacenter-client",
+              "description": "ObsPy allows you to easily download earthquake data from various data centers/networks through its client API. This is an overview of available services and a demo of the client API for International Federation of Digital Seismograph Networks (FDSN). Use this if you need to download earthquake research data.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/seismic-phase-picking/environment/skills/obspy-datacenter-client/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "seisbench-model-api",
+              "id": "seisbench-model-api",
+              "description": "An overview of the core model API of SeisBench, a Python framework for training and applying machine learning algorithms to seismic data. It is useful for annotating waveforms using pretrained SOTA ML models, for tasks like phase picking, earthquake detection, waveform denoising and depth estimation. For any waveform, you can manipulate it into an obspy stream object and it will work seamlessly with seisbench models.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/earthquake-phase-association/environment/skills/seisbench-model-api/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "seismic-picker-selection",
+              "id": "seismic-picker-selection",
+              "description": "This is a summary the advantages and disadvantages of earthquake event detection and phase picking methods, shared by leading seismology researchers at the 2025 Earthquake Catalog Workshop. Use it when you have a seismic phase picking task at hand.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/earthquake-phase-association/environment/skills/seismic-picker-selection/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        },
+        {
+          "name": "Travel Planning and Financial Analysis",
+          "id": "travel-and-finance",
+          "description": "Tools for travel logistics and financial data analysis. Includes flight and accommodation search, restaurant recommendations, driving distance estimation, SEC filings analysis, and investment fund tracking.",
+          "type": "type",
+          "children": [
+            {
+              "name": "13f-analyzer",
+              "id": "13f-analyzer",
+              "description": "Perform various data analysis on SEC 13-F and obtain some insights of fund activities such as number of holdings, AUM, and change of holdings between two quarters.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/sec-financial-report/environment/skills/13f-analyzer/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "powerlifting",
+              "id": "powerlifting",
+              "description": "Calculating powerlifting scores to determine the performance of lifters across different weight classes. ",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/powerlifting-coef-calc/environment/skills/powerlifting/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "search-accommodations",
+              "id": "search-accommodations",
+              "description": "Lookup accommodations by city from the bundled dataset. Use this skill when you need to recommend places to stay in a given city or filter lodging options before building an itinerary.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/travel-planning/environment/skills/search-accommodations/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "search-attractions",
+              "id": "search-attractions",
+              "description": "Retrieve attractions by city from the bundled dataset. Use this skill when surfacing points of interest or building sightseeing suggestions for a destination.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/travel-planning/environment/skills/search-attractions/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "search-cities",
+              "id": "search-cities",
+              "description": "List cities for a given state using the bundled background data. Use this skill to validate state inputs or expand destination choices before flight/restaurant/attraction/driving/accommodation lookups.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/travel-planning/environment/skills/search-cities/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "search-driving-distance",
+              "id": "search-driving-distance",
+              "description": "Estimate driving/taxi duration, distance, and rough cost between two cities using the bundled distance matrix CSV. Use this skill when comparing ground travel options or validating itinerary legs.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/travel-planning/environment/skills/search-driving-distance/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "search-flights",
+              "id": "search-flights",
+              "description": "Search flights by origin, destination, and departure date using the bundled flights dataset. Use this skill when proposing flight options or checking whether a route/date combination exists.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/travel-planning/environment/skills/search-flights/SKILL.md",
+              "author": "benchflow-ai"
+            },
+            {
+              "name": "search-restaurants",
+              "id": "search-restaurants",
+              "description": "Retrieve restaurants by city from the bundled dataset. Use this skill when recommending places to eat or validating dining options for a destination.",
+              "type": "skill",
+              "github_url": "https://github.com/benchflow-ai/skillsbench/blob/main/tasks/travel-planning/environment/skills/search-restaurants/SKILL.md",
+              "author": "benchflow-ai"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+        const marginLeft = 60;
+        const marginTop = 50;
+        const nodeVerticalSpacing = 30;  // Vertical spacing between nodes
+        const nodeHorizontalSpacing = 220;  // Horizontal spacing between depth levels
+
+        const root = d3.hierarchy(treeData);
+        root.x0 = 0;
+        root.y0 = 0;
+
+        // Collapse children initially for domains
+        root.children.forEach(d => {
+            if (d.children) {
+                d._children = d.children;
+                d.children = null;
+            }
+        });
+
+        const svgElement = d3.select("#tree")
+            .append("svg")
+            .attr("width", window.innerWidth)
+            .attr("height", Math.max(window.innerHeight - 200, 800));
+
+        const svg = svgElement.append("g")
+            .attr("transform", `translate(${marginLeft}, ${marginTop})`);
+
+        // Use nodeSize for consistent spacing instead of fixed size
+        const tree = d3.tree()
+            .nodeSize([nodeVerticalSpacing, nodeHorizontalSpacing])
+            .separation((a, b) => a.parent === b.parent ? 1 : 1.5);
+
+        const tooltip = d3.select("#tooltip");
+        let tooltipHideTimer = null;
+
+        // Keep tooltip visible when hovering over it
+        tooltip.on("mouseenter", () => {
+            if (tooltipHideTimer) { clearTimeout(tooltipHideTimer); tooltipHideTimer = null; }
+        });
+        tooltip.on("mouseleave", () => {
+            tooltip.style("display", "none");
+        });
+
+        // Search state
+        let searchMatches = [];
+        let currentMatchIndex = -1;
+
+        function update(source) {
+            const duration = 300;
+
+            // Compute the new tree layout
+            tree(root);
+
+            const nodes = root.descendants();
+            const links = root.links();
+
+            // Calculate bounds of visible nodes
+            let minX = Infinity, maxX = -Infinity;
+            let maxY = 0;
+            nodes.forEach(d => {
+                minX = Math.min(minX, d.x);
+                maxX = Math.max(maxX, d.x);
+                maxY = Math.max(maxY, d.y);
+            });
+
+            // Dynamic SVG sizing based on tree bounds
+            const treeHeight = maxX - minX + 100;
+            const treeWidth = maxY + 300;
+            const newHeight = Math.max(treeHeight, window.innerHeight - 200, 800);
+            const newWidth = Math.max(treeWidth, window.innerWidth);
+
+            svgElement
+                .transition()
+                .duration(duration)
+                .attr("height", newHeight)
+                .attr("width", newWidth);
+
+            // Adjust g transform to center tree vertically (offset by minX)
+            svg.transition()
+                .duration(duration)
+                .attr("transform", `translate(${marginLeft}, ${-minX + marginTop})`);
+
+            // Nodes
+            const node = svg.selectAll("g.node")
+                .data(nodes, d => d.data.id || d.data.name);
+
+            const nodeEnter = node.enter()
+                .append("g")
+                .attr("class", d => `node node--${d.data.type || 'root'}`)
+                .attr("transform", d => `translate(${source.y0}, ${source.x0})`)
+                .on("click", (event, d) => {
+                    if (d.children) {
+                        d._children = d.children;
+                        d.children = null;
+                    } else if (d._children) {
+                        d.children = d._children;
+                        d._children = null;
+                        // Collapse grandchildren to expand one level at a time
+                        d.children.forEach(child => {
+                            if (child.children) {
+                                child._children = child.children;
+                                child.children = null;
+                            }
+                        });
+                    }
+                    update(d);
+                })
+                .on("mouseover", (event, d) => {
+                    if (tooltipHideTimer) { clearTimeout(tooltipHideTimer); tooltipHideTimer = null; }
+                    const hasContent = d.data.description || d.data.github_url;
+                    if (hasContent) {
+                        let html = `<div class="tooltip-title">${d.data.name}</div>`;
+                        if (d.data.description) {
+                            html += `<div class="tooltip-desc">${d.data.description}</div>`;
+                        }
+                        if (d.data.author || d.data.stars) {
+                            let meta = '';
+                            if (d.data.author) meta += d.data.author;
+                            if (d.data.stars) meta += (meta ? ' · ' : '') + '⭐ ' + d.data.stars;
+                            html += `<div class="tooltip-meta">${meta}</div>`;
+                        }
+                        if (d.data.github_url) {
+                            html += `<a class="tooltip-link" href="${d.data.github_url}" target="_blank" rel="noopener">View on GitHub ↗</a>`;
+                        }
+                        tooltip.style("display", "block")
+                            .html(html)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 10) + "px");
+                    }
+                })
+                .on("mouseout", () => {
+                    tooltipHideTimer = setTimeout(() => {
+                        tooltip.style("display", "none");
+                    }, 300);
+                });
+
+            nodeEnter.append("circle")
+                .attr("r", d => d.data.type === 'skill' ? 5 : 8)
+                .attr("class", d => d._children ? "node--collapsed" : "");
+
+            nodeEnter.append("text")
+                .attr("dy", "0.35em")
+                .attr("x", d => d.children || d._children ? -12 : 12)
+                .attr("text-anchor", d => d.children || d._children ? "end" : "start")
+                .text(d => d.data.name);
+
+            const nodeUpdate = nodeEnter.merge(node);
+
+            nodeUpdate.transition()
+                .duration(duration)
+                .attr("transform", d => `translate(${d.y}, ${d.x})`);
+
+            nodeUpdate.select("circle")
+                .attr("class", d => d._children ? "node--collapsed" : "");
+
+            const nodeExit = node.exit()
+                .transition()
+                .duration(duration)
+                .attr("transform", d => `translate(${source.y}, ${source.x})`)
+                .remove();
+
+            // Links
+            const link = svg.selectAll("path.link")
+                .data(links, d => d.target.data.id || d.target.data.name);
+
+            const linkEnter = link.enter()
+                .insert("path", "g")
+                .attr("class", "link")
+                .attr("d", d => {
+                    const o = {x: source.x0, y: source.y0};
+                    return diagonal(o, o);
+                });
+
+            linkEnter.merge(link)
+                .transition()
+                .duration(duration)
+                .attr("d", d => diagonal(d.source, d.target));
+
+            link.exit()
+                .transition()
+                .duration(duration)
+                .attr("d", d => {
+                    const o = {x: source.x, y: source.y};
+                    return diagonal(o, o);
+                })
+                .remove();
+
+            nodes.forEach(d => {
+                d.x0 = d.x;
+                d.y0 = d.y;
+            });
+
+            // Update search highlights after tree update
+            updateSearchHighlights();
+        }
+
+        function diagonal(s, d) {
+            return `M ${s.y} ${s.x}
+                    C ${(s.y + d.y) / 2} ${s.x},
+                      ${(s.y + d.y) / 2} ${d.x},
+                      ${d.y} ${d.x}`;
+        }
+
+        update(root);
+
+        // === Enhanced Search Functionality ===
+
+        function getAllNodes(node) {
+            // Recursively get all nodes including collapsed ones
+            const nodes = [node];
+            const children = node.children || node._children || [];
+            children.forEach(child => {
+                nodes.push(...getAllNodes(child));
+            });
+            return nodes;
+        }
+
+        function searchTree(query) {
+            if (!query) return [];
+
+            const allNodes = getAllNodes(root);
+            const matches = [];
+
+            allNodes.forEach(node => {
+                const name = (node.data.name || "").toLowerCase();
+                const id = (node.data.id || "").toLowerCase();
+                const desc = (node.data.description || "").toLowerCase();
+
+                if (name.includes(query) || id.includes(query) || desc.includes(query)) {
+                    matches.push(node);
+                }
+            });
+
+            return matches;
+        }
+
+        function getNodePath(node) {
+            const path = [];
+            let current = node;
+            while (current.parent) {
+                path.unshift(current.data.name);
+                current = current.parent;
+            }
+            return path.join(" > ");
+        }
+
+        function expandToNode(node) {
+            // Expand all ancestors to make the node visible
+            const ancestors = node.ancestors().reverse();
+            ancestors.forEach(ancestor => {
+                if (ancestor._children) {
+                    ancestor.children = ancestor._children;
+                    ancestor._children = null;
+                }
+            });
+        }
+
+        function scrollToNode(node) {
+            // Wait for D3 transition to complete then scroll
+            setTimeout(() => {
+                const nodeElement = svg.selectAll("g.node")
+                    .filter(d => d === node)
+                    .node();
+
+                if (nodeElement) {
+                    const rect = nodeElement.getBoundingClientRect();
+                    const container = document.querySelector('.tree-container');
+                    const containerRect = container.getBoundingClientRect();
+
+                    // Calculate scroll position to center the node
+                    const scrollLeft = rect.left - containerRect.left + container.scrollLeft - containerRect.width / 2;
+                    const scrollTop = rect.top - containerRect.top + container.scrollTop - containerRect.height / 2;
+
+                    container.scrollTo({
+                        left: Math.max(0, scrollLeft),
+                        top: Math.max(0, scrollTop),
+                        behavior: 'smooth'
+                    });
+                }
+            }, 350);
+        }
+
+        function updateSearchHighlights() {
+            // Clear all highlights
+            svg.selectAll("g.node")
+                .classed("node--match", false)
+                .classed("node--current", false);
+
+            if (searchMatches.length === 0) return;
+
+            // Get node IDs for matching
+            const matchIds = new Set(searchMatches.map(n => n.data.id || n.data.name));
+
+            // Highlight all matches
+            svg.selectAll("g.node")
+                .classed("node--match", d => matchIds.has(d.data.id || d.data.name));
+
+            // Highlight current match
+            if (currentMatchIndex >= 0 && currentMatchIndex < searchMatches.length) {
+                const currentNode = searchMatches[currentMatchIndex];
+                svg.selectAll("g.node")
+                    .filter(d => d === currentNode)
+                    .classed("node--current", true);
+            }
+        }
+
+        function renderSearchResults(matches, query) {
+            const resultsEl = document.getElementById('search-results');
+            const countEl = document.getElementById('search-count');
+            const navEl = document.getElementById('search-nav');
+            const clearBtn = document.getElementById('search-clear');
+
+            clearBtn.classList.toggle('visible', query.length > 0);
+
+            if (matches.length === 0) {
+                resultsEl.classList.remove('visible');
+                countEl.classList.remove('visible');
+                navEl.classList.remove('visible');
+                if (query) {
+                    countEl.textContent = 'No results found';
+                    countEl.classList.add('visible');
+                }
+                return;
+            }
+
+            countEl.textContent = `Found ${matches.length} result${matches.length > 1 ? 's' : ''}`;
+            countEl.classList.add('visible');
+            navEl.classList.add('visible');
+
+            // Build results list
+            let html = '';
+            matches.forEach((node, index) => {
+                const nodeType = node.data.type === 'skill' ? 'skill' : 'category';
+                html += `
+                    <div class="search-result-item${index === currentMatchIndex ? ' active' : ''}" data-index="${index}">
+                        <div class="search-result-name">
+                            ${escapeHtml(node.data.name)}
+                            <span class="search-result-type search-result-type--${nodeType}">${nodeType}</span>
+                        </div>
+                        <div class="search-result-path">${escapeHtml(getNodePath(node))}</div>
+                    </div>
+                `;
+            });
+
+            resultsEl.innerHTML = html;
+            resultsEl.classList.add('visible');
+
+            // Add click handlers
+            resultsEl.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = parseInt(item.dataset.index);
+                    jumpToResult(index);
+                });
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function jumpToResult(index) {
+            if (index < 0 || index >= searchMatches.length) return;
+
+            currentMatchIndex = index;
+            const node = searchMatches[index];
+
+            // Expand path to node
+            expandToNode(node);
+
+            // Update tree
+            update(root);
+
+            // Scroll to node
+            scrollToNode(node);
+
+            // Update results list active state
+            document.querySelectorAll('.search-result-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+
+            // Scroll result into view if needed
+            const activeResult = document.querySelector('.search-result-item.active');
+            if (activeResult) {
+                activeResult.scrollIntoView({ block: 'nearest' });
+            }
+
+            updateNavButtons();
+        }
+
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('prev-result');
+            const nextBtn = document.getElementById('next-result');
+
+            prevBtn.disabled = currentMatchIndex <= 0;
+            nextBtn.disabled = currentMatchIndex >= searchMatches.length - 1;
+        }
+
+        function clearSearch() {
+            const searchInput = document.getElementById('search');
+            searchInput.value = '';
+            searchMatches = [];
+            currentMatchIndex = -1;
+
+            document.getElementById('search-results').classList.remove('visible');
+            document.getElementById('search-count').classList.remove('visible');
+            document.getElementById('search-nav').classList.remove('visible');
+            document.getElementById('search-clear').classList.remove('visible');
+
+            updateSearchHighlights();
+        }
+
+        // Search input handler with debounce
+        let searchTimeout;
+        document.getElementById('search').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.toLowerCase().trim();
+
+            searchTimeout = setTimeout(() => {
+                searchMatches = searchTree(query);
+                currentMatchIndex = searchMatches.length > 0 ? 0 : -1;
+                renderSearchResults(searchMatches, query);
+                updateSearchHighlights();
+
+                // Auto-expand and scroll to first match
+                if (searchMatches.length > 0) {
+                    expandToNode(searchMatches[0]);
+                    update(root);
+                    scrollToNode(searchMatches[0]);
+                }
+            }, 200);
+        });
+
+        // Clear button
+        document.getElementById('search-clear').addEventListener('click', clearSearch);
+
+        // Navigation buttons
+        document.getElementById('prev-result').addEventListener('click', () => {
+            if (currentMatchIndex > 0) {
+                jumpToResult(currentMatchIndex - 1);
+            }
+        });
+
+        document.getElementById('next-result').addEventListener('click', () => {
+            if (currentMatchIndex < searchMatches.length - 1) {
+                jumpToResult(currentMatchIndex + 1);
+            }
+        });
+
+        // Keyboard navigation
+        document.getElementById('search').addEventListener('keydown', function(e) {
+            if (searchMatches.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (currentMatchIndex < searchMatches.length - 1) {
+                    jumpToResult(currentMatchIndex + 1);
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (currentMatchIndex > 0) {
+                    jumpToResult(currentMatchIndex - 1);
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentMatchIndex >= 0) {
+                    jumpToResult(currentMatchIndex);
+                    document.getElementById('search-results').classList.remove('visible');
+                }
+            } else if (e.key === 'Escape') {
+                document.getElementById('search-results').classList.remove('visible');
+            }
+        });
+
+        // Close results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-wrapper')) {
+                document.getElementById('search-results').classList.remove('visible');
+            }
+        });
+
+        // Show results when focusing on search with existing query
+        document.getElementById('search').addEventListener('focus', function() {
+            if (searchMatches.length > 0) {
+                document.getElementById('search-results').classList.add('visible');
+            }
+        });
+
+        // Expand all on double click root
+        svg.selectAll("g.node").filter(d => d.depth === 0)
+            .on("dblclick", () => {
+                function expandAll(d) {
+                    if (d._children) {
+                        d.children = d._children;
+                        d._children = null;
+                    }
+                    if (d.children) d.children.forEach(expandAll);
+                }
+                expandAll(root);
+                update(root);
+            });
+    </script>
+</body>
+</html>

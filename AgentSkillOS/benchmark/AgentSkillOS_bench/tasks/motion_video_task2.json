@@ -1,0 +1,138 @@
+{
+  "task_id": "motion_video_task2",
+  "task_name": "Fourier Series Expansion and Animation",
+  "description": "Compute Fourier series coefficients for a square wave and create an educational animation showing how the approximation improves with more terms.",
+  "skills": [
+    "manim",
+    "sympy"
+  ],
+  "prompt": "I am a math education content creator, and I want to produce an educational video explaining Fourier series convergence. Please analyze the Fourier series of a square wave: f(x)=1 for 0<x<\\pi, f(x)=-1 for -\\pi<x<0, with period 2\\pi.\n\nCompute the Fourier coefficients b_n for n=1 to n=10 (exactly 10 coefficients, do NOT include a_0). Also compute partial sums for N=1, 3, 5, and 10 terms.\n\nSave the results to fourier_coefficients.json with:\n- A 'coefficients' array containing exactly 10 objects, each with 'n' (integer 1-10) and 'value' (the b_n coefficient value)\n- A 'partial_sums' object with keys 'N=1', 'N=3', 'N=5', 'N=10', where each contains an 'expression' field showing the formula using symbolic fractions with π (e.g., '(4/pi)*sin(x) + (4/(3*pi))*sin(3*x)'), not decimal approximations\n\nThen create fourier_animation.mp4 showing the square wave and how the Fourier approximation progressively improves. The animation must show 4 clearly distinct and separate stages for N=1, 3, 5, and 10, with visible transitions between each stage. Display the mathematical formulas (using fractions with π) in the animation. Ensure axis labels use clean formatting without excessive decimal places.",
+  "outputs": [
+    "fourier_coefficients.json",
+    "fourier_animation.mp4"
+  ],
+  "category": "motion_video",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that fourier_coefficients.json exists",
+      "weight": 3,
+      "op_args": {
+        "path": "fourier_coefficients.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that coefficients file is valid JSON",
+      "weight": 3,
+      "op_args": {
+        "path": "fourier_coefficients.json"
+      },
+      "depends_on": [
+        "json_exists"
+      ]
+    },
+    {
+      "id": "json_has_structure",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that JSON has required structure with coefficients and partial_sums",
+      "weight": 3,
+      "op_args": {
+        "path": "fourier_coefficients.json"
+      },
+      "value": [
+        "coefficients",
+        "partial_sums"
+      ],
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "has_10_coefficients",
+      "type": "objective_usability",
+      "op_func": "json_array_length",
+      "description": "Check that coefficients array has exactly 10 elements",
+      "weight": 8,
+      "op_args": {
+        "path": "fourier_coefficients.json",
+        "array_path": "coefficients",
+        "operator": "==",
+        "expected": 10
+      },
+      "depends_on": [
+        "json_has_structure"
+      ]
+    },
+    {
+      "id": "b1_correct",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Check that b₁ ≈ 1.2732 (4/π)",
+      "weight": 8,
+      "op_args": {
+        "path": "fourier_coefficients.json",
+        "array_path": "coefficients",
+        "match": {
+          "n": 1
+        },
+        "checks": [
+          {
+            "field": "value",
+            "type": "near",
+            "expected": 1.2732,
+            "tolerance": 0.01
+          }
+        ]
+      },
+      "depends_on": [
+        "has_10_coefficients"
+      ]
+    },
+    {
+      "id": "b3_correct",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Check that b₃ ≈ 0.4244 (4/3π)",
+      "weight": 5,
+      "op_args": {
+        "path": "fourier_coefficients.json",
+        "array_path": "coefficients",
+        "match": {
+          "n": 3
+        },
+        "checks": [
+          {
+            "field": "value",
+            "type": "near",
+            "expected": 0.4244,
+            "tolerance": 0.01
+          }
+        ]
+      },
+      "depends_on": [
+        "has_10_coefficients"
+      ]
+    },
+    {
+      "id": "video_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that fourier_animation.mp4 exists and is substantial",
+      "weight": 8,
+      "op_args": {
+        "path": "fourier_animation.mp4",
+        "min_size": 1
+      }
+    }
+  ]
+}

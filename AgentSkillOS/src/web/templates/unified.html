@@ -1,0 +1,44 @@
+    <!-- Loading spinner (before WebSocket state restoration) -->
+    <div x-show="!initialized"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         class="container mx-auto p-4 md:p-6 lg:p-8">
+        <div class="flex items-center justify-center h-64">
+            <div class="text-center">
+                <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-gray-400 text-sm">Connecting...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- App content: header + phases (gated behind initialized, x-cloak prevents pre-Alpine FOUC) -->
+    <div x-show="initialized" x-cloak>
+        <!-- INCLUDE:core/header.html -->
+
+        <main class="container mx-auto p-4 md:p-6 lg:p-8">
+            <!-- INCLUDE:core/phase-idle.html -->
+
+            <!-- SLOT:search -->
+
+            <!-- SLOT:review -->
+
+            <!-- SLOT:execute -->
+        </main>
+    </div>
+
+    <!-- Modals stay OUTSIDE the gate (they have their own x-show conditions) -->
+    <!-- SLOT:orchestrator_modals -->
+
+    <!-- SLOT:manager_modals -->
+
+    <!-- INCLUDE:core/completion-modal.html -->
+
+    <!-- INCLUDE:modules/recipe/save-recipe-modal.html -->
+
+    <!-- INCLUDE:core/end-task-modal.html -->
+
+    <!-- INCLUDE:core/start-new-task-button.html -->

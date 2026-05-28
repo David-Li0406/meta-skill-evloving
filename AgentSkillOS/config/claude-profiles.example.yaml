@@ -1,0 +1,27 @@
+active: default
+
+profiles:
+  default:
+    description: "Anthropic direct API"
+    default_model: sonnet                          # ANTHROPIC_MODEL
+    opus: claude-opus-4-5-20251101                 # ANTHROPIC_DEFAULT_OPUS_MODEL
+    sonnet: claude-sonnet-4-5-20241022             # ANTHROPIC_DEFAULT_SONNET_MODEL
+    haiku: claude-haiku-4-5-20241022               # ANTHROPIC_DEFAULT_HAIKU_MODEL
+
+  openrouter:
+    description: "Claude via OpenRouter"
+    default_model: sonnet
+    opus: anthropic/claude-opus-4
+    sonnet: anthropic/claude-sonnet-4
+    haiku: anthropic/claude-haiku-4
+    base_url: "https://openrouter.ai/api/v1"
+    auth_token: "${OPENROUTER_API_KEY}"            # Set OPENROUTER_API_KEY in .env
+
+  litellm:
+    description: "Local LiteLLM proxy"
+    default_model: sonnet
+    opus: claude-opus-4
+    sonnet: claude-sonnet-4
+    haiku: claude-haiku-4
+    base_url: "http://localhost:4000"
+    auth_token: "${LITELLM_MASTER_KEY}"            # Set LITELLM_MASTER_KEY in .env

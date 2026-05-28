@@ -1,0 +1,155 @@
+{
+  "task_id": "visual_creation_task6",
+  "task_name": "AI Illustrated Immersive Scroll Narrative",
+  "description": "Create an immersive scrolling web experience about space exploration history, combining AI-generated illustrations with interactive scroll animations.",
+  "skills": [
+    "generate-image",
+    "scroll-experience"
+  ],
+  "prompt": "I am a science museum curator, and I want to build an immersive online exhibit for our \"History of Human Space Exploration\" display. Please create a scrolling web page with 5 illustrated chapters. Generate illustrations for each milestone: chapter_1.png for Sputnik 1957, chapter_2.png for Apollo moon landing 1969, chapter_3.png for the Space Shuttle era, chapter_4.png for the ISS, and chapter_5.png for a Mars colonization concept.\n\nCreate index.html with full-screen sections for each chapter, smooth scrolling with layered depth effects, text animations that reveal content as you scroll, a progress indicator bar, and responsive design for different screen sizes.",
+  "outputs": [
+    "chapter_1.png",
+    "chapter_2.png",
+    "chapter_3.png",
+    "chapter_4.png",
+    "chapter_5.png",
+    "index.html"
+  ],
+  "category": "visual_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "chapter_1_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that chapter_1.png (Sputnik 1957) exists",
+      "weight": 1,
+      "op_args": {
+        "path": "chapter_1.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "chapter_2_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that chapter_2.png (Apollo moon landing) exists",
+      "weight": 1,
+      "op_args": {
+        "path": "chapter_2.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "chapter_3_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that chapter_3.png (Space Shuttle era) exists",
+      "weight": 1,
+      "op_args": {
+        "path": "chapter_3.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "chapter_4_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that chapter_4.png (ISS) exists",
+      "weight": 1,
+      "op_args": {
+        "path": "chapter_4.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "chapter_5_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that chapter_5.png (Mars colonization) exists",
+      "weight": 1,
+      "op_args": {
+        "path": "chapter_5.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "html_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that index.html exists",
+      "weight": 3,
+      "op_args": {
+        "path": "index.html",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "sections_present",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Verify HTML has 5 section areas",
+      "weight": 3,
+      "op_args": {
+        "path": "index.html",
+        "min_matches": 5,
+        "mode": "regex"
+      },
+      "value": "<section|<div[^>]*class=[\"'][^\"']*section",
+      "depends_on": [
+        "html_exists"
+      ]
+    },
+    {
+      "id": "scroll_animation",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Check for parallax or scroll animation code",
+      "weight": 3,
+      "op_args": {
+        "path": "index.html",
+        "min_matches": 1,
+        "mode": "regex"
+      },
+      "value": "scroll-timeline|gsap|parallax|transform.*scroll|translate.*scroll|@keyframes.*scroll",
+      "depends_on": [
+        "html_exists"
+      ]
+    },
+    {
+      "id": "progress_indicator",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Check for progress bar or indicator",
+      "weight": 3,
+      "op_args": {
+        "path": "index.html",
+        "mode": "contains"
+      },
+      "value": [
+        "progress"
+      ],
+      "depends_on": [
+        "html_exists"
+      ]
+    },
+    {
+      "id": "responsive_design",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Check for responsive media queries",
+      "weight": 3,
+      "op_args": {
+        "path": "index.html",
+        "min_matches": 1,
+        "mode": "regex"
+      },
+      "value": "@media.*\\(.*max-width|@media.*\\(.*min-width",
+      "depends_on": [
+        "html_exists"
+      ]
+    }
+  ]
+}

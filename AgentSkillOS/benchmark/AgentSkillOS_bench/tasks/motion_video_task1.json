@@ -1,0 +1,29 @@
+{
+  "task_id": "motion_video_task1",
+  "task_name": "Mathematical Animation: Matrix as Linear Transformation",
+  "description": "Create an educational mathematical animation explaining why matrices can perform linear transformations on vectors, showing how matrix columns represent transformed basis vectors and how any vector transforms accordingly.",
+  "skills": [
+    "manim"
+  ],
+  "prompt": "I am a math teacher, and I want to create an educational animation for my students to visualize why matrices can perform linear transformations on vectors. Please create an animation as linear_transform.mp4 with at least 5 seconds, showing: 1) A 2D coordinate system with labeled x/y axes; 2) The standard basis vectors $\\hat{\\imath} = (1,0)$ and $\\hat{\\jmath} = (0,1)$; 3) A 2x2 transformation matrix $A = \\begin{bmatrix} 2 & 1 \\\\ 0 & 1 \\end{bmatrix}$ and demonstrate how matrix columns represent where basis vectors land after transformation; 4) Show an arbitrary vector $\\vec{v} = (1,1)$ and demonstrate that $\\vec{v}$ transforms to $A\\vec{v}$ by following the transformed basis vectors ($\\vec{v} = 1 \\cdot \\hat{\\imath} + 1 \\cdot \\hat{\\jmath}$ becomes $\\vec{v}' = 1 \\cdot \\hat{\\imath}' + 1 \\cdot \\hat{\\jmath}'$); 5) Explain visually why this preserves linearity (addition and scalar multiplication). ",
+  "outputs": [
+    "linear_transform.mp4"
+  ],
+  "category": "motion_video",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "video_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the animation video exists",
+      "weight": 10,
+      "op_args": {
+        "path": "linear_transform.mp4",
+        "min_size": 1
+      }
+    }
+  ]
+}

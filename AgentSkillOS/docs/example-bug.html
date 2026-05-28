@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Diagnosis Report - AgentSkillOS Example</title>
+    <meta name="description" content="AgentSkillOS Example: Auto-locate frontend bugs and generate visual diagnosis reports">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./examples.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container header-inner">
+            <a href="index.html#gallery" class="back-link">
+                <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                <span class="i18n" data-en="Back to Home" data-zh="返回主页">Back to Home</span>
+            </a>
+            <div class="header-controls">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                <button class="lang-toggle" onclick="toggleLang()">
+                    <span id="lang-en" class="active">EN</span> | <span id="lang-zh">中</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <span class="example-badge">EXAMPLE 01</span>
+            <h1 class="i18n" data-en="Bug Diagnosis Report" data-zh="Bug 诊断报告">Bug Diagnosis Report</h1>
+            <p class="hero-desc i18n" data-en="Auto-locate frontend bugs and generate visual diagnosis reports with annotated screenshots" data-zh="自动定位前端Bug，生成带标注截图的可视化诊断报告">Auto-locate frontend bugs and generate visual diagnosis reports with annotated screenshots</p>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title i18n" data-en="Task" data-zh="任务">Task</h2>
+            <div class="task-card">
+                <div class="task-label i18n" data-en="User Input" data-zh="用户输入">User Input</div>
+                <p class="task-text i18n" data-en="I'm a front-end developer. Users reported a bug when accessing my login page (login_en.html) on mobile devices. Please identify and fix the bug, then generate a bug report (bug_report.md) with before/after screenshots highlighting the issue." data-zh="我是一名前端开发者。用户反馈在移动设备上访问我的登录页面（login_en.html）时出现了 Bug。请定位并修复该 Bug，然后生成一份包含修复前后截图对比的 Bug 报告（bug_report.md）。">I'm a front-end developer. Users reported a bug when accessing my login page (login_en.html) on mobile devices. Please identify and fix the bug, then generate a bug report (bug_report.md) with before/after screenshots highlighting the issue.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title i18n" data-en="Results" data-zh="结果">Results</h2>
+            <div class="gallery">
+                <div class="gallery-item">
+                    <img src="./assets/case1_bug_report/before_after_merged.png" alt="Before and After" onclick="openLightbox(this)">
+                    <p class="gallery-caption i18n" data-en="Left: The original login page showing mobile responsive issues — form elements overflow the viewport, buttons are misaligned, and text is clipped on smaller screens. Right: The fixed version with properly responsive layout — all elements fit within the viewport, buttons are correctly positioned, and the form adapts to mobile screen sizes." data-zh="左侧：原始登录页面在移动端的显示问题 — 表单元素超出视口范围，按钮错位，文字在小屏幕上被截断。右侧：修复后的响应式布局 — 所有元素正确适配视口，按钮位置正确，表单能够自适应移动端屏幕尺寸。">Left: The original login page showing mobile responsive issues — form elements overflow the viewport, buttons are misaligned, and text is clipped on smaller screens. Right: The fixed version with properly responsive layout — all elements fit within the viewport, buttons are correctly positioned, and the form adapts to mobile screen sizes.</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="./assets/case1_bug_report/bug_report_en_merged.png" alt="Bug Report" onclick="openLightbox(this)">
+                    <p class="gallery-caption i18n" data-en="The auto-generated bug diagnosis report in Markdown format. It includes: (1) Bug summary with severity level, (2) Root cause analysis pinpointing the CSS issues causing the mobile layout problems, (3) Annotated screenshots with red highlights marking the exact problematic areas, (4) Code diff showing the specific CSS fixes applied, and (5) Testing verification confirming the fix works across different device sizes." data-zh="自动生成的 Markdown 格式 Bug 诊断报告。包含：(1) Bug 摘要及严重程度，(2) 根因分析，定位导致移动端布局问题的 CSS 问题，(3) 带红色高亮标注的截图，精确标记问题区域，(4) 代码差异对比，展示具体的 CSS 修复内容，(5) 测试验证，确认修复在不同设备尺寸上生效。">The auto-generated bug diagnosis report in Markdown format. It includes: (1) Bug summary with severity level, (2) Root cause analysis pinpointing the CSS issues causing the mobile layout problems, (3) Annotated screenshots with red highlights marking the exact problematic areas, (4) Code diff showing the specific CSS fixes applied, and (5) Testing verification confirming the fix works across different device sizes.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title i18n" data-en="Skill Workflow (DAG)" data-zh="技能流程 (DAG)">Skill Workflow (DAG)</h2>
+            <div class="workflow">
+                <img src="./assets/case1_bug_report/bug_skills.png" alt="Skill DAG" class="workflow-img" onclick="openLightbox(this)">
+                <p class="workflow-caption i18n" data-en="Skills automatically selected and orchestrated by AgentSkillOS" data-zh="AgentSkillOS 自动选择和编排的技能">Skills automatically selected and orchestrated by AgentSkillOS</p>
+            </div>
+        </section>
+
+        <nav class="nav-section">
+            <div class="nav-links">
+                <a href="index.html#gallery" class="nav-link">
+                    <div class="nav-link-label i18n" data-en="Back to" data-zh="返回">Back to</div>
+                    <div class="nav-link-title i18n" data-en="Project Home" data-zh="项目主页">Project Home</div>
+                </a>
+                <a href="example-ui.html" class="nav-link next">
+                    <div class="nav-link-label i18n" data-en="Next Example" data-zh="下一个示例">Next Example</div>
+                    <div class="nav-link-title i18n" data-en="UI Design Research" data-zh="UI 设计研究">UI Design Research</div>
+                </a>
+            </div>
+        </nav>
+    </main>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close">&times;</button>
+        <img src="" alt="" id="lightbox-img">
+    </div>
+
+        <script src="./examples.js"></script>
+</body>
+</html>

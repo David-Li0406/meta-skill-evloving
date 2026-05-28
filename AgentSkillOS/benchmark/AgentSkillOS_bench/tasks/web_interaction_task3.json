@@ -1,0 +1,53 @@
+{
+  "task_id": "web_interaction_task3",
+  "task_name": "Mobile Responsive Bug Investigation and Fix",
+  "description": "Investigate a mobile responsive CSS bug in a login page, diagnose the root cause, fix it, and write a bug report with before/after screenshots.",
+  "skills": [
+    "dev-browser"
+  ],
+  "prompt": "I am a front-end developer. Users have reported that a bug occurs when accessing the login page I wrote on a their iphone SE. The code for my login page is login.html. Please help me identify and fix the bug, and write a bug fix report. The report should include a screenshot of the problematic web page before the bug fix (saved as before_fix.png) and a screenshot of the normal web page after the bug fix (saved as after_fix.png). In the screenshots, the location of the bug should be highlighted with clear and eye-catching markers. The report should be saved as bug_report.md.",
+  "outputs": [
+    "before_fix.png",
+    "after_fix.png",
+    "bug_report.md"
+  ],
+  "category": "web_interaction",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "bug_report_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that bug_report.md exists",
+      "weight": 2,
+      "op_args": {
+        "path": "bug_report.md",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "before_screenshot_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that before_fix.png screenshot exists",
+      "weight": 1,
+      "op_args": {
+        "path": "before_fix.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "after_screenshot_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that after_fix.png screenshot exists",
+      "weight": 1,
+      "op_args": {
+        "path": "after_fix.png",
+        "min_size": 1
+      }
+    }
+  ]
+}

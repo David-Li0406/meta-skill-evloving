@@ -1,0 +1,24 @@
+    <!-- Fixed Action Buttons (always visible in complete/error phase) -->
+    <div x-show="phase === 'complete' || phase === 'error'"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
+        <!-- Save as Recipe Button (only in DAG mode with successful completion) -->
+        <button x-show="executionMode === 'dag' && phase === 'complete' && completionResultStatus !== 'partial'"
+                @click="openSaveRecipeModal()"
+                class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-full font-medium shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+            Save as Recipe
+        </button>
+        <!-- Start New Task Button -->
+        <button @click="resetToStart()"
+                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Start New Task
+        </button>
+    </div>

@@ -1,0 +1,2934 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentSkillOS | Organizing and Orchestrating Agent Skills</title>
+  <meta name="description" content="AgentSkillOS homepage aligned to paper logic: introduction, method, benchmark, experiments, and all 30 benchmark tasks as cards.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Open+Sans:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f7fc;
+      --bg-soft: #eef3fb;
+      --surface: #ffffff;
+      --surface-muted: #f8faff;
+      --text: #1e293b;
+      --muted: #475569;
+      --line: #dbe4f0;
+      --primary: #2563eb;
+      --secondary: #3b82f6;
+      --cta: #f97316;
+      --success: #0891b2;
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-sm: 0 10px 24px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 16px 34px rgba(15, 23, 42, 0.11);
+      --shadow-lg: 0 26px 54px rgba(15, 23, 42, 0.16);
+      --max-width: 1200px;
+      --z-nav: 50;
+      --z-modal: 80;
+      --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.24);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #0b1322;
+      --bg-soft: #101b31;
+      --surface: #101a2f;
+      --surface-muted: #172541;
+      --text: #e2e8f0;
+      --muted: #9fb1cc;
+      --line: #283b5c;
+      --primary: #60a5fa;
+      --secondary: #3b82f6;
+      --cta: #fb923c;
+      --success: #22d3ee;
+      --shadow-sm: 0 12px 26px rgba(2, 8, 23, 0.55);
+      --shadow-md: 0 18px 36px rgba(2, 8, 23, 0.64);
+      --shadow-lg: 0 28px 58px rgba(2, 8, 23, 0.72);
+      --focus-ring: 0 0 0 3px rgba(96, 165, 250, 0.34);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Open Sans", "Noto Sans SC", "Segoe UI", sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 8% 12%, rgba(37, 99, 235, 0.11), transparent 40%),
+        radial-gradient(circle at 92% 5%, rgba(249, 115, 22, 0.08), transparent 34%),
+        linear-gradient(180deg, var(--bg) 0%, #f9fbff 100%);
+    }
+
+    html[data-theme="dark"] body {
+      background:
+        radial-gradient(circle at 8% 12%, rgba(96, 165, 250, 0.17), transparent 42%),
+        radial-gradient(circle at 92% 5%, rgba(251, 146, 60, 0.12), transparent 36%),
+        linear-gradient(180deg, var(--bg) 0%, #0f1a30 100%);
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    h1,
+    h2,
+    h3,
+    .brand,
+    .metric-value,
+    .task-title {
+      font-family: "Poppins", "Noto Sans SC", sans-serif;
+    }
+
+    .container {
+      width: min(var(--max-width), calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .section {
+      padding: 78px 0;
+      scroll-margin-top: 24px;
+    }
+
+    .topbar {
+      position: relative;
+      top: 0;
+      margin-top: 24px;
+      z-index: var(--z-nav);
+      background: transparent;
+    }
+
+    .topbar-inner {
+      width: min(var(--max-width), calc(100% - 40px));
+      margin: 0 auto;
+      height: 62px;
+      padding: 0 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      backdrop-filter: none;
+      box-shadow: none;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      height: 100%;
+      flex: 0 0 auto;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .brand img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+      border: none;
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+    }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      margin-left: auto;
+      padding: 5px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .nav-link {
+      position: relative;
+      text-decoration: none;
+      border: none;
+      background: transparent;
+      color: #56657a;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 0;
+      padding: 8px 2px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 180ms ease;
+    }
+
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 2px;
+      width: 100%;
+      height: 1.5px;
+      background: var(--primary);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 180ms ease;
+    }
+
+    .btn,
+    .lang-btn {
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 180ms ease, color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .topbar .icon-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: none;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: #4f6078;
+      cursor: pointer;
+      transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .topbar .icon-btn::after {
+      content: none;
+    }
+
+    .topbar .icon-btn svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    .topbar .github-icon svg {
+      width: 17px;
+      height: 17px;
+      fill: currentColor;
+      stroke: none;
+    }
+
+    .topbar .theme-icon svg,
+    .topbar .lang-icon svg {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .nav-link:hover,
+    .topbar .icon-btn:hover {
+      background: rgba(37, 99, 235, 0.15);
+      transform: none;
+      color: var(--primary);
+      box-shadow: none;
+    }
+
+    .nav-link:hover::after,
+    .nav-link:focus-visible::after {
+      transform: scaleX(1);
+    }
+
+    .nav-link:focus-visible,
+    .btn:focus-visible,
+    .lang-btn:focus-visible,
+    .icon-btn:focus-visible,
+    .filter-chip:focus-visible,
+    .task-card:focus-visible,
+    .modal-close:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
+    .btn-primary {
+      border-color: transparent;
+      color: #fff;
+      background: linear-gradient(130deg, var(--primary) 0%, var(--secondary) 66%, var(--cta) 100%);
+      box-shadow: 0 14px 24px rgba(37, 99, 235, 0.27);
+    }
+
+    .btn-primary:hover {
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 18px 30px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-jump {
+      border: 1px solid transparent;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 52%, #0ea5e9 100%);
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      text-shadow: 0 1px 1px rgba(15, 23, 42, 0.24);
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.34);
+    }
+
+    .btn-jump:hover {
+      color: #ffffff;
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.42);
+    }
+
+    .hero {
+      padding: 96px 0 40px;
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 1.16fr 0.84fr;
+      gap: 32px;
+      align-items: stretch;
+    }
+
+    .hero-layout > .reveal:first-child {
+      padding-top: 12px;
+      padding-right: 8px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.73rem;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 14px;
+      padding: 6px 10px;
+      border: 1px solid #d5e3f4;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 10px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    h1 {
+      font-size: clamp(2.08rem, 4.1vw, 3.35rem);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      margin-bottom: 14px;
+      max-width: 18ch;
+    }
+
+    .hero-summary {
+      color: #4d6785;
+      font-size: clamp(1rem, 1.75vw, 1.12rem);
+      max-width: 58ch;
+    }
+
+    .hero-actions {
+      margin-top: 26px;
+      display: inline-flex;
+      justify-content: flex-start;
+      align-items: stretch;
+      flex-wrap: nowrap;
+      gap: 10px;
+      max-width: 100%;
+      padding: 10px;
+      border: 1px solid #d7e4f3;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.76);
+      box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(14px);
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 250, 255, 0.96) 100%);
+      box-shadow: var(--shadow-sm);
+      padding: 18px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .metric {
+      border: 1px solid #dce6f6;
+      border-radius: 14px;
+      background: var(--surface-muted);
+      padding: 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.66);
+    }
+
+    .metric-value {
+      font-size: 1.26rem;
+      line-height: 1.05;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 2px;
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .github-block {
+      margin-top: 10px;
+      border: 1px solid #dbe6f6;
+      border-radius: 14px;
+      background: #f8faff;
+      padding: 10px;
+    }
+
+    .github-head {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: #35557f;
+    }
+
+    .github-grid {
+      margin-top: 6px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .github-stat {
+      text-decoration: none;
+      border: 1px solid #d3e0f3;
+      border-radius: 12px;
+      background: #fff;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .github-stat:hover {
+      border-color: #9fb8df;
+      box-shadow: 0 10px 18px rgba(37, 99, 235, 0.14);
+      transform: translateY(-1px);
+    }
+
+    .github-value {
+      font-family: "Poppins", "Noto Sans SC", sans-serif;
+      font-size: 1rem;
+      line-height: 1.1;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .github-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.77rem;
+      color: #4e6685;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .github-label-icon {
+      width: 12px;
+      height: 12px;
+      display: block;
+      flex: 0 0 auto;
+    }
+
+    .github-label-icon.star {
+      fill: currentColor;
+      stroke: none;
+    }
+
+    .github-label-icon.fork {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .github-meta {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.74rem;
+    }
+
+    .github-meta time {
+      font-weight: 700;
+    }
+
+    .panel-cta-note {
+      margin-top: 14px;
+      color: #537094;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      font-weight: 600;
+      text-wrap: balance;
+      max-width: 34ch;
+    }
+
+    .panel-actions {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .panel-actions .btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      text-align: left;
+      padding: 13px 14px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .panel-actions .btn-jump {
+      border-radius: 16px;
+      font-size: 0.98rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      min-height: 56px;
+      white-space: normal;
+      text-shadow: none;
+    }
+
+    .panel-actions .btn::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: inherit;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 56%, rgba(255, 255, 255, 0.16) 100%);
+      pointer-events: none;
+    }
+
+    .panel-actions .btn::after {
+      content: "";
+      position: absolute;
+      right: -12%;
+      bottom: -92%;
+      width: 68%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0) 70%);
+      opacity: 0.9;
+      pointer-events: none;
+      transition: transform 220ms ease, opacity 220ms ease;
+    }
+
+    .panel-actions .btn:hover::after {
+      transform: translate(-8px, -10px) scale(1.05);
+      opacity: 1;
+    }
+
+    .panel-actions .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .panel-actions .btn > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .panel-actions .btn-badge {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.92);
+      text-transform: uppercase;
+    }
+
+    .panel-actions .btn-copy {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .panel-actions .btn-kicker {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .panel-actions .btn-label {
+      font-size: 0.98rem;
+      line-height: 1.08;
+      color: #ffffff;
+    }
+
+    .panel-actions .btn-arrow {
+      margin-left: auto;
+      flex: 0 0 auto;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 1rem;
+      line-height: 1;
+      transition: transform 180ms ease, opacity 180ms ease;
+      opacity: 0.82;
+    }
+
+    .panel-actions .btn:hover .btn-arrow {
+      transform: translate(2px, -2px);
+      opacity: 1;
+    }
+
+    .panel-actions .btn-star {
+      border-color: rgba(250, 204, 21, 0.34);
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 54%, #f59e0b 100%);
+      box-shadow: 0 18px 32px rgba(37, 99, 235, 0.26);
+    }
+
+    .panel-actions .btn-star:hover {
+      background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 52%, #d97706 100%);
+      box-shadow: 0 22px 38px rgba(37, 99, 235, 0.34);
+    }
+
+    .panel-actions .btn-arxiv {
+      border-color: rgba(248, 113, 113, 0.34);
+      background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 56%, #ea580c 100%);
+      box-shadow: 0 18px 32px rgba(127, 29, 29, 0.26);
+    }
+
+    .panel-actions .btn-arxiv:hover {
+      background: linear-gradient(135deg, #6b1414 0%, #991b1b 54%, #c2410c 100%);
+      box-shadow: 0 22px 38px rgba(127, 29, 29, 0.34);
+    }
+
+    .hero-nav-btn {
+      border-color: #c6d8ef;
+      background: linear-gradient(180deg, #ffffff 0%, #f0f6ff 100%);
+      color: #31557d;
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      padding: 10px 18px;
+      border-radius: 999px;
+      min-height: 44px;
+      min-width: 0;
+      justify-content: center;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.1);
+    }
+
+    .hero-nav-btn:hover {
+      border-color: #95b7e4;
+      background: linear-gradient(180deg, #ffffff 0%, #e8f1ff 100%);
+      color: var(--primary);
+      box-shadow: 0 12px 22px rgba(37, 99, 235, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .figure {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: #fff;
+      box-shadow: var(--shadow-sm);
+      padding: 14px;
+    }
+
+    .figure img {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+      border: 1px solid #dfe8f5;
+    }
+
+    .figure figcaption {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .hero-demo {
+      width: min(780px, calc(100% - 56px));
+      margin: 14px auto 0;
+      padding: 10px;
+    }
+
+    .hero-demo img {
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      max-height: 360px;
+    }
+
+    .hero-demo figcaption {
+      font-size: 0.84rem;
+      text-align: center;
+    }
+
+    .section-head {
+      margin-bottom: 20px;
+    }
+
+    .section-tag {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
+    h2 {
+      font-size: clamp(1.54rem, 3vw, 2.36rem);
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      max-width: 78ch;
+      font-size: 0.99rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .content-card {
+      border: 1px solid #d8e2f1;
+      border-radius: var(--radius-lg);
+      background: #fff;
+      padding: 14px;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.07);
+      transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .content-card:hover {
+      transform: translateY(-2px);
+      border-color: #b3c7e8;
+      box-shadow: var(--shadow-md);
+    }
+
+    .content-card h3 {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .content-card img {
+      width: 100%;
+      display: block;
+      border-radius: 10px;
+      border: 1px solid #dce7f7;
+      margin-bottom: 8px;
+      background: #fff;
+    }
+
+    .content-card p {
+      color: var(--muted);
+      font-size: 0.91rem;
+    }
+
+    .content-list {
+      margin-top: 8px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .content-list li {
+      list-style: none;
+      border-left: 3px solid #bfd2f2;
+      padding-left: 8px;
+      color: #3a5566;
+      font-size: 0.9rem;
+    }
+
+    .chip-row {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid #c7d6ef;
+      border-radius: 999px;
+      background: #f5f8ff;
+      color: #294d8a;
+      font-size: 0.79rem;
+      font-weight: 700;
+      padding: 6px 10px;
+    }
+
+    .task-shell {
+      margin-top: 16px;
+      border: 1px solid #d2deef;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 255, 0.96) 100%);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .task-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-chip {
+      border: 1px solid #c5d4ec;
+      border-radius: 999px;
+      background: #f7faff;
+      color: #29435d;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: border-color 180ms ease, color 180ms ease, background-color 180ms ease, transform 180ms ease;
+    }
+
+    .cat-icon {
+      margin-right: 6px;
+      font-size: 0.9em;
+      vertical-align: -1px;
+    }
+
+    .filter-chip:hover {
+      transform: translateY(-1px);
+      border-color: #9fb7de;
+      color: var(--primary);
+    }
+
+    .filter-chip.active {
+      border-color: transparent;
+      background: linear-gradient(130deg, var(--primary) 0%, var(--secondary) 75%);
+      color: #fff;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .task-card {
+      border: 1px solid #d4dfef;
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 224px;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+      transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .task-card:hover,
+    .task-card:focus-visible {
+      border-color: #a7bce0;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      outline: none;
+    }
+
+    .task-id {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.71rem;
+      color: #59718e;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .task-icon-badge {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #eaf2ff;
+      font-size: 0.72rem;
+      line-height: 1;
+      font-family: "Open Sans", "Noto Sans SC", sans-serif;
+      letter-spacing: 0;
+    }
+
+    .task-title {
+      font-size: 0.97rem;
+      line-height: 1.35;
+      font-weight: 700;
+      min-height: 2.7em;
+    }
+
+    .task-meta {
+      font-size: 0.79rem;
+      color: #4d6786;
+      font-weight: 600;
+    }
+
+    .task-desc {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.42;
+    }
+
+    .task-prompt {
+      color: #314c70;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      border-left: 2px solid #c5d6ee;
+      padding-left: 8px;
+      flex: 1;
+    }
+
+    .task-prompt-label {
+      font-weight: 700;
+      color: #27456d;
+    }
+
+    .task-link {
+      color: var(--primary);
+      font-size: 0.83rem;
+      font-weight: 700;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .examples-grid {
+      align-items: stretch;
+      grid-auto-rows: 1fr;
+    }
+
+    .gallery-jump {
+      display: flex;
+      text-decoration: none;
+      color: inherit;
+      height: 100%;
+    }
+
+    .gallery-card {
+      border: 1px solid #d5e1f2;
+      border-radius: var(--radius-lg);
+      background: #fff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.07);
+      transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .gallery-card:hover {
+      transform: translateY(-2px);
+      border-color: #b4c8ea;
+      box-shadow: var(--shadow-md);
+    }
+
+    .examples-grid .gallery-card {
+      height: 368px;
+    }
+
+    .examples-grid .gallery-card img {
+      width: 100%;
+      height: 208px;
+      object-fit: cover;
+      display: block;
+      background: #f6f9ff;
+      border-bottom: 1px solid #dee8f6;
+    }
+
+    .gallery-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-height: 132px;
+    }
+
+    .gallery-body h3 {
+      font-size: 0.98rem;
+      margin-bottom: 0;
+      line-height: 1.3;
+      min-height: 2.6em;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .gallery-body p {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+
+    html[data-theme="dark"] .nav-link,
+    html[data-theme="dark"] .topbar .icon-btn {
+      color: #a6b7d1;
+    }
+
+    html[data-theme="dark"] .topbar-inner {
+      background: transparent;
+    }
+
+    html[data-theme="dark"] .nav-row {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    html[data-theme="dark"] .topbar .icon-btn:hover {
+      background: rgba(96, 165, 250, 0.16);
+    }
+
+    html[data-theme="dark"] .btn-jump {
+      border-color: rgba(125, 211, 252, 0.45);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 52%, #0369a1 100%);
+      color: #eaf2ff;
+      box-shadow: 0 12px 24px rgba(2, 8, 23, 0.58);
+    }
+
+    html[data-theme="dark"] .btn-jump:hover {
+      border-color: rgba(125, 211, 252, 0.66);
+      color: #f8fbff;
+      background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 52%, #075985 100%);
+      box-shadow: 0 16px 30px rgba(2, 8, 23, 0.68);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-method {
+      border-color: rgba(125, 211, 252, 0.5);
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 58%, #0369a1 100%);
+      box-shadow: 0 14px 28px rgba(2, 8, 23, 0.62);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-method:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 58%, #075985 100%);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-benchmark {
+      border-color: rgba(94, 234, 212, 0.44);
+      background: linear-gradient(135deg, #0d9488 0%, #115e59 58%, #1d4ed8 100%);
+      box-shadow: 0 14px 28px rgba(2, 8, 23, 0.62);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-benchmark:hover {
+      background: linear-gradient(135deg, #0f766e 0%, #134e4a 58%, #1e40af 100%);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-star {
+      border-color: rgba(250, 204, 21, 0.3);
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 54%, #d97706 100%);
+      box-shadow: 0 18px 34px rgba(2, 8, 23, 0.62);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-star:hover {
+      background: linear-gradient(135deg, #172554 0%, #1e40af 52%, #b45309 100%);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-arxiv {
+      border-color: rgba(248, 113, 113, 0.3);
+      background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 54%, #9a3412 100%);
+      box-shadow: 0 18px 34px rgba(2, 8, 23, 0.62);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-arxiv:hover {
+      background: linear-gradient(135deg, #3f0909 0%, #6b1414 52%, #7c2d12 100%);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn::before {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 52%, rgba(15, 23, 42, 0.14) 100%);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-badge {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.07);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    html[data-theme="dark"] .panel-actions .btn-kicker {
+      color: rgba(226, 232, 240, 0.72);
+    }
+
+    html[data-theme="dark"] .panel-cta-note {
+      color: #b6c9e6;
+    }
+
+    html[data-theme="dark"] .hero-layout > .reveal:first-child {
+      padding-top: 10px;
+    }
+
+    html[data-theme="dark"] .eyebrow {
+      border-color: #35527d;
+      background: rgba(14, 24, 42, 0.72);
+      box-shadow: 0 12px 22px rgba(2, 8, 23, 0.3);
+    }
+
+    html[data-theme="dark"] .hero-summary {
+      color: #aec1dd;
+    }
+
+    html[data-theme="dark"] .hero-actions {
+      border-color: #31496c;
+      background: rgba(14, 24, 42, 0.78);
+      box-shadow: 0 18px 32px rgba(2, 8, 23, 0.42);
+    }
+
+    html[data-theme="dark"] .hero-nav-btn {
+      border-color: #38557f;
+      background: linear-gradient(180deg, #172947 0%, #12233b 100%);
+      color: #d7e5f8;
+      box-shadow: 0 10px 18px rgba(2, 8, 23, 0.34);
+    }
+
+    html[data-theme="dark"] .hero-nav-btn:hover {
+      border-color: #6ea8f7;
+      background: linear-gradient(180deg, #1a3156 0%, #163055 100%);
+      color: #f4f8ff;
+      box-shadow: 0 14px 24px rgba(2, 8, 23, 0.42);
+    }
+
+    html[data-theme="dark"] .panel {
+      background: linear-gradient(180deg, rgba(16, 26, 47, 0.95) 0%, rgba(15, 30, 55, 0.95) 100%);
+    }
+
+    html[data-theme="dark"] .github-block {
+      border-color: #3a5784;
+      background: #152744;
+    }
+
+    html[data-theme="dark"] .github-head {
+      color: #9bc0f2;
+    }
+
+    html[data-theme="dark"] .github-stat {
+      border-color: #3a5784;
+      background: #12223b;
+    }
+
+    html[data-theme="dark"] .github-stat:hover {
+      border-color: #7faced;
+      box-shadow: 0 12px 20px rgba(2, 8, 23, 0.55);
+    }
+
+    html[data-theme="dark"] .github-label {
+      color: #9fb5d7;
+    }
+
+    html[data-theme="dark"] .github-meta {
+      color: #9eb5d8;
+    }
+
+    html[data-theme="dark"] .metric,
+    html[data-theme="dark"] .content-card,
+    html[data-theme="dark"] .task-card,
+    html[data-theme="dark"] .gallery-card,
+    html[data-theme="dark"] .footer-wrap,
+    html[data-theme="dark"] .modal-panel,
+    html[data-theme="dark"] .detail-block,
+    html[data-theme="dark"] .figure {
+      border-color: var(--line);
+      background: var(--surface);
+    }
+
+    html[data-theme="dark"] .task-shell {
+      border-color: var(--line);
+      background: linear-gradient(180deg, rgba(16, 26, 47, 0.96) 0%, rgba(14, 28, 51, 0.96) 100%);
+    }
+
+    html[data-theme="dark"] .figure img,
+    html[data-theme="dark"] .content-card img,
+    html[data-theme="dark"] .gallery-card img {
+      border-color: #31486f;
+      background: #0e1d35;
+    }
+
+    html[data-theme="dark"] .content-list li {
+      border-left-color: #486ca3;
+      color: #adc1dd;
+    }
+
+    html[data-theme="dark"] .chip {
+      border-color: #3e5985;
+      background: #162846;
+      color: #9fc0ef;
+    }
+
+    html[data-theme="dark"] .filter-chip {
+      border-color: #3a5682;
+      background: #142541;
+      color: #a7bcdb;
+    }
+
+    html[data-theme="dark"] .filter-chip:hover {
+      border-color: #74a1de;
+    }
+
+    html[data-theme="dark"] .task-id {
+      color: #87a4cb;
+    }
+
+    html[data-theme="dark"] .task-icon-badge {
+      background: #1b2d4d;
+    }
+
+    html[data-theme="dark"] .task-meta {
+      color: #9db2d1;
+    }
+
+    html[data-theme="dark"] .task-prompt {
+      color: #a9bedf;
+      border-left-color: #47699c;
+    }
+
+    html[data-theme="dark"] .task-prompt-label {
+      color: #c2d8f8;
+    }
+
+    html[data-theme="dark"] .citation {
+      border-color: #3a5987;
+      background: #13233d;
+      color: #afc3e3;
+    }
+
+    html[data-theme="dark"] .modal-close {
+      border-color: #3a5987;
+      background: #12213b;
+      color: #9ab2d6;
+    }
+
+    html[data-theme="dark"] .modal-close:hover {
+      border-color: #86b6f6;
+    }
+
+    html[data-theme="dark"] .modal-category {
+      background: rgba(96, 165, 250, 0.2);
+      color: #bfdbfe;
+    }
+
+    html[data-theme="dark"] .detail-block h4 {
+      color: #a3c0e7;
+    }
+
+    html[data-theme="dark"] .detail-block ul {
+      color: #b2c6e5;
+    }
+
+    html[data-theme="dark"] .modal-prompt-block {
+      border-color: var(--line);
+      background: #13233d;
+    }
+
+    html[data-theme="dark"] .modal-prompt-block h4 {
+      color: #a3c0e7;
+    }
+
+    html[data-theme="dark"] .modal-prompt {
+      color: #b2c6e5;
+    }
+
+    .footer {
+      padding: 30px 0 60px;
+    }
+
+    .footer-wrap {
+      border: 1px solid #d5e1f2;
+      border-radius: var(--radius-xl);
+      background: #fff;
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .footer-wrap p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .citation {
+      margin-top: 10px;
+      border: 1px dashed #c6d8f2;
+      border-radius: 10px;
+      background: #f7faff;
+      color: #304c72;
+      padding: 10px;
+      text-align: left;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: var(--z-modal);
+      display: none;
+    }
+
+    .modal.open {
+      display: block;
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.58);
+    }
+
+    .modal-panel {
+      position: relative;
+      width: min(760px, calc(100% - 24px));
+      margin: 5vh auto 0;
+      max-height: 90vh;
+      overflow: auto;
+      border-radius: var(--radius-xl);
+      border: 1px solid #d1ddf0;
+      background: #fff;
+      box-shadow: var(--shadow-lg);
+      padding: 14px;
+    }
+
+    .modal-close {
+      margin-left: auto;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid #c1d2ea;
+      background: #fff;
+      color: #2a3f5d;
+      font-size: 22px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .modal-close:hover {
+      color: var(--primary);
+      border-color: #9eb8df;
+    }
+
+    .modal-category {
+      display: inline-block;
+      margin-top: 6px;
+      margin-bottom: 6px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.12);
+      color: #1f4ed8;
+      padding: 5px 10px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .modal-title {
+      font-size: clamp(1.2rem, 2.3vw, 1.62rem);
+      line-height: 1.25;
+      margin-bottom: 7px;
+    }
+
+    .modal-meta,
+    .modal-desc {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 10px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .detail-block {
+      border: 1px solid #d5e1f2;
+      border-radius: 12px;
+      background: #f8faff;
+      padding: 10px;
+    }
+
+    .detail-block h4 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #2f4f74;
+      margin-bottom: 7px;
+    }
+
+    .detail-block ul {
+      list-style: disc;
+      padding-left: 18px;
+      display: grid;
+      gap: 4px;
+      color: #324d71;
+      font-size: 0.89rem;
+    }
+
+    .modal-prompt-block {
+      margin-top: 10px;
+      border: 1px solid #d5e1f2;
+      border-radius: 12px;
+      background: #f8faff;
+      padding: 10px;
+    }
+
+    .modal-prompt-block h4 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #2f4f74;
+      margin-bottom: 7px;
+    }
+
+    .modal-prompt {
+      color: #324d71;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1060px) {
+      .hero-layout,
+      .grid-2,
+      .grid-3,
+      .task-grid,
+      .gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .hero-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-layout > .reveal:first-child {
+        padding-right: 0;
+      }
+
+      .hero-actions {
+        flex-wrap: wrap;
+        border-radius: 24px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .section {
+        padding: 56px 0;
+      }
+
+      .topbar {
+        top: 0;
+        margin-top: 8px;
+      }
+
+      .topbar-inner {
+        height: 56px;
+        padding: 0;
+      }
+
+      .nav-link {
+        display: none;
+      }
+
+      .nav-row {
+        gap: 4px;
+        padding: 3px;
+      }
+
+      .btn,
+      .lang-btn {
+        padding: 7px 10px;
+        font-size: 11px;
+      }
+
+      .hero-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+        border-radius: 20px;
+        padding: 8px;
+      }
+
+      .hero-nav-btn {
+        flex: 1 1 calc(50% - 8px);
+        min-width: calc(50% - 8px);
+        padding: 10px 14px;
+        min-height: 44px;
+        font-size: 0.84rem;
+      }
+
+      .panel-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-grid,
+      .grid-2,
+      .grid-3,
+      .task-grid,
+      .gallery-grid,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-demo {
+        width: 100%;
+        padding: 8px;
+      }
+
+      .examples-grid .gallery-card img {
+        height: 186px;
+      }
+
+      .examples-grid .gallery-card {
+        height: auto;
+        min-height: 340px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top" aria-label="AgentSkillOS home">
+        <img src="./assets/logo.png" alt="AgentSkillOS logo">
+      </a>
+      <nav class="nav-row" aria-label="Utility">
+        <a class="icon-btn github-icon" href="https://github.com/ynulihao/AgentSkillOS" target="_blank" rel="noopener" aria-label="Open GitHub repository" title="GitHub">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.59 7.59 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+          </svg>
+        </a>
+        <button type="button" class="icon-btn theme-icon" id="themeToggle" aria-label="Switch to dark mode" title="Dark">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79Z"></path>
+          </svg>
+        </button>
+        <button type="button" class="icon-btn lang-icon" id="langToggle" aria-label="Switch to Chinese" title="中文">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M3 12h18"></path>
+            <path d="M12 3a15 15 0 0 1 0 18"></path>
+            <path d="M12 3a15 15 0 0 0 0 18"></path>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero" id="introduction">
+      <div class="container hero-layout">
+        <div class="reveal">
+          <p class="eyebrow i18n" data-en="Agent Skill Ecosystem" data-zh="Agent 技能生态系统">Agent Skill Ecosystem</p>
+          <h1 class="i18n" data-en="Organizing, Orchestrating, and Benchmarking Agent Skills at Ecosystem Scale" data-zh="面向生态规模的 Agent 技能组织、编排与评测">Organizing, Orchestrating, and Benchmarking Agent Skills at Ecosystem Scale</h1>
+          <p class="hero-summary i18n" data-en="Build Your Agent from 200,000+ Skills" data-zh="通过技能检索与编排，从 200,000+ 技能中构建Agent">Build Your Agent from 200,000+ Skills via Skill Retrieval &amp; Orchestration</p>
+          <div class="hero-actions">
+            <a class="btn hero-nav-btn i18n" data-en="Method" data-zh="方法" href="#method">Method</a>
+            <a class="btn hero-nav-btn i18n" data-en="Benchmark" data-zh="基准测试" href="#benchmark">Benchmark</a>
+            <a class="btn hero-nav-btn i18n" data-en="Experiments" data-zh="实验" href="#experiments">Experiments</a>
+            <a class="btn hero-nav-btn i18n" data-en="Case Study" data-zh="案例研究" href="#gallery">Case Study</a>
+          </div>
+        </div>
+
+        <aside class="panel reveal">
+          <div class="metric-grid">
+            <div class="metric">
+              <p class="metric-value">200,000+</p>
+              <p class="metric-label i18n" data-en="Public Skills" data-zh="公开技能">Public Skills</p>
+            </div>
+            <div class="metric">
+              <p class="metric-value">30</p>
+              <p class="metric-label i18n" data-en="Benchmark Tasks" data-zh="评测任务">Benchmark Tasks</p>
+            </div>
+            <div class="metric">
+              <p class="metric-value">5</p>
+              <p class="metric-label i18n" data-en="Task Categories" data-zh="任务类别">Task Categories</p>
+            </div>
+            <div class="metric">
+              <p class="metric-value">200 / 1K / 200K</p>
+              <p class="metric-label i18n" data-en="Ecosystem Sizes" data-zh="生态规模">Ecosystem Sizes</p>
+            </div>
+          </div>
+          <section class="github-block" aria-label="GitHub repository statistics">
+            <p class="github-head i18n" data-en="GitHub Project" data-zh="GitHub 项目">GitHub Project</p>
+            <div class="github-grid">
+              <a class="github-stat" id="githubStarLink" href="https://github.com/ynulihao/AgentSkillOS/stargazers" target="_blank" rel="noopener">
+                <span class="github-value" id="githubStars">--</span>
+                <span class="github-label">
+                  <svg class="github-label-icon star" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m12 3.5 2.79 5.66 6.25.91-4.52 4.4 1.07 6.22L12 17.76 6.41 20.7l1.07-6.22-4.52-4.4 6.25-.91L12 3.5Z"></path>
+                  </svg>
+                  <span class="i18n" data-en="Stars" data-zh="星标">Stars</span>
+                </span>
+              </a>
+              <a class="github-stat" id="githubForkLink" href="https://github.com/ynulihao/AgentSkillOS/network/members" target="_blank" rel="noopener">
+                <span class="github-value" id="githubForks">--</span>
+                <span class="github-label">
+                  <svg class="github-label-icon fork" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="6" cy="4" r="2"></circle>
+                    <circle cx="6" cy="19" r="2"></circle>
+                    <circle cx="18" cy="14" r="2"></circle>
+                    <path d="M6 6v11"></path>
+                    <path d="M8 8h7a3 3 0 0 1 3 3v1"></path>
+                  </svg>
+                  <span class="i18n" data-en="Forks" data-zh="分叉">Forks</span>
+                </span>
+              </a>
+            </div>
+            <p class="github-meta"><span class="i18n" data-en="Updated" data-zh="更新于">Updated</span>: <time id="githubUpdated">--</time></p>
+          </section>
+          <p class="panel-cta-note i18n" data-en="If AgentSkillOS helps your work, support us with a Star and cite our paper." data-zh="如果 AgentSkillOS 对你的工作有帮助，欢迎用一个 Star 支持我们，并引用我们的论文。">If AgentSkillOS helps your work, support us with a Star and cite our paper.</p>
+          <div class="panel-actions">
+            <a class="btn btn-jump btn-star" href="https://github.com/ynulihao/AgentSkillOS" target="_blank" rel="noopener">
+              <span class="btn-badge" aria-hidden="true">GH</span>
+              <span class="btn-copy">
+                <span class="btn-kicker i18n" data-en="GitHub" data-zh="GitHub">GitHub</span>
+                <span class="btn-label i18n" data-en="Give us a Star" data-zh="给我们 Star">Give us a Star</span>
+              </span>
+              <span class="btn-arrow" aria-hidden="true">-&gt;</span>
+            </a>
+            <a class="btn btn-jump btn-arxiv" href="https://arxiv.org/abs/2603.02176" target="_blank" rel="noopener">
+              <span class="btn-badge" aria-hidden="true">AX</span>
+              <span class="btn-copy">
+                <span class="btn-kicker i18n" data-en="Paper" data-zh="论文">Paper</span>
+                <span class="btn-label">Arxiv</span>
+              </span>
+              <span class="btn-arrow" aria-hidden="true">-&gt;</span>
+            </a>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="method">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="section-tag">Method</p>
+          <h2 class="i18n" data-en="Two-Stage AgentSkillOS Framework" data-zh="AgentSkillOS 双阶段框架">Two-Stage AgentSkillOS Framework</h2>
+          <p class="section-desc i18n" data-en="AgentSkillOS follows a two-stage pipeline: Manage Skills (capability-tree construction) and Solve Tasks (retrieval, orchestration, and execution)." data-zh="AgentSkillOS 采用两阶段流程：Manage Skills（能力树构建）与 Solve Tasks（检索、编排、执行）。">AgentSkillOS follows a two-stage pipeline: Manage Skills (capability-tree construction) and Solve Tasks (retrieval, orchestration, and execution).</p>
+        </header>
+
+        <div class="grid-2">
+          <article class="content-card reveal">
+            <h3 class="i18n" data-en="Stage 1 · Manage Skills" data-zh="阶段 1 · 管理技能">Stage 1 · Manage Skills</h3>
+            <p class="i18n" data-en="Organize ecosystem skills into a capability tree for coarse-to-fine discovery." data-zh="将生态技能组织成能力树，支持由粗到细的发现。">Organize ecosystem skills into a capability tree for coarse-to-fine discovery.</p>
+            <ul class="content-list">
+              <li class="i18n" data-en="Node-level recursive categorization" data-zh="节点级递归分类">Node-level recursive categorization</li>
+              <li class="i18n" data-en="Usage-frequency queue for active set" data-zh="使用频率队列选择活跃集合">Usage-frequency queue for active set</li>
+              <li class="i18n" data-en="Dormant index with semantic suggestions" data-zh="休眠索引与语义建议">Dormant index with semantic suggestions</li>
+            </ul>
+          </article>
+          <article class="content-card reveal">
+            <h3 class="i18n" data-en="Stage 2 · Solve Tasks" data-zh="阶段 2 · 解决任务">Stage 2 · Solve Tasks</h3>
+            <p class="i18n" data-en="Build a task-specific agent through retrieval and DAG-based multi-skill execution." data-zh="通过检索与 DAG 多技能执行构建任务专用 Agent。">Build a task-specific agent through retrieval and DAG-based multi-skill execution.</p>
+            <ul class="content-list">
+              <li class="i18n" data-en="Task-driven skill retrieval" data-zh="任务驱动检索">Task-driven skill retrieval</li>
+              <li class="i18n" data-en="DAG orchestration with strategy variants" data-zh="多策略 DAG 编排">DAG orchestration with strategy variants</li>
+              <li class="i18n" data-en="Layered execution with dependency control" data-zh="分层依赖执行">Layered execution with dependency control</li>
+            </ul>
+            <div class="chip-row">
+              <span class="chip">Quality-First</span>
+              <span class="chip">Efficiency-First</span>
+              <span class="chip">Simplicity-First</span>
+            </div>
+          </article>
+        </div>
+
+        <figure class="figure reveal">
+          <img src="./assets/paper_figures/fig_framework.png" alt="Fig.1 framework in paper">
+          <figcaption class="i18n" data-en="Figure 1: overall AgentSkillOS workflow for skill retrieval, orchestration, and execution." data-zh="图 1：AgentSkillOS 在技能检索、编排与执行上的整体工作流。">Figure 1: overall AgentSkillOS workflow for skill retrieval, orchestration, and execution.</figcaption>
+        </figure>
+
+        <div id="capability-trees" class="subsection reveal" style="margin-top:2rem;">
+          <h3 class="i18n" data-en="Capability Tree Expansion" data-zh="能力树展开动画">Capability Tree Expansion</h3>
+          <p class="section-desc i18n" data-en="Visualizing how the skill tree scales from a curated starter set to a large-scale ecosystem." data-zh="展示技能树如何从精选入门集合扩展到大规模生态。">Visualizing how the skill tree scales from a curated starter set to a large-scale ecosystem.</p>
+          <div class="grid-3">
+            <article class="content-card reveal">
+              <img src="./assets/capability_trees/tree_200_expand.gif" alt="200-skill capability tree expansion">
+              <h3 class="i18n" data-en="200-Skill Tree" data-zh="200 技能树">200-Skill Tree</h3>
+              <p class="i18n" data-en="4 levels, 22 nodes — a curated starter set." data-zh="4 层，22 个节点 — 精选入门集合。">4 levels, 22 nodes — a curated starter set.</p>
+            </article>
+            <article class="content-card reveal">
+              <img src="./assets/capability_trees/tree_1000_expand.gif" alt="1000-skill capability tree expansion">
+              <h3 class="i18n" data-en="1,000-Skill Tree" data-zh="1,000 技能树">1,000-Skill Tree</h3>
+              <p class="i18n" data-en="7 levels, 47 nodes — mid-scale ecosystem." data-zh="7 层，47 个节点 — 中等规模生态。">7 levels, 47 nodes — mid-scale ecosystem.</p>
+            </article>
+            <article class="content-card reveal">
+              <img src="./assets/capability_trees/tree_10000_expand.gif" alt="10000-skill capability tree expansion">
+              <h3 class="i18n" data-en="10,000-Skill Tree" data-zh="10,000 技能树">10,000-Skill Tree</h3>
+              <p class="i18n" data-en="6 levels, 67 nodes — large-scale ecosystem." data-zh="6 层，67 个节点 — 大规模生态。">6 levels, 67 nodes — large-scale ecosystem.</p>
+            </article>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section" id="benchmark">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="section-tag">Benchmark</p>
+          <h2 class="i18n" data-en="Benchmark: 30 Multimodal Creative Tasks Across 5 Categories" data-zh="5 类别共 30 个多模态创意任务">30 Multimodal Creative Tasks Across 5 Categories</h2>
+          <p class="section-desc i18n" data-en="The benchmark emphasizes three properties: multimodal creative tasks spanning multi-format outputs, pairwise evaluation with position-bias mitigation, and Bradley-Terry aggregation." data-zh="该 Benchmark 强调三项特性：涵盖多格式输出的多模态创意任务、去位置偏差的成对评估，以及 Bradley-Terry 聚合。">The benchmark emphasizes three properties: multimodal creative tasks spanning multi-format outputs, pairwise evaluation with position-bias mitigation, and Bradley-Terry aggregation.</p>
+        </header>
+
+        <div class="grid-3">
+          <article class="content-card reveal">
+            <h3 class="i18n" data-en="Multimodal Creative Tasks" data-zh="多模态创意任务">Multimodal Creative Tasks</h3>
+            <p class="i18n" data-en="Tasks require end-user artifacts in multi-format outputs such as PDF, PPTX, DOCX, HTML, video, and generated images." data-zh="任务要求输出面向终端用户的多格式产物，如 PDF、PPTX、DOCX、HTML、视频与图像。">Tasks require end-user artifacts in multi-format outputs such as PDF, PPTX, DOCX, HTML, video, and generated images.</p>
+          </article>
+          <article class="content-card reveal">
+            <h3 class="i18n" data-en="Pairwise Evaluation" data-zh="成对评估">Pairwise Evaluation</h3>
+            <p class="i18n" data-en="Outputs are compared in both orders to reduce position bias and capture reliable preference signals." data-zh="结果在双向顺序下比较，以降低位置偏差并获得稳定偏好信号。">Outputs are compared in both orders to reduce position bias and capture reliable preference signals.</p>
+          </article>
+          <article class="content-card reveal">
+            <h3 class="i18n" data-en="Bradley-Terry Scores" data-zh="Bradley-Terry 评分">Bradley-Terry Scores</h3>
+            <p class="i18n" data-en="Pairwise preferences are aggregated into continuous ranking scores for fine-grained system comparisons." data-zh="将成对偏好聚合为连续排名分数，实现细粒度系统对比。">Pairwise preferences are aggregated into continuous ranking scores for fine-grained system comparisons.</p>
+          </article>
+        </div>
+
+        <div class="chip-row reveal">
+          <span class="chip i18n" data-en="Data Computation ×6" data-zh="数据计算 ×6">Data Computation ×6</span>
+          <span class="chip i18n" data-en="Document Creation ×6" data-zh="文档生成 ×6">Document Creation ×6</span>
+          <span class="chip i18n" data-en="Motion Video ×6" data-zh="动画视频 ×6">Motion Video ×6</span>
+          <span class="chip i18n" data-en="Visual Creation ×6" data-zh="视觉创作 ×6">Visual Creation ×6</span>
+          <span class="chip i18n" data-en="Web Interaction ×6" data-zh="网页交互 ×6">Web Interaction ×6</span>
+        </div>
+
+        <!-- <figure class="figure reveal" style="margin-top: 14px;">
+          <img src="./assets/paper_figures/fig_benchmark.png" alt="Fig.2 benchmark framework">
+          <figcaption class="i18n" data-en="Figure 2: benchmark framework and the Bradley-Terry aggregation pipeline." data-zh="图 2：Benchmark 框架与 Bradley-Terry 聚合流程。">Figure 2: benchmark framework and the Bradley-Terry aggregation pipeline.</figcaption>
+        </figure> -->
+
+        <figure class="figure reveal" style="margin-top: 12px;">
+          <img src="./assets/paper_figures/fig_task_overview.png" alt="Fig.3 task overview and complexity">
+          <figcaption class="i18n" data-en="Figure 3: 30 tasks grouped into five categories, with task-complexity statistics." data-zh="图 3：30 个任务的五类分布及任务复杂度统计。">Figure 3: 30 tasks grouped into five categories, with task-complexity statistics.</figcaption>
+        </figure>
+
+        <div id="tasks" class="subsection reveal" style="margin-top:2rem;">
+          <h3 class="i18n" data-en="Benchmark Tasks with Prompts" data-zh="含 Prompt 的 Benchmark 任务">Benchmark Tasks with Prompts</h3>
+          <p class="section-desc i18n" data-en="Each benchmark task is shown as a card with a prompt preview. Open details to read the full prompt, required skills, and output files." data-zh="每个 Benchmark 任务以卡片形式展示并提供 prompt 预览。展开后可查看完整 prompt、技能需求与输出文件。">Each benchmark task is shown as a card with a prompt preview. Open details to read the full prompt, required skills, and output files.</p>
+          <div class="task-shell reveal">
+            <div class="task-toolbar">
+              <div class="filters" id="categoryFilters" aria-label="Task category filters"></div>
+              <p class="count"><span id="visibleCount">0</span> <span id="visibleCountText">tasks</span></p>
+            </div>
+            <div class="task-grid" id="taskGrid" aria-live="polite"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section" id="experiments">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="section-tag">Experiments</p>
+          <h2 class="i18n" data-en="Experimental Findings" data-zh="实验发现">Experimental Findings</h2>
+          <p class="section-desc i18n" data-en="Evaluated across 200 / 1K / 200K skill ecosystems, AgentSkillOS demonstrates consistent superiority over baselines, with ablation confirming that both retrieval and orchestration are indispensable, and strategy selection producing structurally distinct execution graphs." data-zh="在 200 / 1K / 200K 三个生态规模下评估，AgentSkillOS 展现出对基线的持续优势；消融实验证实检索与编排缺一不可；策略选择产生结构性不同的执行图。">Evaluated across 200 / 1K / 200K skill ecosystems, AgentSkillOS demonstrates consistent superiority over baselines, with ablation confirming that both retrieval and orchestration are indispensable, and strategy selection producing structurally distinct execution graphs.</p>
+        </header>
+
+        <div class="grid-3">
+          <article class="content-card reveal">
+            <h3 class="i18n" data-en="Finding 1: Substantial Gains over Baselines at Every Scale" data-zh="结论 1：在各规模下均大幅超越基线">Finding 1: Substantial Gains over Baselines at Every Scale</h3>
+            <p class="i18n" data-en="All three AgentSkillOS variants achieve the highest Bradley-Terry scores across 200 / 1K / 200K ecosystems. The w/ Full Pool baseline, which feeds the entire skill set directly to the agent, scores poorly because a growing fraction of skills becomes invisible — structured retrieval and orchestration overcome this scalability bottleneck." data-zh="三个 AgentSkillOS 变体在 200 / 1K / 200K 生态中均获得最高 Bradley-Terry 分数。将全部技能直接提供给 Agent 的 Full Pool 基线表现不佳，因为随着生态扩大，越来越多技能变得不可见——结构化检索与编排克服了这一可扩展性瓶颈。">All three AgentSkillOS variants achieve the highest Bradley-Terry scores across 200 / 1K / 200K ecosystems. The w/ Full Pool baseline, which feeds the entire skill set directly to the agent, scores poorly because a growing fraction of skills becomes invisible — structured retrieval and orchestration overcome this scalability bottleneck.</p>
+          </article>
+          <article class="content-card reveal">
+            <h3 class="i18n" data-en="Finding 2: Ablation: Both Retrieval and Orchestration Are Essential" data-zh="结论 2：消融实验：检索与编排缺一不可">Finding 2: Ablation: Both Retrieval and Orchestration Are Essential</h3>
+            <p class="i18n" data-en="Removing components reveals a clear degradation gradient. Without DAG orchestration, retrieval alone is insufficient; without retrieval, even oracle skills cannot close the gap. Compared to the oracle upper bound, Quality-First shows only a modest deficit that narrows as the ecosystem grows, validating that tree-based retrieval effectively approximates oracle skill selection." data-zh="逐步移除组件呈现清晰的退化梯度：缺少 DAG 编排时，仅靠检索不够；缺少检索时，即使给定 oracle 技能也无法弥补差距。与 oracle 上界对比，Quality-First 仅存微小差距且随生态扩大而缩小，验证了能力树检索可有效逼近 oracle 技能选择。">Removing components reveals a clear degradation gradient. Without DAG orchestration, retrieval alone is insufficient; without retrieval, even oracle skills cannot close the gap. Compared to the oracle upper bound, Quality-First shows only a modest deficit that narrows as the ecosystem grows, validating that tree-based retrieval effectively approximates oracle skill selection.</p>
+          </article>
+          <article class="content-card reveal">
+            <h3 class="i18n" data-en="Finding 3: Strategy Choice Shapes Execution Structure" data-zh="结论 3：策略选择决定执行结构">Finding 3: Strategy Choice Shapes Execution Structure</h3>
+            <p class="i18n" data-en="Each orchestration strategy faithfully translates its design intent into a distinct DAG topology. Quality-First builds deep, multi-stage pipelines with rich dependencies; Efficiency-First trades depth for width to maximize parallelism; Simplicity-First retains only essential steps. Users gain real control over the quality–speed–simplicity trade-off through strategy selection alone." data-zh="每种编排策略都将设计意图忠实映射为不同的 DAG 拓扑。Quality-First 构建深层多阶段流水线；Efficiency-First 以宽度换深度来最大化并行；Simplicity-First 仅保留关键步骤。用户只需选择策略，即可真正控制质量-速度-简洁性的权衡。">Each orchestration strategy faithfully translates its design intent into a distinct DAG topology. Quality-First builds deep, multi-stage pipelines with rich dependencies; Efficiency-First trades depth for width to maximize parallelism; Simplicity-First retains only essential steps. Users gain real control over the quality–speed–simplicity trade-off through strategy selection alone.</p>
+          </article>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <article class="content-card reveal">
+            <img src="./assets/paper_figures/fig_radar.png" alt="Fig.4 radar results">
+            <h3 class="i18n" data-en="Fig. 4: Category Radar" data-zh="Fig.4：类别雷达图">Fig. 4: Category Radar</h3>
+            <p class="i18n" data-en="Per-category Bradley-Terry performance across ecosystem scales, showing broad and stable coverage." data-zh="跨生态规模的类别级 Bradley-Terry 表现，展示稳定且全面的能力覆盖。">Per-category Bradley-Terry performance across ecosystem scales, showing broad and stable coverage.</p>
+          </article>
+        </div>
+        <div class="grid-2" style="margin-top: 14px;">
+          <article class="content-card reveal">
+            <img src="./assets/paper_figures/fig_ablation.png" alt="Fig.5 ablation study">
+            <h3 class="i18n" data-en="Fig. 5: Ablation" data-zh="Fig.5：消融实验">Fig. 5: Ablation</h3>
+            <p class="i18n" data-en="Separates retrieval and orchestration effects; confirms both components are required." data-zh="拆分检索与编排贡献，验证两者都不可缺失。">Separates retrieval and orchestration effects; confirms both components are required.</p>
+          </article>
+          <article class="content-card reveal">
+            <img src="./assets/paper_figures/fig_dag_metrics.png" alt="Fig.6 DAG metrics">
+            <h3 class="i18n" data-en="Fig. 6: DAG Structure Metrics" data-zh="Fig.6：DAG 结构指标">Fig. 6: DAG Structure Metrics</h3>
+            <p class="i18n" data-en="Different orchestration strategies induce distinct topology profiles (depth, width, edges, nodes)." data-zh="不同编排策略对应不同拓扑特征（深度、宽度、边数、节点数）。">Different orchestration strategies induce distinct topology profiles (depth, width, edges, nodes).</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="gallery">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="section-tag">Case Study</p>
+          <h2 class="i18n" data-en="Case Study and Supplementary Artifacts" data-zh="案例研究与补充产物">Case Study and Supplementary Artifacts</h2>
+          <p class="section-desc i18n" data-en="This section highlights the qualitative case-study figure and representative supplementary artifacts from the original project assets." data-zh="本节展示定性案例研究图，以及来自原项目素材的代表性补充产物。">This section highlights the qualitative case-study figure and representative supplementary artifacts from the original project assets.</p>
+        </header>
+
+        <figure class="figure hero-demo reveal">
+          <a href="https://www.youtube.com/watch?v=trh7doIZ3aA" target="_blank" rel="noopener">
+            <img src="./assets/cover.png" alt="AgentSkillOS video cover">
+          </a>
+          <figcaption class="i18n" data-en="Demo preview from the AgentSkillOS project assets." data-zh="来自 AgentSkillOS 项目素材的演示预览。">Demo preview from the AgentSkillOS project assets.</figcaption>
+        </figure>
+
+        <figure class="figure reveal">
+          <img src="./assets/paper_figures/fig_case_study.png" alt="Fig.7 case study">
+          <figcaption class="i18n" data-en="Figure 7: qualitative comparison between the vanilla baseline and AgentSkillOS Quality-First outputs." data-zh="图 7：vanilla 基线与 AgentSkillOS Quality-First 输出的定性对比。">Figure 7: qualitative comparison between the vanilla baseline and AgentSkillOS Quality-First outputs.</figcaption>
+        </figure>
+
+        <div class="gallery-grid examples-grid" style="margin-top: 14px;">
+          <a class="gallery-jump" href="./example-bug.html">
+            <article class="gallery-card reveal">
+              <img src="./assets/case1_bug_report/before_after_merged.png" alt="Bug diagnosis example">
+              <div class="gallery-body">
+                <h3 class="i18n" data-en="Example 01 · Bug Diagnosis Report" data-zh="示例 01 · Bug 诊断报告">Example 01 · Bug Diagnosis Report</h3>
+                <p class="i18n" data-en="Mobile bug localization, fix validation, and visual bug report generation with before/after evidence." data-zh="移动端问题定位、修复验证与可视化 Bug 报告生成（含修复前后证据）。">Mobile bug localization, fix validation, and visual bug report generation with before/after evidence.</p>
+              </div>
+            </article>
+          </a>
+          <a class="gallery-jump" href="./example-ui.html">
+            <article class="gallery-card reveal">
+              <img src="./assets/case2_ui_design/fusion_design_merged.png" alt="UI design research example">
+              <div class="gallery-body">
+                <h3 class="i18n" data-en="Example 02 · UI Design Research" data-zh="示例 02 · UI 设计研究">Example 02 · UI Design Research</h3>
+                <p class="i18n" data-en="Design-language research, report generation, and multi-direction concept mockups for knowledge software." data-zh="面向知识软件的设计语言研究、报告生成与多方向概念稿输出。">Design-language research, report generation, and multi-direction concept mockups for knowledge software.</p>
+              </div>
+            </article>
+          </a>
+          <a class="gallery-jump" href="./example-paper.html">
+            <article class="gallery-card reveal">
+              <img src="./assets/case3_paper_promotion/scientific_slide.png" alt="Paper promotion example">
+              <div class="gallery-body">
+                <h3 class="i18n" data-en="Example 03 · Paper Promotion" data-zh="示例 03 · 论文推广">Example 03 · Paper Promotion</h3>
+                <p class="i18n" data-en="Transforms academic papers into social slides, scientific pages, and platform-specific promotion content." data-zh="将学术论文转译为社交幻灯片、科研页面与平台适配推广内容。">Transforms academic papers into social slides, scientific pages, and platform-specific promotion content.</p>
+              </div>
+            </article>
+          </a>
+          <a class="gallery-jump" href="./example-video.html">
+            <article class="gallery-card reveal">
+              <img src="./assets/case4_cat_meme/video1.gif" alt="Meme video example">
+              <div class="gallery-body">
+                <h3 class="i18n" data-en="Example 04 · Meme Video" data-zh="示例 04 · 病毒式短视频">Example 04 · Meme Video</h3>
+                <p class="i18n" data-en="Green-screen compositing, subtitle timing, and viral short-video production with multi-version outputs." data-zh="绿幕合成、字幕时序与多版本病毒式短视频生产。">Green-screen compositing, subtitle timing, and viral short-video production with multi-version outputs.</p>
+              </div>
+            </article>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-wrap">
+      <p class="i18n" data-en="If AgentSkillOS helps your work, please cite the paper." data-zh="如果 AgentSkillOS 对你有帮助，欢迎引用论文。">If AgentSkillOS helps your work, please cite the paper.</p>
+      <div class="citation" id="citationText">@article{li2026organizing,
+  title={Organizing, Orchestrating, and Benchmarking Agent Skills at Ecosystem Scale},
+  author={Li, Hao and Mu, Chunjiang and Chen, Jianhao and Ren, Siyue and Cui, Zhiyao and Zhang, Yiqun and Bai, Lei and Hu, Shuyue},
+  journal={arXiv preprint arXiv:2603.02176},
+  year={2026}
+}</div>
+    </div>
+  </footer>
+
+  <div class="modal" id="taskModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal="true"></div>
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button type="button" class="modal-close" id="modalClose" aria-label="Close dialog">×</button>
+      <p class="modal-category" id="modalCategory"></p>
+      <h3 class="modal-title" id="modalTitle"></h3>
+      <p class="modal-meta" id="modalMeta"></p>
+      <p class="modal-desc" id="modalDescription"></p>
+      <div class="detail-grid">
+        <div class="detail-block">
+          <h4 id="skillsHeading">Skills</h4>
+          <ul id="modalSkills"></ul>
+        </div>
+        <div class="detail-block">
+          <h4 id="outputsHeading">Outputs</h4>
+          <ul id="modalOutputs"></ul>
+        </div>
+      </div>
+      <div class="modal-prompt-block">
+        <h4 id="promptHeading">Prompt</h4>
+        <p class="modal-prompt" id="modalPrompt"></p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const TASKS =
+[
+  {
+    "task_id": "data_computation_task1",
+    "task_name": "Penguin Species Research Report and Presentation",
+    "category": "data_computation",
+    "description": "Analyze penguin morphological data to identify species-specific characteristics, produce a professional analysis report with publication-quality visualizations, and create academic conference slides.",
+    "prompt": "I am a zoologist, and I need to present my research findings on penguins next week. I have collected observational data on different penguin species, stored at the path artifacts/penguins.csv, which contains several hundred samples with measurements of bill length, bill depth, flipper length, body mass, species, island, and sex.\n\nBased on these data, I would like to analyze the species-specific characteristics of different types of penguins. Please perform statistical analysis including: descriptive statistics per species, species comparison tests, and morphological differences between sexes within each species.\n\nGenerate at least 4 publication-quality figures (saved as PNG files) visualizing the key findings — for example, species comparison box plots, correlation scatter plots colored by species, and distribution plots.\n\nI need you to produce two deliverables:\n1. A professional and comprehensive analysis report on penguin species characteristics (report.docx), aimed at specialists, with embedded figures, statistical tables, and written interpretation of results.\n2. Academic-style slides (presentation.pptx) with at least 10 slides covering: title, data overview, methodology, key findings with visualizations, species comparisons, and conclusions. The slides should tell a coherent data story suitable for a research conference.",
+    "skills": [
+      "pptx",
+      "docx",
+      "scientific-visualization",
+      "data-storytelling"
+    ],
+    "outputs": [
+      "report.docx",
+      "presentation.pptx"
+    ]
+  },
+  {
+    "task_id": "data_computation_task2",
+    "task_name": "Monte Carlo Portfolio VaR Simulation",
+    "category": "data_computation",
+    "description": "Build a simulation model to assess portfolio risk using Value-at-Risk methodology with correlated multi-asset returns.",
+    "prompt": "I am a risk analyst at an investment firm, and I need to quantify the downside risk of a proposed portfolio for our risk committee. Please build a portfolio risk simulation model. Portfolio: Stock A with 40% weight, 12% return, and 25% vol; Stock B with 35% weight, 8% return, and 18% vol; Bond C with 25% weight, 4% return, and 6% vol. Correlations: A-B=0.6, A-C=-0.2, B-C=0.1. Initial investment: 10M.\n\nCreate portfolio_var.xlsx with a 'Simulation' sheet containing 10,000 simulated scenarios accounting for asset correlations, and a 'Risk Metrics' sheet showing expected return, volatility, 95% VaR, 99% VaR, and max drawdown.\n\nSave var_results.json with: expected_return, volatility, var_95, var_99, and max_drawdown — all as decimals, with VaR values negative to indicate losses.",
+    "skills": [
+      "xlsx"
+    ],
+    "outputs": [
+      "var_results.json",
+      "portfolio_var.xlsx"
+    ]
+  },
+  {
+    "task_id": "data_computation_task3",
+    "task_name": "Differential Equation Symbolic Analysis",
+    "category": "data_computation",
+    "description": "Analyze the stability of a predator-prey dynamics model, find equilibrium points, compute eigenvalues, and classify stability types.",
+    "prompt": "I am a computational biology PhD student, and I'm working on a chapter of my thesis analyzing predator-prey dynamics. Please perform symbolic stability analysis of the Lotka-Volterra model:\n  \\frac{dx}{dt} = \\alpha x - \\beta xy\n  \\frac{dy}{dt} = \\delta xy - \\gamma y\nParameters: \\alpha=1.0, \\beta=0.1, \\delta=0.075, \\gamma=1.5.\n\nFind all equilibrium points, compute Jacobian matrices and eigenvalues at each, and classify stability type as stable/unstable node, saddle, center, or stable/unstable spiral.\n\nSave to stability_analysis.json with an equilibria array, each entry containing: coordinates with x and y, eigenvalues as a list, and stability_type as a string.",
+    "skills": [
+      "sympy"
+    ],
+    "outputs": [
+      "stability_analysis.json"
+    ]
+  },
+  {
+    "task_id": "data_computation_task4",
+    "task_name": "ML Hyperparameter Tuning for Breast Cancer Classification",
+    "category": "data_computation",
+    "description": "Optimize a baseline SVM classifier through systematic hyperparameter tuning, compare different optimization approaches, and produce a structured tuning report.",
+    "prompt": "I am a data scientist, and I have a breast cancer classification project in ml_project/. The baseline model in train_baseline.py uses an SVM with suboptimal hyperparameters — no feature scaling, linear kernel, C=0.001 — achieving only about 90% accuracy on the Wisconsin Breast Cancer dataset with 569 samples and 30 features.\n\nPlease help me systematically optimize this model to achieve at least 96% test accuracy. I want you to:\n\n1. First, run train_baseline.py to confirm baseline performance.\n\n2. Try at least two different hyperparameter optimization approaches, such as exhaustive search and a smarter search method, over SVM hyperparameters including kernel, C, and gamma. Use proper feature scaling and cross-validation.\n\n3. Compare the approaches and identify which one works better.\n\n4. Train the final best model and save it as best_model.pkl.\n\n5. Generate comparison.json containing: baseline_accuracy, results from both optimization methods including best_params, best_cv_score, and search_time_seconds, as well as best_method, best_params, final_test_accuracy, final_test_f1, and improvement_over_baseline.",
+    "skills": [
+      "tuning-hyperparameters"
+    ],
+    "outputs": [
+      "comparison.json",
+      "best_model.pkl"
+    ]
+  },
+  {
+    "task_id": "data_computation_task5",
+    "task_name": "Statistical Hypothesis Testing",
+    "category": "data_computation",
+    "description": "Perform 3 types of hypothesis tests (t-test, chi-square, ANOVA) on given datasets and output results in JSON and Excel.",
+    "prompt": "I am a biostatistics graduate student, and I need to complete a homework assignment on statistical hypothesis testing. Please perform hypothesis tests on the following 3 datasets and save results to hypothesis_tests.json and hypothesis_tests.xlsx.\n\nDataset 1 (Two-sample t-test): Control group [23.1, 22.5, 24.0, 21.8, 23.5, 22.9, 24.2, 23.0, 22.7, 23.8, 21.5, 24.1, 23.3, 22.6, 23.9]; Treatment group [26.3, 25.8, 27.1, 26.5, 25.2, 26.8, 27.3, 25.9, 26.1, 27.0, 25.5, 26.7, 26.0, 25.6, 26.4]. Test whether the treatment group mean is significantly greater than the control group (α=0.05).\n\nDataset 2 (Chi-square test of independence): Contingency table — Preference (A/B/C) vs Age group (Young/Middle/Old): [[30,25,15],[20,30,20],[10,15,35]]. Test whether preference and age are independent.\n\nDataset 3 (One-way ANOVA): Drug A [22.5,24.1,23.0,25.2,23.8,24.5], Drug B [26.3,25.8,27.1,26.5,25.2,26.8], Drug C [31.2,30.5,32.0,31.8,30.9,31.6]. Test whether the three group means differ significantly.\n\nJSON output format — use exactly this structure:\n{\n  \"t_test\": {\"test_name\": \"...\", \"statistic\": ..., \"p_value\": ..., \"conclusion\": \"reject or fail_to_reject\", \"effect_size\": ..., \"control_mean\": ..., \"treatment_mean\": ...},\n  \"chi_square\": {\"test_name\": \"...\", \"statistic\": ..., \"p_value\": ..., \"conclusion\": \"...\", \"effect_size\": ..., \"df\": ...},\n  \"anova\": {\"test_name\": \"...\", \"statistic\": ..., \"p_value\": ..., \"conclusion\": \"...\", \"effect_size\": ..., \"drug_a_mean\": ..., \"drug_b_mean\": ..., \"drug_c_mean\": ...}\n} The Excel file should have 3 sheets (T-Test, Chi-Square, ANOVA), each containing raw data and computed results.",
+    "skills": [
+      "sympy",
+      "xlsx"
+    ],
+    "outputs": [
+      "hypothesis_tests.json",
+      "hypothesis_tests.xlsx"
+    ]
+  },
+  {
+    "task_id": "data_computation_task6",
+    "task_name": "Definite Integral Computation and Visualization",
+    "category": "data_computation",
+    "description": "Compute 4 definite integrals using symbolic and 3 numerical methods, generate publication-quality visualizations.",
+    "prompt": "I am a numerical analysis student, and I need to complete a coursework project comparing numerical integration methods. Please compute the symbolic and numerical solutions for the following 4 definite integrals, and generate visualizations:\n\n1. $\\int_0^{\\pi} \\sin(x)\\,dx$\n2. $\\int_0^{1} e^{-x^2}\\,dx$\n3. $\\int_1^{e} \\ln(x)\\,dx$\n4. $\\int_0^{\\pi/2} \\sqrt{\\sin(x)}\\,dx$\n\nFor each integral, apply 3 numerical methods (Trapezoidal rule N=100, Simpson's rule N=100, Gaussian quadrature) and compute the numerical approximation and error.\n\nOutput integrals.json as a JSON object with an \"integrals\" key containing an array of 4 objects, i.e. {\"integrals\": [...]}, each object containing integral_id, integrand, bounds, exact_numeric, trapezoidal, simpson, gaussian_quadrature, and the error for each method.\n\nGenerate 5 figures: integral_1.png through integral_4.png (function curve with shaded area and exact value annotation) and error_comparison.png (a grouped bar chart comparing errors of the 3 methods across all 4 integrals on a logarithmic scale). All figures should be publication quality with LaTeX labels.",
+    "skills": [
+      "sympy",
+      "scientific-visualization"
+    ],
+    "outputs": [
+      "integrals.json",
+      "integral_1.png",
+      "integral_2.png",
+      "integral_3.png",
+      "integral_4.png",
+      "error_comparison.png"
+    ]
+  },
+  {
+    "task_id": "document_creation_task1",
+    "task_name": "Technical Service Contract Generation",
+    "category": "document_creation",
+    "description": "Generate a professional technical service contract as a Word document with proper structure, formatting, tables, and tracked changes.",
+    "prompt": "I am a legal operations manager, and I need to draft a technical service contract for an upcoming IT consulting engagement. Please generate it as contract.docx with 7 chapters as Heading 1: Party Information, Scope of Services, Service Duration, Fees and Payment, Confidentiality, Liability, Dispute Resolution. Each chapter should have at least 2 substantive paragraphs.\n\nChapter 4 must include a fee breakdown table (at least 3 service items, 4 columns: Service Item, Unit Price, Quantity, Amount). Add tracked changes in Chapter 5 changing the confidentiality period from '2 years' to '3 years'. Include signature lines for both parties at the end.",
+    "skills": [
+      "docx"
+    ],
+    "outputs": [
+      "contract.docx"
+    ]
+  },
+  {
+    "task_id": "document_creation_task2",
+    "task_name": "Academic Paper Multi-Format Conversion",
+    "category": "document_creation",
+    "description": "Transform an academic paper source into multiple formats for different distribution channels: website, slides, and summary document.",
+    "prompt": "I am an AI researcher and I want to maximize the impact of my latest paper. The paper source files are in paper_src/. Please create three outputs to help me disseminate my work:\n\n1. Interactive HTML website as index.html with navigation and styling for online browsing.\n2. Conference talk slides as talk.pptx with at least 10 slides: cover, motivation, related work, methodology across 3+ slides, experiments across 2+ slides with data tables, and conclusion.\n3. Word summary as summary.docx with title as Heading 1, authors, abstract, key contributions as 3-5 bullets, methodology overview, and experimental findings as sections with Heading 2.",
+    "skills": [
+      "scroll-experience",
+      "pptx",
+      "docx"
+    ],
+    "outputs": [
+      "summary.docx",
+      "talk.pptx",
+      "index.html"
+    ]
+  },
+  {
+    "task_id": "document_creation_task3",
+    "task_name": "Attention Paper Reference Summary",
+    "category": "document_creation",
+    "description": "Read the last paragraph of the Background section of 'Attention Is All You Need', find the 3 cited papers, and create academic summaries.",
+    "prompt": "I am a PhD student studying natural language processing, and I want to deeply understand the foundational references behind the Transformer. The paper \"Attention Is All You Need\" (Vaswani et al., 2017) is provided as attention_is_all_you_need.pdf. Please read the last paragraph of the Background section — it cites 3 key papers. Find these 3 papers and write a 300-500 word academic summary for each, covering: the paper's core contribution, methodology overview, and its relationship to the Transformer.\n\nGenerate reference_summary.docx containing: a title, an introduction explaining the inspirations behind the Transformer, one section per paper (Heading 2), and a summary comparison table at the end. The document must end with a \"References\" section listing all 3 cited papers in APA format (Author, A. B. (Year). Title. Journal/Conference, Volume, Pages.). In the body text, use APA in-text citations such as (Kaiser & Sutskever, 2016) when referring to each paper.",
+    "skills": [
+      "citation-management",
+      "docx",
+      "dev-browser"
+    ],
+    "outputs": [
+      "reference_summary.docx"
+    ]
+  },
+  {
+    "task_id": "document_creation_task4",
+    "task_name": "Academic Seminar Presentation Slides",
+    "category": "document_creation",
+    "description": "Create a professional PDF presentation for an academic seminar on large language models, including proper structure, content, and visual design.",
+    "prompt": "I am a PhD student preparing for an academic seminar next week, and I need a polished slide deck that presents a critical review of my research area. Please create a professional academic presentation with at least 12 pages on \"Emergent Abilities and Alignment Techniques in Large Language Models\". It should cover: background and motivation, core concepts including emergent abilities and scaling laws, a comparison table of major alignment methods — RLHF, Constitutional AI, and DPO — with columns for pros, cons, and computational cost, a critical analysis section identifying open problems and limitations of current approaches, your recommended research directions, and a summary with references. The presentation should make a clear argument, not just survey the field. The slides should include rich visual content such as diagrams, charts, and illustrations to enhance understanding and engagement.\n\nOutput as presentation.pdf.",
+    "skills": [
+      "scientific-slides",
+      "dev-browser"
+    ],
+    "outputs": [
+      "presentation.pdf"
+    ]
+  },
+  {
+    "task_id": "document_creation_task5",
+    "task_name": "Quarterly Performance Report Presentation",
+    "category": "document_creation",
+    "description": "Generate a comprehensive quarterly business performance report as a PowerPoint presentation with charts, tables, and consistent formatting.",
+    "prompt": "I am a business operations manager, and I need to prepare our Q3 2024 quarterly performance report for the executive team. Please create it as quarterly_report.pptx with at least 8 slides. Include: cover slide, table of contents, revenue overview with July $12.0M / Aug $13.5M / Sep $15.0M, KPIs showing Revenue Growth 25% YoY, Customers 1500, NPS 72, and Satisfaction 85%, product performance table, market trends, Q4 plan, and closing slide.\n\nUse consistent color scheme and page numbers throughout.",
+    "skills": [
+      "pptx"
+    ],
+    "outputs": [
+      "quarterly_report.pptx"
+    ]
+  },
+  {
+    "task_id": "document_creation_task6",
+    "task_name": "Quantum Computing Teaching Handout with AI Figures",
+    "category": "document_creation",
+    "description": "Create teaching materials for quantum computing fundamentals including AI-generated illustrations and a structured PDF handout presentation.",
+    "prompt": "I am a university lecturer, and I'm preparing teaching materials on \"Quantum Computing Fundamentals\" for my undergraduate class. Please generate 3 illustrations: qubit.png showing a Bloch sphere visualization, gates.png showing Hadamard & CNOT gate operations, and circuit.png showing a simple quantum circuit diagram.\n\nCreate presentation.pdf with at least 8 pages covering: title page, classical vs quantum computing, qubits & superposition, quantum gates, quantum circuits, entanglement, applications, and summary with key takeaways.",
+    "skills": [
+      "generate-image",
+      "scientific-slides"
+    ],
+    "outputs": [
+      "qubit.png",
+      "gates.png",
+      "circuit.png",
+      "presentation.pdf"
+    ]
+  },
+  {
+    "task_id": "motion_video_task1",
+    "task_name": "Mathematical Animation: Matrix as Linear Transformation",
+    "category": "motion_video",
+    "description": "Create an educational mathematical animation explaining why matrices can perform linear transformations on vectors, showing how matrix columns represent transformed basis vectors and how any vector transforms accordingly.",
+    "prompt": "I am a math teacher, and I want to create an educational animation for my students to visualize why matrices can perform linear transformations on vectors. Please create an animation as linear_transform.mp4 with at least 5 seconds, showing: 1) A 2D coordinate system with labeled x/y axes; 2) The standard basis vectors $\\hat{\\imath} = (1,0)$ and $\\hat{\\jmath} = (0,1)$; 3) A 2x2 transformation matrix $A = \\begin{bmatrix} 2 & 1 \\\\ 0 & 1 \\end{bmatrix}$ and demonstrate how matrix columns represent where basis vectors land after transformation; 4) Show an arbitrary vector $\\vec{v} = (1,1)$ and demonstrate that $\\vec{v}$ transforms to $A\\vec{v}$ by following the transformed basis vectors ($\\vec{v} = 1 \\cdot \\hat{\\imath} + 1 \\cdot \\hat{\\jmath}$ becomes $\\vec{v}' = 1 \\cdot \\hat{\\imath}' + 1 \\cdot \\hat{\\jmath}'$); 5) Explain visually why this preserves linearity (addition and scalar multiplication). ",
+    "skills": [
+      "manim"
+    ],
+    "outputs": [
+      "linear_transform.mp4"
+    ]
+  },
+  {
+    "task_id": "motion_video_task2",
+    "task_name": "Fourier Series Expansion and Animation",
+    "category": "motion_video",
+    "description": "Compute Fourier series coefficients for a square wave and create an educational animation showing how the approximation improves with more terms.",
+    "prompt": "I am a math education content creator, and I want to produce an educational video explaining Fourier series convergence. Please analyze the Fourier series of a square wave: f(x)=1 for 0<x<\\pi, f(x)=-1 for -\\pi<x<0, with period 2\\pi.\n\nCompute the Fourier coefficients b_n for n=1 to n=10 (exactly 10 coefficients, do NOT include a_0). Also compute partial sums for N=1, 3, 5, and 10 terms.\n\nSave the results to fourier_coefficients.json with:\n- A 'coefficients' array containing exactly 10 objects, each with 'n' (integer 1-10) and 'value' (the b_n coefficient value)\n- A 'partial_sums' object with keys 'N=1', 'N=3', 'N=5', 'N=10', where each contains an 'expression' field showing the formula using symbolic fractions with π (e.g., '(4/pi)*sin(x) + (4/(3*pi))*sin(3*x)'), not decimal approximations\n\nThen create fourier_animation.mp4 showing the square wave and how the Fourier approximation progressively improves. The animation must show 4 clearly distinct and separate stages for N=1, 3, 5, and 10, with visible transitions between each stage. Display the mathematical formulas (using fractions with π) in the animation. Ensure axis labels use clean formatting without excessive decimal places.",
+    "skills": [
+      "manim",
+      "sympy"
+    ],
+    "outputs": [
+      "fourier_coefficients.json",
+      "fourier_animation.mp4"
+    ]
+  },
+  {
+    "task_id": "motion_video_task3",
+    "task_name": "8-Puzzle: Solvability Analysis, Optimal Solving, and Sliding Animation",
+    "category": "motion_video",
+    "description": "Analyze the 8-puzzle mathematically (solvability, state space), find an optimal solution, and create a sliding tile animation.",
+    "prompt": "I am an AI course instructor, and I want to create a comprehensive 8-puzzle demonstration combining mathematical analysis, problem solving, and visualization for my students.\n\nInitial state: 7 2 4 / 5 _ 6 / 8 3 1, where _ is the blank. Goal state: 1 2 3 / 4 5 6 / 7 8 _.\n\nStep 1 — Mathematical analysis: Compute the total state space size for the 8-puzzle, determine how many configurations are solvable, verify whether this specific initial state can reach the goal state, and compute the Manhattan distance heuristic for the initial state. Save to puzzle_analysis.json with: total_configurations, solvable_configurations, initial_state, goal_state, inversion_count, is_solvable, manhattan_distance, and tile_distances array showing each of the 8 numbered tiles' (1-8) Manhattan distance.\n\nStep 2 — Find an optimal or near-optimal solution to the puzzle. Save the solution as puzzle_plan.txt with one move per line.\n\nStep 3 — Create puzzle_animation.mp4 showing the 3 \\times 3 grid with tiles sliding step-by-step according to your solution, with a move counter displayed, ending at the solved state.",
+    "skills": [
+      "manim",
+      "sympy"
+    ],
+    "outputs": [
+      "puzzle_analysis.json",
+      "puzzle_plan.txt",
+      "puzzle_animation.mp4"
+    ]
+  },
+  {
+    "task_id": "motion_video_task4",
+    "task_name": "Transformer Self-Attention Explainer Video",
+    "category": "motion_video",
+    "description": "Create a ~30 second animated video explaining the Transformer Self-Attention mechanism.",
+    "prompt": "I am an AI course instructor, and I want to create an engaging concept explainer video for my students on how Self-Attention works in Transformers. Please create a ~30 second animated video explaining the Transformer Self-Attention mechanism. The video should include: (1) a title card, (2) an input sequence illustration, (3) animated Q/K/V matrix computation, (4) an attention score matrix heatmap animation, and (5) the weighted sum output. Use clear color coding and text annotations throughout. Output the video as transformer_attention.mp4 (1080p), with source code in the src/ directory.",
+    "skills": [
+      "remotion"
+    ],
+    "outputs": [
+      "transformer_attention.mp4"
+    ]
+  },
+  {
+    "task_id": "motion_video_task5",
+    "task_name": "Sorting Algorithm Visualization",
+    "category": "motion_video",
+    "description": "Create an animation showing 3 sorting algorithms (Bubble, Quick, Merge) on the same input array.",
+    "prompt": "I am a computer science teaching assistant, and I want to create a visual demonstration of sorting algorithms for an introductory algorithms course. Please create an animation showing 3 sorting algorithms operating on the same input array [38, 27, 43, 3, 9, 82, 10]. The animation should have 3 clearly separated segments: (1) Bubble Sort — highlighting each comparison and swap, (2) Quick Sort — highlighting pivot selection and partitioning, (3) Merge Sort — showing recursive splitting and merging. Display the algorithm name and time complexity at the start of each segment. Use distinct colors: yellow for elements being compared, green for elements in their sorted position, and red for the pivot. Output sorting_animation.mp4 and sorting_results.json (containing input_array, sorted_array, and each algorithm's comparisons and swaps count).",
+    "skills": [
+      "manim"
+    ],
+    "outputs": [
+      "sorting_results.json",
+      "sorting_animation.mp4"
+    ]
+  },
+  {
+    "task_id": "motion_video_task6",
+    "task_name": "Calculus Derivatives Teaching Animation and Handout",
+    "category": "motion_video",
+    "description": "Create an animation demonstrating derivative concepts and a companion teaching handout.",
+    "prompt": "I am a calculus instructor, and I want to produce a teaching materials package on the concept of derivatives for my introductory calculus students. (1) Create an animation derivatives_animation.mp4 showing: the function f(x)=x² at the point x=1, where a secant line progressively approaches the tangent line as h decreases from 2 down to 0.01. Dynamically display the slope value as it changes, and annotate the final derivative f'(1)=2. Then show f(x)=sin(x) with its derivative f'(x)=cos(x) overlaid on the same axes. (2) Create a companion teaching handout derivatives_slides.pdf (at least 8 pages) covering: definition of a derivative, limit formula, geometric interpretation, common derivative formulas table, chain rule, and application examples.",
+    "skills": [
+      "manim",
+      "scientific-slides"
+    ],
+    "outputs": [
+      "derivatives_slides.pdf",
+      "derivatives_animation.mp4"
+    ]
+  },
+  {
+    "task_id": "visual_creation_task1",
+    "task_name": "AI Scientific Figures + Academic Conference Poster",
+    "category": "visual_creation",
+    "description": "Create an academic conference poster about graph neural networks for molecular property prediction, including AI-generated scientific figures and professional layout.",
+    "prompt": "I am a graduate researcher, and I need to create a conference poster for presenting my work on molecular property prediction using graph neural networks. Please create an A0 academic poster on \"Graph Neural Network-Based Molecular Property Prediction\". Generate 3 scientific figures: gnn_architecture.png showing the GNN architecture diagram, molecular_graph.png showing molecule-to-graph representation, and performance.png showing a performance comparison chart.\n\nBuild a 3-column poster, output as poster.pdf, with blue-green academic theme, including sections: Abstract, Introduction, Method with architecture figure, Molecular Representation, Experimental Results with performance figure, Conclusions, and References with 3-5 citations.",
+    "skills": [
+      "generate-image",
+      "latex-posters"
+    ],
+    "outputs": [
+      "gnn_architecture.png",
+      "molecular_graph.png",
+      "performance.png",
+      "poster.pdf"
+    ]
+  },
+  {
+    "task_id": "visual_creation_task2",
+    "task_name": "Knowledge Management Software Visual Design Research",
+    "category": "visual_creation",
+    "description": "Research the visual design language of existing knowledge management products, write a comparative analysis report, and generate design concept images synthesizing insights from the research.",
+    "prompt": "I am a product designer, and our company is planning to build a knowledge management software product. I need you to research multiple related products, specifically Notion, Confluence, and Obsidian, and produce a visual design style research report about them. Browse their official websites, capture a screenshot of each product's key interface (1 screenshot per product). Save the screenshots with these exact filenames: notion.png, confluence.png, obsidian.png. The visual style research report should be saved as report.docx and must include: the captured screenshots, a comparative analysis table covering layout style, color palette, typography, and icon design for each product, as well as a synthesis section with design recommendations. Then, based on the analysis, synthesize the design characteristics of these products and generate three design concept images for a knowledge management software to provide design inspiration. The design concept images should be saved as fusion_design_1.png, fusion_design_2.png, and fusion_design_3.png, respectively.",
+    "skills": [
+      "dev-browser",
+      "generate-image",
+      "docx"
+    ],
+    "outputs": [
+      "notion.png",
+      "confluence.png",
+      "obsidian.png",
+      "report.docx",
+      "fusion_design_1.png",
+      "fusion_design_2.png",
+      "fusion_design_3.png"
+    ]
+  },
+  {
+    "task_id": "visual_creation_task3",
+    "task_name": "Artisan Café Social Media Image Set",
+    "category": "visual_creation",
+    "description": "Create a professional social media image set for a fictional artisan café, including food photography, interior shots, a promotional graphic, and a composite preview grid.",
+    "prompt": "I am a small café owner, and I need a professional social media content pack for my artisan café \"Ember & Bloom\". Please generate the following 4 images and 1 composite:\n\n1. latte_art.png — An overhead top-down shot of a beautifully crafted latte art on a wooden table, warm natural lighting, square format.\n2. pastry_display.png — A styled flat-lay of artisan pastries (croissants, tarts, muffins) on a marble surface with coffee beans scattered around, portrait format.\n3. cafe_interior.png — A cozy café interior scene with warm Edison-bulb lighting, exposed brick walls, plants, and comfortable seating, landscape format.\n4. promo_story.png — A promotional graphic for \"Weekend Brunch Special\" with appetizing food imagery and bold text overlay, story format.\n5. preview_grid.png — A 2×2 grid layout compositing all 4 images above as a social media preview, with thin white borders between panels.\n\nAll images should have a warm, inviting aesthetic with a consistent earth-tone color palette (browns, creams, warm golds).",
+    "skills": [
+      "generate-image",
+      "media-processing"
+    ],
+    "outputs": [
+      "latte_art.png",
+      "pastry_display.png",
+      "cafe_interior.png",
+      "promo_story.png",
+      "preview_grid.png"
+    ]
+  },
+  {
+    "task_id": "visual_creation_task4",
+    "task_name": "Humorous Meme Image Generation",
+    "category": "visual_creation",
+    "description": "Generate a single humorous meme image with a JSON metadata file.",
+    "prompt": "I am a social media content creator, and I need a funny meme to share with my followers. Please generate a single humorous meme image saved as meme.png. The meme should be universally relatable and funny — for example, about procrastination, Monday mornings, or the gap between expectations and reality. Use a classic meme template format with an image and witty text overlay. Also generate meme.json containing the fields: topic (the meme theme), caption (the text used on the meme), and humor_style (e.g., \"ironic\", \"self-deprecating\", \"observational\").",
+    "skills": [
+      "meme-factory"
+    ],
+    "outputs": [
+      "meme.json",
+      "meme.png"
+    ]
+  },
+  {
+    "task_id": "visual_creation_task5",
+    "task_name": "Digital Art Exhibition Immersive Multimedia Website",
+    "category": "visual_creation",
+    "description": "Create a promotional website for a digital art exhibition, combining AI-generated artwork, image processing for thumbnails and banners.",
+    "prompt": "I am an art director, and I'm organizing a digital art exhibition called \"FutureScape\". I need a promotional website to showcase the exhibition online. Please generate 6 artwork images: cyberpunk.png, biomechanical.png, interstellar.png, deep_sea.png, quantum_garden.png, time_corridor.png. Create smaller preview versions around 400×300: cyberpunk_thumb.png, biomechanical_thumb.png, interstellar_thumb.png, deep_sea_thumb.png, quantum_garden_thumb.png, time_corridor_thumb.png. Combine all 6 artworks into a wide banner image as banner.jpg.\n\nBuild index.html with: a hero section featuring the banner, 6 artwork showcase sections, a thumbnail gallery grid, dark theme with neon accents in cyan/magenta/purple, and responsive design.",
+    "skills": [
+      "generate-image",
+      "media-processing",
+      "frontend-design"
+    ],
+    "outputs": [
+      "cyberpunk.png",
+      "biomechanical.png",
+      "interstellar.png",
+      "deep_sea.png",
+      "quantum_garden.png",
+      "time_corridor.png",
+      "cyberpunk_thumb.png",
+      "biomechanical_thumb.png",
+      "interstellar_thumb.png",
+      "deep_sea_thumb.png",
+      "quantum_garden_thumb.png",
+      "time_corridor_thumb.png",
+      "banner.jpg",
+      "index.html"
+    ]
+  },
+  {
+    "task_id": "visual_creation_task6",
+    "task_name": "AI Illustrated Immersive Scroll Narrative",
+    "category": "visual_creation",
+    "description": "Create an immersive scrolling web experience about space exploration history, combining AI-generated illustrations with interactive scroll animations.",
+    "prompt": "I am a science museum curator, and I want to build an immersive online exhibit for our \"History of Human Space Exploration\" display. Please create a scrolling web page with 5 illustrated chapters. Generate illustrations for each milestone: chapter_1.png for Sputnik 1957, chapter_2.png for Apollo moon landing 1969, chapter_3.png for the Space Shuttle era, chapter_4.png for the ISS, and chapter_5.png for a Mars colonization concept.\n\nCreate index.html with full-screen sections for each chapter, smooth scrolling with layered depth effects, text animations that reveal content as you scroll, a progress indicator bar, and responsive design for different screen sizes.",
+    "skills": [
+      "generate-image",
+      "scroll-experience"
+    ],
+    "outputs": [
+      "chapter_1.png",
+      "chapter_2.png",
+      "chapter_3.png",
+      "chapter_4.png",
+      "chapter_5.png",
+      "index.html"
+    ]
+  },
+  {
+    "task_id": "web_interaction_task1",
+    "task_name": "Competitor Website Analysis Report",
+    "category": "web_interaction",
+    "description": "Browse competitor project management tool websites, capture screenshots of key pages, and produce a professional competitive analysis report as a Word document.",
+    "prompt": "I am a product manager, and our company is planning to build an online project management tool. I need you to research two major competitors — Trello and Asana — by browsing their websites.\n\nFor each product, capture at least 2 screenshots of key pages: the homepage and a features/product page. Save the screenshots as trello_homepage.png, trello_features.png, asana_homepage.png, and asana_features.png.\n\nThen produce a competitive analysis report saved as competitor_report.docx. The report should include:\n- An overview section introducing each competitor with the captured screenshots\n- A feature comparison table covering: task management, team collaboration, third-party integrations, and pricing model\n- A strengths and weaknesses analysis for each product\n- A recommendations section with differentiation strategies for our new product",
+    "skills": [
+      "dev-browser",
+      "docx"
+    ],
+    "outputs": [
+      "trello_homepage.png",
+      "trello_features.png",
+      "asana_homepage.png",
+      "asana_features.png",
+      "competitor_report.docx"
+    ]
+  },
+  {
+    "task_id": "web_interaction_task2",
+    "task_name": "AI Weekly Newsletter from Web Curation",
+    "category": "web_interaction",
+    "description": "Browse Hacker News to curate AI-related articles, capture screenshots of source pages, and compile a professionally formatted weekly newsletter as a Word document.",
+    "prompt": "I am a tech team lead, and I am responsible for curating a weekly AI newsletter for our engineering team. I need you to browse Hacker News (https://news.ycombinator.com) and curate content for this week's newsletter.\n\nFirst, take a screenshot of the Hacker News homepage and save it as hn_homepage.png. Then browse the listings and identify at least 5 articles related to AI, machine learning, or large language models. For each selected article, visit its linked page and take a screenshot of just the first visible viewport (no full-page scroll), saving them as article_1.png through article_5.png.\n\nCompile the curated content into newsletter.docx with the following structure:\n- Newsletter title and date\n- Editor's note: a brief overview of this week's AI landscape (100-200 words)\n- Article entries: for each article include the title, source URL, a summary (50-100 words), and reference the corresponding screenshot\n- Weekly trend summary: synthesize the common themes across the curated articles",
+    "skills": [
+      "dev-browser",
+      "docx"
+    ],
+    "outputs": [
+      "hn_homepage.png",
+      "article_1.png",
+      "article_2.png",
+      "article_3.png",
+      "article_4.png",
+      "article_5.png",
+      "newsletter.docx"
+    ]
+  },
+  {
+    "task_id": "web_interaction_task3",
+    "task_name": "Mobile Responsive Bug Investigation and Fix",
+    "category": "web_interaction",
+    "description": "Investigate a mobile responsive CSS bug in a login page, diagnose the root cause, fix it, and write a bug report with before/after screenshots.",
+    "prompt": "I am a front-end developer. Users have reported that a bug occurs when accessing the login page I wrote on a their iphone SE. The code for my login page is login.html. Please help me identify and fix the bug, and write a bug fix report. The report should include a screenshot of the problematic web page before the bug fix (saved as before_fix.png) and a screenshot of the normal web page after the bug fix (saved as after_fix.png). In the screenshots, the location of the bug should be highlighted with clear and eye-catching markers. The report should be saved as bug_report.md.",
+    "skills": [
+      "dev-browser"
+    ],
+    "outputs": [
+      "before_fix.png",
+      "after_fix.png",
+      "bug_report.md"
+    ]
+  },
+  {
+    "task_id": "web_interaction_task4",
+    "task_name": "Climate Data Story Dashboard",
+    "category": "web_interaction",
+    "description": "Create an interactive HTML dashboard telling the story of global temperature change with interactive charts.",
+    "prompt": "I am a data journalist, and I want to create an interactive data storytelling piece about global temperature change for our publication's website. Please create an interactive HTML dashboard (dashboard.html) that tells the story of global temperature change. Data source: use global annual mean temperature anomaly data from 1880 to 2023 (obtainable from NASA GISS or reasonably simulated). The dashboard should include: (1) a title area and narrative introduction, (2) a time-series line chart with interactive hover showing specific year data, (3) a bar chart grouped by decade, (4) key milestone annotations (e.g., the Paris Agreement year), (5) data insight cards (3-4 key statistics), and (6) a responsive layout. Use D3.js or Chart.js for interactive charts.",
+    "skills": [
+      "data-storytelling",
+      "scientific-visualization",
+      "frontend-design"
+    ],
+    "outputs": [
+      "dashboard.html"
+    ]
+  },
+  {
+    "task_id": "web_interaction_task5",
+    "task_name": "Automated Web Data Collection & Structured Report Pipeline",
+    "category": "web_interaction",
+    "description": "Scrape Python built-in functions from official docs, then generate structured JSON data, a categorized Excel catalog, and a Word analysis report.",
+    "prompt": "You are a Python technical documentation engineer responsible for maintaining your team's internal knowledge base. You need to build an automated pipeline to collect Python built-in function information from the official documentation and generate standardized reports.\n\nPlease complete the following tasks:\n\n1. Visit the Python official documentation's built-in functions page (https://docs.python.org/3/library/functions.html) and extract the name and description (first sentence of the docstring) of every built-in function listed on the page.\n\n2. Generate builtin_functions.json as a JSON object with the following fields:\n   - \"source\": the URL of the page you scraped (string)\n   - \"total_count\": the total number of functions collected (integer)\n   - \"functions\": an array of objects, each containing \"name\" (function name) and \"description\" (brief description), sorted alphabetically by name\n\n3. Generate functions_catalog.xlsx with two worksheets:\n   - Sheet 1 \"Function Catalog\": three columns (No., Function Name, Description), sorted alphabetically, with bold header row and colored background\n   - Sheet 2 \"Category Statistics\": group functions by functional category (e.g., Type Conversion, Math Operations, Sequence Operations, I/O, Object & Class Inspection, Iterator Tools, etc.), showing function count per category and listing all function names under each category\n\n4. Generate catalog_report.docx containing:\n   - A report title\n   - An overview paragraph (stating the data source and total number of functions collected)\n   - Detailed sections by functional category (each category as a Heading 2, listing functions with brief explanations)\n   - A summary paragraph (overall assessment of Python's built-in function ecosystem and usage recommendations)",
+    "skills": [
+      "firecrawl-scraper",
+      "xlsx",
+      "docx"
+    ],
+    "outputs": [
+      "builtin_functions.json",
+      "functions_catalog.xlsx",
+      "catalog_report.docx"
+    ]
+  },
+  {
+    "task_id": "web_interaction_task6",
+    "task_name": "Web Scraping with Excel Report",
+    "category": "web_interaction",
+    "description": "Collect book pricing data from an online bookstore and produce an Excel market analysis report.",
+    "prompt": "I am a market researcher, and I want to analyze pricing trends in the online book market. Please collect book data from https://books.toscrape.com, covering the first 2 pages with at least 30 books. For each book, I need: title, price as numeric without the £ symbol, rating on a 1-5 scale, and availability.\n\nCreate books_report.xlsx with 3 sheets: 'Raw Data' containing all books, 'Statistics' with calculated metrics including total_books, average_price, max_price, min_price, and in_stock_count using spreadsheet formulas so values update automatically, and 'Market Insights' showing price tier segmentation — Budget under 20, Mid-range 20-40, and Premium over 40 — with count and average rating per tier.\n\nAlso save stats.json with: total_books, average_price, max_price, min_price, in_stock_count, price_tiers as an object with budget/midrange/premium counts, and market_insight as a 1-2 sentence string describing the relationship between price and rating you observed.",
+    "skills": [
+      "dev-browser",
+      "xlsx"
+    ],
+    "outputs": [
+      "stats.json",
+      "books_report.xlsx"
+    ]
+  }
+]
+;
+
+    const CATEGORY_ORDER = [
+      "data_computation",
+      "document_creation",
+      "motion_video",
+      "visual_creation",
+      "web_interaction"
+    ];
+
+    const CATEGORY_ICONS = {
+      data_computation: "\u{1F4CA}",
+      document_creation: "\u{1F4C4}",
+      motion_video: "\u{1F3AC}",
+      visual_creation: "\u{1F3A8}",
+      web_interaction: "\u{1F310}"
+    };
+
+    const ICONS = {
+      themeDark: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79Z"></path>
+        </svg>
+      `,
+      themeLight: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2.5"></path>
+          <path d="M12 19.5V22"></path>
+          <path d="M4.93 4.93l1.77 1.77"></path>
+          <path d="M17.3 17.3l1.77 1.77"></path>
+          <path d="M2 12h2.5"></path>
+          <path d="M19.5 12H22"></path>
+          <path d="M4.93 19.07l1.77-1.77"></path>
+          <path d="M17.3 6.7l1.77-1.77"></path>
+        </svg>
+      `,
+      language: `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h18"></path>
+          <path d="M12 3a15 15 0 0 1 0 18"></path>
+          <path d="M12 3a15 15 0 0 0 0 18"></path>
+        </svg>
+      `
+    };
+
+    const TEXT = {
+      en: {
+        all: "All",
+        skills: "skills",
+        outputs: "outputs",
+        promptLabel: "Prompt",
+        promptHeading: "Prompt",
+        viewDetails: "View details",
+        empty: "No tasks under this filter.",
+        countWord: "tasks",
+        themeDark: "Dark",
+        themeLight: "Light",
+        themeToDarkAria: "Switch to dark mode",
+        themeToLightAria: "Switch to light mode",
+        skillsHeading: "Skills",
+        outputsHeading: "Outputs",
+        modalMeta: (task) => `${task.task_id} · ${task.skills.length} skills · ${task.outputs.length} outputs`,
+        categoryLabels: {
+          data_computation: "Data Computation",
+          document_creation: "Document Creation",
+          motion_video: "Motion Video",
+          visual_creation: "Visual Creation",
+          web_interaction: "Web Interaction"
+        }
+      },
+      zh: {
+        all: "全部",
+        skills: "技能",
+        outputs: "输出",
+        promptLabel: "Prompt",
+        promptHeading: "Prompt",
+        viewDetails: "查看详情",
+        empty: "该筛选下暂无任务。",
+        countWord: "个任务",
+        themeDark: "深色",
+        themeLight: "浅色",
+        themeToDarkAria: "切换到深色模式",
+        themeToLightAria: "切换到浅色模式",
+        skillsHeading: "技能列表",
+        outputsHeading: "输出文件",
+        modalMeta: (task) => `${task.task_id} · ${task.skills.length} 个技能 · ${task.outputs.length} 个输出`,
+        categoryLabels: {
+          data_computation: "数据计算",
+          document_creation: "文档生成",
+          motion_video: "动画视频",
+          visual_creation: "视觉创作",
+          web_interaction: "网页交互"
+        }
+      }
+    };
+
+    const THEME_STORAGE_KEY = "agentskillos-theme";
+    const savedTheme = (() => {
+      try {
+        return localStorage.getItem(THEME_STORAGE_KEY);
+      } catch (_error) {
+        return null;
+      }
+    })();
+
+    const state = {
+      lang: "en",
+      category: "all",
+      theme: savedTheme === "dark" || savedTheme === "light"
+        ? savedTheme
+        : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    };
+
+    let activeTask = null;
+    let lastFocused = null;
+
+    const themeToggle = document.getElementById("themeToggle");
+    const langToggle = document.getElementById("langToggle");
+    const filtersEl = document.getElementById("categoryFilters");
+    const taskGrid = document.getElementById("taskGrid");
+    const visibleCountEl = document.getElementById("visibleCount");
+    const visibleCountTextEl = document.getElementById("visibleCountText");
+
+    const modal = document.getElementById("taskModal");
+    const modalClose = document.getElementById("modalClose");
+    const modalCategory = document.getElementById("modalCategory");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalMeta = document.getElementById("modalMeta");
+    const modalDescription = document.getElementById("modalDescription");
+    const modalSkills = document.getElementById("modalSkills");
+    const modalOutputs = document.getElementById("modalOutputs");
+    const skillsHeading = document.getElementById("skillsHeading");
+    const outputsHeading = document.getElementById("outputsHeading");
+    const promptHeading = document.getElementById("promptHeading");
+    const modalPrompt = document.getElementById("modalPrompt");
+    const githubStarsEl = document.getElementById("githubStars");
+    const githubForksEl = document.getElementById("githubForks");
+    const githubUpdatedEl = document.getElementById("githubUpdated");
+    const githubStarLink = document.getElementById("githubStarLink");
+    const githubForkLink = document.getElementById("githubForkLink");
+
+    const GITHUB_REPO = "ynulihao/AgentSkillOS";
+    const GITHUB_STATS_CACHE_KEY = "agentskillos-github-stats";
+    const GITHUB_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
+    let githubStatsCache = null;
+
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+
+    function observeReveals(scope = document) {
+      scope.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+    }
+
+    function t(key) {
+      return TEXT[state.lang][key];
+    }
+
+    function categoryLabel(category) {
+      return TEXT[state.lang].categoryLabels[category] || category;
+    }
+
+    function categoryIcon(category) {
+      return CATEGORY_ICONS[category] || "\u{1F9E9}";
+    }
+
+    function formatCompactNumber(value) {
+      if (typeof value !== "number" || Number.isNaN(value)) return "--";
+      if (value < 1000) return String(value);
+      if (value < 10000) return `${(value / 1000).toFixed(1)}k`;
+      if (value < 1000000) return `${Math.round(value / 1000)}k`;
+      return `${(value / 1000000).toFixed(1)}M`;
+    }
+
+    function formatGitHubUpdated(isoString) {
+      if (!isoString) return "--";
+      const date = new Date(isoString);
+      if (Number.isNaN(date.getTime())) return "--";
+      return new Intl.DateTimeFormat(state.lang === "en" ? "en-US" : "zh-CN", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit"
+      }).format(date);
+    }
+
+    function renderGitHubStats() {
+      if (!githubStatsCache) return;
+      githubStarsEl.textContent = formatCompactNumber(githubStatsCache.stars);
+      githubForksEl.textContent = formatCompactNumber(githubStatsCache.forks);
+      githubUpdatedEl.textContent = formatGitHubUpdated(githubStatsCache.updatedAt);
+
+      const baseUrl = githubStatsCache.htmlUrl || `https://github.com/${GITHUB_REPO}`;
+      githubStarLink.href = `${baseUrl}/stargazers`;
+      githubForkLink.href = `${baseUrl}/network/members`;
+    }
+
+    function loadGitHubStatsCache() {
+      try {
+        const raw = localStorage.getItem(GITHUB_STATS_CACHE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return;
+        if (typeof parsed.stars !== "number" || typeof parsed.forks !== "number") return;
+        githubStatsCache = parsed;
+      } catch (_error) {
+      }
+    }
+
+    function saveGitHubStatsCache() {
+      if (!githubStatsCache) return;
+      try {
+        localStorage.setItem(GITHUB_STATS_CACHE_KEY, JSON.stringify(githubStatsCache));
+      } catch (_error) {
+      }
+    }
+
+    async function fetchGitHubStats() {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
+          headers: { Accept: "application/vnd.github+json" }
+        });
+        if (!response.ok) throw new Error(`GitHub API status: ${response.status}`);
+        const data = await response.json();
+        githubStatsCache = {
+          stars: data.stargazers_count,
+          forks: data.forks_count,
+          updatedAt: data.updated_at,
+          htmlUrl: data.html_url,
+          fetchedAt: Date.now()
+        };
+        saveGitHubStatsCache();
+        renderGitHubStats();
+      } catch (_error) {
+        if (githubStatsCache) {
+          renderGitHubStats();
+          return;
+        }
+        githubStarsEl.textContent = "N/A";
+        githubForksEl.textContent = "N/A";
+        githubUpdatedEl.textContent = "--";
+      }
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function taskNumber(taskId) {
+      const m = taskId.match(/task(\d+)$/);
+      return m ? Number(m[1]) : 0;
+    }
+
+    function sortedTasks() {
+      return [...TASKS].sort((a, b) => {
+        const c = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
+        if (c !== 0) return c;
+        return taskNumber(a.task_id) - taskNumber(b.task_id);
+      });
+    }
+
+    function visibleTasks() {
+      if (state.category === "all") return sortedTasks();
+      return sortedTasks().filter((task) => task.category === state.category);
+    }
+
+    function truncate(text, limit = 150) {
+      if (text.length <= limit) return text;
+      return `${text.slice(0, limit).trimEnd()}...`;
+    }
+
+    function renderFilters() {
+      const categories = ["all", ...CATEGORY_ORDER];
+      filtersEl.innerHTML = categories
+        .map((category) => {
+          const isActive = category === state.category;
+          const label = category === "all" ? t("all") : categoryLabel(category);
+          const icon = category === "all" ? "\u{1F9E9}" : categoryIcon(category);
+          return `<button type="button" class="filter-chip ${isActive ? "active" : ""}" data-category="${category}" aria-pressed="${isActive}"><span class="cat-icon" aria-hidden="true">${escapeHtml(icon)}</span>${escapeHtml(label)}</button>`;
+        })
+        .join("");
+
+      filtersEl.querySelectorAll(".filter-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          state.category = chip.dataset.category;
+          renderFilters();
+          renderTasks();
+        });
+      });
+    }
+
+    function renderTasks() {
+      const tasks = visibleTasks();
+      visibleCountEl.textContent = String(tasks.length);
+
+      if (tasks.length === 0) {
+        taskGrid.innerHTML = `<p class="task-desc">${escapeHtml(t("empty"))}</p>`;
+        return;
+      }
+
+      taskGrid.innerHTML = tasks
+        .map((task) => {
+          const meta = `${categoryLabel(task.category)} · ${task.skills.length} ${t("skills")} · ${task.outputs.length} ${t("outputs")}`;
+          const promptPreview = truncate((task.prompt || "").replace(/\s+/g, " ").trim() || task.description, 180);
+          return `
+            <article class="task-card reveal" role="button" tabindex="0" data-task-id="${escapeHtml(task.task_id)}" aria-label="${escapeHtml(task.task_name)}">
+              <p class="task-id"><span class="task-icon-badge" aria-hidden="true">${escapeHtml(categoryIcon(task.category))}</span>${escapeHtml(task.task_id)}</p>
+              <h3 class="task-title">${escapeHtml(task.task_name)}</h3>
+              <p class="task-meta">${escapeHtml(meta)}</p>
+              <p class="task-desc">${escapeHtml(truncate(task.description))}</p>
+              <p class="task-prompt"><span class="task-prompt-label">${escapeHtml(t("promptLabel"))}:</span> ${escapeHtml(promptPreview)}</p>
+              <span class="task-link">${escapeHtml(t("viewDetails"))}</span>
+            </article>
+          `;
+        })
+        .join("");
+
+      observeReveals(taskGrid);
+
+      taskGrid.querySelectorAll(".task-card").forEach((card) => {
+        const task = TASKS.find((item) => item.task_id === card.dataset.taskId);
+        if (!task) return;
+
+        card.addEventListener("click", () => openModal(task));
+        card.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openModal(task);
+          }
+        });
+      });
+    }
+
+    function fillModal(task) {
+      modalCategory.textContent = `${categoryIcon(task.category)} ${categoryLabel(task.category)}`;
+      modalTitle.textContent = task.task_name;
+      modalMeta.textContent = t("modalMeta")(task);
+      modalDescription.textContent = task.description;
+      skillsHeading.textContent = t("skillsHeading");
+      outputsHeading.textContent = t("outputsHeading");
+      promptHeading.textContent = t("promptHeading");
+      modalPrompt.textContent = task.prompt || task.description;
+
+      modalSkills.innerHTML = "";
+      modalOutputs.innerHTML = "";
+
+      task.skills.forEach((skill) => {
+        const li = document.createElement("li");
+        li.textContent = skill;
+        modalSkills.appendChild(li);
+      });
+
+      task.outputs.forEach((output) => {
+        const li = document.createElement("li");
+        li.textContent = output;
+        modalOutputs.appendChild(li);
+      });
+    }
+
+    function openModal(task) {
+      activeTask = task;
+      lastFocused = document.activeElement;
+      fillModal(task);
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+      modalClose.focus();
+    }
+
+    function closeModal() {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+      if (lastFocused && typeof lastFocused.focus === "function") {
+        lastFocused.focus();
+      }
+    }
+
+    function trapFocus(event) {
+      if (!modal.classList.contains("open") || event.key !== "Tab") return;
+      const focusable = modal.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    function applyTheme() {
+      document.documentElement.setAttribute("data-theme", state.theme);
+      themeToggle.innerHTML = state.theme === "dark" ? ICONS.themeLight : ICONS.themeDark;
+      themeToggle.setAttribute("aria-label", state.theme === "dark" ? t("themeToLightAria") : t("themeToDarkAria"));
+      themeToggle.setAttribute("title", state.theme === "dark" ? t("themeLight") : t("themeDark"));
+
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, state.theme);
+      } catch (_error) {
+      }
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = state.lang === "en" ? "en" : "zh-CN";
+      document.querySelectorAll(".i18n").forEach((el) => {
+        const text = state.lang === "en" ? el.dataset.en : el.dataset.zh;
+        if (text) el.textContent = text;
+      });
+
+      visibleCountTextEl.textContent = t("countWord");
+      langToggle.innerHTML = ICONS.language;
+      langToggle.setAttribute("aria-label", state.lang === "en" ? "Switch to Chinese" : "Switch to English");
+      langToggle.setAttribute("title", state.lang === "en" ? "中文" : "English");
+      applyTheme();
+
+      renderFilters();
+      renderTasks();
+
+      if (modal.classList.contains("open") && activeTask) {
+        fillModal(activeTask);
+      }
+
+      renderGitHubStats();
+    }
+
+    langToggle.addEventListener("click", () => {
+      state.lang = state.lang === "en" ? "zh" : "en";
+      applyLanguage();
+    });
+
+    themeToggle.addEventListener("click", () => {
+      state.theme = state.theme === "dark" ? "light" : "dark";
+      applyTheme();
+    });
+
+    modalClose.addEventListener("click", closeModal);
+    modal.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLElement && event.target.dataset.closeModal === "true") {
+        closeModal();
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && modal.classList.contains("open")) {
+        closeModal();
+        return;
+      }
+      trapFocus(event);
+    });
+
+    loadGitHubStatsCache();
+    applyLanguage();
+    observeReveals(document);
+    fetchGitHubStats();
+    setInterval(fetchGitHubStats, GITHUB_REFRESH_INTERVAL_MS);
+  </script>
+</body>
+</html>

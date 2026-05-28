@@ -1,0 +1,213 @@
+        <!-- Phase: IDLE - Task Input (only in full mode) -->
+        <div x-show="mode === 'full' && phase === 'idle'" x-transition class="max-w-5xl mx-auto">
+            <div class="flex gap-6">
+            <!-- Main Input Card -->
+            <div class="flex-1 bento-card">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    What would you like to do?
+                </h2>
+                <textarea
+                    x-model="taskInput"
+                    @keydown.meta.enter="startSearch()"
+                    @keydown.ctrl.enter="startSearch()"
+                    class="w-full h-56 bg-surface-primary border border-border-default rounded-lg p-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500 focus:outline-none resize-none"
+                    placeholder="The more detailed the description, the more likely it is to retrieve the right skills. (e.g., 'As a Ph.D. student, I have recently completed a research paper and would like to effectively promote it across both domestic and international social media platforms. Additionally, I need assistance in creating online materials to serve as a central hub for clearly presenting and disseminating my research findings to a broader audience. My paper is available locally at: workspace/Avengers.pdf.')"
+                ></textarea>
+
+                <div class="mt-3">
+                    <label class="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Attachments (optional)</label>
+                    <!-- Drag-drop upload area -->
+                    <div class="border-2 border-dashed border-border-default rounded-lg p-4 text-center transition-colors cursor-pointer"
+                         :class="{'border-purple-500 bg-purple-500/10': dragOver}"
+                         @dragover.prevent="dragOver = true"
+                         @dragleave="dragOver = false"
+                         @drop.prevent="handleDrop($event)"
+                         @click="$refs.fileInput.click()">
+                        <input type="file" x-ref="fileInput" multiple class="hidden" @change="handleFileSelect($event)">
+                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm" x-show="!uploading">Drag files here or click to select</p>
+                        <p class="text-purple-500 dark:text-purple-400 text-sm" x-show="uploading">Uploading...</p>
+                    </div>
+                    <!-- Uploaded files list -->
+                    <div x-show="uploadedFiles.length > 0" class="mt-2 space-y-2">
+                        <template x-for="(file, index) in uploadedFiles" :key="index">
+                            <div class="flex items-center justify-between p-2 bg-surface-tertiary rounded-lg">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <span class="text-sm text-gray-700 dark:text-gray-300 truncate" x-text="file.name"></span>
+                                    <span class="text-xs text-gray-500" x-text="formatFileSize(file.size)"></span>
+                                </div>
+                                <button @click.stop="removeFile(index)" class="p-1 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                    <!-- Upload message -->
+                    <p x-show="uploadMessage"
+                       x-text="uploadMessage"
+                       :class="uploadError ? 'text-red-400' : 'text-green-400'"
+                       class="text-sm mt-2 text-center"></p>
+                </div>
+
+                <!-- Skill Group Selection -->
+                <div class="mt-4" x-show="skillGroups.length > 1">
+                    <label class="text-sm text-gray-500 dark:text-gray-400 mb-2 block">Skill Group</label>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="group in skillGroups" :key="group.id">
+                            <button @click="selectSkillGroup(group.id)"
+                                class="px-4 py-2 rounded-lg border transition-all text-sm"
+                                :class="group.is_current
+                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                    : 'bg-surface-tertiary border-border-default hover:border-purple-500 text-gray-700 dark:text-gray-300'">
+                                <span x-text="group.name"></span>
+                            </button>
+                        </template>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1"
+                       x-text="skillGroups.find(g => g.is_current)?.description || ''"></p>
+
+                    <!-- Custom Skill Group Configuration -->
+                    <div class="mt-3 space-y-2" x-show="skillGroups.find(g => g.is_current && g.is_configurable)" x-transition>
+                        <div>
+                            <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Skills Directory</label>
+                            <input type="text" x-model="customConfig.skills_dir"
+                                @change="setCustomConfig()"
+                                class="w-full bg-surface-primary border border-border-default rounded-lg p-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                                placeholder="e.g., data/my_skills" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Tree Path</label>
+                            <input type="text" x-model="customConfig.tree_path"
+                                @change="setCustomConfig()"
+                                class="w-full bg-surface-primary border border-border-default rounded-lg p-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:border-purple-500 focus:outline-none"
+                                placeholder="e.g., data/my_tree.yaml" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label class="text-sm text-gray-500 dark:text-gray-400 mb-1 block">Task Name (optional)</label>
+                    <input
+                        type="text"
+                        x-model="taskNameInput"
+                        class="w-full bg-surface-primary border border-border-default rounded-lg p-2 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-purple-500 focus:outline-none text-sm"
+                        placeholder="e.g., quarterly_report (for folder naming)"
+                        maxlength="30"
+                    />
+                </div>
+
+                <!-- Recipe Recommendations -->
+                <div x-show="recommendedRecipes.length > 0" x-transition class="mt-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            Quick Execute with Recipe
+                        </h3>
+                        <span class="text-xs text-gray-400">Skip search, run directly</span>
+                    </div>
+                    <div class="space-y-2">
+                        <template x-for="recipe in recommendedRecipes" :key="recipe.id">
+                            <div @click="executeRecipe(recipe.id)"
+                                 class="p-3 rounded-lg border border-border-default bg-surface-tertiary/50 hover:border-green-500/50 hover:bg-green-500/5 cursor-pointer transition-all group">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-medium text-gray-900 dark:text-gray-100 group-hover:text-green-400 transition-colors" x-text="recipe.name"></span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400" x-text="recipe.skill_ids.length + ' skills'"></span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1" x-text="recipe.description"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <!-- Recipe searching indicator -->
+                <div x-show="recipeSearching" class="mt-2 text-xs text-gray-400 flex items-center gap-1">
+                    <svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                    </svg>
+                    Matching recipes...
+                </div>
+
+                <div class="mt-4 flex justify-between items-center">
+                    <span class="text-xs text-gray-500">Press Cmd+Enter to search</span>
+                    <button
+                        @click="startSearch()"
+                        :disabled="!taskInput.trim()"
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Search Skills
+                    </button>
+                </div>
+            </div>
+
+            <!-- Demo Tasks Sidebar -->
+            <div class="w-64 flex flex-col gap-3 shrink-0">
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Demo Tasks</h3>
+                <template x-for="demo in demoTasks" :key="demo.id">
+                    <div @click="loadDemo(demo.id)"
+                         class="p-4 rounded-xl border border-border-default bg-surface-secondary hover:border-purple-500/50 hover:bg-surface-tertiary/50 transition-all cursor-pointer group"
+                         :class="loadingDemoId === demo.id ? 'opacity-60 pointer-events-none' : ''">
+                        <!-- Icon -->
+                        <div class="w-8 h-8 rounded-lg mb-3 flex items-center justify-center"
+                             :class="{
+                                 'bg-red-500/20': demo.icon === 'bug',
+                                 'bg-purple-500/20': demo.icon === 'design',
+                                 'bg-cyan-500/20': demo.icon === 'chart',
+                                 'bg-amber-500/20': demo.icon === 'paper',
+                                 'bg-pink-500/20': demo.icon === 'video',
+                                 'bg-gray-500/20': !['bug', 'design', 'chart', 'paper', 'video'].includes(demo.icon)
+                             }">
+                            <!-- Bug icon -->
+                            <svg x-show="demo.icon === 'bug'" class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                            <!-- Design icon -->
+                            <svg x-show="demo.icon === 'design'" class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                            </svg>
+                            <!-- Chart icon -->
+                            <svg x-show="demo.icon === 'chart'" class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            <!-- Paper icon -->
+                            <svg x-show="demo.icon === 'paper'" class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <!-- Video icon -->
+                            <svg x-show="demo.icon === 'video'" class="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <!-- Title -->
+                        <h4 class="font-medium text-gray-900 dark:text-gray-100 text-sm group-hover:text-purple-500 dark:group-hover:text-purple-400 transition-colors" x-text="demo.title"></h4>
+                        <!-- Description -->
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2" x-text="demo.description"></p>
+                        <!-- File count badge -->
+                        <div class="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                            </svg>
+                            <span x-text="demo.file_count + ' file' + (demo.file_count > 1 ? 's' : '')"></span>
+                            <!-- Loading spinner -->
+                            <svg x-show="loadingDemoId === demo.id" class="w-3 h-3 animate-spin ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                            </svg>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            </div>
+        </div>

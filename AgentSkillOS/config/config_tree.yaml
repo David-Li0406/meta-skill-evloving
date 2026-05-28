@@ -1,0 +1,72 @@
+# =============================================================================
+# AgentSkillOS Configuration — Tree Manager
+# Priority: CLI arguments > Environment variables (.env) > config.yaml
+# =============================================================================
+
+# =============================================================================
+# Global Configuration
+# =============================================================================
+
+skill_group: skill_seeds
+max_skills: 10
+prune_enabled: true
+port: 8765
+
+# Module Selection
+manager: tree
+orchestrator: dag
+
+# =============================================================================
+# Shared Defaults
+# =============================================================================
+core:
+  retry:
+    base_delay: 1.0
+    max_retries: 3
+
+# =============================================================================
+# Manager Plugins
+# =============================================================================
+managers:
+  tree:
+    branching_factor: 7
+    max_depth: 6
+    build:
+      max_workers: 4
+      caching: true
+      num_retries: 3
+      timeout: 600.0
+      deterministic_prompts: true
+      discovery_seed: 42
+      prompt_fingerprint_version: v1
+      cache_observability: true
+    search:
+      max_parallel: 5
+      temperature: 0.3
+      timeout: 600.0
+      caching: true
+    layering:
+      mode: disabled         # disabled | directory | install-count
+      dormant_skills_dir: "" # for mode=directory, relative to project root
+      active_threshold: 50   # for mode=install-count
+      max_dormant_suggestions: 10
+      installs_data_path: tools/skills_downloader_from_skillssh/skills_scraped.json
+      dormant_search:
+        keyword_enabled: true
+        cache_ttl: 31536000
+
+# =============================================================================
+# Orchestrator Plugins
+# =============================================================================
+orchestrators:
+  dag:
+    node_timeout: 3600.0
+    max_concurrent: 6
+    runtime:
+      model: sonnet
+  free-style:
+    runtime:
+      model: sonnet
+  no-skill:
+    runtime:
+      model: sonnet

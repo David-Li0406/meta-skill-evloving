@@ -1,0 +1,37 @@
+# AgentSkillOS Eval Configuration: dag-specified-0
+skill_group: skill_10000
+max_skills: 8
+prune_enabled: true
+port: 8765
+manager: tree
+orchestrator: dag
+
+core:
+  retry:
+    base_delay: 1.0
+    max_retries: 3
+
+managers:
+  tree:
+    branching_factor: 12
+    max_depth: 8
+    build:
+      max_workers: 4
+      caching: true
+    search:
+      max_parallel: 5
+      temperature: 0.3
+      timeout: 600.0
+      caching: true
+    layering:
+      mode: directory
+      dormant_skills_dir: data/skill_190000_dormant
+      max_dormant_suggestions: 10
+
+orchestrators:
+  dag:
+    batch_auto_plan: 0
+    node_timeout: 3600.0
+    max_concurrent: 6
+    runtime:
+      model: sonnet

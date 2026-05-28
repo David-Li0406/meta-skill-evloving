@@ -1,0 +1,64 @@
+{
+  "task_id": "visual_creation_task1",
+  "task_name": "AI Scientific Figures + Academic Conference Poster",
+  "description": "Create an academic conference poster about graph neural networks for molecular property prediction, including AI-generated scientific figures and professional layout.",
+  "skills": [
+    "generate-image",
+    "latex-posters"
+  ],
+  "prompt": "I am a graduate researcher, and I need to create a conference poster for presenting my work on molecular property prediction using graph neural networks. Please create an A0 academic poster on \"Graph Neural Network-Based Molecular Property Prediction\". Generate 3 scientific figures: gnn_architecture.png showing the GNN architecture diagram, molecular_graph.png showing molecule-to-graph representation, and performance.png showing a performance comparison chart.\n\nBuild a 3-column poster, output as poster.pdf, with blue-green academic theme, including sections: Abstract, Introduction, Method with architecture figure, Molecular Representation, Experimental Results with performance figure, Conclusions, and References with 3-5 citations.",
+  "outputs": [
+    "gnn_architecture.png",
+    "molecular_graph.png",
+    "performance.png",
+    "poster.pdf"
+  ],
+  "category": "visual_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "figures_exist",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that all 3 scientific figures exist",
+      "weight": 4,
+      "op_args": {
+        "path": [
+          "gnn_architecture.png",
+          "molecular_graph.png",
+          "performance.png"
+        ],
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pdf_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that poster PDF exists",
+      "weight": 4,
+      "op_args": {
+        "path": "poster.pdf",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pdf_size",
+      "type": "objective_usability",
+      "op_func": "pdf_dimensions",
+      "description": "Verify PDF is approximately A0 size",
+      "weight": 4,
+      "op_args": {
+        "path": "poster.pdf",
+        "expected_size": "A0",
+        "tolerance_mm": 100,
+        "allow_rotated": true
+      },
+      "depends_on": [
+        "pdf_exists"
+      ]
+    }
+  ]
+}

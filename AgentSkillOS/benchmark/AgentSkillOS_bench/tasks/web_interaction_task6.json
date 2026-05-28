@@ -1,0 +1,96 @@
+{
+  "task_id": "web_interaction_task6",
+  "task_name": "Web Scraping with Excel Report",
+  "description": "Collect book pricing data from an online bookstore and produce an Excel market analysis report.",
+  "skills": [
+    "dev-browser",
+    "xlsx"
+  ],
+  "prompt": "I am a market researcher, and I want to analyze pricing trends in the online book market. Please collect book data from https://books.toscrape.com, covering the first 2 pages with at least 30 books. For each book, I need: title, price as numeric without the £ symbol, rating on a 1-5 scale, and availability.\n\nCreate books_report.xlsx with 3 sheets: 'Raw Data' containing all books, 'Statistics' with calculated metrics including total_books, average_price, max_price, min_price, and in_stock_count using spreadsheet formulas so values update automatically, and 'Market Insights' showing price tier segmentation — Budget under 20, Mid-range 20-40, and Premium over 40 — with count and average rating per tier.\n\nAlso save stats.json with: total_books, average_price, max_price, min_price, in_stock_count, price_tiers as an object with budget/midrange/premium counts, and market_insight as a 1-2 sentence string describing the relationship between price and rating you observed.",
+  "outputs": [
+    "stats.json",
+    "books_report.xlsx"
+  ],
+  "category": "web_interaction",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "excel_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that books_report.xlsx exists",
+      "weight": 4,
+      "op_args": {
+        "path": "books_report.xlsx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "excel_has_3_sheets",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Check that Excel file has all 3 required sheets",
+      "weight": 9,
+      "op_args": {
+        "path": "books_report.xlsx",
+        "mode": "contains"
+      },
+      "value": [
+        "Raw Data",
+        "Statistics",
+        "Market Insights"
+      ],
+      "depends_on": [
+        "excel_exists"
+      ]
+    },
+    {
+      "id": "stats_json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that stats.json exists",
+      "weight": 4,
+      "op_args": {
+        "path": "stats.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "stats_json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that stats.json is valid JSON",
+      "weight": 4,
+      "op_args": {
+        "path": "stats.json"
+      },
+      "depends_on": [
+        "stats_json_exists"
+      ]
+    },
+    {
+      "id": "stats_has_fields",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that stats.json has all required fields including market insight",
+      "weight": 9,
+      "op_args": {
+        "path": "stats.json"
+      },
+      "value": [
+        "total_books",
+        "average_price",
+        "max_price",
+        "min_price",
+        "in_stock_count",
+        "price_tiers",
+        "market_insight"
+      ],
+      "depends_on": [
+        "stats_json_valid"
+      ]
+    }
+  ]
+}

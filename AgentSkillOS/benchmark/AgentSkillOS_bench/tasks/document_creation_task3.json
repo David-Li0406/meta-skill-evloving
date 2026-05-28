@@ -1,0 +1,31 @@
+{
+  "task_id": "document_creation_task3",
+  "task_name": "Attention Paper Reference Summary",
+  "description": "Read the last paragraph of the Background section of 'Attention Is All You Need', find the 3 cited papers, and create academic summaries.",
+  "skills": [
+    "citation-management",
+    "docx",
+    "dev-browser"
+  ],
+  "prompt": "I am a PhD student studying natural language processing, and I want to deeply understand the foundational references behind the Transformer. The paper \"Attention Is All You Need\" (Vaswani et al., 2017) is provided as attention_is_all_you_need.pdf. Please read the last paragraph of the Background section — it cites 3 key papers. Find these 3 papers and write a 300-500 word academic summary for each, covering: the paper's core contribution, methodology overview, and its relationship to the Transformer.\n\nGenerate reference_summary.docx containing: a title, an introduction explaining the inspirations behind the Transformer, one section per paper (Heading 2), and a summary comparison table at the end. The document must end with a \"References\" section listing all 3 cited papers in APA format (Author, A. B. (Year). Title. Journal/Conference, Volume, Pages.). In the body text, use APA in-text citations such as (Kaiser & Sutskever, 2016) when referring to each paper.",
+  "outputs": [
+    "reference_summary.docx"
+  ],
+  "category": "document_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "docx_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that reference_summary.docx exists",
+      "weight": 4,
+      "op_args": {
+        "path": "reference_summary.docx",
+        "min_size": 1
+      }
+    }
+  ]
+}

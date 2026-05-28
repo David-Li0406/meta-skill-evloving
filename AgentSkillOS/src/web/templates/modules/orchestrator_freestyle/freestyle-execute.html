@@ -1,0 +1,41 @@
+        <!-- Phase: PLANNING/EXECUTING - Freestyle Orchestration View -->
+        <div x-show="executionMode === 'free-style' && (mode === 'execute' || phase === 'planning' || phase === 'executing' || phase === 'complete' || phase === 'error')" x-transition>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+                <!-- INCLUDE:core/log-panel.html -->
+
+                <!-- Sub Agents Panel -->
+                <section x-show="waitingForNodes || activeNodeIds().length > 0" x-transition
+                         class="lg:col-span-4 bento-card" style="min-height: 100px;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-gray-900 dark:text-gray-100 font-semibold flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                            Task Log
+                        </h2>
+                        <span class="text-xs text-gray-500 bg-surface-tertiary px-2 py-1 rounded" x-text="activeNodeIds().length + ' active'"></span>
+                    </div>
+                    <div x-show="waitingForNodes && activeNodeIds().length === 0" class="text-gray-500 h-32 flex flex-col items-center justify-center gap-2">
+                        <svg class="w-8 h-8 text-purple-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                        </svg>
+                        <span class="text-sm">Awaiting plan (usually takes 1-2 minutes)...</span>
+                    </div>
+                    <div class="space-y-2">
+                        <template x-for="nodeId in activeNodeIds()" :key="'sub-' + nodeId">
+                            <div @click="selectedNodeId = nodeId"
+                                 class="bg-surface-primary rounded-lg border px-3 py-2.5 flex items-center gap-3 cursor-pointer hover:bg-surface-tertiary/50 transition-all"
+                                 :class="getNodeBorderClass(getNodeStatus(nodeId))">
+                                <!-- Status + Node Name -->
+                                <span class="flex items-center gap-2 shrink-0" :class="getNodeTextClass(getNodeStatus(nodeId))">
+                                    <span x-html="getStatusIconSvg(getNodeStatus(nodeId))"></span>
+                                    <span class="font-medium text-sm" x-text="nodeId"></span>
+                                </span>
+                                <!-- Latest Log -->
+                                <span class="font-mono text-xs text-gray-500 truncate flex-1" x-text="getLatestLog(nodeId)"></span>
+                                <!-- Log Count Badge -->
+                                <span class="text-xs text-gray-500 bg-surface-tertiary px-2 py-0.5 rounded-full whitespace-nowrap" x-text="getNodeLogs(nodeId).length"></span>
+                            </div>
+                        </template>
+                    </div>
+                </section>
+            </div>
+        </div>

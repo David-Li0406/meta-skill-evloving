@@ -1,0 +1,81 @@
+{
+  "task_id": "document_creation_task6",
+  "task_name": "Quantum Computing Teaching Handout with AI Figures",
+  "description": "Create teaching materials for quantum computing fundamentals including AI-generated illustrations and a structured PDF handout presentation.",
+  "skills": [
+    "generate-image",
+    "scientific-slides"
+  ],
+  "prompt": "I am a university lecturer, and I'm preparing teaching materials on \"Quantum Computing Fundamentals\" for my undergraduate class. Please generate 3 illustrations: qubit.png showing a Bloch sphere visualization, gates.png showing Hadamard & CNOT gate operations, and circuit.png showing a simple quantum circuit diagram.\n\nCreate presentation.pdf with at least 8 pages covering: title page, classical vs quantum computing, qubits & superposition, quantum gates, quantum circuits, entanglement, applications, and summary with key takeaways.",
+  "outputs": [
+    "qubit.png",
+    "gates.png",
+    "circuit.png",
+    "presentation.pdf"
+  ],
+  "category": "document_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "qubit_figure_size",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that qubit.png exists and has reasonable size",
+      "weight": 2,
+      "op_args": {
+        "path": "qubit.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "gates_figure_size",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that gates.png exists and has reasonable size",
+      "weight": 2,
+      "op_args": {
+        "path": "gates.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "circuit_figure_size",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that circuit.png exists and has reasonable size",
+      "weight": 3,
+      "op_args": {
+        "path": "circuit.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pdf_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the presentation PDF exists",
+      "weight": 7,
+      "op_args": {
+        "path": "presentation.pdf",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pdf_page_count",
+      "type": "objective_usability",
+      "op_func": "pdf_page_count",
+      "description": "Check that the PDF has at least 8 pages",
+      "weight": 11,
+      "op_args": {
+        "path": "presentation.pdf",
+        "operator": ">=",
+        "expected": 8
+      },
+      "depends_on": [
+        "pdf_exists"
+      ]
+    }
+  ]
+}

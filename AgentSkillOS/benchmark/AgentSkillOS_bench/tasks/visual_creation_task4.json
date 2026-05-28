@@ -1,0 +1,72 @@
+{
+  "task_id": "visual_creation_task4",
+  "task_name": "Humorous Meme Image Generation",
+  "description": "Generate a single humorous meme image with a JSON metadata file.",
+  "skills": [
+    "meme-factory"
+  ],
+  "prompt": "I am a social media content creator, and I need a funny meme to share with my followers. Please generate a single humorous meme image saved as meme.png. The meme should be universally relatable and funny — for example, about procrastination, Monday mornings, or the gap between expectations and reality. Use a classic meme template format with an image and witty text overlay. Also generate meme.json containing the fields: topic (the meme theme), caption (the text used on the meme), and humor_style (e.g., \"ironic\", \"self-deprecating\", \"observational\").",
+  "outputs": [
+    "meme.json",
+    "meme.png"
+  ],
+  "category": "visual_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "meme_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that meme.png exists",
+      "weight": 5,
+      "op_args": {
+        "path": "meme.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that meme.json exists",
+      "weight": 5,
+      "op_args": {
+        "path": "meme.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that meme.json is valid JSON",
+      "weight": 5,
+      "op_args": {
+        "path": "meme.json"
+      },
+      "depends_on": [
+        "json_exists"
+      ]
+    },
+    {
+      "id": "json_has_keys",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that meme.json has topic, caption, and humor_style",
+      "weight": 5,
+      "op_args": {
+        "path": "meme.json"
+      },
+      "value": [
+        "topic",
+        "caption",
+        "humor_style"
+      ],
+      "depends_on": [
+        "json_valid"
+      ]
+    }
+  ]
+}

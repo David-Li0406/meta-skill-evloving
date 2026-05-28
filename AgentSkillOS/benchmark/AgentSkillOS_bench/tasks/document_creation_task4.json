@@ -1,0 +1,60 @@
+{
+  "task_id": "document_creation_task4",
+  "task_name": "Academic Seminar Presentation Slides",
+  "description": "Create a professional PDF presentation for an academic seminar on large language models, including proper structure, content, and visual design.",
+  "skills": [
+    "scientific-slides",
+    "dev-browser"
+  ],
+  "prompt": "I am a PhD student preparing for an academic seminar next week, and I need a polished slide deck that presents a critical review of my research area. Please create a professional academic presentation with at least 12 pages on \"Emergent Abilities and Alignment Techniques in Large Language Models\". It should cover: background and motivation, core concepts including emergent abilities and scaling laws, a comparison table of major alignment methods — RLHF, Constitutional AI, and DPO — with columns for pros, cons, and computational cost, a critical analysis section identifying open problems and limitations of current approaches, your recommended research directions, and a summary with references. The presentation should make a clear argument, not just survey the field. The slides should include rich visual content such as diagrams, charts, and illustrations to enhance understanding and engagement.\n\nOutput as presentation.pdf.",
+  "outputs": [
+    "presentation.pdf"
+  ],
+  "category": "document_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "pdf_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the presentation PDF exists",
+      "weight": 2,
+      "op_args": {
+        "path": "presentation.pdf",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pdf_page_count",
+      "type": "objective_usability",
+      "op_func": "pdf_page_count",
+      "description": "Verify PDF has at least 12 pages",
+      "weight": 2,
+      "op_args": {
+        "path": "presentation.pdf",
+        "operator": ">=",
+        "expected": 12
+      },
+      "depends_on": [
+        "pdf_exists"
+      ]
+    },
+    {
+      "id": "pdf_orientation",
+      "type": "objective_usability",
+      "op_func": "pdf_orientation",
+      "description": "Verify PDF pages are in landscape orientation (required for slides)",
+      "weight": 15,
+      "op_args": {
+        "path": "presentation.pdf",
+        "expected": "landscape",
+        "check_all": true
+      },
+      "depends_on": [
+        "pdf_exists"
+      ]
+    }
+  ]
+}

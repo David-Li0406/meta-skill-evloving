@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Design Research - AgentSkillOS Example</title>
+    <meta name="description" content="AgentSkillOS Example: Research Notion/Confluence design patterns and generate concept designs">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./examples.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container header-inner">
+            <a href="index.html#gallery" class="back-link">
+                <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                <span class="i18n" data-en="Back to Home" data-zh="返回主页">Back to Home</span>
+            </a>
+            <div class="header-controls">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                <button class="lang-toggle" onclick="toggleLang()">
+                    <span id="lang-en" class="active">EN</span> | <span id="lang-zh">中</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <span class="example-badge">EXAMPLE 02</span>
+            <h1 class="i18n" data-en="UI Design Research" data-zh="UI 设计研究">UI Design Research</h1>
+            <p class="hero-desc i18n" data-en="Research Notion/Confluence design patterns and generate concept design mockups" data-zh="研究 Notion/Confluence 设计语言，生成概念设计稿">Research Notion/Confluence design patterns and generate concept design mockups</p>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title i18n" data-en="Task" data-zh="任务">Task</h2>
+            <div class="task-card">
+                <div class="task-label i18n" data-en="User Input" data-zh="用户输入">User Input</div>
+                <p class="task-text i18n" data-en="I'm a product designer planning a knowledge management software. Research products like Notion and Confluence, then create a visual design style report (report.docx) with screenshots. Based on the analysis, generate three design concept images (fusion_design_1/2/3.png) that synthesize their design characteristics." data-zh="我是一名产品设计师，正在规划一款知识管理软件。请研究 Notion 和 Confluence 等产品，然后创建一份包含截图的视觉设计风格报告（report.docx）。基于分析结果，生成三张融合它们设计特点的概念设计图（fusion_design_1/2/3.png）。">I'm a product designer planning a knowledge management software. Research products like Notion and Confluence, then create a visual design style report (report.docx) with screenshots. Based on the analysis, generate three design concept images (fusion_design_1/2/3.png) that synthesize their design characteristics.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title i18n" data-en="Results" data-zh="结果">Results</h2>
+            <div class="gallery">
+                <div class="gallery-item">
+                    <img src="./assets/case2_ui_design/fusion_design_merged.png" alt="Fusion Design Concepts" onclick="openLightbox(this)">
+                    <p class="gallery-caption i18n" data-en="Three AI-generated UI concept designs that synthesize design patterns from Notion and Confluence. Each concept demonstrates a unique visual direction: minimalist block-based editing (Notion-inspired), structured hierarchical navigation (Confluence-inspired), and a balanced fusion approach. The designs showcase consistent typography, color systems, and component layouts suitable for knowledge management software." data-zh="三款由 AI 生成的 UI 概念设计，融合了 Notion 和 Confluence 的设计语言。每个概念展示独特的视觉方向：极简块状编辑风格（Notion 风格）、结构化层级导航（Confluence 风格）、以及平衡融合方案。设计展示了统一的字体排版、配色系统和组件布局，适用于知识管理软件。">Three AI-generated UI concept designs that synthesize design patterns from Notion and Confluence. Each concept demonstrates a unique visual direction: minimalist block-based editing (Notion-inspired), structured hierarchical navigation (Confluence-inspired), and a balanced fusion approach. The designs showcase consistent typography, color systems, and component layouts suitable for knowledge management software.</p>
+                </div>
+                <div class="gallery-item">
+                    <img src="./assets/case2_ui_design/word_UI.png" alt="Design Style Report" onclick="openLightbox(this)">
+                    <p class="gallery-caption i18n" data-en="The generated design style report in Word format (.docx). It contains: competitive analysis of Notion and Confluence UI patterns, captured screenshots of key interface elements, color palette extraction, typography analysis, spacing and layout grid systems, and actionable design recommendations for building a new knowledge management product." data-zh="生成的 Word 格式设计风格报告（.docx）。包含：Notion 和 Confluence 的 UI 竞品分析、关键界面元素的截图采集、配色方案提取、字体排版分析、间距与布局栅格系统，以及构建新知识管理产品的可操作设计建议。">The generated design style report in Word format (.docx). It contains: competitive analysis of Notion and Confluence UI patterns, captured screenshots of key interface elements, color palette extraction, typography analysis, spacing and layout grid systems, and actionable design recommendations for building a new knowledge management product.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title i18n" data-en="Skill Workflow (DAG)" data-zh="技能流程 (DAG)">Skill Workflow (DAG)</h2>
+            <div class="workflow">
+                <img src="./assets/case2_ui_design/ui_skills.png" alt="Skill DAG" class="workflow-img" onclick="openLightbox(this)">
+                <p class="workflow-caption i18n" data-en="Skills automatically selected and orchestrated by AgentSkillOS" data-zh="AgentSkillOS 自动选择和编排的技能">Skills automatically selected and orchestrated by AgentSkillOS</p>
+            </div>
+        </section>
+
+        <nav class="nav-section">
+            <div class="nav-links">
+                <a href="example-bug.html" class="nav-link">
+                    <div class="nav-link-label i18n" data-en="Previous" data-zh="上一个">Previous</div>
+                    <div class="nav-link-title i18n" data-en="Bug Diagnosis Report" data-zh="Bug 诊断报告">Bug Diagnosis Report</div>
+                </a>
+                <a href="example-paper.html" class="nav-link next">
+                    <div class="nav-link-label i18n" data-en="Next Example" data-zh="下一个示例">Next Example</div>
+                    <div class="nav-link-title i18n" data-en="Paper Promotion" data-zh="论文推广">Paper Promotion</div>
+                </a>
+            </div>
+        </nav>
+    </main>
+
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close">&times;</button>
+        <img src="" alt="" id="lightbox-img">
+    </div>
+
+        <script src="./examples.js"></script>
+</body>
+</html>

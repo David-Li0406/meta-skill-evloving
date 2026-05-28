@@ -1,0 +1,101 @@
+# =============================================================================
+# AgentSkillOS Configuration
+# Priority: CLI arguments > Environment variables (.env) > config.yaml
+# =============================================================================
+
+# =============================================================================
+# Global Configuration
+# =============================================================================
+
+# Skill group selection
+# Options: skill_seeds (~50 curated, recommended), top500, top1000, skill_200
+skill_group: skill_200
+
+# Maximum skills count (max skills to select during auto search)
+max_skills: 8
+
+# Skill deduplication (remove similar skills)
+prune_enabled: true
+
+# Web UI port
+port: 8765
+
+# Module Selection (Plugin System)
+# Manager: skill indexing + retrieval implementation
+# Options: tree | vector | direct (direct requires orchestrator: free-style)
+manager: tree
+# Orchestrator: skill execution orchestration (single source of truth for execution mode)
+# Options: dag | free-style | no-skill
+orchestrator: dag
+
+# =============================================================================
+# Shared Defaults
+# =============================================================================
+core:
+  retry:
+    base_delay: 1.0
+    max_retries: 3
+
+# =============================================================================
+# Manager Plugins
+# =============================================================================
+managers:
+  direct: {}  # No configuration — directly provides all skills to agent
+
+  vector:
+    top_k: 10
+    collection_name: skills
+    build:
+      batch_size: 100
+      max_workers: 4
+      caching: true
+
+  tree:
+    branching_factor: 7
+    max_depth: 6
+    build:
+      max_workers: 4
+      caching: true
+      num_retries: 3
+      timeout: 600.0
+      deterministic_prompts: true
+      discovery_seed: 42
+      prompt_fingerprint_version: v1
+      cache_observability: true
+    search:
+      max_parallel: 5
+      temperature: 0.3
+      timeout: 600.0
+      caching: true
+    layering:
+      mode: disabled         # disabled | directory | install-count
+      dormant_skills_dir: "" # for mode=directory, relative to project root
+      active_threshold: 50   # for mode=install-count
+      max_dormant_suggestions: 10
+      installs_data_path: tools/skills_downloader_from_skillssh/skills_scraped.json
+      dormant_search:
+        keyword_enabled: true
+        cache_ttl: 31536000
+
+# =============================================================================
+# Orchestrator Plugins
+# =============================================================================
+orchestrators:
+  dag:
+    node_timeout: 3600.0
+    max_concurrent: 6
+    batch_auto_plan: 0  # Plan selection for batch mode (0=quality, 1=speed, 2=simplicity)
+    runtime:
+      model: sonnet
+      execution_timeout: 0.0
+      summary_max_length: 500
+  free-style:
+    runtime:
+      model: sonnet
+      execution_timeout: 0.0
+      summary_max_length: 500
+  no-skill:
+    runtime:
+      model: sonnet
+      execution_timeout: 0.0
+      summary_max_length: 500

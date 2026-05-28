@@ -1,0 +1,154 @@
+        <!-- Phase: REVIEWING - Skill Selection (vector manager, no tree browser) -->
+        <div x-show="phase === 'reviewing' && uiHints.has_skill_review" x-transition class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+            <!-- Skill Cards -->
+            <div class="lg:col-span-9 bento-card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Candidate Skills
+                        <span class="text-sm font-normal text-gray-400" x-text="'(' + selectedSkills.length + ' selected, ranked by similarity)'"></span>
+                    </h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-[32rem] overflow-y-auto content-start">
+                    <template x-for="(skill, index) in searchResult.skills" :key="skill.id">
+                        <div
+                            class="skill-card cursor-pointer p-4"
+                            :class="{'selected': selectedSkills.includes(skill.id)}"
+                            @click="toggleSkill(skill.id)"
+                        >
+                            <div class="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    :checked="selectedSkills.includes(skill.id)"
+                                    class="mt-1.5 rounded border-gray-300 dark:border-gray-600 bg-surface-primary text-purple-500 focus:ring-purple-500"
+                                    @click.stop="toggleSkill(skill.id)"
+                                >
+                                <div class="flex-1 min-w-0">
+                                    <!-- Row 1: Name + Official + Similarity + Details -->
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="(index + 1) + '.'"></span>
+                                            <span class="font-medium text-base text-gray-900 dark:text-gray-100" x-text="skill.name"></span>
+                                            <span x-show="skill.is_official"
+                                                  class="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-semibold rounded-full">
+                                                Official
+                                            </span>
+                                            <!-- Similarity Score Badge -->
+                                            <span class="px-2 py-0.5 text-[10px] font-mono font-semibold rounded-full"
+                                                  :class="skill.similarity >= 0.5 ? 'bg-green-500/20 text-green-500' : (skill.similarity >= 0.3 ? 'bg-amber-500/20 text-amber-500' : 'bg-gray-500/20 text-gray-400')"
+                                                  x-text="(skill.similarity * 100).toFixed(1) + '% match'"></span>
+                                        </div>
+                                        <button
+                                            @click.stop="openSkillDetail(skill)"
+                                            class="text-xs px-2 py-1 bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors text-gray-500 dark:text-gray-400 flex-shrink-0"
+                                            title="View details"
+                                        >
+                                            Details
+                                        </button>
+                                    </div>
+
+                                    <!-- Row 2: GitHub + Stars + Author -->
+                                    <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                        <a x-show="skill.github_url"
+                                           :href="skill.github_url"
+                                           @click.stop
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                           title="View on GitHub">
+                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span x-text="'★' + (skill.stars || 0)"></span>
+                                        </a>
+                                        <span x-show="skill.github_url && skill.author">•</span>
+                                        <span x-show="skill.author" class="truncate">
+                                            Author: <span x-text="skill.author"></span>
+                                        </span>
+                                    </div>
+
+                                    <!-- Row 3: Description (3 lines) -->
+                                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="skill.description" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="mt-4 flex justify-between items-center">
+                    <button
+                        @click="copyInstallCommands()"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                        </svg>
+                        <span x-text="copyMessage || 'Copy Install Commands'"></span>
+                    </button>
+                    <div class="flex items-center gap-4">
+                        <button
+                            @click="resetSearch()"
+                            class="px-4 py-2 bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
+                        >
+                            Search Again
+                        </button>
+                        <!-- Execution Mode Selection -->
+                        <div class="flex items-center gap-2 bg-surface-tertiary rounded-lg p-1">
+                            <template x-for="engine in availableEngines" :key="engine.id">
+                                <button
+                                    @click="executionMode = engine.id"
+                                    :class="executionMode === engine.id
+                                        ? 'bg-purple-600 text-white'
+                                        : 'text-gray-400 hover:text-gray-300'"
+                                    class="px-3 py-1 rounded text-sm font-medium transition-colors"
+                                    :title="engine.description"
+                                    x-text="engine.label"
+                                ></button>
+                            </template>
+                        </div>
+                        <button
+                            @click="confirmSkills()"
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                            Continue with <span x-text="selectedSkills.length"></span> skills
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Log -->
+            <div class="lg:col-span-3 bento-card">
+                <h2 class="text-lg font-semibold mb-4">Search Log</h2>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 dark:text-gray-400">Task:</span>
+                        <span class="text-gray-700 dark:text-gray-200 text-right max-w-[200px] truncate" x-text="task"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 dark:text-gray-400">Skills Found:</span>
+                        <span class="text-green-500 dark:text-green-400 font-mono" x-text="searchResult.skills?.length || 0"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500 dark:text-gray-400">Search Method:</span>
+                        <span class="text-purple-500 dark:text-purple-400 font-mono">Vector</span>
+                    </div>
+                </div>
+
+                <!-- Logs -->
+                <div class="mt-6">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Activity Log</h3>
+                    <div class="h-[20rem] overflow-y-auto bg-surface-primary rounded-lg p-2">
+                        <template x-for="(log, index) in logs.slice(-20)" :key="index">
+                            <div class="log-entry text-xs py-0.5" :class="'log-' + log.level">
+                                <span class="text-gray-400 dark:text-gray-500 shrink-0" x-text="log.timestamp"></span>
+                                <span x-text="log.message"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>

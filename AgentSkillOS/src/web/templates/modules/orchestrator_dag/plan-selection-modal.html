@@ -1,0 +1,63 @@
+    <!-- Plan Selection Modal -->
+    <div x-show="showPlanSelection" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-[#161B22]/95 backdrop-blur-xl rounded-2xl border border-border-default p-6 md:p-8 max-w-4xl w-full max-h-[90vh] shadow-2xl shadow-black/50 animate-modal flex flex-col">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                    Select Execution Plan
+                </h2>
+            </div>
+            <p class="text-gray-500 dark:text-gray-400 mb-6 text-sm">Choose a plan to execute. Click the preview to enlarge and view details.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto flex-1">
+                <template x-for="(plan, index) in orchestrator?.plans || []" :key="index">
+                    <div class="p-5 border rounded-xl bg-white/50 dark:bg-[#0D1117]/50 hover:border-purple-500/50 hover:bg-surface-tertiary/30 transition-all group"
+                         :class="pendingPlanIndex === index ? 'ring-2 ring-purple-500 border-purple-500' : 'border-border-default'">
+                        <!-- Clickable title/description area - pre-selects the plan -->
+                        <div @click="preSelectPlan(index)" class="cursor-pointer">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-purple-500 dark:group-hover:text-purple-300 transition-colors" x-text="plan.name || 'Plan ' + (index + 1)"></h3>
+                                <span class="text-cyan-500 dark:text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded-full border border-cyan-500/20"
+                                      x-text="(plan.nodes?.length || 0) + ' nodes'"></span>
+                            </div>
+                            <p class="text-gray-500 text-sm mb-4" x-text="plan.description || 'No description'" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"></p>
+                        </div>
+                        <!-- Mini DAG Preview - click to enlarge -->
+                        <div @click.stop="openPlanPreview(plan)"
+                             class="bg-white dark:bg-surface-primary rounded-lg p-3 border border-border-muted cursor-zoom-in hover:border-purple-500/50 transition-colors relative">
+                            <span x-html="renderPlanPreview(plan)"></span>
+                            <!-- Top-right persistent hint -->
+                            <div class="absolute top-1 right-1 flex items-center gap-1 text-purple-400 text-xs bg-white/80 dark:bg-surface-primary/80 px-1.5 py-0.5 rounded">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                                </svg>
+                                <span>Click to zoomin</span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <!-- Confirmation Buttons (sticky at panel bottom) -->
+            <div x-show="pendingPlanIndex !== null"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="sticky bottom-0 mt-4 pt-4 border-t border-border-muted bg-white dark:bg-[#161B22] flex justify-end gap-3">
+                <button @click="cancelPlanSelection()"
+                        class="px-4 py-2 rounded-lg bg-gray-700/90 text-gray-200 hover:bg-gray-600/90 transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button @click="confirmPlanSelection()"
+                        class="px-6 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 font-medium transition-colors flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Confirm Selection
+                </button>
+            </div>
+        </div>
+    </div>

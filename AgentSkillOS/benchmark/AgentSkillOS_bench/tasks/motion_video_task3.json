@@ -1,0 +1,277 @@
+{
+  "task_id": "motion_video_task3",
+  "task_name": "8-Puzzle: Solvability Analysis, Optimal Solving, and Sliding Animation",
+  "description": "Analyze the 8-puzzle mathematically (solvability, state space), find an optimal solution, and create a sliding tile animation.",
+  "skills": [
+    "manim",
+    "sympy"
+  ],
+  "prompt": "I am an AI course instructor, and I want to create a comprehensive 8-puzzle demonstration combining mathematical analysis, problem solving, and visualization for my students.\n\nInitial state: 7 2 4 / 5 _ 6 / 8 3 1, where _ is the blank. Goal state: 1 2 3 / 4 5 6 / 7 8 _.\n\nStep 1 — Mathematical analysis: Compute the total state space size for the 8-puzzle, determine how many configurations are solvable, verify whether this specific initial state can reach the goal state, and compute the Manhattan distance heuristic for the initial state. Save to puzzle_analysis.json with: total_configurations, solvable_configurations, initial_state, goal_state, inversion_count, is_solvable, manhattan_distance, and tile_distances array showing each of the 8 numbered tiles' (1-8) Manhattan distance.\n\nStep 2 — Find an optimal or near-optimal solution to the puzzle. Save the solution as puzzle_plan.txt with one move per line.\n\nStep 3 — Create puzzle_animation.mp4 showing the 3 \\times 3 grid with tiles sliding step-by-step according to your solution, with a move counter displayed, ending at the solved state.",
+  "outputs": [
+    "puzzle_analysis.json",
+    "puzzle_plan.txt",
+    "puzzle_animation.mp4"
+  ],
+  "category": "motion_video",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "analysis_json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that puzzle_analysis.json exists",
+      "weight": 2,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "analysis_json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that puzzle_analysis.json is valid JSON",
+      "weight": 2,
+      "op_args": {
+        "path": "puzzle_analysis.json"
+      },
+      "depends_on": [
+        "analysis_json_exists"
+      ]
+    },
+    {
+      "id": "analysis_has_keys",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that puzzle_analysis.json has all required fields",
+      "weight": 3,
+      "op_args": {
+        "path": "puzzle_analysis.json"
+      },
+      "value": [
+        "total_configurations",
+        "solvable_configurations",
+        "inversion_count",
+        "is_solvable",
+        "manhattan_distance",
+        "tile_distances"
+      ],
+      "depends_on": [
+        "analysis_json_valid"
+      ]
+    },
+    {
+      "id": "total_configs_correct",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check total_configurations = 362880 (9!)",
+      "weight": 3,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "json_path": "total_configurations",
+        "operator": "==",
+        "expected": 362880
+      },
+      "depends_on": [
+        "analysis_has_keys"
+      ]
+    },
+    {
+      "id": "solvable_configs_correct",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check solvable_configurations = 181440 (9!/2)",
+      "weight": 3,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "json_path": "solvable_configurations",
+        "operator": "==",
+        "expected": 181440
+      },
+      "depends_on": [
+        "analysis_has_keys"
+      ]
+    },
+    {
+      "id": "inversion_count_correct",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check inversion_count = 16",
+      "weight": 3,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "json_path": "inversion_count",
+        "operator": "==",
+        "expected": 16
+      },
+      "depends_on": [
+        "analysis_has_keys"
+      ]
+    },
+    {
+      "id": "manhattan_correct",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check manhattan_distance = 14",
+      "weight": 3,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "json_path": "manhattan_distance",
+        "operator": "==",
+        "expected": 14
+      },
+      "depends_on": [
+        "analysis_has_keys"
+      ]
+    },
+    {
+      "id": "tile_distances_array_length",
+      "type": "objective_usability",
+      "op_func": "json_array_length",
+      "description": "Check that tile_distances array has 8 elements",
+      "weight": 1,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "array_path": "tile_distances",
+        "operator": "==",
+        "expected": 8
+      },
+      "depends_on": [
+        "analysis_has_keys"
+      ]
+    },
+    {
+      "id": "tile1_distance_correct",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Check Tile 1 Manhattan distance = 4",
+      "weight": 1,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "array_path": "tile_distances",
+        "match": {
+          "tile": 1
+        },
+        "checks": [
+          {
+            "field": "distance",
+            "type": "equals",
+            "expected": 4
+          }
+        ]
+      },
+      "depends_on": [
+        "tile_distances_array_length"
+      ]
+    },
+    {
+      "id": "tile3_distance_correct",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Check Tile 3 Manhattan distance = 3",
+      "weight": 1,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "array_path": "tile_distances",
+        "match": {
+          "tile": 3
+        },
+        "checks": [
+          {
+            "field": "distance",
+            "type": "equals",
+            "expected": 3
+          }
+        ]
+      },
+      "depends_on": [
+        "tile_distances_array_length"
+      ]
+    },
+    {
+      "id": "tile7_distance_correct",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Check Tile 7 Manhattan distance = 2",
+      "weight": 1,
+      "op_args": {
+        "path": "puzzle_analysis.json",
+        "array_path": "tile_distances",
+        "match": {
+          "tile": 7
+        },
+        "checks": [
+          {
+            "field": "distance",
+            "type": "equals",
+            "expected": 2
+          }
+        ]
+      },
+      "depends_on": [
+        "tile_distances_array_length"
+      ]
+    },
+    {
+      "id": "plan_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that puzzle_plan.txt exists",
+      "weight": 2,
+      "op_args": {
+        "path": "puzzle_plan.txt",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "plan_valid",
+      "type": "objective_usability",
+      "op_func": "puzzle_8_plan_validates",
+      "description": "Objectively validate the 8-puzzle solution",
+      "weight": 12,
+      "op_args": {
+        "plan_path": "puzzle_plan.txt",
+        "initial_state": [
+          7,
+          2,
+          4,
+          5,
+          0,
+          6,
+          8,
+          3,
+          1
+        ],
+        "goal_state": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          0
+        ],
+        "min_moves": 14,
+        "max_moves": 50
+      },
+      "depends_on": [
+        "plan_exists"
+      ]
+    },
+    {
+      "id": "video_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that puzzle_animation.mp4 exists and is substantial",
+      "weight": 5,
+      "op_args": {
+        "path": "puzzle_animation.mp4",
+        "min_size": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "task_id": "motion_video_task4",
+  "task_name": "Transformer Self-Attention Explainer Video",
+  "description": "Create a ~30 second animated video explaining the Transformer Self-Attention mechanism.",
+  "skills": [
+    "remotion"
+  ],
+  "prompt": "I am an AI course instructor, and I want to create an engaging concept explainer video for my students on how Self-Attention works in Transformers. Please create a ~30 second animated video explaining the Transformer Self-Attention mechanism. The video should include: (1) a title card, (2) an input sequence illustration, (3) animated Q/K/V matrix computation, (4) an attention score matrix heatmap animation, and (5) the weighted sum output. Use clear color coding and text annotations throughout. Output the video as transformer_attention.mp4 (1080p), with source code in the src/ directory.",
+  "outputs": [
+    "transformer_attention.mp4"
+  ],
+  "category": "motion_video",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "video_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that transformer_attention.mp4 exists with substantial size",
+      "weight": 8,
+      "op_args": {
+        "path": "transformer_attention.mp4",
+        "min_size": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "task_id": "data_computation_task6",
+  "task_name": "Definite Integral Computation and Visualization",
+  "description": "Compute 4 definite integrals using symbolic and 3 numerical methods, generate publication-quality visualizations.",
+  "skills": [
+    "sympy",
+    "scientific-visualization"
+  ],
+  "prompt": "I am a numerical analysis student, and I need to complete a coursework project comparing numerical integration methods. Please compute the symbolic and numerical solutions for the following 4 definite integrals, and generate visualizations:\n\n1. $\\int_0^{\\pi} \\sin(x)\\,dx$\n2. $\\int_0^{1} e^{-x^2}\\,dx$\n3. $\\int_1^{e} \\ln(x)\\,dx$\n4. $\\int_0^{\\pi/2} \\sqrt{\\sin(x)}\\,dx$\n\nFor each integral, apply 3 numerical methods (Trapezoidal rule N=100, Simpson's rule N=100, Gaussian quadrature) and compute the numerical approximation and error.\n\nOutput integrals.json as a JSON object with an \"integrals\" key containing an array of 4 objects, i.e. {\"integrals\": [...]}, each object containing integral_id, integrand, bounds, exact_numeric, trapezoidal, simpson, gaussian_quadrature, and the error for each method.\n\nGenerate 5 figures: integral_1.png through integral_4.png (function curve with shaded area and exact value annotation) and error_comparison.png (a grouped bar chart comparing errors of the 3 methods across all 4 integrals on a logarithmic scale). All figures should be publication quality with LaTeX labels.",
+  "outputs": [
+    "integrals.json",
+    "integral_1.png",
+    "integral_2.png",
+    "integral_3.png",
+    "integral_4.png",
+    "error_comparison.png"
+  ],
+  "category": "data_computation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that integrals.json exists",
+      "weight": 3,
+      "op_args": {
+        "path": "integrals.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that integrals.json is valid JSON",
+      "weight": 3,
+      "op_args": {
+        "path": "integrals.json"
+      },
+      "depends_on": [
+        "json_exists"
+      ]
+    },
+    {
+      "id": "integral1_correct",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Check integral 1 exact_numeric ≈ 2.0",
+      "weight": 8,
+      "op_args": {
+        "path": "integrals.json",
+        "array_path": "integrals",
+        "match": {
+          "integral_id": 1
+        },
+        "checks": [
+          {
+            "field": "exact_numeric",
+            "type": "near",
+            "expected": 2.0,
+            "tolerance": 0.001
+          }
+        ]
+      },
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "integral2_correct",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Check integral 2 exact_numeric ≈ 0.7468",
+      "weight": 8,
+      "op_args": {
+        "path": "integrals.json",
+        "array_path": "integrals",
+        "match": {
+          "integral_id": 2
+        },
+        "checks": [
+          {
+            "field": "exact_numeric",
+            "type": "near",
+            "expected": 0.7468,
+            "tolerance": 0.001
+          }
+        ]
+      },
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "integral3_correct",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Check integral 3 exact_numeric ≈ 1.0",
+      "weight": 8,
+      "op_args": {
+        "path": "integrals.json",
+        "array_path": "integrals",
+        "match": {
+          "integral_id": 3
+        },
+        "checks": [
+          {
+            "field": "exact_numeric",
+            "type": "near",
+            "expected": 1.0,
+            "tolerance": 0.001
+          }
+        ]
+      },
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "fig1_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that figures/integral_1.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "integral_1.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "fig2_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that figures/integral_2.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "integral_2.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "fig3_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that figures/integral_3.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "integral_3.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "fig4_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that figures/integral_4.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "integral_4.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "error_fig_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that figures/error_comparison.png exists",
+      "weight": 2,
+      "op_args": {
+        "path": "error_comparison.png",
+        "min_size": 1
+      }
+    }
+  ]
+}

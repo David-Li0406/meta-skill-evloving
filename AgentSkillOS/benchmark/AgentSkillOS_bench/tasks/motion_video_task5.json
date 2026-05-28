@@ -1,0 +1,71 @@
+{
+  "task_id": "motion_video_task5",
+  "task_name": "Sorting Algorithm Visualization",
+  "description": "Create an animation showing 3 sorting algorithms (Bubble, Quick, Merge) on the same input array.",
+  "skills": [
+    "manim"
+  ],
+  "prompt": "I am a computer science teaching assistant, and I want to create a visual demonstration of sorting algorithms for an introductory algorithms course. Please create an animation showing 3 sorting algorithms operating on the same input array [38, 27, 43, 3, 9, 82, 10]. The animation should have 3 clearly separated segments: (1) Bubble Sort — highlighting each comparison and swap, (2) Quick Sort — highlighting pivot selection and partitioning, (3) Merge Sort — showing recursive splitting and merging. Display the algorithm name and time complexity at the start of each segment. Use distinct colors: yellow for elements being compared, green for elements in their sorted position, and red for the pivot. Output sorting_animation.mp4 and sorting_results.json (containing input_array, sorted_array, and each algorithm's comparisons and swaps count).",
+  "outputs": [
+    "sorting_results.json",
+    "sorting_animation.mp4"
+  ],
+  "category": "motion_video",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "video_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that sorting_animation.mp4 exists",
+      "weight": 5,
+      "op_args": {
+        "path": "sorting_animation.mp4",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that sorting_results.json exists",
+      "weight": 3,
+      "op_args": {
+        "path": "sorting_results.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that sorting_results.json is valid JSON",
+      "weight": 3,
+      "op_args": {
+        "path": "sorting_results.json"
+      },
+      "depends_on": [
+        "json_exists"
+      ]
+    },
+    {
+      "id": "json_has_keys",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that JSON has input_array and sorted_array",
+      "weight": 3,
+      "op_args": {
+        "path": "sorting_results.json"
+      },
+      "value": [
+        "input_array",
+        "sorted_array"
+      ],
+      "depends_on": [
+        "json_valid"
+      ]
+    }
+  ]
+}

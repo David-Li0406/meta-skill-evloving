@@ -1,0 +1,146 @@
+{
+  "task_id": "data_computation_task2",
+  "task_name": "Monte Carlo Portfolio VaR Simulation",
+  "description": "Build a simulation model to assess portfolio risk using Value-at-Risk methodology with correlated multi-asset returns.",
+  "skills": [
+    "xlsx"
+  ],
+  "prompt": "I am a risk analyst at an investment firm, and I need to quantify the downside risk of a proposed portfolio for our risk committee. Please build a portfolio risk simulation model. Portfolio: Stock A with 40% weight, 12% return, and 25% vol; Stock B with 35% weight, 8% return, and 18% vol; Bond C with 25% weight, 4% return, and 6% vol. Correlations: A-B=0.6, A-C=-0.2, B-C=0.1. Initial investment: 10M.\n\nCreate portfolio_var.xlsx with a 'Simulation' sheet containing 10,000 simulated scenarios accounting for asset correlations, and a 'Risk Metrics' sheet showing expected return, volatility, 95% VaR, 99% VaR, and max drawdown.\n\nSave var_results.json with: expected_return, volatility, var_95, var_99, and max_drawdown — all as decimals, with VaR values negative to indicate losses.",
+  "outputs": [
+    "var_results.json",
+    "portfolio_var.xlsx"
+  ],
+  "category": "data_computation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "excel_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the Excel workbook exists",
+      "weight": 9,
+      "op_args": {
+        "path": "portfolio_var.xlsx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the results JSON exists",
+      "weight": 5,
+      "op_args": {
+        "path": "var_results.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that the results file is valid JSON",
+      "weight": 9,
+      "op_args": {
+        "path": "var_results.json"
+      },
+      "depends_on": [
+        "json_exists"
+      ]
+    },
+    {
+      "id": "json_has_keys",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that the results file has all required keys",
+      "weight": 5,
+      "op_args": {
+        "path": "var_results.json"
+      },
+      "value": [
+        "expected_return",
+        "volatility",
+        "var_95",
+        "var_99",
+        "max_drawdown"
+      ],
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "expected_return_correct",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check that portfolio expected return is approximately 8.6%",
+      "weight": 12,
+      "op_args": {
+        "path": "var_results.json",
+        "json_path": "expected_return",
+        "operator": "abs_diff",
+        "expected": 0.086,
+        "tolerance": 0.005
+      },
+      "depends_on": [
+        "json_has_keys"
+      ]
+    },
+    {
+      "id": "volatility_correct",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check that portfolio volatility is approximately 15.13%",
+      "weight": 14,
+      "op_args": {
+        "path": "var_results.json",
+        "json_path": "volatility",
+        "operator": "abs_diff",
+        "expected": 0.1461,
+        "tolerance": 0.01
+      },
+      "depends_on": [
+        "json_has_keys"
+      ]
+    },
+    {
+      "id": "var_95_range",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check that 95% VaR is in reasonable range (-20% to -10%)",
+      "weight": 14,
+      "op_args": {
+        "path": "var_results.json",
+        "json_path": "var_95",
+        "operator": "in_range",
+        "expected": {
+          "min": -0.2,
+          "max": -0.1
+        }
+      },
+      "depends_on": [
+        "json_has_keys"
+      ]
+    },
+    {
+      "id": "var_99_range",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check that 99% VaR is in reasonable range (-30% to -15%)",
+      "weight": 14,
+      "op_args": {
+        "path": "var_results.json",
+        "json_path": "var_99",
+        "operator": "in_range",
+        "expected": {
+          "min": -0.3,
+          "max": -0.15
+        }
+      },
+      "depends_on": [
+        "json_has_keys"
+      ]
+    }
+  ]
+}

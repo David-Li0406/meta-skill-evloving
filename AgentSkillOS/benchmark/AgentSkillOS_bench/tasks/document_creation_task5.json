@@ -1,0 +1,104 @@
+{
+  "task_id": "document_creation_task5",
+  "task_name": "Quarterly Performance Report Presentation",
+  "description": "Generate a comprehensive quarterly business performance report as a PowerPoint presentation with charts, tables, and consistent formatting.",
+  "skills": [
+    "pptx"
+  ],
+  "prompt": "I am a business operations manager, and I need to prepare our Q3 2024 quarterly performance report for the executive team. Please create it as quarterly_report.pptx with at least 8 slides. Include: cover slide, table of contents, revenue overview with July $12.0M / Aug $13.5M / Sep $15.0M, KPIs showing Revenue Growth 25% YoY, Customers 1500, NPS 72, and Satisfaction 85%, product performance table, market trends, Q4 plan, and closing slide.\n\nUse consistent color scheme and page numbers throughout.",
+  "outputs": [
+    "quarterly_report.pptx"
+  ],
+  "category": "document_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "pptx_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the presentation file exists",
+      "weight": 8,
+      "op_args": {
+        "path": "quarterly_report.pptx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "has_eight_slides",
+      "type": "objective_usability",
+      "op_func": "pptx_slide_count",
+      "description": "Check that the presentation has at least 8 slides",
+      "weight": 8,
+      "op_args": {
+        "path": "quarterly_report.pptx",
+        "operator": ">=",
+        "expected": 8
+      },
+      "depends_on": [
+        "pptx_exists"
+      ]
+    },
+    {
+      "id": "has_kpi_revenue_growth",
+      "type": "objective_usability",
+      "op_func": "pptx_content_check",
+      "description": "Check that Revenue Growth 25% is present",
+      "weight": 3,
+      "op_args": {
+        "path": "quarterly_report.pptx",
+        "mode": "regex"
+      },
+      "value": "25\\s*%|25%|revenue.*growth.*25|growth.*25",
+      "depends_on": [
+        "pptx_exists"
+      ]
+    },
+    {
+      "id": "has_kpi_customers",
+      "type": "objective_usability",
+      "op_func": "pptx_content_check",
+      "description": "Check that Customer count 1500 is present",
+      "weight": 3,
+      "op_args": {
+        "path": "quarterly_report.pptx",
+        "mode": "regex"
+      },
+      "value": "1,?500|1\\.5\\s*K|1500",
+      "depends_on": [
+        "pptx_exists"
+      ]
+    },
+    {
+      "id": "has_kpi_nps",
+      "type": "objective_usability",
+      "op_func": "pptx_content_check",
+      "description": "Check that NPS 72 is present",
+      "weight": 3,
+      "op_args": {
+        "path": "quarterly_report.pptx",
+        "mode": "regex"
+      },
+      "value": "NPS.*72|72.*NPS|\\b72\\b",
+      "depends_on": [
+        "pptx_exists"
+      ]
+    },
+    {
+      "id": "has_kpi_satisfaction",
+      "type": "objective_usability",
+      "op_func": "pptx_content_check",
+      "description": "Check that Customer Satisfaction 85% is present",
+      "weight": 2,
+      "op_args": {
+        "path": "quarterly_report.pptx",
+        "mode": "regex"
+      },
+      "value": "85\\s*%|85%|satisfaction.*85|85.*satisfaction",
+      "depends_on": [
+        "pptx_exists"
+      ]
+    }
+  ]
+}

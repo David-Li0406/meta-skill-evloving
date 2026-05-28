@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skillclaw"
+version = "0.4.0"
+description = "Claw agent skill injection and auto-evolution"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.0",
+    "pyyaml>=6.0",
+    "fastapi",
+    "uvicorn[standard]",
+    "httpx",
+    "tiktoken",
+]
+
+[project.optional-dependencies]
+# Tokenizer for prompt truncation and PRM/OPD token-level data
+tokenizer = [
+    "transformers>=4.51.1",
+]
+# Embedding-based skill retrieval
+embedding = [
+    "numpy",
+    "sentence-transformers",
+]
+# Skill evolution / OPD / PRM via OpenAI-compatible LLM
+evolve = [
+    "openai",
+]
+# Cloud skill sharing via Alibaba Cloud OSS
+sharing = [
+    "boto3",
+    "oss2",
+]
+# Central evolve server deployment
+server = [
+    "boto3",
+    "openai",
+    "oss2",
+    "python-dotenv",
+]
+# Everything
+all = [
+    "skillclaw[tokenizer,embedding,evolve,sharing,server]",
+]
+
+[project.scripts]
+skillclaw = "skillclaw.cli:skillclaw"
+skillclaw-evolve-server = "evolve_server.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["skillclaw*", "evolve_server*"]
+
+[tool.setuptools.package-data]
+skillclaw = ["dashboard_assets/*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E731", "F403", "F405"]
+
+[tool.ruff.lint.per-file-ignores]
+"evolve_server/pipeline/execution.py" = ["E501"]
+
+[tool.uv]
+# Install with: uv sync --extra all

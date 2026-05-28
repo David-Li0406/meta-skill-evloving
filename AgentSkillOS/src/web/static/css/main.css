@@ -1,0 +1,526 @@
+/* Main CSS - Shared styles for Skill Orchestrator WebUI */
+
+/* Alpine.js cloak - hide elements until Alpine initializes */
+[x-cloak] { display: none !important; }
+
+/* Base styles */
+body { font-family: 'Fira Sans', system-ui, sans-serif; }
+pre, code, .font-mono { font-family: 'Fira Code', monospace; }
+
+/* Status colors */
+.status-completed { color: #22c55e; }
+.status-running { color: #f59e0b; }
+.status-failed { color: #ef4444; }
+.status-pending { color: #6e7681; }
+
+/* Enhanced log styles with backgrounds */
+.log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.15s;
+}
+.log-entry:hover { background: rgba(0,0,0,0.03); }
+.dark .log-entry:hover { background: rgba(255,255,255,0.03); }
+/* Light mode: use dark text */
+.log-error {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 2px solid #ef4444;
+}
+.log-ok {
+    color: #16a34a;
+    background: rgba(34, 197, 94, 0.1);
+    border-left: 2px solid #22c55e;
+}
+.log-warn {
+    color: #d97706;
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 2px solid #f59e0b;
+}
+.log-tool { color: #2563eb; }
+.log-send {
+    color: #7c3aed;
+    background: rgba(139, 92, 246, 0.1);
+    border-left: 2px solid #8b5cf6;
+}
+.log-recv {
+    color: #0891b2;
+    background: rgba(6, 182, 212, 0.1);
+    border-left: 2px solid #06b6d4;
+}
+/* Dark mode: use light text */
+.dark .log-error { color: #fca5a5; }
+.dark .log-ok { color: #86efac; }
+.dark .log-warn { color: #fcd34d; }
+.dark .log-tool { color: #93c5fd; }
+.dark .log-send { color: #c4b5fd; }
+.dark .log-recv { color: #67e8f9; }
+.log-info { color: #374151; }
+.dark .log-info { color: #e6edf3; }
+
+pre { white-space: pre; overflow-x: auto; }
+
+/* Bento card style */
+.bento-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-default);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+}
+.bento-card:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1), 0 0 0 1px rgba(139, 92, 246, 0.1);
+}
+.dark .bento-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 0 1px rgba(139, 92, 246, 0.1);
+}
+
+/* DAG Graph Styles */
+.dag-node {
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.dag-node:hover {
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+    cursor: pointer;
+}
+.dag-node-pending { fill: #E2E8F0; stroke: #94A3B8; stroke-width: 1.5; }
+.dark .dag-node-pending { fill: #21262D; stroke: #484F58; }
+/* Light mode: use light fill */
+.dag-node-running {
+    fill: #fef3c7;
+    stroke: #f59e0b;
+    stroke-width: 2;
+    animation: pulse-glow 1.5s infinite;
+}
+.dag-node-completed { fill: #dcfce7; stroke: #22c55e; stroke-width: 2; }
+.dag-node-failed {
+    fill: #fee2e2;
+    stroke: #ef4444;
+    stroke-width: 2;
+    animation: error-shake 0.5s ease-in-out;
+}
+/* Dark mode: use dark fill */
+.dark .dag-node-running { fill: #422006; }
+.dark .dag-node-completed { fill: #052E16; }
+.dark .dag-node-failed { fill: #450A0A; }
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.3)); }
+    50% { opacity: 0.8; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6)); }
+}
+@keyframes error-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}
+
+.dag-edge { stroke: #94A3B8; stroke-width: 1.5; fill: none; }
+.dark .dag-edge { stroke: #484F58; }
+
+/* DAG node text - dark in light mode, light in dark mode */
+.dag-node-text { fill: #1f2937; }
+.dark .dag-node-text { fill: #e4e4e4; }
+
+/* Modal animation */
+@keyframes modal-enter {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-modal { animation: modal-enter 0.2s ease-out; }
+
+/* Ping animation for connection indicator */
+@keyframes ping-slow {
+    75%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping-slow { animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+/* Tree node styles (for unified UI) */
+.tree-node { cursor: pointer; }
+.tree-node circle { transition: all 0.3s ease; }
+/* Light mode - use darker colors for visibility on white background */
+.tree-node--category circle { fill: #0288d1; stroke: #0288d1; }
+.tree-node--skill circle { fill: #f57c00; stroke: #f57c00; }
+.tree-node--exploring circle { fill: #d97706; stroke: #d97706; stroke-width: 3px; animation: pulse 1.5s infinite; }
+.tree-node--selected circle { fill: #16a34a; stroke: #16a34a; stroke-width: 2px; }
+.tree-node--rejected circle { fill: #6b7280; stroke: #6b7280; opacity: 0.4; }
+/* Dark mode - use brighter colors for visibility on dark background */
+.dark .tree-node--category circle { fill: #4fc3f7; stroke: #4fc3f7; }
+.dark .tree-node--skill circle { fill: #ffb74d; stroke: #ffb74d; }
+.dark .tree-node--exploring circle { fill: #f59e0b; stroke: #f59e0b; }
+.dark .tree-node--selected circle { fill: #22c55e; stroke: #22c55e; }
+.dark .tree-node--rejected circle { fill: #6e7681; stroke: #6e7681; }
+.tree-link { fill: none; stroke: rgba(0,0,0,0.35); stroke-width: 1.5px; }
+.dark .tree-link { stroke: rgba(255,255,255,0.25); }
+
+/* Tree node text labels */
+.tree-node text { fill: #1f2937; }
+.dark .tree-node text { fill: #e4e4e4; }
+
+/* Pruning animation - shake and fade */
+.tree-node--pruning circle {
+    animation: shake 0.3s ease-in-out 3, fadeOut 0.8s ease forwards 0.9s;
+}
+
+/* Pruned skill - red with shake animation */
+/* Light mode */
+.tree-node--pruned circle {
+    fill: #dc2626 !important;
+    stroke: #b91c1c !important;
+    stroke-width: 2px;
+    animation: shake 0.3s ease-in-out 2, pruneFade 0.8s ease forwards 0.6s;
+}
+/* Dark mode */
+.dark .tree-node--pruned circle {
+    fill: #ef4444 !important;
+    stroke: #dc2626 !important;
+}
+
+/* Final selected skill - special glow highlight */
+/* Light mode */
+.tree-node--final circle {
+    fill: #16a34a !important;
+    stroke: #15803d !important;
+    stroke-width: 4px !important;
+    filter: drop-shadow(0 0 10px rgba(22, 163, 74, 0.7));
+    animation: glow 2s ease-in-out infinite;
+}
+/* Dark mode */
+.dark .tree-node--final circle {
+    fill: #22c55e !important;
+    stroke: #10b981 !important;
+    filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.7));
+}
+
+/* Skill selection states */
+/* Light mode */
+.tree-node--skill-selected circle {
+    fill: #16a34a;
+    stroke: #16a34a;
+    stroke-width: 2px;
+}
+.tree-node--skill-rejected circle {
+    fill: #6b7280;
+    stroke: #6b7280;
+    opacity: 0.25;
+    transition: opacity 0.5s ease;
+}
+/* Dark mode */
+.dark .tree-node--skill-selected circle {
+    fill: #22c55e;
+    stroke: #22c55e;
+}
+.dark .tree-node--skill-rejected circle {
+    fill: #6e7681;
+    stroke: #6e7681;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0.15; }
+}
+
+@keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.5)); }
+    50% { filter: drop-shadow(0 0 16px rgba(34, 197, 94, 0.9)); }
+}
+
+@keyframes pruneFade {
+    from { opacity: 1; }
+    to { opacity: 0.4; }
+}
+
+/* Skill card (for unified UI review phase) */
+.skill-card {
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border-default);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    transition: all 0.2s;
+}
+.skill-card:hover { border-color: #8b5cf6; }
+.skill-card.selected { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Custom Scrollbar Styles */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+.dark * {
+    scrollbar-color: #475569 #1e293b;
+}
+
+/* Skill Markdown rendering styles - use !important to override Tailwind Preflight */
+article.skill-markdown {
+    color: #374151 !important;
+    line-height: 1.6 !important;
+    font-size: 0.875rem !important;
+    max-width: none;
+}
+article.skill-markdown > *:first-child { margin-top: 0 !important; }
+article.skill-markdown > *:last-child { margin-bottom: 0 !important; }
+
+/* Headings - override Tailwind's font-size: inherit */
+article.skill-markdown h1,
+article.skill-markdown h2,
+article.skill-markdown h3,
+article.skill-markdown h4,
+article.skill-markdown h5,
+article.skill-markdown h6 {
+    color: #111827 !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    margin-top: 1.5em !important;
+    margin-bottom: 0.5em !important;
+}
+article.skill-markdown h1 { font-size: 1.375em !important; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3em; }
+article.skill-markdown h2 { font-size: 1.2em !important; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25em; }
+article.skill-markdown h3 { font-size: 1.1em !important; }
+article.skill-markdown h4 { font-size: 1em !important; }
+article.skill-markdown h5 { font-size: 0.9375em !important; }
+article.skill-markdown h6 { font-size: 0.875em !important; color: #6b7280 !important; }
+
+/* Paragraphs */
+article.skill-markdown p { margin: 0.75em 0 !important; }
+
+/* Lists - must use !important to override Tailwind's list-style: none */
+article.skill-markdown ul,
+article.skill-markdown ol {
+    margin: 0.75em 0 !important;
+    padding-left: 1.5em !important;
+}
+article.skill-markdown ul { list-style-type: disc !important; }
+article.skill-markdown ol { list-style-type: decimal !important; }
+article.skill-markdown li {
+    display: list-item !important;
+    margin: 0.25em 0 !important;
+}
+article.skill-markdown li > ul,
+article.skill-markdown li > ol { margin: 0.25em 0 !important; }
+article.skill-markdown li > p { margin: 0.25em 0 !important; }
+
+/* Inline code */
+article.skill-markdown code {
+    background: #f3f4f6 !important;
+    color: #e11d48 !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 0.25em !important;
+    font-size: 0.85em !important;
+    font-family: 'Fira Code', 'Consolas', 'Monaco', monospace !important;
+    white-space: nowrap;
+}
+
+/* Code blocks - disable line wrapping, use horizontal scroll */
+article.skill-markdown pre {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    padding: 1em !important;
+    border-radius: 0.5em !important;
+    overflow-x: auto !important;
+    margin: 1em 0 !important;
+    font-size: 0.8125em !important;
+    line-height: 1.5 !important;
+    white-space: pre !important;
+    word-wrap: normal !important;
+}
+article.skill-markdown pre code {
+    background: transparent !important;
+    color: inherit !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    font-size: inherit !important;
+    white-space: pre !important;
+}
+
+/* Blockquotes */
+article.skill-markdown blockquote {
+    border-left: 4px solid #8b5cf6 !important;
+    background: #f5f3ff !important;
+    padding: 0.75em 1em !important;
+    margin: 1em 0 !important;
+    color: #4b5563 !important;
+    font-style: italic !important;
+    border-radius: 0 0.375em 0.375em 0 !important;
+}
+article.skill-markdown blockquote p { margin: 0.25em 0 !important; }
+article.skill-markdown blockquote p:first-child { margin-top: 0 !important; }
+article.skill-markdown blockquote p:last-child { margin-bottom: 0 !important; }
+
+/* Links */
+article.skill-markdown a {
+    color: #7c3aed !important;
+    text-decoration: none !important;
+}
+article.skill-markdown a:hover {
+    color: #6d28d9 !important;
+    text-decoration: underline !important;
+}
+
+/* Horizontal rules */
+article.skill-markdown hr {
+    border: none !important;
+    border-top: 1px solid #e5e7eb !important;
+    margin: 1.5em 0 !important;
+}
+
+/* Tables */
+article.skill-markdown table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 1em 0 !important;
+    font-size: 0.875em !important;
+}
+article.skill-markdown th,
+article.skill-markdown td {
+    border: 1px solid #e5e7eb !important;
+    padding: 0.5em 0.75em !important;
+    text-align: left !important;
+}
+article.skill-markdown th {
+    background: #f9fafb !important;
+    font-weight: 600 !important;
+}
+article.skill-markdown tr:nth-child(even) { background: #f9fafb !important; }
+
+/* Images */
+article.skill-markdown img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 0.5em !important;
+    margin: 1em 0 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+/* Strong and emphasis */
+article.skill-markdown strong { font-weight: 600 !important; color: #111827 !important; }
+article.skill-markdown em { font-style: italic !important; }
+
+/* Task lists */
+article.skill-markdown input[type="checkbox"] {
+    margin-right: 0.5em !important;
+    vertical-align: middle !important;
+}
+
+/* Definition lists */
+article.skill-markdown dl { margin: 1em 0 !important; }
+article.skill-markdown dt { font-weight: 600 !important; margin-top: 0.5em !important; }
+article.skill-markdown dd { margin-left: 1.5em !important; color: #4b5563 !important; }
+
+/* ===== Dark Mode ===== */
+.dark article.skill-markdown { color: #e4e4e4 !important; }
+.dark article.skill-markdown h1,
+.dark article.skill-markdown h2,
+.dark article.skill-markdown h3,
+.dark article.skill-markdown h4,
+.dark article.skill-markdown h5,
+.dark article.skill-markdown h6 { color: #f3f4f6 !important; }
+.dark article.skill-markdown h1,
+.dark article.skill-markdown h2 { border-bottom-color: #374151 !important; }
+.dark article.skill-markdown h6 { color: #9ca3af !important; }
+.dark article.skill-markdown code {
+    background: #374151 !important;
+    color: #f472b6 !important;
+}
+.dark article.skill-markdown pre {
+    background: #0d1117 !important;
+    color: #e6edf3 !important;
+}
+.dark article.skill-markdown blockquote {
+    background: #1e1b4b !important;
+    border-left-color: #8b5cf6 !important;
+    color: #c4b5fd !important;
+}
+.dark article.skill-markdown a { color: #a78bfa !important; }
+.dark article.skill-markdown a:hover { color: #c4b5fd !important; }
+.dark article.skill-markdown hr { border-top-color: #374151 !important; }
+.dark article.skill-markdown th,
+.dark article.skill-markdown td { border-color: #374151 !important; }
+.dark article.skill-markdown th { background: #1f2937 !important; }
+.dark article.skill-markdown tr:nth-child(even) { background: #161b22 !important; }
+.dark article.skill-markdown strong { color: #f3f4f6 !important; }
+.dark article.skill-markdown dd { color: #9ca3af !important; }
+.dark article.skill-markdown img { box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important; }
+
+/* Legacy prose class (keep for compatibility) */
+.prose {
+    color: #374151;
+    line-height: 1.5;
+    font-size: 0.875rem;
+}
+.prose h1, .prose h2, .prose h3, .prose h4 {
+    color: #111827;
+    font-weight: 600;
+    margin-top: 1.25em;
+    margin-bottom: 0.5em;
+    line-height: 1.3;
+}
+.prose h1 { font-size: 1.25em; }
+.prose h2 { font-size: 1.125em; }
+.prose h3 { font-size: 1em; }
+.prose p { margin: 0.5em 0; }
+.prose ul, .prose ol { margin: 0.5em 0; padding-left: 1.25em; }
+.prose li { margin: 0.15em 0; }
+.prose code { background: #f3f4f6; padding: 0.15em 0.3em; border-radius: 0.25em; font-size: 0.8125em; }
+.prose pre { background: #1e293b; color: #e2e8f0; padding: 0.875em; border-radius: 0.5em; overflow-x: auto; margin: 0.75em 0; }
+.prose pre code { background: transparent; padding: 0; color: inherit; }
+.prose blockquote { border-left: 3px solid #d1d5db; padding-left: 0.875em; margin: 0.75em 0; color: #6b7280; font-style: italic; }
+.prose a { color: #7c3aed; text-decoration: underline; }
+.prose a:hover { color: #6d28d9; }
+.dark .prose { color: #e4e4e4; }
+.dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose h4 { color: #f3f4f6; }
+.dark .prose code { background: #374151; color: #e4e4e4; }
+.dark .prose pre { background: #0d1117; color: #e6edf3; }
+.dark .prose a { color: #a78bfa; }

@@ -1,0 +1,44 @@
+{
+  "task_id": "document_creation_task1",
+  "task_name": "Technical Service Contract Generation",
+  "description": "Generate a professional technical service contract as a Word document with proper structure, formatting, tables, and tracked changes.",
+  "skills": [
+    "docx"
+  ],
+  "prompt": "I am a legal operations manager, and I need to draft a technical service contract for an upcoming IT consulting engagement. Please generate it as contract.docx with 7 chapters as Heading 1: Party Information, Scope of Services, Service Duration, Fees and Payment, Confidentiality, Liability, Dispute Resolution. Each chapter should have at least 2 substantive paragraphs.\n\nChapter 4 must include a fee breakdown table (at least 3 service items, 4 columns: Service Item, Unit Price, Quantity, Amount). Add tracked changes in Chapter 5 changing the confidentiality period from '2 years' to '3 years'. Include signature lines for both parties at the end.",
+  "outputs": [
+    "contract.docx"
+  ],
+  "category": "document_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "docx_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the contract document exists",
+      "weight": 6,
+      "op_args": {
+        "path": "contract.docx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "has_signature_lines",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Check that the document contains signature line text",
+      "weight": 6,
+      "op_args": {
+        "path": "contract.docx",
+        "mode": "contains"
+      },
+      "value": [
+        "signature",
+        "party"
+      ]
+    }
+  ]
+}

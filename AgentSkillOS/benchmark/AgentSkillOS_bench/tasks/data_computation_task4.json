@@ -1,0 +1,91 @@
+{
+  "task_id": "data_computation_task4",
+  "task_name": "ML Hyperparameter Tuning for Breast Cancer Classification",
+  "description": "Optimize a baseline SVM classifier through systematic hyperparameter tuning, compare different optimization approaches, and produce a structured tuning report.",
+  "skills": [
+    "tuning-hyperparameters"
+  ],
+  "prompt": "I am a data scientist, and I have a breast cancer classification project in ml_project/. The baseline model in train_baseline.py uses an SVM with suboptimal hyperparameters — no feature scaling, linear kernel, C=0.001 — achieving only about 90% accuracy on the Wisconsin Breast Cancer dataset with 569 samples and 30 features.\n\nPlease help me systematically optimize this model to achieve at least 96% test accuracy. I want you to:\n\n1. First, run train_baseline.py to confirm baseline performance.\n\n2. Try at least two different hyperparameter optimization approaches, such as exhaustive search and a smarter search method, over SVM hyperparameters including kernel, C, and gamma. Use proper feature scaling and cross-validation.\n\n3. Compare the approaches and identify which one works better.\n\n4. Train the final best model and save it as best_model.pkl.\n\n5. Generate comparison.json containing: baseline_accuracy, results from both optimization methods including best_params, best_cv_score, and search_time_seconds, as well as best_method, best_params, final_test_accuracy, final_test_f1, and improvement_over_baseline.",
+  "outputs": [
+    "comparison.json",
+    "best_model.pkl"
+  ],
+  "category": "data_computation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "comparison_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that comparison.json exists",
+      "weight": 11,
+      "op_args": {
+        "path": "comparison.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "best_model_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that best_model.pkl exists",
+      "weight": 11,
+      "op_args": {
+        "path": "best_model.pkl",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "comparison_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check comparison.json is valid JSON",
+      "weight": 6,
+      "op_args": {
+        "path": "comparison.json"
+      },
+      "depends_on": [
+        "comparison_exists"
+      ]
+    },
+    {
+      "id": "comparison_has_keys",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check comparison.json has all required keys",
+      "weight": 17,
+      "op_args": {
+        "path": "comparison.json"
+      },
+      "value": [
+        "baseline_accuracy",
+        "best_method",
+        "best_params",
+        "final_test_accuracy",
+        "final_test_f1",
+        "improvement_over_baseline"
+      ],
+      "depends_on": [
+        "comparison_valid"
+      ]
+    },
+    {
+      "id": "final_accuracy_threshold",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check that final test accuracy is at least 0.96",
+      "weight": 13,
+      "op_args": {
+        "path": "comparison.json",
+        "json_path": "final_test_accuracy",
+        "operator": ">=",
+        "expected": 0.96
+      },
+      "depends_on": [
+        "comparison_has_keys"
+      ]
+    }
+  ]
+}

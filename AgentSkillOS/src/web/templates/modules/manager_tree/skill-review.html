@@ -1,0 +1,274 @@
+        <!-- Phase: REVIEWING - Skill Selection (only when has_skill_review) -->
+        <div x-show="phase === 'reviewing' && uiHints.has_skill_review" x-transition class="space-y-4 md:space-y-6">
+            <!-- Recipe Recommendations (Top Banner) -->
+            <div x-show="recipeSearching || recommendedRecipes.length > 0" x-transition class="bento-card">
+                <!-- Searching Indicator -->
+                <div x-show="recipeSearching" class="flex items-center gap-2 text-sm text-gray-400">
+                    <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                    </svg>
+                    <span>Matching saved recipes...</span>
+                </div>
+                <!-- Recipe Results -->
+                <div x-show="!recipeSearching && recommendedRecipes.length > 0">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            Quick Execute with Recipe
+                        </h2>
+                        <span class="text-xs text-gray-400">Skip skill selection, run a saved workflow directly</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <template x-for="recipe in recommendedRecipes" :key="recipe.id">
+                            <div class="p-3 rounded-lg border border-border-default bg-surface-tertiary/50 hover:border-green-500/50 hover:bg-green-500/5 transition-all group">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="font-medium text-gray-900 dark:text-gray-100 group-hover:text-green-400 transition-colors text-sm" x-text="recipe.name"></span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400" x-text="recipe.skill_ids.length + ' skills'"></span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-2" x-text="recipe.description"></p>
+                                <div class="flex items-center gap-2">
+                                    <button @click="executeRecipe(recipe.id)"
+                                            class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded font-medium transition-colors">
+                                        Execute
+                                    </button>
+                                    <button @click="openRecipeDetail(recipe)"
+                                            class="px-3 py-1.5 bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 text-xs rounded font-medium transition-colors text-gray-500 dark:text-gray-400">
+                                        Details
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+            <!-- Skill Cards -->
+            <div class="lg:col-span-9 bento-card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Candidate Skills
+                        <span class="text-sm font-normal text-gray-400" x-text="'(' + selectedSkills.length + ' selected, sorted by relevance)'"></span>
+                    </h2>
+                    <button
+                        @click="showTreeBrowser = true"
+                        class="text-sm px-3 py-1.5 bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-1.5"
+                        title="Click to add or remove skills"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        Add More
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-[32rem] overflow-y-auto content-start">
+                    <template x-for="(skill, index) in searchResult.skills" :key="skill.id">
+                        <div
+                            class="skill-card cursor-pointer p-4"
+                            :class="{'selected': selectedSkills.includes(skill.id)}"
+                            @click="toggleSkill(skill.id)"
+                        >
+                            <div class="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    :checked="selectedSkills.includes(skill.id)"
+                                    class="mt-1.5 rounded border-gray-300 dark:border-gray-600 bg-surface-primary text-purple-500 focus:ring-purple-500"
+                                    @click.stop="toggleSkill(skill.id)"
+                                >
+                                <div class="flex-1 min-w-0">
+                                    <!-- Row 1: Name + Official + Details -->
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100" x-text="(index + 1) + '.'"></span>
+                                            <span class="font-medium text-base text-gray-900 dark:text-gray-100" x-text="skill.name"></span>
+                                            <!-- Official Badge -->
+                                            <span x-show="skill.is_official"
+                                                  class="px-1.5 py-0.5 bg-blue-500 text-white text-[10px] font-semibold rounded-full">
+                                                Official
+                                            </span>
+                                        </div>
+                                        <button
+                                            @click.stop="openSkillDetail(skill)"
+                                            class="text-xs px-2 py-1 bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors text-gray-500 dark:text-gray-400 flex-shrink-0"
+                                            title="View details"
+                                        >
+                                            Details
+                                        </button>
+                                    </div>
+
+                                    <!-- Row 2: GitHub + Stars + Author -->
+                                    <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                        <!-- GitHub Link + Stars -->
+                                        <a x-show="skill.github_url"
+                                           :href="skill.github_url"
+                                           @click.stop
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                           title="View on GitHub">
+                                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span x-text="'★' + (skill.stars || 0)"></span>
+                                        </a>
+                                        <!-- Separator -->
+                                        <span x-show="skill.github_url && skill.author">•</span>
+                                        <!-- Author -->
+                                        <span x-show="skill.author" class="truncate">
+                                            Author: <span x-text="skill.author"></span>
+                                        </span>
+                                    </div>
+
+                                    <!-- Row 3: Description (3 lines) -->
+                                    <div class="text-xs text-gray-500 dark:text-gray-400" x-text="skill.description" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"></div>
+
+                                    <!-- Row 4: Selection Reason -->
+                                    <div x-show="skill.reason"
+                                         class="text-xs text-purple-600 dark:text-purple-400 mt-2 italic">
+                                        <span class="font-medium not-italic">Reason: </span><span x-text="skill.reason"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <!-- Dormant Suggestions Section -->
+                <div x-show="dormantSuggestions.length > 0" x-transition class="mt-4 border-t border-border-default pt-4">
+                    <details class="group" open>
+                        <summary class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                            <svg class="w-4 h-4 transform transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                            <span>Dormant Skills</span>
+                            <span class="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-xs rounded-full" x-text="dormantSuggestions.length"></span>
+                            <span class="text-xs font-normal text-gray-400">Less frequently used skills that match your task</span>
+                        </summary>
+                        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <template x-for="skill in dormantSuggestions" :key="skill.id">
+                                <div
+                                    class="p-3 rounded-lg border border-dashed border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60 hover:bg-amber-500/10 transition-all"
+                                    :class="{'border-solid border-purple-500/60 bg-purple-500/10': selectedSkills.includes(skill.id)}"
+                                >
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-medium text-sm text-gray-900 dark:text-gray-100" x-text="skill.name"></span>
+                                                <span class="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-semibold rounded-full">Dormant</span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-2" x-text="skill.description"></p>
+                                            <div class="flex items-center gap-3 text-xs text-gray-400">
+                                                <span x-show="skill.installs_count !== undefined" class="flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                    </svg>
+                                                    <span x-text="skill.installs_count + ' installs'"></span>
+                                                </span>
+                                                <span x-show="skill.match_score !== undefined" class="flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                                    </svg>
+                                                    <span x-text="(skill.match_score * 100).toFixed(0) + '% match'"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            @click="addDormantSkill(skill)"
+                                            class="px-2.5 py-1.5 text-xs font-medium rounded transition-colors flex-shrink-0"
+                                            :class="selectedSkills.includes(skill.id)
+                                                ? 'bg-purple-600 text-white hover:bg-purple-700'
+                                                : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'"
+                                            x-text="selectedSkills.includes(skill.id) ? 'Added' : 'Add'"
+                                        ></button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="mt-4 flex justify-between items-center">
+                    <button
+                        @click="copyInstallCommands()"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                        </svg>
+                        <span x-text="copyMessage || 'Copy Install Commands'"></span>
+                    </button>
+                    <div class="flex items-center gap-4">
+                        <!-- Execution Mode Selection -->
+                        <button
+                        @click="resetSearch()"
+                        class="px-4 py-2 bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
+                    >
+                        Search Again
+                    </button>
+                        <div class="flex items-center gap-2 bg-surface-tertiary rounded-lg p-1">
+                            <template x-for="engine in availableEngines" :key="engine.id">
+                                <button
+                                    @click="executionMode = engine.id"
+                                    :class="executionMode === engine.id
+                                        ? 'bg-purple-600 text-white'
+                                        : 'text-gray-400 hover:text-gray-300'"
+                                    class="px-3 py-1 rounded text-sm font-medium transition-colors"
+                                    :title="engine.description"
+                                    x-text="engine.label"
+                                ></button>
+                            </template>
+                        </div>
+                        <button
+                            @click="confirmSkills()"
+                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                            Continue with <span x-text="selectedSkills.length"></span> skills
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Search Log -->
+            <div class="lg:col-span-3">
+                <!-- Search Log -->
+                <div class="bento-card">
+                    <h2 class="text-lg font-semibold mb-4">Search Log</h2>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 dark:text-gray-400">Task:</span>
+                            <span class="text-gray-700 dark:text-gray-200 text-right max-w-[200px] truncate" x-text="task"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 dark:text-gray-400">Skills Found:</span>
+                            <span class="text-green-500 dark:text-green-400 font-mono" x-text="searchResult.skills?.length || 0"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 dark:text-gray-400">LLM Calls:</span>
+                            <span class="text-cyan-500 dark:text-cyan-400 font-mono" x-text="searchResult.llm_calls || 0"></span>
+                        </div>
+                    </div>
+
+                    <!-- Logs -->
+                    <div class="mt-6">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Activity Log</h3>
+                        <div class="h-[20rem] overflow-y-auto bg-surface-primary rounded-lg p-2">
+                            <template x-for="(log, index) in logs.slice(-20)" :key="index">
+                                <div class="log-entry text-xs py-0.5" :class="'log-' + log.level">
+                                    <span class="text-gray-400 dark:text-gray-500 shrink-0" x-text="log.timestamp"></span>
+                                    <span x-text="log.message"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>

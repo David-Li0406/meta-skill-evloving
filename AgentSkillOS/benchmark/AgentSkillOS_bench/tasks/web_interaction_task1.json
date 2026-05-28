@@ -1,0 +1,78 @@
+{
+  "task_id": "web_interaction_task1",
+  "task_name": "Competitor Website Analysis Report",
+  "description": "Browse competitor project management tool websites, capture screenshots of key pages, and produce a professional competitive analysis report as a Word document.",
+  "skills": [
+    "dev-browser",
+    "docx"
+  ],
+  "prompt": "I am a product manager, and our company is planning to build an online project management tool. I need you to research two major competitors — Trello and Asana — by browsing their websites.\n\nFor each product, capture at least 2 screenshots of key pages: the homepage and a features/product page. Save the screenshots as trello_homepage.png, trello_features.png, asana_homepage.png, and asana_features.png.\n\nThen produce a competitive analysis report saved as competitor_report.docx. The report should include:\n- An overview section introducing each competitor with the captured screenshots\n- A feature comparison table covering: task management, team collaboration, third-party integrations, and pricing model\n- A strengths and weaknesses analysis for each product\n- A recommendations section with differentiation strategies for our new product",
+  "outputs": [
+    "trello_homepage.png",
+    "trello_features.png",
+    "asana_homepage.png",
+    "asana_features.png",
+    "competitor_report.docx"
+  ],
+  "category": "web_interaction",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "report_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that competitor_report.docx exists",
+      "weight": 2,
+      "op_args": {
+        "path": "competitor_report.docx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "trello_homepage_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that trello_homepage.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "trello_homepage.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "trello_features_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that trello_features.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "trello_features.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "asana_homepage_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that asana_homepage.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "asana_homepage.png",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "asana_features_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that asana_features.png exists",
+      "weight": 1,
+      "op_args": {
+        "path": "asana_features.png",
+        "min_size": 1
+      }
+    }
+  ]
+}

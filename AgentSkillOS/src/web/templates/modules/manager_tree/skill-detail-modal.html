@@ -1,0 +1,142 @@
+    <!-- Skill Detail Modal -->
+    <div x-show="selectedSkillDetail" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="closeSkillDetail()">
+        <div class="bg-white dark:bg-[#161B22]/95 backdrop-blur-xl rounded-2xl border border-border-default p-6 max-w-5xl w-full max-h-[85vh] flex flex-col shadow-2xl shadow-black/50 animate-modal">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <span x-text="selectedSkillDetail?.name || 'Skill Detail'"></span>
+                </h2>
+                <button @click="closeSkillDetail()" class="p-2 hover:bg-surface-tertiary rounded-lg transition-colors">
+                    <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div x-show="skillDetailLoading" class="flex-1 flex items-center justify-center">
+                <div class="text-center">
+                    <svg class="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                    </svg>
+                    <span class="text-gray-500 dark:text-gray-400">Loading skill details...</span>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div x-show="!skillDetailLoading" class="flex-1 flex gap-4 overflow-hidden">
+                <!-- Left: Directory Tree (1/3) -->
+                <div class="w-1/3 flex flex-col border-r border-border-default pr-4">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                        Directory Structure
+                    </h3>
+                    <div class="flex-1 overflow-auto bg-surface-primary rounded-lg p-3">
+                        <div x-html="renderDirectoryTree(skillDirectoryTree)"></div>
+                        <div x-show="!skillDirectoryTree" class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
+                            No directory structure available
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Content Area (2/3) -->
+                <div class="w-2/3 flex flex-col">
+                    <!-- Title bar: SKILL.md or file name with back button -->
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                            <template x-if="!viewingFile">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    SKILL.md
+                                </span>
+                            </template>
+                            <template x-if="viewingFile">
+                                <span class="flex items-center gap-2">
+                                    <button @click="backToSkillMd()" class="p-1 hover:bg-surface-tertiary rounded transition-colors" title="Back to SKILL.md">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                        </svg>
+                                    </button>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <span x-text="viewingFile?.name"></span>
+                                </span>
+                            </template>
+                        </h3>
+                        <span x-show="viewingFile" class="text-xs text-gray-400 dark:text-gray-500" x-text="viewingFile?.path"></span>
+                    </div>
+
+                    <!-- SKILL.md Content - use :class to control display, ensure always rendered in DOM -->
+                    <div :class="viewingFile ? 'hidden' : 'flex-1 overflow-auto'" class="bg-surface-primary rounded-lg p-4">
+                        <!-- Prominent name and description -->
+                        <div x-show="skillDetailName" class="mb-4 pb-4 border-b border-border-default">
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100" x-text="skillDetailName"></h2>
+                            <p x-show="skillDetailDescription" class="text-sm text-gray-600 dark:text-gray-400 mt-1" x-text="skillDetailDescription"></p>
+                        </div>
+                        <!-- Markdown body -->
+                        <article class="skill-markdown" x-html="renderedSkillMarkdown"></article>
+                        <div x-show="!renderedSkillMarkdown && !skillDetailName" class="text-gray-500 dark:text-gray-400 text-sm text-center py-4">
+                            No SKILL.md content available
+                        </div>
+                    </div>
+
+                    <!-- File Content - use :class to control display -->
+                    <div :class="!viewingFile ? 'hidden' : 'flex-1 overflow-auto'" class="bg-surface-primary rounded-lg">
+                        <!-- Loading state -->
+                        <div x-show="viewingFileLoading" class="flex items-center justify-center h-full">
+                            <div class="text-center">
+                                <svg class="w-8 h-8 text-purple-500 animate-spin mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="12"/>
+                                </svg>
+                                <span class="text-gray-500 dark:text-gray-400 text-sm">Loading file...</span>
+                            </div>
+                        </div>
+                        <!-- File content (not loading) -->
+                        <div x-show="!viewingFileLoading" class="h-full overflow-hidden">
+                            <!-- Binary file message -->
+                            <div x-show="viewingFile?.is_binary" class="flex items-center justify-center h-full">
+                                <div class="text-center py-8">
+                                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    <p class="text-gray-500 dark:text-gray-400">Binary file cannot be displayed</p>
+                                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1" x-text="viewingFile?.error"></p>
+                                </div>
+                            </div>
+                            <!-- Error message (non-binary) -->
+                            <div x-show="viewingFile?.error && !viewingFile?.is_binary" class="flex items-center justify-center h-full">
+                                <div class="text-center py-8">
+                                    <svg class="w-12 h-12 mx-auto mb-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                    <p class="text-red-500" x-text="viewingFile?.error"></p>
+                                </div>
+                            </div>
+                            <!-- Normal file content -->
+                            <pre x-show="!viewingFile?.error && viewingFile?.content" class="p-4 text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre overflow-x-auto"><code x-text="viewingFile?.content || ''"></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-4 pt-4 border-t border-border-muted flex justify-between items-center text-sm">
+                <span class="text-gray-500 dark:text-gray-400" x-text="selectedSkillDetail?.description || ''"></span>
+                <button @click="closeSkillDetail()"
+                        class="px-4 py-2 bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>

@@ -1,0 +1,53 @@
+                <!-- Main Log Panel -->
+                <section :class="uiHints.execution_visual === 'graph' && (waitingForNodes || (orchestrator && orchestrator.nodes && orchestrator.nodes.length > 0)) ? 'lg:col-span-8' : 'lg:col-span-12'"
+                         class="bento-card flex flex-col"
+                         :style="waitingForNodes || (orchestrator && orchestrator.nodes && orchestrator.nodes.length > 0) ? 'min-height: 280px; max-height: 50vh;' : 'min-height: 300px; max-height: 60vh;'">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h2 class="text-gray-900 dark:text-gray-100 font-semibold flex items-center gap-3">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <span x-text="executionMode === 'free-style' ? 'Execution Log' : 'Orchestrator Log'"></span>
+                            <span x-show="workDir" class="text-gray-400 dark:text-gray-500 font-normal text-sm" x-text="'(' + workDir + ')'"></span>
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <button @click="endTaskEarly()"
+                                    x-show="phase === 'planning' || phase === 'executing'"
+                                    class="text-xs bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                End Task
+                            </button>
+                            <button @click="logs = []"
+                                    class="text-xs bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Clear
+                            </button>
+                            <button @click="scrollLogsToBottom()"
+                                    class="text-xs bg-surface-tertiary hover:bg-gray-200 dark:hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                </svg>
+                                Bottom
+                            </button>
+                            <label class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 px-2 py-1.5 bg-surface-tertiary rounded-lg cursor-pointer">
+                                <input type="checkbox" x-model="autoScroll" class="rounded border-gray-300 dark:border-gray-600 bg-surface-primary text-purple-500 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer">
+                                Auto
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto bg-surface-primary rounded-lg p-3 font-mono text-sm" x-ref="logContainer" style="min-height: 0;">
+                        <template x-for="(log, index) in mainLogs()" :key="'main-' + index">
+                            <div class="log-entry py-1" :class="'log-' + log.level">
+                                <span class="text-gray-500 text-xs shrink-0 w-16"
+                                      x-text="index === 0 || mainLogs()[index-1].timestamp !== log.timestamp ? log.timestamp : ''"></span>
+                                <span class="shrink-0" x-html="getLogIconSvg(log.level)"></span>
+                                <span class="break-all" x-text="log.message"></span>
+                            </div>
+                        </template>
+                        <div x-show="mainLogs().length === 0" class="text-gray-500 h-full flex items-center justify-center">
+                            <span class="text-sm">Waiting for interaction...</span>
+                        </div>
+                    </div>
+                </section>

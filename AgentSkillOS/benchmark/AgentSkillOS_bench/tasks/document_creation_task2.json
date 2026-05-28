@@ -1,0 +1,100 @@
+{
+  "task_id": "document_creation_task2",
+  "task_name": "Academic Paper Multi-Format Conversion",
+  "description": "Transform an academic paper source into multiple formats for different distribution channels: website, slides, and summary document.",
+  "skills": [
+    "scroll-experience",
+    "pptx",
+    "docx"
+  ],
+  "prompt": "I am an AI researcher and I want to maximize the impact of my latest paper. The paper source files are in paper_src/. Please create three outputs to help me disseminate my work:\n\n1. Interactive HTML website as index.html with navigation and styling for online browsing.\n2. Conference talk slides as talk.pptx with at least 10 slides: cover, motivation, related work, methodology across 3+ slides, experiments across 2+ slides with data tables, and conclusion.\n3. Word summary as summary.docx with title as Heading 1, authors, abstract, key contributions as 3-5 bullets, methodology overview, and experimental findings as sections with Heading 2.",
+  "outputs": [
+    "summary.docx",
+    "talk.pptx",
+    "index.html"
+  ],
+  "category": "document_creation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "website_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the website index.html exists",
+      "weight": 3,
+      "op_args": {
+        "path": "index.html",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pptx_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the PowerPoint presentation exists",
+      "weight": 3,
+      "op_args": {
+        "path": "talk.pptx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "docx_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that the Word summary exists",
+      "weight": 3,
+      "op_args": {
+        "path": "summary.docx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "pptx_slide_count",
+      "type": "objective_usability",
+      "op_func": "pptx_slide_count",
+      "description": "Check that the presentation has at least 10 slides",
+      "weight": 9,
+      "op_args": {
+        "path": "talk.pptx",
+        "operator": ">=",
+        "expected": 10
+      },
+      "depends_on": [
+        "pptx_exists"
+      ]
+    },
+    {
+      "id": "docx_sections",
+      "type": "objective_usability",
+      "op_func": "docx_heading_count",
+      "description": "Check that the Word summary has at least 4 clearly formatted sections",
+      "weight": 9,
+      "op_args": {
+        "path": "summary.docx",
+        "operator": ">=",
+        "expected": 4
+      },
+      "depends_on": [
+        "docx_exists"
+      ]
+    },
+    {
+      "id": "docx_has_content",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Check that the Word summary contains methodology and results sections",
+      "weight": 6,
+      "op_args": {
+        "path": "summary.docx",
+        "mode": "contains"
+      },
+      "value": [
+        "method",
+        "result"
+      ]
+    }
+  ]
+}

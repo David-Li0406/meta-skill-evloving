@@ -1,0 +1,224 @@
+{
+  "task_id": "data_computation_task3",
+  "task_name": "Differential Equation Symbolic Analysis",
+  "description": "Analyze the stability of a predator-prey dynamics model, find equilibrium points, compute eigenvalues, and classify stability types.",
+  "skills": [
+    "sympy"
+  ],
+  "prompt": "I am a computational biology PhD student, and I'm working on a chapter of my thesis analyzing predator-prey dynamics. Please perform symbolic stability analysis of the Lotka-Volterra model:\n  \\frac{dx}{dt} = \\alpha x - \\beta xy\n  \\frac{dy}{dt} = \\delta xy - \\gamma y\nParameters: \\alpha=1.0, \\beta=0.1, \\delta=0.075, \\gamma=1.5.\n\nFind all equilibrium points, compute Jacobian matrices and eigenvalues at each, and classify stability type as stable/unstable node, saddle, center, or stable/unstable spiral.\n\nSave to stability_analysis.json with an equilibria array, each entry containing: coordinates with x and y, eigenvalues as a list, and stability_type as a string.",
+  "outputs": [
+    "stability_analysis.json"
+  ],
+  "category": "data_computation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that stability_analysis.json exists",
+      "weight": 5,
+      "op_args": {
+        "path": "stability_analysis.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that the file is valid JSON",
+      "weight": 5,
+      "op_args": {
+        "path": "stability_analysis.json"
+      },
+      "depends_on": [
+        "json_exists"
+      ]
+    },
+    {
+      "id": "json_has_structure",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that JSON has required structure",
+      "weight": 5,
+      "op_args": {
+        "path": "stability_analysis.json"
+      },
+      "value": [
+        "equilibria"
+      ],
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "equilibria_count",
+      "type": "objective_usability",
+      "op_func": "json_schema_valid",
+      "description": "Check that exactly 2 equilibrium points are found",
+      "weight": 15,
+      "op_args": {
+        "path": "stability_analysis.json"
+      },
+      "value": {
+        "type": "object",
+        "properties": {
+          "equilibria": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "required": [
+          "equilibria"
+        ]
+      },
+      "depends_on": [
+        "json_has_structure"
+      ]
+    },
+    {
+      "id": "eq0_eigenvalues",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Equilibrium (0,0): eigenvalues should be real {-1.5, 1.0} (saddle point)",
+      "weight": 20,
+      "op_args": {
+        "path": "stability_analysis.json",
+        "array_path": "equilibria",
+        "match": {
+          "coordinates.x": {
+            "near": 0,
+            "tolerance": 0.01
+          },
+          "coordinates.y": {
+            "near": 0,
+            "tolerance": 0.01
+          }
+        },
+        "checks": [
+          {
+            "field": "eigenvalues",
+            "type": "array_length",
+            "expected": 2
+          },
+          {
+            "field": "eigenvalues",
+            "type": "sorted_reals_near",
+            "expected": [
+              -1.5,
+              1.0
+            ],
+            "tolerance": 0.05
+          }
+        ]
+      },
+      "depends_on": [
+        "json_has_structure"
+      ]
+    },
+    {
+      "id": "eq0_stability",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Equilibrium (0,0): stability should be classified as saddle",
+      "weight": 10,
+      "op_args": {
+        "path": "stability_analysis.json",
+        "array_path": "equilibria",
+        "match": {
+          "coordinates.x": {
+            "near": 0,
+            "tolerance": 0.01
+          },
+          "coordinates.y": {
+            "near": 0,
+            "tolerance": 0.01
+          }
+        },
+        "checks": [
+          {
+            "field": "stability_type",
+            "type": "contains",
+            "expected": "saddle"
+          }
+        ]
+      },
+      "depends_on": [
+        "json_has_structure"
+      ]
+    },
+    {
+      "id": "eq1_eigenvalues",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Equilibrium (20,10): eigenvalues should be purely imaginary ±1.2247i (center)",
+      "weight": 20,
+      "op_args": {
+        "path": "stability_analysis.json",
+        "array_path": "equilibria",
+        "match": {
+          "coordinates.x": {
+            "near": 20,
+            "tolerance": 0.5
+          },
+          "coordinates.y": {
+            "near": 10,
+            "tolerance": 0.5
+          }
+        },
+        "checks": [
+          {
+            "field": "eigenvalues",
+            "type": "array_length",
+            "expected": 2
+          },
+          {
+            "field": "eigenvalues",
+            "type": "purely_imaginary_magnitude_near",
+            "expected": 1.2247,
+            "tolerance": 0.1,
+            "real_tolerance": 0.1
+          }
+        ]
+      },
+      "depends_on": [
+        "json_has_structure"
+      ]
+    },
+    {
+      "id": "eq1_stability",
+      "type": "objective_usability",
+      "op_func": "json_array_item_check",
+      "description": "Equilibrium (20,10): stability should be classified as center",
+      "weight": 10,
+      "op_args": {
+        "path": "stability_analysis.json",
+        "array_path": "equilibria",
+        "match": {
+          "coordinates.x": {
+            "near": 20,
+            "tolerance": 0.5
+          },
+          "coordinates.y": {
+            "near": 10,
+            "tolerance": 0.5
+          }
+        },
+        "checks": [
+          {
+            "field": "stability_type",
+            "type": "contains",
+            "expected": "center"
+          }
+        ]
+      },
+      "depends_on": [
+        "json_has_structure"
+      ]
+    }
+  ]
+}

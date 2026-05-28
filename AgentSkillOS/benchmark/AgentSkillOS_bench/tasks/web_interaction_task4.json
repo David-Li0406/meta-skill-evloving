@@ -1,0 +1,46 @@
+{
+  "task_id": "web_interaction_task4",
+  "task_name": "Climate Data Story Dashboard",
+  "description": "Create an interactive HTML dashboard telling the story of global temperature change with interactive charts.",
+  "skills": [
+    "data-storytelling",
+    "scientific-visualization",
+    "frontend-design"
+  ],
+  "prompt": "I am a data journalist, and I want to create an interactive data storytelling piece about global temperature change for our publication's website. Please create an interactive HTML dashboard (dashboard.html) that tells the story of global temperature change. Data source: use global annual mean temperature anomaly data from 1880 to 2023 (obtainable from NASA GISS or reasonably simulated). The dashboard should include: (1) a title area and narrative introduction, (2) a time-series line chart with interactive hover showing specific year data, (3) a bar chart grouped by decade, (4) key milestone annotations (e.g., the Paris Agreement year), (5) data insight cards (3-4 key statistics), and (6) a responsive layout. Use D3.js or Chart.js for interactive charts.",
+  "outputs": [
+    "dashboard.html"
+  ],
+  "category": "web_interaction",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "html_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that dashboard.html exists with substantial content",
+      "weight": 5,
+      "op_args": {
+        "path": "dashboard.html",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "has_chart_lib",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Check that dashboard uses a charting library",
+      "weight": 5,
+      "op_args": {
+        "path": "dashboard.html",
+        "mode": "regex"
+      },
+      "value": "(?i)(chart|d3|echarts|plotly)",
+      "depends_on": [
+        "html_exists"
+      ]
+    }
+  ]
+}

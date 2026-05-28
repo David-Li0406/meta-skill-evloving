@@ -1,0 +1,122 @@
+{
+  "task_id": "data_computation_task5",
+  "task_name": "Statistical Hypothesis Testing",
+  "description": "Perform 3 types of hypothesis tests (t-test, chi-square, ANOVA) on given datasets and output results in JSON and Excel.",
+  "skills": [
+    "sympy",
+    "xlsx"
+  ],
+  "prompt": "I am a biostatistics graduate student, and I need to complete a homework assignment on statistical hypothesis testing. Please perform hypothesis tests on the following 3 datasets and save results to hypothesis_tests.json and hypothesis_tests.xlsx.\n\nDataset 1 (Two-sample t-test): Control group [23.1, 22.5, 24.0, 21.8, 23.5, 22.9, 24.2, 23.0, 22.7, 23.8, 21.5, 24.1, 23.3, 22.6, 23.9]; Treatment group [26.3, 25.8, 27.1, 26.5, 25.2, 26.8, 27.3, 25.9, 26.1, 27.0, 25.5, 26.7, 26.0, 25.6, 26.4]. Test whether the treatment group mean is significantly greater than the control group (α=0.05).\n\nDataset 2 (Chi-square test of independence): Contingency table — Preference (A/B/C) vs Age group (Young/Middle/Old): [[30,25,15],[20,30,20],[10,15,35]]. Test whether preference and age are independent.\n\nDataset 3 (One-way ANOVA): Drug A [22.5,24.1,23.0,25.2,23.8,24.5], Drug B [26.3,25.8,27.1,26.5,25.2,26.8], Drug C [31.2,30.5,32.0,31.8,30.9,31.6]. Test whether the three group means differ significantly.\n\nJSON output format — use exactly this structure:\n{\n  \"t_test\": {\"test_name\": \"...\", \"statistic\": ..., \"p_value\": ..., \"conclusion\": \"reject or fail_to_reject\", \"effect_size\": ..., \"control_mean\": ..., \"treatment_mean\": ...},\n  \"chi_square\": {\"test_name\": \"...\", \"statistic\": ..., \"p_value\": ..., \"conclusion\": \"...\", \"effect_size\": ..., \"df\": ...},\n  \"anova\": {\"test_name\": \"...\", \"statistic\": ..., \"p_value\": ..., \"conclusion\": \"...\", \"effect_size\": ..., \"drug_a_mean\": ..., \"drug_b_mean\": ..., \"drug_c_mean\": ...}\n} The Excel file should have 3 sheets (T-Test, Chi-Square, ANOVA), each containing raw data and computed results.",
+  "outputs": [
+    "hypothesis_tests.json",
+    "hypothesis_tests.xlsx"
+  ],
+  "category": "data_computation",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that hypothesis_tests.json exists",
+      "weight": 3,
+      "op_args": {
+        "path": "hypothesis_tests.json",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "xlsx_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that hypothesis_tests.xlsx exists",
+      "weight": 3,
+      "op_args": {
+        "path": "hypothesis_tests.xlsx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that hypothesis_tests.json is valid JSON",
+      "weight": 3,
+      "op_args": {
+        "path": "hypothesis_tests.json"
+      },
+      "depends_on": [
+        "json_exists"
+      ]
+    },
+    {
+      "id": "json_has_keys",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that JSON has t_test, chi_square, and anova sections",
+      "weight": 5,
+      "op_args": {
+        "path": "hypothesis_tests.json"
+      },
+      "value": [
+        "t_test",
+        "chi_square",
+        "anova"
+      ],
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "treatment_mean_correct",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check that t-test treatment group mean is approximately 26.28",
+      "weight": 8,
+      "op_args": {
+        "path": "hypothesis_tests.json",
+        "json_path": "t_test.treatment_mean",
+        "operator": "abs_diff",
+        "expected": 26.28,
+        "tolerance": 0.5
+      },
+      "depends_on": [
+        "json_has_keys"
+      ]
+    },
+    {
+      "id": "ttest_p_significant",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check that t-test p-value is less than 0.05 (significant)",
+      "weight": 10,
+      "op_args": {
+        "path": "hypothesis_tests.json",
+        "json_path": "t_test.p_value",
+        "operator": "<",
+        "expected": 0.05
+      },
+      "depends_on": [
+        "json_has_keys"
+      ]
+    },
+    {
+      "id": "anova_p_significant",
+      "type": "objective_usability",
+      "op_func": "json_field_numeric_compare",
+      "description": "Check that ANOVA p-value is less than 0.05 (significant)",
+      "weight": 10,
+      "op_args": {
+        "path": "hypothesis_tests.json",
+        "json_path": "anova.p_value",
+        "operator": "<",
+        "expected": 0.05
+      },
+      "depends_on": [
+        "json_has_keys"
+      ]
+    }
+  ]
+}

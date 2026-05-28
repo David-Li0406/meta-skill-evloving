@@ -1,0 +1,180 @@
+{
+  "task_id": "web_interaction_task5",
+  "task_name": "Automated Web Data Collection & Structured Report Pipeline",
+  "description": "Scrape Python built-in functions from official docs, then generate structured JSON data, a categorized Excel catalog, and a Word analysis report.",
+  "skills": [
+    "firecrawl-scraper",
+    "xlsx",
+    "docx"
+  ],
+  "prompt": "You are a Python technical documentation engineer responsible for maintaining your team's internal knowledge base. You need to build an automated pipeline to collect Python built-in function information from the official documentation and generate standardized reports.\n\nPlease complete the following tasks:\n\n1. Visit the Python official documentation's built-in functions page (https://docs.python.org/3/library/functions.html) and extract the name and description (first sentence of the docstring) of every built-in function listed on the page.\n\n2. Generate builtin_functions.json as a JSON object with the following fields:\n   - \"source\": the URL of the page you scraped (string)\n   - \"total_count\": the total number of functions collected (integer)\n   - \"functions\": an array of objects, each containing \"name\" (function name) and \"description\" (brief description), sorted alphabetically by name\n\n3. Generate functions_catalog.xlsx with two worksheets:\n   - Sheet 1 \"Function Catalog\": three columns (No., Function Name, Description), sorted alphabetically, with bold header row and colored background\n   - Sheet 2 \"Category Statistics\": group functions by functional category (e.g., Type Conversion, Math Operations, Sequence Operations, I/O, Object & Class Inspection, Iterator Tools, etc.), showing function count per category and listing all function names under each category\n\n4. Generate catalog_report.docx containing:\n   - A report title\n   - An overview paragraph (stating the data source and total number of functions collected)\n   - Detailed sections by functional category (each category as a Heading 2, listing functions with brief explanations)\n   - A summary paragraph (overall assessment of Python's built-in function ecosystem and usage recommendations)",
+  "outputs": [
+    "builtin_functions.json",
+    "functions_catalog.xlsx",
+    "catalog_report.docx"
+  ],
+  "category": "web_interaction",
+  "aggregation": {
+    "strategy": "weighted_sum"
+  },
+  "evaluators": [
+    {
+      "id": "json_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that builtin_functions.json exists and has substantial content",
+      "weight": 2,
+      "op_args": {
+        "path": "builtin_functions.json",
+        "min_size": 500
+      }
+    },
+    {
+      "id": "xlsx_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that functions_catalog.xlsx exists",
+      "weight": 2,
+      "op_args": {
+        "path": "functions_catalog.xlsx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "docx_exists",
+      "type": "objective_usability",
+      "op_func": "file_exists",
+      "description": "Check that catalog_report.docx exists",
+      "weight": 2,
+      "op_args": {
+        "path": "catalog_report.docx",
+        "min_size": 1
+      }
+    },
+    {
+      "id": "json_valid",
+      "type": "objective_usability",
+      "op_func": "json_valid",
+      "description": "Check that the JSON file is valid",
+      "weight": 2,
+      "op_args": {
+        "path": "builtin_functions.json"
+      },
+      "depends_on": [
+        "json_exists"
+      ]
+    },
+    {
+      "id": "json_keys",
+      "type": "objective_usability",
+      "op_func": "json_has_keys",
+      "description": "Check that JSON contains required top-level fields: source, total_count, functions",
+      "weight": 3,
+      "op_args": {
+        "path": "builtin_functions.json"
+      },
+      "value": [
+        "source",
+        "total_count",
+        "functions"
+      ],
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "json_schema",
+      "type": "objective_usability",
+      "op_func": "json_schema_valid",
+      "description": "Validate that each item in the functions array has name and description fields",
+      "weight": 5,
+      "op_args": {
+        "path": "builtin_functions.json"
+      },
+      "value": {
+        "type": "object",
+        "required": [
+          "functions"
+        ],
+        "properties": {
+          "functions": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "description"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "json_count",
+      "type": "objective_usability",
+      "op_func": "json_array_length",
+      "description": "Check that at least 60 built-in functions were collected",
+      "weight": 5,
+      "op_args": {
+        "path": "builtin_functions.json",
+        "array_path": "functions",
+        "operator": ">=",
+        "expected": 60
+      },
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "key_functions",
+      "type": "objective_usability",
+      "op_func": "file_content_check",
+      "description": "Check that essential built-in function names are present",
+      "weight": 5,
+      "op_args": {
+        "path": "builtin_functions.json",
+        "mode": "contains"
+      },
+      "value": [
+        "print",
+        "len",
+        "range",
+        "type",
+        "int"
+      ],
+      "depends_on": [
+        "json_valid"
+      ]
+    },
+    {
+      "id": "docx_structure",
+      "type": "objective_usability",
+      "op_func": "docx_heading_count",
+      "description": "Check that the report has enough category section headings",
+      "weight": 4,
+      "op_args": {
+        "path": "catalog_report.docx",
+        "operator": ">=",
+        "expected": 4
+      },
+      "depends_on": [
+        "docx_exists"
+      ]
+    }
+  ]
+}
