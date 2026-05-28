@@ -1,0 +1,50 @@
+{
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session_start.py",
+          "timeout": 30
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/load_memories.py",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "Before Claude finishes, check if this conversation had substantial work (debugging, solutions, decisions, user preferences learned). If yes, return a systemMessage reminding: '💾 Before wrapping up: Did you learn anything worth memorizing for the team? Preferences, solutions, decisions, or facts?'. If trivial chat or quick answer, just approve without reminder."
+        },
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session_extract.py",
+          "timeout": 60
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "${CLAUDE_PLUGIN_ROOT}/hooks/session_summary.py",
+          "timeout": 60
+        }
+      ]
+    }
+  ]
+}

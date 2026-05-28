@@ -1,0 +1,58 @@
+{
+  "name": "generate-message-id",
+  "description": "Generate unique message ID from content hash or timestamp",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object that needs a unique message ID"
+  },
+  "args": {
+    "id_field": {
+      "type": "string",
+      "required": false,
+      "description": "Dot-separated path where ID should be stored (defaults to 'id')"
+    },
+    "strategy": {
+      "type": "string",
+      "required": false,
+      "description": "ID generation strategy: 'hash' (content-based, default), 'timestamp' (current time), or 'hybrid' (timestamp + short hash)"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Input object with generated ID added/updated at specified path"
+  },
+  "examples": [
+    {
+      "description": "Generate hash-based ID (default) at root level",
+      "input": {"content": "Hello world", "user": "alice"},
+      "args": {},
+      "output": {"content": "Hello world", "user": "alice", "id": "msg-eyJjb250ZW50Ijoi"}
+    },
+    {
+      "description": "Generate timestamp-based ID",
+      "input": {"content": "Message"},
+      "args": {"strategy": "timestamp"},
+      "output": {"content": "Message", "id": "20240101-120000-123"}
+    },
+    {
+      "description": "Generate ID at nested path",
+      "input": {"message": {"text": "Hello"}},
+      "args": {"id_field": "message.id"},
+      "output": {"message": {"text": "Hello", "id": "msg-eyJtZXNzYWdlIjp7"}}
+    },
+    {
+      "description": "Same content produces same hash ID",
+      "input": {"x": 1, "y": 2},
+      "args": {"strategy": "hash"},
+      "output": {"x": 1, "y": 2, "id": "msg-eyJ4IjoxLCJ5Ijoy"}
+    },
+    {
+      "description": "Hybrid strategy combines timestamp and hash",
+      "input": {"data": "test"},
+      "args": {"strategy": "hybrid"},
+      "output": {"data": "test", "id": "20240101-eyJkYXRh"}
+    }
+  ],
+  "tags": ["id", "message", "hash", "timestamp", "unique", "generation"]
+}

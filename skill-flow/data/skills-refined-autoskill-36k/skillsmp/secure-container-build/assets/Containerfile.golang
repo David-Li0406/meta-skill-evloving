@@ -1,0 +1,62 @@
+# syntax=docker/dockerfile:1
+
+# Global ARG for runtime image selection
+# - latest: Production (no shell, minimal, most secure)
+# - latest-dev: Development/debugging (includes shell and basic tools)
+ARG RUNTIME_TAG=latest
+
+###############################
+# Builder stage
+###############################
+FROM docker.io/golang:1 AS builder
+
+# Install tini for signal handling
+RUN <<EOT
+apt update -qy
+DEBIAN_FRONTEND=noninteractive \
+  apt install -qyy --no-install-recommends \
+  tini \
+  ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOT
+
+WORKDIR /app
+
+# Copy go.mod and go.sum first (optimal layer caching)
+COPY go.mod go.sum ./
+
+# Download dependencies (cached layer)
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# Copy source code
+COPY . ./
+
+# Build static binary (no CGO, no runtime dependencies)
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux \
+    go build -ldflags="-w -s" -o /app/server .
+
+###############################
+# Runtime stage (static - smallest possible)
+###############################
+# Re-declare ARG for this stage
+ARG RUNTIME_TAG=latest
+FROM cgr.dev/chainguard/static:${RUNTIME_TAG} AS runtime
+
+# Copy tini from builder
+COPY --from=builder /usr/bin/tini-static /sbin/tini
+
+# Copy the static binary
+COPY --from=builder --chown=65532:65532 /app/server /app/server
+
+# Switch to non-root user (Wolfi default: 65532)
+USER 65532:65532
+WORKDIR /app
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/app/server"]
+
+# To build for debugging with shell access:
+# podman build --build-arg RUNTIME_TAG=latest-dev -t myapp:debug .

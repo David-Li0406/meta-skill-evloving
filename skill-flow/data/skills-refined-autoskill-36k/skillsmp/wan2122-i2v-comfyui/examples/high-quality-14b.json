@@ -1,0 +1,162 @@
+{
+  "name": "High Quality 14B Workflow",
+  "description": "Wan2.2 14Bモデルを使用した最高品質ワークフロー",
+  "version": "1.0.0",
+  "requirements": {
+    "minimum_vram": "24GB (fp8)",
+    "recommended_vram": "40GB+ (fp16)",
+    "target_gpu": "RTX 4090, A100, H100"
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "title": "Load High-Res Image",
+      "properties": {
+        "image": "high_quality_input.png"
+      },
+      "notes": "高解像度入力を推奨: 720×1280 または 1280×720"
+    },
+    {
+      "id": 2,
+      "type": "LoadDiffusionModel",
+      "title": "Load Wan2.2 14B",
+      "properties": {
+        "model_name": "wan2.2_i2v_14B_fp16.safetensors"
+      },
+      "notes": "14B fp16: 最高品質。VRAM 40GB以上推奨"
+    },
+    {
+      "id": 3,
+      "type": "LoadCLIP",
+      "title": "Load Text Encoder (Full)",
+      "properties": {
+        "clip_name": "umt5_xxl_fp16.safetensors",
+        "type": "wan"
+      },
+      "notes": "fp16フルエンコーダ。fp8でも大きな品質差はない"
+    },
+    {
+      "id": 4,
+      "type": "LoadCLIPVision",
+      "title": "Load CLIP Vision",
+      "properties": {
+        "clip_name": "clip_vision_h.safetensors"
+      }
+    },
+    {
+      "id": 5,
+      "type": "LoadVAE",
+      "title": "Load VAE",
+      "properties": {
+        "vae_name": "wan2.2_vae.safetensors"
+      }
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "title": "Detailed Positive Prompt",
+      "properties": {
+        "text": "Cinematic quality video, professional lighting, smooth natural movement, subtle camera motion, photorealistic details, 4K quality, masterpiece"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      },
+      "notes": "詳細なプロンプトでより良い結果を得られる"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "title": "Comprehensive Negative",
+      "properties": {
+        "text": "blurry, low quality, noise, artifacts, flickering, distorted, deformed, watermark, text, logo, oversaturated, underexposed, jpeg artifacts, pixelated, bad anatomy"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      },
+      "notes": "包括的なネガティブプロンプトで品質向上"
+    },
+    {
+      "id": 8,
+      "type": "CLIPVisionEncode",
+      "title": "Encode Input",
+      "inputs": {
+        "clip_vision": { "node": 4, "output": "CLIP_VISION" },
+        "image": { "node": 1, "output": "IMAGE" }
+      }
+    },
+    {
+      "id": 9,
+      "type": "WanVideoI2VSampler",
+      "title": "High Quality Sampling",
+      "properties": {
+        "width": 720,
+        "height": 1280,
+        "length": 81,
+        "cfg": 6.0,
+        "steps": 30,
+        "seed": 42
+      },
+      "inputs": {
+        "model": { "node": 2, "output": "MODEL" },
+        "positive": { "node": 6, "output": "CONDITIONING" },
+        "negative": { "node": 7, "output": "CONDITIONING" },
+        "clip_vision_output": { "node": 8, "output": "CLIP_VISION_OUTPUT" }
+      },
+      "notes": "高解像度(720p)、30steps、固定シード(42)で再現可能な高品質出力"
+    },
+    {
+      "id": 10,
+      "type": "VAEDecodeVideo",
+      "title": "Decode Video",
+      "inputs": {
+        "vae": { "node": 5, "output": "VAE" },
+        "samples": { "node": 9, "output": "LATENT" }
+      }
+    },
+    {
+      "id": 11,
+      "type": "SaveVideo",
+      "title": "Save High Quality",
+      "properties": {
+        "filename_prefix": "wan22_14b_hq",
+        "fps": 24,
+        "format": "mp4",
+        "quality": 95
+      },
+      "inputs": {
+        "images": { "node": 10, "output": "IMAGE" }
+      },
+      "notes": "高品質(95)で保存。ファイルサイズは大きくなる"
+    }
+  ],
+  "connections": [
+    { "from": [1, "IMAGE"], "to": [8, "image"] },
+    { "from": [2, "MODEL"], "to": [9, "model"] },
+    { "from": [3, "CLIP"], "to": [6, "clip"] },
+    { "from": [3, "CLIP"], "to": [7, "clip"] },
+    { "from": [4, "CLIP_VISION"], "to": [8, "clip_vision"] },
+    { "from": [5, "VAE"], "to": [10, "vae"] },
+    { "from": [6, "CONDITIONING"], "to": [9, "positive"] },
+    { "from": [7, "CONDITIONING"], "to": [9, "negative"] },
+    { "from": [8, "CLIP_VISION_OUTPUT"], "to": [9, "clip_vision_output"] },
+    { "from": [9, "LATENT"], "to": [10, "samples"] },
+    { "from": [10, "IMAGE"], "to": [11, "images"] }
+  ],
+  "quality_tips": [
+    "固定シードを使用して良い結果を再現",
+    "CFG 6.0でプロンプトへの忠実度と品質のバランス",
+    "Steps 30で細部の描写を向上",
+    "入力画像も高品質なものを使用（ノイズは引き継がれる）"
+  ],
+  "post_processing": {
+    "upscaling": "必要に応じて4K upscalerでさらに高解像度化",
+    "color_grading": "DaVinci Resolveなどで色調整",
+    "frame_interpolation": "24fps → 60fps補間でより滑らかに"
+  },
+  "performance_notes": {
+    "rtx_4090": "約40-50秒/生成",
+    "a100_40gb": "約30-40秒/生成",
+    "a100_80gb": "約25-35秒/生成"
+  }
+}

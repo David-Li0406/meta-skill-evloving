@@ -1,0 +1,106 @@
+import { Button } from "@openpromo/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@openpromo/ui/components/dialog";
+import { Input } from "@openpromo/ui/components/input";
+import { Label } from "@openpromo/ui/components/label";
+import { Textarea } from "@openpromo/ui/components/textarea";
+import { useState } from "react";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { use{{EntityName}} } from "@/queries/{{entityKebab}}";
+
+interface {{EntityName}}CreateDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function {{EntityName}}CreateDialog({
+  open,
+  onOpenChange,
+}: {{EntityName}}CreateDialogProps) {
+  const { workspace } = useWorkspace();
+  const { create } = use{{EntityName}}();
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    await create.mutateAsync({
+      workspaceSlug: workspace.slug,
+      name,
+      description: description || undefined,
+    });
+
+    // Reset form and close
+    setName("");
+    setDescription("");
+    onOpenChange(false);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setName("");
+      setDescription("");
+    }
+    onOpenChange(open);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Create {{EntityName}}</DialogTitle>
+            <DialogDescription>
+              Add a new {{entityName}} to your workspace.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter name..."
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (optional)</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter description..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!name || create.isPending}>
+              {create.isPending ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

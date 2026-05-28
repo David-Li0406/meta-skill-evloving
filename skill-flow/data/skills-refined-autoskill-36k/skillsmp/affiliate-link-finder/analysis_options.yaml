@@ -1,0 +1,44 @@
+# 2026 Professional Standard for ADHD Health & Referral Apps
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # Exclude generated files from warnings (Riverpod/Freezed)
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+  
+  language:
+    # 2026 Hardened Type Safety
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+  errors:
+    # Treat these as "Stop & Fix" errors, not just warnings
+    todo: ignore
+    missing_required_param: error
+    missing_return: error
+    use_build_context_synchronously: error # Critical for safety alerts
+    invalid_use_of_visible_for_testing_member: error
+
+linter:
+  rules:
+    # Performance & ADHD UX Rules
+    - prefer_const_constructors          # The #1 Flutter rule
+    - prefer_const_literals_to_create_immutables
+    - avoid_unnecessary_containers      # Keeps widget tree shallow
+    - sized_box_for_whitespace          # More readable than Container()
+    
+    # Professionalism & Maintenance
+    - always_declare_return_types
+    - cancel_subscriptions              # Prevents memory leaks in trackers
+    - close_sinks                       # Prevents data corruption
+    - test_types_in_equals
+    - use_super_parameters              # 2026 Flutter best practice
+    
+    # Accessibility (a11y) - Critical for health apps
+    - annotate_overrides
+    - avoid_empty_else
+    - avoid_web_libraries_in_flutter
+    - await_only_futures
+    - empty_catches

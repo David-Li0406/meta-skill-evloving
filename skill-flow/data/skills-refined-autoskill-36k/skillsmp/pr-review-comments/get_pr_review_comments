@@ -1,0 +1,233 @@
+#!/bin/bash
+# vim: set filetype=bash:
+
+set -euo pipefail
+
+# Script to extract GitHub PR review comments and output them for further processing
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log_info() { echo -e "${GREEN}[INFO]${NC} $1" >&2; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $1" >&2; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+
+# Function to extract GitHub owner and repo from git remote
+get_github_repo_info() {
+    log_info "Extracting repository info from git remote..."
+
+    # Get the remote URL for origin
+    local remote_url
+    if ! remote_url=$(git remote get-url origin 2>/dev/null); then
+        log_error "Failed to get git remote URL for 'origin'"
+        log_error "Make sure you're in a git repository with a remote named 'origin'"
+        exit 1
+    fi
+
+    log_info "Remote URL: $remote_url"
+
+    # Parse owner and repo from the URL
+    # Handles formats:
+    #   SSH: git@github.com:owner/repo.git
+    #   HTTPS: https://github.com/owner/repo.git
+    #   GHE: git@github.enterprise.com:owner/repo.git or https://github.enterprise.com/owner/repo.git
+    local owner repo
+
+    if [[ "$remote_url" =~ ^git@[^:]+:([^/]+)/(.+)\.git$ ]]; then
+        # SSH format
+        owner="${BASH_REMATCH[1]}"
+        repo="${BASH_REMATCH[2]}"
+    elif [[ "$remote_url" =~ ^https?://[^/]+/([^/]+)/(.+)\.git$ ]]; then
+        # HTTPS format with .git
+        owner="${BASH_REMATCH[1]}"
+        repo="${BASH_REMATCH[2]}"
+    elif [[ "$remote_url" =~ ^https?://[^/]+/([^/]+)/(.+)$ ]]; then
+        # HTTPS format without .git
+        owner="${BASH_REMATCH[1]}"
+        repo="${BASH_REMATCH[2]}"
+    else
+        log_error "Could not parse owner/repo from remote URL: $remote_url"
+        log_error "Expected format: git@host:owner/repo.git or https://host/owner/repo.git"
+        exit 1
+    fi
+
+    if [ -z "$owner" ] || [ -z "$repo" ]; then
+        log_error "Extracted empty owner or repo from remote URL"
+        exit 1
+    fi
+
+    log_info "Detected repository: $owner/$repo"
+
+    # Return as space-separated values
+    echo "$owner $repo"
+}
+
+# Function to check if current branch has a PR
+get_current_pr() {
+    local current_branch
+    current_branch=$(git branch --show-current)
+
+    if [ -z "$current_branch" ]; then
+        log_error "Could not determine current branch"
+        exit 1
+    fi
+
+    log_info "Checking for PR on branch: $current_branch"
+
+    local pr_info
+    if ! pr_info=$(gh pr list -s all --head "$current_branch" --json number --jq '.[0].number' 2>/dev/null); then
+        log_error "Failed to query GitHub PR. Make sure 'gh' is authenticated."
+        exit 1
+    fi
+
+    if [ -z "$pr_info" ] || [ "$pr_info" = "null" ]; then
+        log_error "No PR found for current branch: $current_branch"
+        log_error "Create a PR first or switch to a branch with an existing PR"
+        exit 1
+    fi
+
+    echo "$pr_info"
+}
+
+# Function to check if a file path is stale (file doesn't exist)
+is_comment_stale() {
+    local file_path="$1"
+
+    # If file_path is empty or null, consider it stale
+    if [ -z "$file_path" ] || [ "$file_path" = "null" ]; then
+        return 0 # stale
+    fi
+
+    # Check if file exists in the repository
+    if [ ! -f "$file_path" ]; then
+        log_warn "File does not exist: $file_path (marking as stale)"
+        return 0 # stale
+    fi
+
+    return 1 # not stale
+}
+
+# Function to clean up comment body (remove Graphite footer)
+clean_comment_body() {
+    local body="$1"
+
+    # Remove the Graphite-specific footer and HTML elements
+    # This removes everything from "*Spotted by [Diamond]" onwards and cleans HTML
+    echo "$body" | sed -E '
+        /\*Spotted by \[Diamond\]/,$d
+        s/<[^>]*>//g
+        /^[[:space:]]*$/d
+    ' | sed -E '/^```suggestion$/,/^```$/d' | sed '/^[[:space:]]*$/d'
+}
+
+# Function to format comment output
+format_comment() {
+    local comment_id="$1"
+    local file_path="$2"
+    local line_number="$3"
+    local clean_body="$4"
+
+    # Format file path with line number if available
+    local file_location="$file_path"
+    if [ "$line_number" != "null" ] && [ -n "$line_number" ]; then
+        file_location="$file_path:$line_number"
+    fi
+
+    echo "$file_location"
+    echo ""
+    echo "$clean_body"
+}
+
+# Main function
+main() {
+    log_info "Starting PR review comment extraction..."
+
+    # Get repository info from git remote
+    local repo_info repo_owner repo_name
+    repo_info=$(get_github_repo_info)
+    read -r repo_owner repo_name <<<"$repo_info"
+
+    # Get current PR number
+    local pr_number
+    pr_number=$(get_current_pr)
+    log_info "Found PR #$pr_number"
+
+    # Create temporary directory for processing
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    trap "rm -rf '$temp_dir'" EXIT
+
+    # Fetch unresolved comments using GraphQL API
+    log_info "Fetching unresolved PR review comments..."
+    local comments_json="$temp_dir/comments.json"
+
+    if ! gh api graphql -f query='{ repository(owner: "'"$repo_owner"'", name: "'"$repo_name"'") { pullRequest(number: '$pr_number') { reviewThreads(first: 100) { edges { node { id isResolved comments(first: 10) { edges { node { id body path line author { login } createdAt } } } } } } } } }' \
+        --jq '.data.repository.pullRequest.reviewThreads.edges[] | select(.node.isResolved == false) | .node.comments.edges[0].node | {id: .id, body: .body, path: .path, line: .line, created_at: .createdAt}' \
+        >"$comments_json"; then
+        log_error "Failed to fetch PR comments"
+        exit 1
+    fi
+
+    # Check if we got any comments
+    if [ ! -s "$comments_json" ]; then
+        log_warn "No unresolved comments found on PR #$pr_number"
+        exit 0
+    fi
+
+    local total_comments
+    total_comments=$(wc -l <"$comments_json")
+    log_info "Found $total_comments unresolved comments"
+
+    local processed_count=0
+    local stale_count=0
+
+    # Process each comment
+    while IFS= read -r comment_json; do
+        local comment_id file_path body line created_at
+
+        comment_id=$(echo "$comment_json" | jq -r '.id')
+        file_path=$(echo "$comment_json" | jq -r '.path')
+        body=$(echo "$comment_json" | jq -r '.body')
+        line=$(echo "$comment_json" | jq -r '.line')
+        created_at=$(echo "$comment_json" | jq -r '.created_at')
+
+        log_info "Processing comment $comment_id for file: $file_path"
+
+        # Check if comment is stale
+        if is_comment_stale "$file_path"; then
+            log_warn "Skipping stale comment $comment_id (file: $file_path)"
+            ((stale_count++))
+            continue
+        fi
+
+        # Clean up comment body
+        local clean_body
+        clean_body=$(clean_comment_body "$body")
+
+        # Format the prompt
+        local formatted_prompt
+        formatted_prompt=$(format_comment "$comment_id" "$file_path" "$line" "$clean_body")
+
+        # Write to file
+        local output_file="${comment_id}-review-feedback.md"
+        echo "$formatted_prompt" >"$output_file"
+
+        # Output the file location (this is what gets piped)
+        echo "$output_file"
+
+        ((processed_count++))
+        log_info "Created: $output_file"
+
+    done <"$comments_json"
+
+    log_info "Processing complete!"
+    log_info "Total comments: $total_comments"
+    log_info "Stale comments skipped: $stale_count"
+    log_info "Files created: $processed_count"
+}
+
+# Run main function
+main "$@"

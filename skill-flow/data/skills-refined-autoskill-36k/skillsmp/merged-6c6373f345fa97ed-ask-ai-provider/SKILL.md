@@ -1,0 +1,46 @@
+---
+name: ask-ai-provider
+description: Use this skill to send requests to various AI providers asynchronously when the user explicitly delegates to an AI provider.
+---
+
+# Ask AI Provider
+
+Send the user's request to the specified AI provider via ask.
+
+## Usage
+
+The first argument must be the provider name. The message MUST be provided via stdin (heredoc or pipe), not as CLI arguments, to avoid shell globbing issues:
+- `gemini` - Send to Gemini
+- `codex` - Send to Codex
+- `opencode` - Send to OpenCode
+- `droid` - Send to Droid
+
+Optional flags after the provider:
+- `--foreground` / `--background`
+- Env overrides: `CCB_ASK_FOREGROUND=1` / `CCB_ASK_BACKGROUND=1`
+
+## Execution (MANDATORY)
+
+```bash
+CCB_CALLER=<provider_name> ask $PROVIDER <<'EOF'
+$MESSAGE
+EOF
+```
+
+## Rules
+
+- After running the command, say "[Provider] processing..." and immediately end your turn.
+- Do not wait for results or check status in the same turn.
+- The task ID and log file path will be displayed for tracking.
+
+## Examples
+
+- `/ask gemini What is 12+12?` (send via heredoc)
+- `CCB_CALLER=codex ask gemini <<'EOF'`
+  `What is 12+12?`
+  `EOF`
+
+## Notes
+
+- If it fails, check backend health with the corresponding ping command (`ping <provider>` (e.g., `ping gemini`)).
+- Codex-managed sessions default to foreground; use `--background` or `CCB_ASK_BACKGROUND=1` for async.

@@ -1,0 +1,196 @@
+name: Build multi-arch container images (Push-by-Digest)
+
+# This workflow uses the "push-by-digest" approach (2025 best practice):
+# - Native ARM64 runners for parallel builds (public repos only)
+# - Images are pushed by digest without intermediate architecture tags
+# - Only tiny digest files (~70 bytes) transfer as artifacts
+# - Registry stays clean (no :arm64/:amd64 clutter)
+#
+# Debug: podman pull --platform linux/arm64 IMAGE:latest
+# See references/github-actions-best-practices.md for alternative approaches
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: build-images-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+permissions:
+  contents: read
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ==========================================================================
+  # BUILD JOBS - Run in parallel on native runners
+  # ==========================================================================
+
+  build:
+    name: Build (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm  # Native ARM64 runner (public repos only)
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login "${{ env.REGISTRY }}" \
+            -u "${{ github.actor }}" \
+            --password-stdin
+
+      # Optional: Login to Docker Hub
+      # - name: Login to Docker Hub
+      #   run: |
+      #     echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login docker.io \
+      #       -u "${{ secrets.DOCKERHUB_USERNAME }}" \
+      #       --password-stdin
+
+      - name: Build image
+        run: |
+          podman build \
+            --network=host \
+            --format docker \
+            --platform linux/${{ matrix.arch }} \
+            --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            -t localhost/build:${{ matrix.arch }} \
+            -f ./Containerfile \
+            .
+
+      - name: Push by digest
+        run: |
+          podman push \
+            --digestfile /tmp/digest \
+            localhost/build:${{ matrix.arch }} \
+            docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          echo "Digest: $(cat /tmp/digest)"
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          cp /tmp/digest /tmp/digests/${{ matrix.arch }}
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v5
+        with:
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/${{ matrix.arch }}
+          if-no-files-found: error
+          retention-days: 1
+
+  # ==========================================================================
+  # MERGE JOB - Create multi-arch manifest from digests
+  # ==========================================================================
+
+  merge:
+    name: Create multi-arch manifest
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v6
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | podman login "${{ env.REGISTRY }}" \
+            -u "${{ github.actor }}" \
+            --password-stdin
+
+      # Optional: Login to Docker Hub
+      # - name: Login to Docker Hub
+      #   run: |
+      #     echo "${{ secrets.DOCKERHUB_TOKEN }}" | podman login docker.io \
+      #       -u "${{ secrets.DOCKERHUB_USERNAME }}" \
+      #       --password-stdin
+
+      - name: Determine tags
+        id: tags
+        run: |
+          TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            TAGS="$TAGS,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          fi
+
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            TAGS="$TAGS,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$VERSION"
+          fi
+
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - name: Create and push manifest
+        run: |
+          AMD64_DIGEST=$(cat /tmp/digests/amd64)
+          ARM64_DIGEST=$(cat /tmp/digests/arm64)
+
+          echo "AMD64 digest: $AMD64_DIGEST"
+          echo "ARM64 digest: $ARM64_DIGEST"
+
+          IFS=',' read -ra TAG_ARRAY <<< "${{ steps.tags.outputs.tags }}"
+          for TAG in "${TAG_ARRAY[@]}"; do
+            echo "Creating manifest for: $TAG"
+
+            podman manifest rm "$TAG" 2>/dev/null || true
+            podman manifest create "$TAG"
+
+            podman manifest add "$TAG" \
+              "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${AMD64_DIGEST}"
+            podman manifest add "$TAG" \
+              "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${ARM64_DIGEST}"
+
+            podman manifest push --all "$TAG" "docker://${TAG}"
+          done
+
+      - name: Verify
+        run: |
+          podman manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+# ==========================================================================
+# USAGE NOTES
+# ==========================================================================
+#
+# 1. Update Containerfile path: -f ./Containerfile.python-uv
+#
+# 2. Debug specific architecture:
+#    podman pull --platform linux/arm64 ghcr.io/OWNER/REPO:latest
+#
+# 3. For private repos, replace runners:
+#    - runner: ubuntu-24.04-arm
+#    + runner: your-org-arm64-runner  # ARM64 larger runner
+#
+# 4. Alternative approaches (see reference docs):
+#    - Architecture Tags: simpler, intermediate :amd64/:arm64 tags
+#    - QEMU: single-runner emulation for private repos
+#
+# 5. --network=host flag:
+#    - Required for ubuntu-24.04 runners >= 20251208.163.1
+#    - Fixes SSL certificate errors during package installation
+#    - See: https://github.com/actions/runner-images/issues/13422

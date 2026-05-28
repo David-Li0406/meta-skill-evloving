@@ -1,0 +1,132 @@
+# Project Configuration
+# All projects, aliases, and folder structure for the Obsidian vault
+
+version: "1.0"
+
+# Standard project subfolders
+project_subfolders:
+  - Architecture
+  - Communications/Meetings
+  - Communications/Emails
+  - Communications/Chats
+  - Communications/Decisions
+  - Development
+  - Environments/Local
+  - Environments/Staging
+  - Environments/Prod
+  - Integrations
+  - Pipelines
+  - Security
+  - Troubleshooting
+
+# Active projects
+projects:
+  SubjectsPlus5:
+    status: active
+    aliases: [SP5, "SubjectsPlus 5", sp5]
+    tag: "Project/SubjectsPlus5"
+
+  SubjectsPlus4:
+    status: maintenance
+    aliases: [SP4, "SubjectsPlus 4", sp4]
+    tag: "Project/SubjectsPlus4"
+
+  ETD:
+    status: active
+    aliases: ["Electronic Theses", etd]
+    tag: "Project/ETD"
+
+  Multisearch:
+    status: active
+    aliases: ["Multi Search", "Federated Search", multisearch]
+    tag: "Project/Multisearch"
+
+  LibWeb:
+    status: active
+    aliases: ["Library Web", "Library Website", libweb]
+    tag: "Project/LibWeb"
+
+  SnipeIT:
+    status: active
+    aliases: [Snipe, "Snipe-IT", snipeit]
+    tag: "Project/SnipeIT"
+
+  UMLOrcid:
+    status: active
+    aliases: [ORCID, Orcid, orcid]
+    tag: "Project/UMLOrcid"
+
+  Jekyllizer:
+    status: active
+    aliases: [Jekyll, jekyllizer]
+    tag: "Project/Jekyllizer"
+
+  CopilotStudio:
+    status: active
+    aliases: [Copilot, "MS Copilot", copilot]
+    tag: "Project/CopilotStudio"
+
+  CMS:
+    status: active
+    aliases: ["Content Management", cms]
+    tag: "Project/CMS"
+
+  Intranet:
+    status: active
+    aliases: ["Internal Site", intranet]
+    tag: "Project/Intranet"
+
+  Kaltura:
+    status: active
+    aliases: ["Video Platform", kaltura]
+    tag: "Project/Kaltura"
+
+  PowerPlatform:
+    status: active
+    aliases: ["Power Platform", "Power Apps", PowerApps, powerplatform]
+    tag: "Project/PowerPlatform"
+
+# Nested projects (hierarchical)
+nested_projects:
+  Calder/Ebooks:
+    status: active
+    aliases: [Ebooks, "Calder Ebooks", CalderEbooks, ebooks]
+    tag: "Project/Calder/Ebooks"
+    parent: Calder
+
+  LMS/Canvas:
+    status: active
+    aliases: [Canvas, "LMS Canvas", canvas]
+    tag: "Project/LMS/Canvas"
+    parent: LMS
+
+  LMS/Blackboard:
+    status: active
+    aliases: [Blackboard, BB, blackboard]
+    tag: "Project/LMS/Blackboard"
+    parent: LMS
+
+# Parent groups (for tag hierarchy queries)
+project_groups:
+  Calder:
+    tag: "Project/Calder"
+    children: [Calder/Ebooks]
+
+  LMS:
+    tag: "Project/LMS"
+    children: [LMS/Canvas, LMS/Blackboard]
+
+# Deprecated project mappings
+deprecated:
+  CalderEbooks: Calder/Ebooks
+  Canvas: LMS/Canvas
+  Blackboard: LMS/Blackboard
+
+# Ambiguous terms requiring user clarification
+ambiguous:
+  Calder:
+    prompt: "Which Calder project?"
+    options: [Calder/Ebooks]
+  LMS:
+    prompt: "Which LMS - Canvas or Blackboard?"
+    options: [LMS/Canvas, LMS/Blackboard]

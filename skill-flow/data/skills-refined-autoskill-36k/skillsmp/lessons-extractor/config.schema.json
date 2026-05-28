@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "lessons-extractor configuration",
+  "description": "Configuration schema for the lessons-extractor skill",
+  "type": "object",
+  "properties": {
+    "logGlob": {
+      "type": "string",
+      "description": "Glob pattern for Claude Code log files (user home scoped)",
+      "default": "~/.claude/projects/**/*.jsonl"
+    },
+    "redactPatterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Regex patterns for sensitive data to redact before processing",
+      "default": [
+        "(?i)api[_-]?key[\"']?\\s*[:=]\\s*[\"']?[\\w-]+",
+        "(?i)password[\"']?\\s*[:=]\\s*[\"']?[^\\s\"']+",
+        "(?i)secret[\"']?\\s*[:=]\\s*[\"']?[\\w-]+",
+        "(?i)token[\"']?\\s*[:=]\\s*[\"']?[\\w-]+",
+        "/Users/[^/]+/",
+        "/home/[^/]+/",
+        "C:\\\\Users\\\\[^\\\\]+\\\\"
+      ]
+    },
+    "outputDir": {
+      "type": "string",
+      "description": "Directory for output files (relative to project root)",
+      "default": "docs/ai/lessons-extractor"
+    }
+  },
+  "additionalProperties": false
+}

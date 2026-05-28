@@ -1,0 +1,40 @@
+# Fixture: Tyler discusses leaving Apple, job offer negotiation
+description: "Tyler mentions leaving Apple and discussing compensation for new role"
+
+entities:
+  must_have:
+    - name_contains: "Tyler"
+      entity_type: Person
+      
+    - name_contains: "Iris"
+      entity_type: Person
+      
+    - name_contains: "Apple"
+      entity_type: Organization
+
+  optional:
+    # Chris might be extracted as a person
+    - name_contains: "Chris"
+      entity_type: Person
+
+relationships:
+  must_have:
+    # Tyler left Apple - should have past tense / invalid_at
+    - source_entity_name_contains: "Tyler"
+      relation_type: WORKS_AT
+      target_entity_name_contains: "Apple"
+
+  optional:
+    # May extract Tyler knows Iris, Chris
+    - relation_type: KNOWS
+
+episode_relationship_mentions:
+  optional:
+    # Source type may vary between self_disclosed and mentioned
+    - extracted_fact_contains: "Apple"
+
+episode_entity_mentions:
+  must_have:
+    - entity_name_contains: "Tyler"
+    - entity_name_contains: "Iris"
+    - entity_name_contains: "Apple"

@@ -1,0 +1,56 @@
+identity:
+  name: md_to_json
+  author: bowenliang123
+  label:
+    en_US: Markdown tables ⮕ JSON
+    zh_Hans: Markdown 表格 ⮕ JSON
+description:
+  human:
+    en_US: Generate JSON or JSONL file from Markdown tables
+    zh_Hans: 将 Markdown 表格转换为 JSON 或 JSONL 文件的工具
+  llm: Generate JSON file from Markdown text
+parameters:
+  - name: md_text
+    type: string
+    required: true
+    label:
+      en_US: Markdown table text
+      zh_Hans: Markdown 表格文本
+    human_description:
+      en_US: Input text of single Markdown table
+      zh_Hans: 单个Markdown格式文本
+    form: llm
+  - name: output_style
+    type: select
+    required: true
+    default: "jsonl"
+    options:
+      - value: "jsonl"
+        label:
+          en_US: "JSONL (one object per line)"
+          zh_Hans: JSONL (每行一个对象)
+      - value: "json_array"
+        label:
+          en_US: "JSON Array (all objects in single array)"
+          zh_Hans: JSON 数组 (单个数组包含所有对象)
+    label:
+      en_US: JSON Output Style
+      zh_Hans: JSON输出格式
+    human_description:
+      en_US: "JSONL: each line represents a JSON object; JSON Array: all objects are in a single array."
+      zh_Hans: "JSONL：每行代表一个JSON对象；JSON数组：所有对象在一个数组中。"
+    llm_description: "jsonl: each line represents a JSON object; json_array: all objects are in a single array."
+    form: form
+  - name: output_filename
+    type: string
+    required: false
+    label:
+      en_US: Output Filename
+      zh_Hans: 输出文件名
+    human_description:
+      en_US: Optional custom output file name, and the filename suffix is not required.
+      zh_Hans: 可选的自定义输出文件名，后缀名无需指定
+    form: llm
+extra:
+  python:
+    source: tools/md_to_json/md_to_json.py

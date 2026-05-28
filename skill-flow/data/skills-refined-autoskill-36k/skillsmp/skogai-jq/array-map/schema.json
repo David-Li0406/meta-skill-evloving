@@ -1,0 +1,46 @@
+{
+  "name": "array-map",
+  "description": "Extract a field from each item in an array",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing an array field with items to extract from"
+  },
+  "args": {
+    "field": {
+      "type": "string",
+      "required": true,
+      "description": "Field name to extract from each array item"
+    },
+    "array": {
+      "type": "string",
+      "required": false,
+      "description": "Name of the array field in the input object (defaults to 'items')"
+    }
+  },
+  "output": {
+    "type": "array",
+    "description": "Array of extracted values from the specified field of each item"
+  },
+  "examples": [
+    {
+      "description": "Extract names from array of objects",
+      "input": {"items": [{"name": "alice", "age": 30}, {"name": "bob", "age": 25}]},
+      "args": {"field": "name"},
+      "output": ["alice", "bob"]
+    },
+    {
+      "description": "Extract ages from array of objects",
+      "input": {"items": [{"name": "alice", "age": 30}, {"name": "bob", "age": 25}]},
+      "args": {"field": "age"},
+      "output": [30, 25]
+    },
+    {
+      "description": "Extract from custom array field name",
+      "input": {"users": [{"id": 1, "name": "alice"}, {"id": 2, "name": "bob"}]},
+      "args": {"field": "id", "array": "users"},
+      "output": [1, 2]
+    }
+  ],
+  "tags": ["array", "map", "extract", "transform"]
+}

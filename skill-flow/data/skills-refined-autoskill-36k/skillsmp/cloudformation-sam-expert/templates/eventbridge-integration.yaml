@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  EventBridge Integration Template
+  展示：EventBus、Rules、Targets、DLQ、錯誤處理
+
+Resources:
+  # Custom EventBridge Bus
+  CustomEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !Sub '${AWS::StackName}-events'
+  
+  # Dead Letter Queue（失敗事件）
+  EventDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${AWS::StackName}-event-dlq'
+      MessageRetentionPeriod: 1209600  # 14 天
+  
+  # Target Lambda Function
+  ProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AWS::StackName}-processor'
+      Handler: handler.lambda_handler
+      CodeUri: src/
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref CustomEventBus
+      Policies:
+        - Statement:
+            # 發送完成事件
+            - Effect: Allow
+              Action: events:PutEvents
+              Resource: !GetAtt CustomEventBus.Arn
+  
+  # EventBridge Rule（路由到 Lambda）
+  ProcessingRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub '${AWS::StackName}-processing-rule'
+      EventBusName: !Ref CustomEventBus
+      Description: Route processing events to Lambda
+      State: ENABLED
+      
+      # Event Pattern（匹配條件）
+      EventPattern:
+        source:
+          - agentcore.app
+        detail-type:
+          - task.created
+          - task.updated
+        detail:
+          priority:
+            - high
+            - critical
+      
+      # Targets
+      Targets:
+        # Primary Target: Lambda
+        - Arn: !GetAtt ProcessorFunction.Arn
+          Id: ProcessorTarget
+          RetryPolicy:
+            MaximumRetryAttempts: 2
+            MaximumEventAge: 3600  # 1 小時
+          DeadLetterConfig:
+            Arn: !GetAtt EventDLQ.Arn
+  
+  # Lambda Permission
+  ProcessorPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ProcessingRule.Arn
+  
+  # SQS Policy（允許 EventBridge 發送到 DLQ）
+  EventDLQPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref EventDLQ
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt EventDLQ.Arn
+  
+  # Archive（事件歷史）
+  EventArchive:
+    Type: AWS::Events::Archive
+    Properties:
+      ArchiveName: !Sub '${AWS::StackName}-archive'
+      EventSourceArn: !GetAtt CustomEventBus.Arn
+      Description: Archive all events for 7 days
+      RetentionDays: 7
+  
+  # CloudWatch Log Group
+  ProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ProcessorFunction}'
+      RetentionInDays: 14
+
+Outputs:
+  EventBusName:
+    Description: Custom EventBridge bus name
+    Value: !Ref CustomEventBus
+    Export:
+      Name: !Sub '${AWS::StackName}-EventBusName'
+  
+  EventBusArn:
+    Description: Custom EventBridge bus ARN
+    Value: !GetAtt CustomEventBus.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-EventBusArn'
+  
+  ProcessorFunctionArn:
+    Description: Processor Lambda ARN
+    Value: !GetAtt ProcessorFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-ProcessorArn'
+  
+  DLQUrl:
+    Description: Dead Letter Queue URL
+    Value: !Ref EventDLQ
+    Export:
+      Name: !Sub '${AWS::StackName}-DLQUrl'

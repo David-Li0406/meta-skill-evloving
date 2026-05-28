@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「学童优选」品牌分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+/* McKinsey/BCG Style Presentation CSS */
+
+/* Color Variables */
+:root {
+    --primary-bg: #FFFFFF;
+    --header-bg: #000000;
+    --primary-accent: #F85d42;
+    --secondary-accent: #74788d;
+    --deep-blue: #556EE6;
+    --green: #34c38f;
+    --blue: #50a5f1;
+    --yellow: #f1b44c;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    --text-light: #FFFFFF;
+}
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    overflow: hidden;
+}
+
+/* Navigation Bar */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--header-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    z-index: 1000;
+}
+
+.nav-btn {
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #e04a31;
+}
+
+.nav-btn:disabled {
+    background-color: var(--secondary-accent);
+    cursor: not-allowed;
+}
+
+.slide-counter {
+    color: var(--text-light);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Presentation Container */
+.presentation-container {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+/* Slide Styles */
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 60px 80px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    overflow-y: auto;
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+}
+
+/* Title Slide */
+.title-slide {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.title {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--primary-accent);
+    margin-bottom: 20px;
+}
+
+.date {
+    font-size: 20px;
+    color: var(--secondary-accent);
+    font-weight: 400;
+}
+
+/* Header Bar */
+.header-bar {
+    background-color: var(--header-bg);
+    padding: 20px 40px;
+    margin: -60px -80px 40px -80px;
+}
+
+.slide-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: -0.5px;
+}
+
+/* Slide Content */
+.slide-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Key Points */
+.key-points {
+    list-style: none;
+    padding: 0;
+}
+
+.key-point {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 20px 0;
+    border-bottom: 2px solid var(--secondary-accent);
+    margin-bottom: 10px;
+}
+
+.key-point::before {
+    content: "✓ ";
+    color: var(--primary-accent);
+    margin-right: 15px;
+    font-weight: 700;
+}
+
+/* Two-Column Layout */
+.two-column {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+.column {
+    flex: 1;
+}
+
+.chart-container {
+    min-height: 400px;
+}
+
+.chart-caption {
+    text-align: center;
+    font-size: 14px;
+    color: var(--secondary-accent);
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Section Header */
+.section-header {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.accent-text {
+    color: var(--primary-accent);
+}
+
+/* Body Text */
+.body-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+/* Bullet Points */
+.bullet-points {
+    list-style: none;
+    padding: 0;
+}
+
+.bullet-points li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 12px 0 12px 30px;
+    position: relative;
+}
+
+.bullet-points li::before {
+    content: "•";
+    color: var(--primary-accent);
+    font-size: 24px;
+    position: absolute;
+    left: 0;
+    top: 8px;
+}
+
+/* Conclusions Grid */
+.conclusions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.conclusion-card {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.card-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+/* Recommendations Box */
+.recommendations-box {
+    background-color: #fff3e0;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--yellow);
+    margin: 30px 0;
+}
+
+/* Numbered List */
+.numbered-list {
+    list-style: none;
+    counter-reset: recommendation-counter;
+    padding: 0;
+}
+
+.numbered-list li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 15px 0 15px 40px;
+    position: relative;
+    counter-increment: recommendation-counter;
+}
+
+.numbered-list li::before {
+    content: counter(recommendation-counter);
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Full-screen Button */
+.fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--header-bg);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: background-color 0.3s ease;
+}
+
+.fullscreen-btn:hover {
+    background-color: var(--secondary-accent);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .slide {
+        padding: 60px 40px;
+    }
+
+    .two-column {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .conclusions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .title {
+        font-size: 48px;
+    }
+
+    .slide-title {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 20px;
+    }
+
+    .slide {
+        padding: 40px 20px;
+    }
+
+    .title {
+        font-size: 36px;
+    }
+
+    .slide-title {
+        font-size: 28px;
+    }
+
+    .subtitle {
+        font-size: 24px;
+    }
+
+    .key-point {
+        font-size: 18px;
+    }
+}
+
+/* Scrollbar Styles */
+.slide::-webkit-scrollbar {
+    width: 8px;
+}
+
+.slide::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.slide::-webkit-scrollbar-thumb {
+    background: var(--secondary-accent);
+    border-radius: 4px;
+}
+
+.slide::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-accent);
+}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← Previous</button>
+        <span class="slide-counter">Slide <span id="currentSlide">1</span> of <span id="totalSlides">1</span></span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+    </nav>
+
+    <!-- Slides Container -->
+    <div class="presentation-container">
+        <div class="slide active" data-slide="1">
+            <div class="title-slide">
+                <h1 class="title">「学童优选」品牌分析报告</h1>
+                <h2 class="subtitle">Data Analysis & Insights</h2>
+                <p class="date">Date: January 2026</p>
+            </div>
+        </div>
+        <div class="slide" data-slide="2">
+            <div class="header-bar">
+                <h1 class="slide-title">Executive Summary</h1>
+            </div>
+            <div class="slide-content">
+                <ul class="key-points">
+                <li class="key-point">结合 School Supply Boxes 的效率优势，强化"一站式解决方案"的便利性</li>
+                <li class="key-point">学习 Melissa & Doug 的教育价值深度，建立"科学成长"的专业形象</li>
+                <li class="key-point">构建"效率 + 教育双核心"的独特价值主张</li>
+                <li class="key-point">效率导向型家长：强调便捷、省时、一站式服务（类似 School Supply Boxes）</li>
+                <li class="key-point">成长型家长：强调科学分级、教育价值、能力培养（类似 Melissa & Doug）</li>
+                </ul>
+            </div>
+        </div>
+        <div class="slide" data-slide="3">
+            <div class="header-bar">
+                <h1 class="slide-title">1. 「学童优选」品牌概述</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <canvas id="chart1"></canvas>
+                    <p class="chart-caption">1. 「学童优选」品牌概述 - Data Visualization</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>3-12 岁儿童成长全周期教育用品与开学准备一站式解决方案品牌 —— 以 "省心开学，科学成长" 为核心，聚焦效率导向型家长（核心）+ 成长型家长（拓展），通过 "年级分层 + 发展适配" 的双产品线（开学必备套装 + 阶段教育玩具），实现学校场景与家庭场景的无缝衔接，让家长省心完成开学准备、科学规划孩子成长，成为儿童学习与发展的专业伙伴。</li>
+                    <li>以 "年级分层设计 + 阶段难度适配" 为核心，构建开学必备用品与核心能力培养工具的协同体系，解决家长开学采购焦虑与能力培养盲目性痛点，实现学校场景与家庭场景的无缝衔接，为 3-12 岁儿童提供适配成长节奏的全周期支持，让开学更从容、成长更扎实。</li>
+                    <li>- **效率痛点**：采购繁琐、决策负担重、担心遗漏开学必需品（通过 "清单驱动 + 套装化 + 一键购买" 的学校用品线解决）；</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="4">
+            <div class="header-bar">
+                <h1 class="slide-title">2. 对标案例学习</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <canvas id="chart2"></canvas>
+                    <p class="chart-caption">2. 对标案例学习 - Data Visualization</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>属于品牌 "身份叙事" 板块：讲 2018 年创立的初衷（解决家长 / 老师采购学习用品的痛点）、2019 年推出 "Supply Your School" 项目的发展历程，帮用户理解品牌的诞生逻辑。</li>
+                    <li>属于品牌 "价值方向" 板块：明确创立目标是 "简化采购流程，助力良好学习环境"；后续包装部分的 "可持续理念" 也属于使命延伸（体现品牌社会责任）。</li>
+                    <li>属于品牌 "竞争亮点" 板块：比如 "免拥挤 / 免奔波的采购体验""产品内部质量测试""全年可订购 + 定制化""批量订购的价格优势"，直接讲用户选它的理由。</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="5">
+            <div class="header-bar">
+                <h1 class="slide-title">4. 财务预测</h1>
+            </div>
+            <div class="slide-content">
+            <p class="body-text">- **2025 年**：65 亿元（增长 30%）</p>
+            <p class="body-text">- **2026 年**：84.5 亿元（增长 30%）</p>
+            <p class="body-text">- **2026 年目标市场份额**：25%</p>
+            </div>
+        </div>
+        <div class="slide" data-slide="6">
+            <div class="header-bar">
+                <h1 class="slide-title">Conclusions & Recommendations</h1>
+            </div>
+            <div class="slide-content">
+                <div class="conclusions-grid">
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 1</h3>
+                    <p class="card-text">结合 School Supply Boxes 的效率优势，强化"一站式解决方案"的便利性</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 2</h3>
+                    <p class="card-text">学习 Melissa & Doug 的教育价值深度，建立"科学成长"的专业形象</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 3</h3>
+                    <p class="card-text">构建"效率 + 教育双核心"的独特价值主张</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 4</h3>
+                    <p class="card-text">效率导向型家长：强调便捷、省时、一站式服务（类似 School Supply Boxes）</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 5</h3>
+                    <p class="card-text">成长型家长：强调科学分级、教育价值、能力培养（类似 Melissa & Doug）</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 6</h3>
+                    <p class="card-text">品牌认知度提升：从 0 到 100 万目标用户</p>
+                </div>
+                </div>
+
+                <div class="recommendations-box">
+                    <h3 class="section-header accent-text">Key Recommendations</h3>
+                    <ol class="numbered-list">
+                        <li><li>结合 School Supply Boxes 的效率优势，强化"一站式解决方案"的便利性</li>
+                    <li>学习 Melissa & Doug 的教育价值深度，建立"科学成长"的专业形象</li>
+                    <li>构建"效率 + 教育双核心"的独特价值主张</li>
+                    <li>效率导向型家长：强调便捷、省时、一站式服务（类似 School Supply Boxes）</li>
+                    <li>成长型家长：强调科学分级、教育价值、能力培养（类似 Melissa & Doug）</li></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+    <script>
+        let currentSlide = 1;
+        let totalSlides = 0;
+
+        function init() {
+            const slides = document.querySelectorAll('.slide');
+            totalSlides = slides.length;
+            document.getElementById('totalSlides').textContent = totalSlides;
+
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function navigate(direction) {
+            const newSlide = currentSlide + direction;
+
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = newSlide;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                navigate(-1);
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Chart.js configurations
+new Chart(document.getElementById('chart1'), {
+        type: 'bar',
+        data: {"labels": ["1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_1", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_2", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_3", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_4", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_5", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_6", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_7", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_8", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_9", "1. \u300c\u5b66\u7ae5\u4f18\u9009\u300d\u54c1_10"], "datasets": [{"label": "Value", "data": [3.0, 12.0, 3.0, 12.0, 3.0, 12.0, 1.0, 2.0, 3.0, 4.0], "backgroundColor": ["#556EE6", "#34c38f", "#50a5f1", "#f1b44c", "#F85d42", "#556EE6", "#34c38f", "#50a5f1", "#f1b44c", "#F85d42"], "borderWidth": 0, "borderRadius": 4}]},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart2'), {
+        type: 'bar',
+        data: {"labels": ["2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_1", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_2", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_3", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_4", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_5", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_6", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_7", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_8", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_9", "2. \u5bf9\u6807\u6848\u4f8b\u5b66\u4e60_10"], "datasets": [{"label": "Value", "data": [2018.0, 2019.0, 1.0, 2.0, 3.0, 4.0, 5.0, 1988.0, 6.0, 1.0], "backgroundColor": ["#556EE6", "#34c38f", "#50a5f1", "#f1b44c", "#F85d42", "#556EE6", "#34c38f", "#50a5f1", "#f1b44c", "#F85d42"], "borderWidth": 0, "borderRadius": 4}]},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+    </script>
+</body>
+</html>

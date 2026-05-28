@@ -1,0 +1,76 @@
+{
+  "name": "validate-format",
+  "description": "Validate string format against common patterns (email, url, uuid, timestamp, date)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing string field to validate"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to string field (e.g., \"user.email\")"
+    },
+    "format": {
+      "type": "string",
+      "required": true,
+      "description": "Format type to validate: \"email\", \"url\", \"uuid\", \"timestamp\", \"date\""
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if value matches format pattern, false if invalid format, path doesn't exist, or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Valid email format",
+      "input": {"user": {"email": "test@example.com"}},
+      "args": {"path": "user.email", "format": "email"},
+      "output": true
+    },
+    {
+      "description": "Invalid email format",
+      "input": {"user": {"email": "not-an-email"}},
+      "args": {"path": "user.email", "format": "email"},
+      "output": false
+    },
+    {
+      "description": "Valid URL format",
+      "input": {"site": "https://example.com/path"},
+      "args": {"path": "site", "format": "url"},
+      "output": true
+    },
+    {
+      "description": "Valid UUID format",
+      "input": {"id": "550e8400-e29b-41d4-a716-446655440000"},
+      "args": {"path": "id", "format": "uuid"},
+      "output": true
+    },
+    {
+      "description": "Valid ISO 8601 timestamp",
+      "input": {"created": "2024-01-15T10:30:00Z"},
+      "args": {"path": "created", "format": "timestamp"},
+      "output": true
+    },
+    {
+      "description": "Valid date format",
+      "input": {"date": "2024-01-15"},
+      "args": {"path": "date", "format": "date"},
+      "output": true
+    },
+    {
+      "description": "Field doesn't exist returns false",
+      "input": {"name": "test"},
+      "args": {"path": "email", "format": "email"},
+      "output": false
+    },
+    {
+      "description": "Non-string value returns false",
+      "input": {"email": 123},
+      "args": {"path": "email", "format": "email"},
+      "output": false
+    }
+  ],
+  "tags": ["validation", "format", "email", "url", "uuid", "timestamp", "date", "pattern", "regex"]
+}

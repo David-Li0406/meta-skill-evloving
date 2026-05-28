@@ -1,0 +1,114 @@
+.variable-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: var(--color-surface);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.variable-slider:hover {
+  background: var(--color-surface-hover);
+}
+
+.variable-slider__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.variable-slider__label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.variable-slider__sublabel {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.variable-slider__value {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: var(--color-surface-elevated);
+  border-radius: 4px;
+  color: var(--color-text);
+}
+
+.variable-slider__track-container {
+  position: relative;
+  height: 8px;
+}
+
+.variable-slider__input {
+  width: 100%;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.variable-slider__input::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
+    to right,
+    var(--slider-color) 0%,
+    var(--slider-color) var(--progress),
+    var(--color-surface-elevated) var(--progress),
+    var(--color-surface-elevated) 100%
+  );
+}
+
+.variable-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--slider-color);
+  border: 3px solid var(--color-bg);
+  margin-top: -5px;
+  cursor: grab;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.variable-slider__input::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.variable-slider__input::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
+.variable-slider__range {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+/* Color variants */
+.variable-slider--foundation {
+  --slider-color: var(--color-foundation);
+}
+
+.variable-slider--dynamic {
+  --slider-color: var(--color-dynamic);
+}
+
+.variable-slider--cognitive {
+  --slider-color: var(--color-cognitive);
+}

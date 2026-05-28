@@ -1,0 +1,41 @@
+{
+  "id": "eval-001",
+  "name": "单文件修改",
+  "complexity": "simple",
+  "description": "为单个文件添加新参数",
+  "requirement": "为 AudioService.enable3DSound() 方法添加一个可选的 intensity 参数（0.0-1.0），控制 3D 音效强度",
+  "context": {
+    "project_type": "音频服务",
+    "files_involved": 1,
+    "estimated_lines": 50,
+    "dependencies": []
+  },
+  "expected_output": {
+    "rfc_sections": ["§1", "§2", "§3", "§4", "§5"],
+    "scenarios": {
+      "normal": 1,
+      "exception": 1,
+      "boundary": 1
+    },
+    "dfx_dimensions": 8
+  },
+  "acceptance_criteria": {
+    "execution_time_max": 480,
+    "token_budget_max": 10000,
+    "user_interactions_max": 2,
+    "first_pass_rate": 0.85,
+    "quality_score_min": 85
+  },
+  "validation": {
+    "must_have": [
+      "参数类型定义（number, 0.0-1.0）",
+      "默认值说明",
+      "边界条件处理（< 0 或 > 1）",
+      "向后兼容性说明"
+    ],
+    "should_have": [
+      "性能影响分析",
+      "测试策略"
+    ]
+  }
+}

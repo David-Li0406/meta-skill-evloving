@@ -1,0 +1,249 @@
+{
+  "connector": "SharePoint",
+  "id": "shared_sharepointonline",
+  "docsUrl": "https://learn.microsoft.com/en-us/connectors/sharepointonline/",
+  "throttling": { "calls": 600, "seconds": 60 },
+  "triggers": {
+    "GetOnNewItems": {
+      "name": "When an item is created",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/onnewitems"
+      },
+      "parameters": {
+        "siteAddress": { "type": "string", "required": true, "example": "https://contoso.sharepoint.com/sites/sitename" },
+        "listName": { "type": "string", "required": true }
+      }
+    },
+    "GetOnUpdatedItems": {
+      "name": "When an item is created or modified",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/onupdateditems"
+      }
+    },
+    "GetOnDeletedItems": {
+      "name": "When an item is deleted",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/ondeleteditems"
+      }
+    },
+    "GetOnNewFileItems": {
+      "name": "When a file is created (properties only)",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(libraryName)}/onnewfileitems"
+      },
+      "parameters": {
+        "siteAddress": { "type": "string", "required": true },
+        "libraryName": { "type": "string", "required": true },
+        "folderPath": { "type": "string", "required": false }
+      }
+    },
+    "GetOnUpdatedFileItems": {
+      "name": "When a file is created or modified (properties only)",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(libraryName)}/onupdatedfileitems"
+      }
+    }
+  },
+  "actions": {
+    "PostItem": {
+      "name": "Create item",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/items",
+        "body": "dynamic|List columns as properties"
+      },
+      "parameters": {
+        "siteAddress": { "type": "string", "required": true },
+        "listName": { "type": "string", "required": true }
+      }
+    },
+    "GetItem": {
+      "name": "Get item",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/items/@{encodeURIComponent(id)}"
+      }
+    },
+    "GetItems": {
+      "name": "Get items",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/items",
+        "queries": {
+          "$filter": "string|OData filter expression",
+          "$orderby": "string|Column to sort by",
+          "$top": "integer|Number of items",
+          "$skiptoken": "string|Pagination token",
+          "viewScopeOption": "string|Default,FilesOnlyInFolder,Recursive,RecursiveAll"
+        }
+      }
+    },
+    "PatchItem": {
+      "name": "Update item",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "patch",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/items/@{encodeURIComponent(id)}",
+        "body": "dynamic|Updated columns"
+      }
+    },
+    "DeleteItem": {
+      "name": "Delete item",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "delete",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/items/@{encodeURIComponent(id)}"
+      }
+    },
+    "CreateFile": {
+      "name": "Create file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/files",
+        "body": "binary|File content",
+        "queries": {
+          "folderPath": "required|string|/Shared Documents/folder",
+          "name": "required|string|filename.ext",
+          "queryParametersSingleEncoded": true
+        }
+      }
+    },
+    "GetFileContent": {
+      "name": "Get file content",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/files/@{encodeURIComponent(fileIdentifier)}/content"
+      }
+    },
+    "GetFileContentByPath": {
+      "name": "Get file content using path",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "get",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/GetFileContentByPath",
+        "queries": { "path": "required|string|/Shared Documents/file.docx" }
+      }
+    },
+    "UpdateFile": {
+      "name": "Update file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "put",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/files/@{encodeURIComponent(fileIdentifier)}/content",
+        "body": "binary|Updated file content"
+      }
+    },
+    "DeleteFile": {
+      "name": "Delete file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "delete",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/files/@{encodeURIComponent(fileIdentifier)}"
+      }
+    },
+    "CopyFileAsync": {
+      "name": "Copy file",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/copyFileAsync",
+        "queries": {
+          "source": "required|string|Source file path",
+          "destination": "required|string|Destination site",
+          "destinationFolder": "required|string",
+          "nameConflictBehavior": "optional|string|fail,replace,rename"
+        }
+      }
+    },
+    "CreateNewFolder": {
+      "name": "Create new folder",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listOrLibrary)}/createnewfolder",
+        "queries": { "path": "required|string|/folder/subfolder" }
+      }
+    },
+    "HttpRequest": {
+      "name": "Send an HTTP request to SharePoint",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/_api/web",
+        "body": {
+          "method": "required|string|GET,POST,PUT,PATCH,DELETE",
+          "uri": "required|string|/_api/web/lists",
+          "headers": "optional|object",
+          "body": "optional|string"
+        }
+      }
+    },
+    "GrantAccess": {
+      "name": "Grant access to an item or folder",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_sharepointonline']['connectionId']" } },
+        "method": "post",
+        "path": "/datasets/@{encodeURIComponent(encodeURIComponent(siteAddress))}/tables/@{encodeURIComponent(listName)}/items/@{encodeURIComponent(id)}/grantaccess",
+        "body": {
+          "recipients": "required|array|[{\"email\":\"user@domain.com\"}]",
+          "roleValue": "required|string|Reader,Contributor,Owner"
+        }
+      }
+    }
+  },
+  "connectionReference": {
+    "shared_sharepointonline": {
+      "connectionName": "",
+      "source": "Invoker",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+      "tier": "NotSpecified"
+    }
+  },
+  "outputSchemas": {
+    "listItem": {
+      "ID": "integer",
+      "Title": "string",
+      "Created": "datetime",
+      "Modified": "datetime",
+      "Author": { "Email": "string", "DisplayName": "string" },
+      "Editor": { "Email": "string", "DisplayName": "string" }
+    },
+    "file": {
+      "Id": "string",
+      "Name": "string",
+      "Path": "string",
+      "Size": "integer",
+      "MediaType": "string",
+      "LastModified": "datetime"
+    }
+  }
+}

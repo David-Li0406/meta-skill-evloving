@@ -1,0 +1,57 @@
+{
+  "name": "string-truncate",
+  "description": "Truncate a string at a specified path to a maximum length, optionally adding ellipsis",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'user.bio')"
+    },
+    "max_length": {
+      "type": "number",
+      "required": true,
+      "description": "Maximum number of characters to keep (must be passed as JSON number via --argjson)"
+    },
+    "ellipsis": {
+      "type": "string",
+      "required": false,
+      "description": "Set to 'true' to add '...' to truncated strings (ellipsis counts toward max_length). Default: 'false'"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Modified object with truncated string at path. Original object returned unchanged if path doesn't exist or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Truncate long string to 10 characters",
+      "input": {"bio": "This is a very long biography text"},
+      "args": {"path": "bio", "max_length": 10},
+      "output": {"bio": "This is a "}
+    },
+    {
+      "description": "Truncate with ellipsis (ellipsis counts in max_length)",
+      "input": {"bio": "This is a very long biography text"},
+      "args": {"path": "bio", "max_length": 10, "ellipsis": "true"},
+      "output": {"bio": "This is..."}
+    },
+    {
+      "description": "Short string unchanged",
+      "input": {"bio": "Short"},
+      "args": {"path": "bio", "max_length": 10},
+      "output": {"bio": "Short"}
+    },
+    {
+      "description": "Nested path truncation",
+      "input": {"user": {"description": "A very long description"}},
+      "args": {"path": "user.description", "max_length": 12, "ellipsis": "true"},
+      "output": {"user": {"description": "A very lo..."}}
+    }
+  ],
+  "tags": ["string", "truncate", "limit", "ellipsis", "length"]
+}

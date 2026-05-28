@@ -1,0 +1,124 @@
+# =============================================================================
+# MULTI-STAGE DOCKERFILE FOR FASTAPI + SQLMODEL + PYDANTIC
+# Stages: Builder → Runtime → Testing → Development
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# STAGE 1: BUILDER
+# Purpose: Install dependencies, compile packages
+# Size: ~400MB (discarded after build)
+# -----------------------------------------------------------------------------
+FROM python:3.12-slim AS builder
+
+# Install UV package manager from official image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# UV Performance optimizations
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_NO_PROGRESS=1
+
+WORKDIR /app
+
+# Copy dependency files first (layer caching optimization)
+# Changes to these files invalidate the cache, but code changes don't
+COPY pyproject.toml uv.lock ./
+
+# Install production dependencies with cache mount
+# --locked: Use exact versions from lockfile
+# --no-dev: Exclude development dependencies
+# --no-editable: Allow copying venv without source
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev --no-editable
+
+# -----------------------------------------------------------------------------
+# STAGE 2: RUNTIME (Production)
+# Purpose: Minimal production image
+# Size: ~150MB
+# -----------------------------------------------------------------------------
+FROM python:3.12-slim AS runtime
+
+# Create non-root user for security
+# Using fixed UID/GID for consistency across environments
+RUN groupadd --gid 1000 app && \
+    useradd --uid 1000 --gid app --shell /bin/bash --create-home app
+
+WORKDIR /app
+
+# Copy virtual environment from builder stage
+# --chown ensures non-root user owns the files
+COPY --from=builder --chown=app:app /app/.venv /app/.venv
+
+# Copy application code
+COPY --chown=app:app ./app ./app
+
+# Set environment variables
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    # Application defaults (override at runtime)
+    PORT=80 \
+    WORKERS=1
+
+# Switch to non-root user
+USER app
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:${PORT}/health')" || exit 1
+
+# Expose port
+EXPOSE ${PORT}
+
+# Run FastAPI with proxy headers (for running behind reverse proxy)
+CMD ["fastapi", "run", "app/main.py", "--port", "80", "--proxy-headers"]
+
+# -----------------------------------------------------------------------------
+# STAGE 3: TESTING (CI/CD)
+# Purpose: Run tests in CI/CD pipeline
+# Size: ~450MB
+# -----------------------------------------------------------------------------
+FROM builder AS testing
+
+# Install ALL dependencies including dev/test
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
+
+# Copy all source code including tests
+COPY . .
+
+# Set test environment
+ENV ENVIRONMENT=testing \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+# Default: run pytest with coverage
+CMD ["pytest", "-v", "--cov=app", "--cov-report=term-missing"]
+
+# -----------------------------------------------------------------------------
+# STAGE 4: DEVELOPMENT (Local)
+# Purpose: Development with hot-reload
+# Size: ~300MB
+# -----------------------------------------------------------------------------
+FROM python:3.12-slim AS development
+
+# Install UV
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install all dependencies including dev
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
+
+# Source code will be mounted as volume at runtime
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Development server with hot-reload
+CMD ["fastapi", "dev", "app/main.py", "--host", "0.0.0.0", "--port", "8000"]

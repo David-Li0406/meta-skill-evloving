@@ -1,0 +1,91 @@
+{
+  "$schema": "../symbols-config-schema.json",
+  "projectName": "SkillMeat",
+  "symbolsDir": "{{SYMBOLS_DIR}}",
+  "domains": {
+    "api": {
+      "file": "symbols-api.json",
+      "description": "Django application - All backend symbols including models, views, serializers, URLs. Use apiLayers for targeted layer access.",
+      "testFile": "symbols-api-tests.json",
+      "enabled": true
+    },
+    "shared": {
+      "file": "symbols-shared.json",
+      "description": "Shared utilities and helpers - Common functions, middleware, decorators, utilities used across apps.",
+      "enabled": true
+    }
+  },
+  "apiLayers": {
+    "models": {
+      "file": "symbols-api-models.json",
+      "description": "Django models - ORM models, database table definitions, model managers, querysets",
+      "enabled": true
+    },
+    "views": {
+      "file": "symbols-api-views.json",
+      "description": "Views and viewsets - Django views, class-based views, DRF viewsets, API endpoints",
+      "enabled": true
+    },
+    "serializers": {
+      "file": "symbols-api-serializers.json",
+      "description": "DRF serializers - Django REST Framework serializers, validation, nested serializers",
+      "enabled": true
+    },
+    "urls": {
+      "file": "symbols-api-urls.json",
+      "description": "URL configuration - URL patterns, routers, path definitions",
+      "enabled": true
+    },
+    "services": {
+      "file": "symbols-api-services.json",
+      "description": "Business logic services - Domain operations, orchestration, business rules (if using service layer pattern)",
+      "enabled": true
+    },
+    "cores": {
+      "file": "symbols-api-cores.json",
+      "description": "Core infrastructure - Middleware, authentication, permissions, signals, management commands",
+      "enabled": true
+    }
+  },
+  "extraction": {
+    "python": {
+      "directories": [
+        "apps",
+        "src",
+        "api",
+        "core",
+        "common"
+      ],
+      "extensions": [".py"],
+      "excludes": [
+        "__pycache__",
+        "*.pyc",
+        ".pytest_cache",
+        ".venv",
+        "venv",
+        ".tox",
+        "*.egg-info",
+        "build",
+        "dist",
+        ".mypy_cache",
+        ".ruff_cache",
+        "migrations/",
+        "static/",
+        "media/"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    },
+    "typescript": {
+      "directories": ["frontend"],
+      "extensions": [".ts", ".tsx"],
+      "excludes": ["node_modules/", "dist/", "build/"],
+      "excludeTests": true,
+      "excludePrivate": false
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "Template for Django backend with Django REST Framework. Common patterns: Django ORM models, class-based views, DRF serializers, viewsets, routers. Adjust directories to match your project structure (apps/, src/, api/, etc.). Migrations are excluded by default."
+  }
+}

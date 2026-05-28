@@ -1,0 +1,2949 @@
+openapi: 3.0.0
+info:
+  title: TogoMedium API
+  description: TogoMedium API is a RESTful API for TogoMedium, a database of growth media for microorganisms.
+  version: 0.0.0
+tags:
+  - name: New
+  - name: GTDB
+  - name: Stats
+  - name: Deprecated
+    description: These endpoints have been deprecated.
+  - name: Media Finder
+    description: These endpoints are related to the media finder Stanzas
+  - name: Stanza
+    description: These endpoints return is used by TogoMedium's Stanza.
+  - name: Detail
+    description: These endpoints return detailed information.
+  - name: List Stanza
+    description: These endpoints return a list of data which is used by TogoMedium's List Stanza.
+paths:
+  /gmdb_all_components:
+    get:
+      operationId: _AllComponents_get
+      description: Deprecated, in favor of `components_with_components`. This endpoint returns a list of all components in the GMDB.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllComponentsResponse'
+      tags:
+        - Deprecated
+      deprecated: true
+  /gmdb_component_by_gmoid:
+    get:
+      operationId: _ComponentDetail_get
+      description: Returns detailed information of a component based on gmo_id.
+      parameters:
+        - $ref: '#/components/parameters/ComponentDetailRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComponentDetailResponse'
+      tags:
+        - Stanza
+        - Detail
+  /gmdb_components_with_components:
+    get:
+      operationId: _componentWithComponents_get
+      description: Find media with the given components, then return all components in the media. Mostly used at 'Find media by components' page.
+      parameters:
+        - $ref: '#/components/parameters/ComponentsWithComponentsRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComponentsWithComponentsResponse'
+      tags:
+        - Media Finder
+  /gmdb_gtdb_taxonomy_ancestors:
+    get:
+      operationId: _GTDBTaxonAncestors_get
+      description: Retrieve the ancestors of a taxonomy, useful for visualizing the taxon's hierarchical tree structure
+      parameters:
+        - $ref: '#/components/parameters/GTDBTaxonAncestorsRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GTDBTaxonAncestorsResponse'
+      tags:
+        - Stanza
+        - New
+        - GTDB
+  /gmdb_gtdb_taxonomy_children:
+    get:
+      operationId: _GTDBTaxonChildren_get
+      description: Returns the direct children of the given taxonomy ID. Mostly used at 'Find media by taxonomic tree' page.
+      parameters:
+        - $ref: '#/components/parameters/GTDBTaxonChildrenRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GTDBTaxonChildrenResponse'
+      tags:
+        - Media Finder
+        - New
+        - GTDB
+  /gmdb_gtdb_taxonomy_search_by_name:
+    get:
+      operationId: _GTDBTaxonSearchByName_get
+      description: Searches for a taxonomy by its name, which is particularly useful for incremental searching.
+      parameters:
+        - $ref: '#/components/parameters/GTDBTaxonSearchByNameRequest.q'
+        - $ref: '#/components/parameters/GTDBTaxonSearchByNameRequest.max'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GTDBTaxonSearchByNameResponse'
+      tags:
+        - Stanza
+        - New
+        - GTDB
+  /gmdb_infraspecific_list_by_taxid:
+    get:
+      operationId: _InfraspecificListByTaxId_get
+      description: Listing up organisms of taxonomy
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfraspecificListByTaxIdResponse'
+      tags:
+        - Deprecated
+      deprecated: true
+  /gmdb_list_components_by_gmoids:
+    get:
+      operationId: _ListComponentsByGmoIds_get
+      description: List growth media components with the given GMO IDs
+      parameters:
+        - $ref: '#/components/parameters/ListComponentsByGmoIdsRequest.gmo_ids'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListComponentsByGmoIdsResponse'
+      tags:
+        - List Stanza
+  /gmdb_list_components_by_keyword:
+    get:
+      operationId: _ListComponentsByKeyword_get
+      description: List growth media components with the given keyword
+      parameters:
+        - $ref: '#/components/parameters/ListComponentsByKeywordRequest.keyword'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListComponentsByKeywordResponse'
+      tags:
+        - List Stanza
+  /gmdb_list_media:
+    get:
+      operationId: _ListMediaDeprecated_get
+      description: This endpoint is deprecated. Use `/list_media` instead.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema: {}
+      tags:
+        - Deprecated
+      deprecated: true
+  /gmdb_list_media_by_cultivable_strain_count:
+    get:
+      operationId: _ListMediaByCultivableCount_get
+      description: List media by cultivable count
+      parameters:
+        - $ref: '#/components/parameters/ListMediaByCultivableCountRequest.cultivable_count'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaByCultivableCountResponse'
+      tags:
+        - List Stanza
+        - New
+  /gmdb_list_media_by_gmids:
+    get:
+      operationId: _ListMediaByGmIds_get
+      description: List growth media with the given GMIDs
+      parameters:
+        - $ref: '#/components/parameters/ListMediaByGmIdsRequest.gm_ids'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaByGmIdsResponse'
+      tags:
+        - List Stanza
+  /gmdb_list_media_by_keyword:
+    get:
+      operationId: _ListMediaByKeyword_get
+      description: List growth media with the given keyword
+      parameters:
+        - $ref: '#/components/parameters/ListMediaByKeywordRequest.keyword'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaByKeywordResponse'
+      tags:
+        - List Stanza
+  /gmdb_list_organisms_by_keyword:
+    get:
+      operationId: _ListOrganismsByKeyword_get
+      description: List organisms with the given keyword
+      parameters:
+        - $ref: '#/components/parameters/ListOrganismsByKeywordRequest.keyword'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOrganismsByKeywordResponse'
+      tags:
+        - List Stanza
+  /gmdb_list_organisms_by_taxids:
+    get:
+      operationId: _ListOrganismsByTaxIds_get
+      description: List organisms with the given tax IDs
+      parameters:
+        - $ref: '#/components/parameters/ListOrganismsByTaxIdsRequest.tax_ids'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOrganismsByTaxIdsResponse'
+      tags:
+        - List Stanza
+  /gmdb_list_similar_media_by_gmid:
+    get:
+      operationId: _ListSimilarMediaByGmId_get
+      description: Get similar growth media by GM ID
+      parameters:
+        - $ref: '#/components/parameters/ListSimilarMediaByGmIdRequest.gm_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListSimilarMediaByGmIdResponse'
+      tags:
+        - List Stanza
+  /gmdb_media_alignment_by_gm_ids:
+    get:
+      operationId: _MediaComponentAlignment_get
+      description: Returns the alignment information of components based on GM IDs. Mostly used at 'Compare media' page.
+      parameters:
+        - $ref: '#/components/parameters/MediaComponentAlignmentRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaComponentAlignmentResponse'
+      tags:
+        - Stanza
+  /gmdb_media_by_attributes:
+    get:
+      operationId: _ListMediaByAttributes_get
+      description: Search media by attributes. Currently, only component(gmo_id) is supported. Mostly used at 'Find media by components' page.
+      parameters:
+        - $ref: '#/components/parameters/ListMediaByAttributesRequest.gmo_ids'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaByAttributesResponse'
+      tags:
+        - Media Finder
+        - List Stanza
+  /gmdb_media_by_gmoid:
+    get:
+      operationId: _ListMediaOfComponent_get
+      description: Get growth media by a component's GMO ID
+      parameters:
+        - $ref: '#/components/parameters/ListMediaOfComponentRequest.gmo_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaOfComponentResponse'
+      tags:
+        - List Stanza
+  /gmdb_media_by_gtdb_taxon:
+    get:
+      operationId: _GTDBListMediaOfTaxons_get
+      description: Search for media associated with a taxon and return a list
+      parameters:
+        - $ref: '#/components/parameters/GTDBListMediaOfTaxonsRequest.tax_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GTDBListMediaOfTaxonsResponse'
+      tags:
+        - List Stanza
+        - New
+        - GTDB
+  /gmdb_media_by_strainid:
+    get:
+      operationId: _ListMediaOfStrain_get
+      description: Search for media associated with a strain and return a list
+      parameters:
+        - $ref: '#/components/parameters/ListMediaOfStrainRequest.strain_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaOfStrainResponse'
+      tags:
+        - List Stanza
+  /gmdb_media_by_taxid:
+    get:
+      operationId: _ListMediaOfTaxon_get
+      description: Search for media associated with a taxon and return a list
+      parameters:
+        - $ref: '#/components/parameters/ListMediaOfTaxonRequest.tax_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaOfTaxonResponse'
+      tags:
+        - List Stanza
+  /gmdb_media_by_taxon:
+    get:
+      operationId: _ListMediaOfTaxons_get
+      description: Search for media associated with a taxon and return a list
+      parameters:
+        - $ref: '#/components/parameters/ListMediaOfTaxonsRequest.tax_ids'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaOfTaxonsResponse'
+      tags:
+        - List Stanza
+  /gmdb_media_strains_alignment_by_gm_ids:
+    get:
+      operationId: _MediaStrainsAlignment_get
+      description: Find multiple media by GM ID and return alignment information of organisms
+      parameters:
+        - $ref: '#/components/parameters/MediaStrainsAlignmentRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediaStrainsAlignmentResponse'
+      tags:
+        - Stanza
+  /gmdb_medium_by_gmid:
+    get:
+      operationId: _MediumDetail_get
+      description: Returns the detailed information of a medium by its GMID
+      parameters:
+        - $ref: '#/components/parameters/MediumDetailRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MediumDetailResponse'
+      tags:
+        - Stanza
+        - Detail
+  /gmdb_organism_by_taxid:
+    get:
+      operationId: _TaxonDetail_get
+      description: Returns the detailed information of taxon by its tax ID
+      parameters:
+        - $ref: '#/components/parameters/TaxonDetailRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonDetailResponse'
+      tags:
+        - Stanza
+        - Detail
+  /gmdb_organism_under_rank_by_taxid:
+    get:
+      operationId: _ListChildrenOfTaxon_get
+      description: List direct children of a taxon. Do not confuse with `gmdb_taxonomy_children` which is not a list type API
+      parameters:
+        - $ref: '#/components/parameters/ListChildrenOfTaxonRequest.tax_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListChildrenOfTaxonResponse'
+      tags:
+        - List Stanza
+  /gmdb_organisms_by_gmid:
+    get:
+      operationId: _ListOrganismsOfMedium_get
+      description: Get organisms by a growth medium ID
+      parameters:
+        - $ref: '#/components/parameters/ListOrganismsOfMediumRequest.gm_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOrganismsOfMediumResponse'
+      tags:
+        - List Stanza
+  /gmdb_organisms_by_phenotypes:
+    get:
+      operationId: _ListOrganismsByPhenotypes_get
+      description: Mostly used at `Find media by organism phenotype` page. Search organisms by various phenotypes
+      parameters:
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.growth_temp'
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.growth_ph'
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.growth_salinity'
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.MPO_10002'
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.MPO_07001'
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.MPO_02000'
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.MPO_01001'
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.MPO_03006'
+        - $ref: '#/components/parameters/ListOrganismsByPhenotypesRequest.MPO_04053'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOrganismsByPhenotypesResponse'
+      tags:
+        - List Stanza
+  /gmdb_phenotype_by_strainid:
+    get:
+      operationId: _ListPhenotypeOfStrain_get
+      description: List phenotypes of the given strain
+      parameters:
+        - $ref: '#/components/parameters/ListPhenotypeOfStrainRequest.strain_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPhenotypeOfStrainResponse'
+      tags:
+        - List Stanza
+  /gmdb_stat_count_media_by_cultivable_strain_count:
+    get:
+      operationId: _CountMediaByCultivableStrainCount_get
+      description: ''
+      parameters:
+        - $ref: '#/components/parameters/CountMediaByCultivableStrainCountRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountMediaByCultivableStrainCountResponse'
+      tags:
+        - Stats
+        - New
+  /gmdb_stat_phylum_gm:
+    get:
+      operationId: _StatPhylumGm_get
+      description: Statistics number of growth media by phylum
+      parameters:
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatPhylumGmResponse'
+      tags:
+        - List Stanza
+        - Stats
+  /gmdb_strain_by_strainid:
+    get:
+      operationId: _StrainDetail_get
+      description: Returns the detailed information of a strain by its strain ID
+      parameters:
+        - $ref: '#/components/parameters/StrainDetailRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrainDetailResponse'
+      tags:
+        - Stanza
+        - Detail
+  /gmdb_strain_list_by_taxid:
+    get:
+      operationId: _ListStrainsOfTaxon_get
+      description: List organisms with the given tax IDs
+      parameters:
+        - $ref: '#/components/parameters/ListStrainsOfTaxonRequest.tax_id'
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListStrainsOfTaxonResponse'
+      tags:
+        - List Stanza
+  /gmdb_taxonomic_rank_by_taxid:
+    get:
+      operationId: _TaxonomicRankByTaxId_get
+      description: Deprecated, in favor of `organism_by_taxid`, Returns detailed information of a taxonomic rank based on tax ID
+      parameters:
+        - $ref: '#/components/parameters/TaxonomicRankByTaxIdRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonomicRankByTaxIdResponse'
+      tags:
+        - Deprecated
+      deprecated: true
+  /gmdb_taxonomy_ancestors:
+    get:
+      operationId: _TaxonAncestors_get
+      description: Retrieve the ancestors of a taxonomy, useful for visualizing the taxon's hierarchical tree structure
+      parameters:
+        - $ref: '#/components/parameters/TaxonAncestorsRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxonAncestorsResponse'
+      tags:
+        - Stanza
+        - New
+  /gmdb_taxonomy_children:
+    get:
+      operationId: _TaxonChildren_get
+      description: Returns the direct children of the given taxonomy ID. Mostly used at 'Find media by taxonomic tree' page.
+      parameters:
+        - $ref: '#/components/parameters/TaxonChildrenRequest'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxonChildrenResponse'
+      tags:
+        - Media Finder
+  /gmdb_taxonomy_search_by_name:
+    get:
+      operationId: _TaxonSearchByName_get
+      description: Searches for a taxonomy by its name, which is particularly useful for incremental searching.
+      parameters:
+        - $ref: '#/components/parameters/TaxonSearchByNameRequest.q'
+        - $ref: '#/components/parameters/TaxonSearchByNameRequest.max'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxonSearchByNameResponse'
+      tags:
+        - Stanza
+        - New
+  /gms_by_kegg_tids_3:
+    get:
+      operationId: _gmsByKeggTids3_get
+      description: Mostly used at the Alignment page.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GmsByKeggTids3Response'
+      tags:
+        - Stanza
+  /gms_kegg_code_tid:
+    get:
+      operationId: _gmsKeggCodeTid_get
+      description: Mostly used at the alignment page.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GmsKeggCodeTidResponse'
+      tags:
+        - Stanza
+  /list_components:
+    get:
+      operationId: _ListComponents_get
+      description: List all components
+      parameters:
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListComponentsResponse'
+      tags:
+        - List Stanza
+  /list_media:
+    get:
+      operationId: _ListMedia_get
+      description: List all growth media
+      parameters:
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMediaResponse'
+      tags:
+        - List Stanza
+  /list_organisms:
+    get:
+      operationId: _ListOrganisms_get
+      description: List all organisms
+      parameters:
+        - $ref: '#/components/parameters/ListRequest.limit'
+        - $ref: '#/components/parameters/ListRequest.offset'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOrganismsResponse'
+      tags:
+        - List Stanza
+  /list_taxons_by_rank:
+    get:
+      operationId: _ListTaxonsByRank_get
+      description: Historically used at the top page for displaying the taxon hierarchy
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema: {}
+      tags:
+        - Deprecated
+      deprecated: true
+components:
+  parameters:
+    ComponentDetailRequest:
+      name: gmo_id
+      in: query
+      required: true
+      description: GMO ID
+      schema:
+        type: string
+      explode: false
+    ComponentsWithComponentsRequest:
+      name: gmo_ids
+      in: query
+      required: false
+      description: Comma-separated GMO IDs. If omitted, return all components
+      schema:
+        type: string
+      explode: false
+    CountMediaByCultivableStrainCountRequest:
+      name: threshold
+      in: query
+      required: false
+      description: ''
+      schema:
+        type: integer
+        default: 11
+      explode: false
+    GTDBListMediaOfTaxonsRequest.tax_id:
+      name: tax_id
+      in: query
+      required: true
+      description: single tax_id
+      schema:
+        type: string
+      explode: false
+    GTDBTaxonAncestorsRequest:
+      name: tax_id
+      in: query
+      required: true
+      description: Taxonomy ID
+      schema:
+        type: string
+      explode: false
+    GTDBTaxonChildrenRequest:
+      name: tax_id
+      in: query
+      required: true
+      description: Taxonomy ID
+      schema:
+        type: string
+      explode: false
+    GTDBTaxonSearchByNameRequest.max:
+      name: max
+      in: query
+      required: true
+      description: Maximum number of results to return
+      schema:
+        type: integer
+      explode: false
+    GTDBTaxonSearchByNameRequest.q:
+      name: q
+      in: query
+      required: true
+      description: Taxonomy name
+      schema:
+        type: string
+        minLength: 4
+      explode: false
+    ListChildrenOfTaxonRequest.tax_id:
+      name: tax_id
+      in: query
+      required: true
+      description: single strain_id
+      schema:
+        type: string
+      explode: false
+    ListComponentsByGmoIdsRequest.gmo_ids:
+      name: gmo_ids
+      in: query
+      required: true
+      description: Comma-separated GMO IDs.
+      schema:
+        type: string
+      explode: false
+    ListComponentsByKeywordRequest.keyword:
+      name: keyword
+      in: query
+      required: true
+      description: Keyword to search for
+      schema:
+        type: string
+      explode: false
+    ListMediaByAttributesRequest.gmo_ids:
+      name: gmo_ids
+      in: query
+      required: true
+      description: String of gmo_id(s) separated by comma.
+      schema:
+        type: string
+      explode: false
+    ListMediaByCultivableCountRequest.cultivable_count:
+      name: cultivable_count
+      in: query
+      required: false
+      description: number of cultivatable strains
+      schema:
+        type: integer
+        default: 1
+      explode: false
+    ListMediaByGmIdsRequest.gm_ids:
+      name: gm_ids
+      in: query
+      required: true
+      description: Comma-separated GMIDs
+      schema:
+        type: string
+      explode: false
+    ListMediaByKeywordRequest.keyword:
+      name: keyword
+      in: query
+      required: true
+      description: Keyword to search for
+      schema:
+        type: string
+      explode: false
+    ListMediaOfComponentRequest.gmo_id:
+      name: gmo_id
+      in: query
+      required: true
+      description: GMO ID
+      schema:
+        type: string
+      explode: false
+    ListMediaOfStrainRequest.strain_id:
+      name: strain_id
+      in: query
+      required: true
+      description: single strain_id
+      schema:
+        type: string
+      explode: false
+    ListMediaOfTaxonRequest.tax_id:
+      name: tax_id
+      in: query
+      required: true
+      description: single tax_id
+      schema:
+        type: string
+      explode: false
+    ListMediaOfTaxonsRequest.tax_ids:
+      name: tax_ids
+      in: query
+      required: true
+      description: comma-separated tax_id
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByKeywordRequest.keyword:
+      name: keyword
+      in: query
+      required: true
+      description: Keyword to search for
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.MPO_01001:
+      name: MPO_01001
+      in: query
+      required: false
+      description: Single MPO id of Cell shape
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.MPO_02000:
+      name: MPO_02000
+      in: query
+      required: false
+      description: Single MPO id of Motility
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.MPO_03006:
+      name: MPO_03006
+      in: query
+      required: false
+      description: Single MPO id of Salinity
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.MPO_04053:
+      name: MPO_04053
+      in: query
+      required: false
+      description: Single MPO id of Carbon fixation
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.MPO_07001:
+      name: MPO_07001
+      in: query
+      required: false
+      description: Single MPO id of Gram Strain
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.MPO_10002:
+      name: MPO_10002
+      in: query
+      required: false
+      description: Single MPO id of Oxygen requirement
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.growth_ph:
+      name: growth_ph
+      in: query
+      required: false
+      description: string of 2 numbers separated by comma to represent min and max
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.growth_salinity:
+      name: growth_salinity
+      in: query
+      required: false
+      description: string of 2 numbers separated by comma to represent min and max
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByPhenotypesRequest.growth_temp:
+      name: growth_temp
+      in: query
+      required: false
+      description: string of 2 numbers separated by comma to represent min and max
+      schema:
+        type: string
+      explode: false
+    ListOrganismsByTaxIdsRequest.tax_ids:
+      name: tax_ids
+      in: query
+      required: true
+      description: Comma-separated list of tax IDs
+      schema:
+        type: string
+      explode: false
+    ListOrganismsOfMediumRequest.gm_id:
+      name: gm_id
+      in: query
+      required: true
+      description: Growth medium ID
+      schema:
+        type: string
+      explode: false
+    ListPhenotypeOfStrainRequest.strain_id:
+      name: strain_id
+      in: query
+      required: true
+      description: strain ID
+      schema:
+        type: string
+      explode: false
+    ListRequest.limit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of results to return
+      schema:
+        type: integer
+      explode: false
+    ListRequest.offset:
+      name: offset
+      in: query
+      required: false
+      description: Number of results to skip before returning
+      schema:
+        type: integer
+      explode: false
+    ListSimilarMediaByGmIdRequest.gm_id:
+      name: gm_id
+      in: query
+      required: true
+      description: GM ID
+      schema:
+        type: string
+      explode: false
+    ListStrainsOfTaxonRequest.tax_id:
+      name: tax_id
+      in: query
+      required: true
+      schema:
+        type: string
+      explode: false
+    MediaComponentAlignmentRequest:
+      name: gm_ids
+      in: query
+      required: true
+      description: Single string of GM IDs separated by comma
+      schema:
+        type: string
+      explode: false
+    MediaStrainsAlignmentRequest:
+      name: gm_ids
+      in: query
+      required: true
+      description: Comma-separated GM IDs
+      schema:
+        type: string
+      explode: false
+    MediumDetailRequest:
+      name: gmid
+      in: query
+      required: true
+      description: Growth medium ID
+      schema:
+        type: string
+      explode: false
+    StrainDetailRequest:
+      name: strain_id
+      in: query
+      required: true
+      description: Strain ID
+      schema:
+        type: string
+      explode: false
+    TaxonAncestorsRequest:
+      name: tax_id
+      in: query
+      required: true
+      description: Taxonomy ID
+      schema:
+        type: string
+      explode: false
+    TaxonChildrenRequest:
+      name: tax_id
+      in: query
+      required: true
+      description: Taxonomy ID
+      schema:
+        type: string
+      explode: false
+    TaxonDetailRequest:
+      name: tax_id
+      in: query
+      required: true
+      description: NCBI Tax ID
+      schema:
+        type: string
+      explode: false
+    TaxonSearchByNameRequest.max:
+      name: max
+      in: query
+      required: true
+      description: Maximum number of results to return
+      schema:
+        type: integer
+      explode: false
+    TaxonSearchByNameRequest.q:
+      name: q
+      in: query
+      required: true
+      description: Taxonomy name
+      schema:
+        type: string
+        minLength: 4
+      explode: false
+    TaxonomicRankByTaxIdRequest:
+      name: tax_id
+      in: query
+      required: true
+      description: NCBI Tax ID
+      schema:
+        type: string
+      explode: false
+  schemas:
+    AllComponentsResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                type: string
+              name:
+                type: string
+            required:
+              - gmo_id
+              - name
+          description: List of all components in GMDB
+    ComponentDetailResponse:
+      type: object
+      required:
+        - pref_label
+        - id
+        - label_ja
+        - alt_labels_en
+        - alt_labels_ja
+        - super_classes
+        - sub_classes
+        - properties
+        - roles
+        - links
+      properties:
+        pref_label:
+          type: string
+          description: Preferred label
+        id:
+          type: string
+          description: Component ID
+        label_ja:
+          type: string
+          description: Japanese label
+        alt_labels_en:
+          type: array
+          items:
+            type: string
+          description: Alternative labels in English
+        alt_labels_ja:
+          type: array
+          items:
+            type: string
+          description: Alternative labels in Japanese
+        super_classes:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                type: string
+              uri:
+                type: string
+              label_en:
+                type: string
+            required:
+              - gmo_id
+              - uri
+              - label_en
+          description: Super classes
+        sub_classes:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                type: string
+              uri:
+                type: string
+              label_en:
+                type: string
+            required:
+              - gmo_id
+              - uri
+              - label_en
+          description: Sub classes
+        properties:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                type: string
+              uri:
+                type: string
+              label_en:
+                type: string
+            required:
+              - gmo_id
+              - uri
+              - label_en
+          description: Properties
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                type: string
+              uri:
+                type: string
+              label_en:
+                type: string
+            required:
+              - gmo_id
+              - uri
+              - label_en
+          description: Roles
+        links:
+          type: array
+          items:
+            type: string
+          description: External links
+    ComponentsWithComponentsResponse:
+      type: object
+      required:
+        - gmo_id
+        - name
+        - japanese_name
+      properties:
+        gmo_id:
+          type: string
+        name:
+          type: string
+        japanese_name:
+          type: string
+    CountMediaByCultivableStrainCountResponse:
+      type: object
+      required:
+        - num_cultivatable_strains
+        - num_media
+      properties:
+        num_cultivatable_strains:
+          type: integer
+          description: number of cultivatable strains
+        num_media:
+          type: integer
+          description: number of media
+    GTDBListMediaOfTaxonsResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              original_media_id:
+                type: string
+              media_id:
+                $ref: '#/components/schemas/ListLink'
+            required:
+              - name
+              - original_media_id
+              - media_id
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    GTDBTaxonAncestorsResponse:
+      type: object
+      required:
+        - tax_id
+        - name
+        - rank
+      properties:
+        tax_id:
+          type: string
+        name:
+          type: string
+        rank:
+          type: string
+    GTDBTaxonChildrenResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                type: string
+              name:
+                type: string
+              rank:
+                type: string
+            required:
+              - tax_id
+              - name
+              - rank
+          description: List of direct child taxa
+    GTDBTaxonSearchByNameResponse:
+      type: object
+      required:
+        - tax_id
+        - name
+        - rank
+      properties:
+        tax_id:
+          type: string
+        name:
+          type: string
+        rank:
+          type: string
+    GmsByKeggTids3Response:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Response model for gmsByKeggTids3
+    GmsKeggCodeTidResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: Response model for gmsKeggCodeTid
+    InfraspecificListByTaxIdResponse:
+      type: object
+      required:
+        - total
+        - offset
+        - limit
+        - contents
+        - columns
+      properties:
+        total:
+          type: integer
+          description: Total number of results
+        offset:
+          type: integer
+          description: Offset of the results
+        limit:
+          type: integer
+          description: Limit of results per request
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: object
+                properties:
+                  label:
+                    type: string
+                  href:
+                    type: string
+                required:
+                  - label
+                  - href
+              rank:
+                type: string
+              name:
+                type: string
+            required:
+              - id
+              - rank
+              - name
+          description: List of organisms
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+          description: Column metadata
+    ListChildrenOfTaxonResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                $ref: '#/components/schemas/ListLink'
+              name:
+                type: string
+              rank:
+                type: string
+              num_of_media:
+                type: integer
+            required:
+              - tax_id
+              - name
+              - rank
+              - num_of_media
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListComponentsByGmoIdsResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: GMO ID link object
+              name:
+                type: string
+                description: Component name
+            required:
+              - gmo_id
+              - name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListComponentsByKeywordResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: GMO ID link object
+              name:
+                type: string
+                description: Component name
+            required:
+              - gmo_id
+              - name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListComponentsResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: GMO ID link object
+              name:
+                type: string
+                description: Component name
+            required:
+              - gmo_id
+              - name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListLink:
+      type: object
+      required:
+        - href
+        - label
+      properties:
+        href:
+          type: string
+          description: URL to the target object. Link should be a valid URI. Do not use relative URLs.
+        label:
+          type: string
+          description: Label for the link
+    ListMediaByAttributesResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              gm_id:
+                type: string
+                description: Media ID
+              name:
+                type: string
+                description: Media name
+              original_media_id:
+                type: string
+                description: Original media ID
+              exact_match:
+                type: boolean
+                description: Indicates if this is an exact match
+            required:
+              - gm_id
+              - name
+              - original_media_id
+              - exact_match
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListMediaByCultivableCountResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              media_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: gm id
+              original_media_id:
+                type: string
+                description: Original media ID
+              media_name:
+                type: string
+                description: Media name
+            required:
+              - media_id
+              - original_media_id
+              - media_name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListMediaByGmIdsResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              media_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: Media ID link object
+              original_media_id:
+                type: string
+                description: Original media ID
+              media_name:
+                type: string
+                description: Media name
+            required:
+              - media_id
+              - original_media_id
+              - media_name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListMediaByKeywordResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              media_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: Media ID link object
+              original_media_id:
+                type: string
+                description: Original media ID
+              media_name:
+                type: string
+                description: Media name
+            required:
+              - media_id
+              - original_media_id
+              - media_name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListMediaOfComponentResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              media_id:
+                type: string
+                description: Media ID link object
+              original_media_id:
+                type: string
+                description: Original media ID
+              media_name:
+                type: string
+                description: Media name
+            required:
+              - media_id
+              - original_media_id
+              - media_name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListMediaOfStrainResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              media_id:
+                $ref: '#/components/schemas/ListLink'
+              name:
+                type: string
+              original_media_id:
+                type: string
+            required:
+              - media_id
+              - name
+              - original_media_id
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListMediaOfTaxonResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              original_media_id:
+                type: string
+              media_id:
+                $ref: '#/components/schemas/ListLink'
+            required:
+              - name
+              - original_media_id
+              - media_id
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListMediaOfTaxonsResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              gm_id:
+                type: string
+              name:
+                type: string
+              original_media_id:
+                type: string
+            required:
+              - gm_id
+              - name
+              - original_media_id
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListMediaResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              media_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: media id link object
+              original_media_id:
+                type: string
+                description: Original media ID
+              media_name:
+                type: string
+                description: Media name
+            required:
+              - media_id
+              - original_media_id
+              - media_name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListOrganismsByKeywordResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: Taxonomy ID link object
+              label:
+                type: string
+                description: Organism label
+            required:
+              - tax_id
+              - label
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListOrganismsByPhenotypesResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                type: string
+              name:
+                type: string
+            required:
+              - tax_id
+              - name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListOrganismsByTaxIdsResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: Taxonomy ID link object
+              label:
+                type: string
+                description: Organism label
+            required:
+              - tax_id
+              - label
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListOrganismsOfMediumResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                type: string
+                description: Taxonomy ID link object
+              name:
+                type: string
+                description: Organism name
+            required:
+              - tax_id
+              - name
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListOrganismsResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: Taxonomy ID link object
+              label:
+                type: string
+                description: Organism label
+            required:
+              - tax_id
+              - label
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListPhenotypeOfStrainResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              source:
+                $ref: '#/components/schemas/ListLink'
+              property:
+                type: string
+              value:
+                type: string
+            required:
+              - source
+              - property
+              - value
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListSimilarMediaByGmIdResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              gm_id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: GM ID link object
+              name:
+                type: string
+                description: Media name
+              score:
+                type: number
+                description: Similarity score
+            required:
+              - gm_id
+              - name
+              - score
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    ListStrainsOfTaxonResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: '#/components/schemas/ListLink'
+                description: ID link object
+              name:
+                type: string
+              other_ids:
+                type: string
+            required:
+              - id
+              - name
+              - other_ids
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    MediaComponentAlignmentResponse:
+      type: object
+      required:
+        - media
+        - organisms
+        - components
+      properties:
+        media:
+          type: array
+          items:
+            type: object
+            properties:
+              gm_id:
+                type: string
+              original_media_id:
+                type: string
+              name:
+                type: string
+              components:
+                type: array
+                items:
+                  type: string
+                description: List of tax IDs
+              organisms:
+                type: array
+                items:
+                  type: string
+                description: List of GMO IDs
+            required:
+              - gm_id
+              - original_media_id
+              - name
+              - components
+              - organisms
+          description: List of media
+        organisms:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                type: string
+              name:
+                type: string
+            required:
+              - tax_id
+              - name
+          description: List of organisms
+        components:
+          type: array
+          items:
+            type: object
+            properties:
+              gmo_id:
+                type: string
+              name:
+                type: string
+              parent:
+                type: string
+                nullable: true
+              category:
+                type: string
+                nullable: true
+              display_order:
+                type: integer
+            required:
+              - gmo_id
+              - name
+              - parent
+              - category
+              - display_order
+          description: List of components
+    MediaStrainsAlignmentResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              gm_id:
+                type: string
+                description: GM ID
+              original_media_id:
+                type: string
+                description: Original media ID
+              label:
+                type: string
+                description: Media label
+              organisms:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    superkingdom:
+                      $ref: '#/components/schemas/SimpleTaxon'
+                    phylum:
+                      $ref: '#/components/schemas/SimpleTaxon'
+                    class:
+                      $ref: '#/components/schemas/SimpleTaxon'
+                    order:
+                      $ref: '#/components/schemas/SimpleTaxon'
+                    family:
+                      $ref: '#/components/schemas/SimpleTaxon'
+                    genus:
+                      $ref: '#/components/schemas/SimpleTaxon'
+                    species:
+                      $ref: '#/components/schemas/SimpleTaxon'
+                    strain:
+                      $ref: '#/components/schemas/SimpleTaxon'
+                  required:
+                    - superkingdom
+                    - phylum
+                    - class
+                    - order
+                    - family
+                    - genus
+                    - species
+                    - strain
+                description: List of organisms
+            required:
+              - gm_id
+              - original_media_id
+              - label
+              - organisms
+          description: List of media alignment information
+    MediumDetailResponse:
+      type: object
+      required:
+        - meta
+        - components
+        - comments
+      properties:
+        meta:
+          type: object
+          properties:
+            gm:
+              type: string
+            name:
+              type: string
+            original_media_id:
+              type: string
+            src_url:
+              type: string
+            ph:
+              type: string
+          required:
+            - gm
+            - name
+            - original_media_id
+            - src_url
+            - ph
+          description: Metadata about the medium
+        components:
+          type: array
+          items:
+            type: object
+            properties:
+              paragraph_index:
+                type: number
+              subcomponent_name:
+                type: string
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    component_name:
+                      type: string
+                    conc_unit:
+                      type: string
+                    conc_value:
+                      type: number
+                    reference_media_id:
+                      type: string
+                    volume:
+                      type: number
+                    unit:
+                      type: string
+                    gmo:
+                      type: string
+                    gmo_id:
+                      type: string
+                    label:
+                      type: string
+                    properties:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          uri:
+                            type: string
+                          label:
+                            type: string
+                        required:
+                          - id
+                          - uri
+                          - label
+                    roles:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          uri:
+                            type: string
+                          label:
+                            type: string
+                        required:
+                          - id
+                          - uri
+                          - label
+                  required:
+                    - component_name
+                    - conc_unit
+                    - conc_value
+                    - reference_media_id
+                    - volume
+                    - unit
+                    - gmo
+                    - gmo_id
+                    - label
+                    - properties
+                    - roles
+            required:
+              - paragraph_index
+              - subcomponent_name
+              - items
+          description: List of components
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              paragraph_index:
+                type: integer
+              comment:
+                type: string
+            required:
+              - paragraph_index
+              - comment
+          description: Comments about the medium
+    SimpleTaxon:
+      type: object
+      required:
+        - id
+        - label
+      properties:
+        id:
+          type: string
+          description: Taxon ID
+        label:
+          type: string
+          description: Taxon label
+    StatPhylumGmResponse:
+      type: object
+      required:
+        - contents
+        - total
+        - offset
+        - limit
+        - columns
+      properties:
+        contents:
+          type: array
+          items:
+            type: object
+            properties:
+              phylum:
+                type: string
+                description: Phylum link object
+              gms:
+                type: string
+                description: Number of growth media
+            required:
+              - phylum
+              - gms
+        total:
+          type: integer
+          example: 100
+        offset:
+          type: integer
+          example: 0
+        limit:
+          type: integer
+          example: 10
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              label:
+                type: string
+            required:
+              - key
+              - label
+    StrainDetailResponse:
+      type: object
+      required:
+        - strain
+        - taxonomy
+      properties:
+        strain:
+          type: object
+          properties:
+            strain_id:
+              type: string
+            strain_name:
+              type: string
+            other_strain_id_list:
+              type: array
+              items:
+                type: object
+                properties:
+                  other_strain_id:
+                    type: string
+                  other_strain_link:
+                    type: string
+                required:
+                  - other_strain_id
+                  - other_strain_link
+          required:
+            - strain_id
+            - strain_name
+            - other_strain_id_list
+        taxonomy:
+          type: object
+          properties:
+            scientific_name:
+              type: string
+            taxid:
+              type: integer
+            rank:
+              type: string
+            authority_name:
+              type: string
+            lineage:
+              type: array
+              items:
+                type: object
+                properties:
+                  uri:
+                    type: string
+                  taxid:
+                    type: integer
+                  label:
+                    type: string
+                  rank:
+                    type: string
+                required:
+                  - uri
+                  - taxid
+                  - label
+                  - rank
+          required:
+            - scientific_name
+            - taxid
+            - rank
+            - authority_name
+            - lineage
+    TaxonAncestorsResponse:
+      type: object
+      required:
+        - tax_id
+        - name
+        - rank
+      properties:
+        tax_id:
+          type: string
+        name:
+          type: string
+        rank:
+          type: string
+    TaxonChildrenResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              tax_id:
+                type: string
+              name:
+                type: string
+              rank:
+                type: string
+            required:
+              - tax_id
+              - name
+              - rank
+          description: List of direct child taxa
+    TaxonDetailResponse:
+      type: object
+      required:
+        - scientific_name
+        - taxid
+        - rank
+        - authority_name
+        - lineage
+        - type_material
+        - other_type_material
+      properties:
+        scientific_name:
+          type: string
+          description: Scientific name
+        taxid:
+          type: integer
+          description: NCBI Taxonomy ID
+        rank:
+          type: string
+          description: Taxonomic rank URI
+        authority_name:
+          type: string
+          description: Authority name
+        lineage:
+          type: array
+          items:
+            type: object
+            properties:
+              uri:
+                type: string
+              taxid:
+                type: integer
+              label:
+                type: string
+              rank:
+                type: string
+            required:
+              - uri
+              - taxid
+              - label
+              - rank
+          description: Lineage information
+        type_material:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+            required:
+              - label
+          description: Type material, available when species is returned
+        other_type_material:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              name:
+                type: string
+            required:
+              - label
+              - name
+          description: Other type material, available when species is returned
+    TaxonSearchByNameResponse:
+      type: object
+      required:
+        - tax_id
+        - name
+        - rank
+      properties:
+        tax_id:
+          type: string
+        name:
+          type: string
+        rank:
+          type: string
+    TaxonomicRankByTaxIdResponse:
+      type: object
+      required:
+        - scientific_name
+        - taxid
+        - rank
+        - authority_name
+        - lineage
+      properties:
+        scientific_name:
+          type: string
+          description: Scientific name
+        taxid:
+          type: string
+          description: Taxonomy ID
+        rank:
+          type: string
+          description: Taxonomic rank
+        authority_name:
+          type: string
+          description: Authority name
+        lineage:
+          type: array
+          items:
+            type: object
+            properties:
+              rank:
+                type: string
+              label:
+                type: string
+              uri:
+                type: string
+              taxid:
+                type: string
+            required:
+              - rank
+              - label
+              - uri
+              - taxid
+          description: Lineage information
+servers:
+  - url: https://togomedium.org/sparqlist/api
+    variables: {}

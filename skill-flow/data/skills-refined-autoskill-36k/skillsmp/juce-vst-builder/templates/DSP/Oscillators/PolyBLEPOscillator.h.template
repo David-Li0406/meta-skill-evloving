@@ -1,0 +1,167 @@
+#pragma once
+
+#include <juce_dsp/juce_dsp.h>
+#include <cmath>
+
+/**
+ * PolyBLEPOscillator
+ *
+ * Anti-aliased oscillator using Polynomial Band-Limited Step (PolyBLEP).
+ * Produces clean, alias-free waveforms suitable for high-quality synthesis.
+ *
+ * PolyBLEP works by applying a polynomial correction at waveform discontinuities
+ * (edges of square waves, reset points of sawtooth) to smooth the transition
+ * and reduce aliasing artifacts.
+ */
+class PolyBLEPOscillator
+{
+public:
+    enum class Waveform
+    {
+        Sine,
+        Triangle,
+        Saw,
+        Square,
+        Pulse25,
+        Pulse10
+    };
+
+    PolyBLEPOscillator() = default;
+
+    //==========================================================================
+    void prepare(double sampleRate)
+    {
+        this->sampleRate = sampleRate;
+        reset();
+    }
+
+    void reset()
+    {
+        phase = 0.0f;
+    }
+
+    //==========================================================================
+    void setFrequency(float frequencyHz)
+    {
+        frequency = frequencyHz;
+        phaseIncrement = frequency / static_cast<float>(sampleRate);
+    }
+
+    void setWaveform(Waveform w)
+    {
+        waveform = w;
+    }
+
+    //==========================================================================
+    float getNextSample()
+    {
+        float sample = 0.0f;
+
+        switch (waveform)
+        {
+            case Waveform::Sine:
+                sample = std::sin(phase * juce::MathConstants<float>::twoPi);
+                break;
+
+            case Waveform::Triangle:
+                sample = getTriangleSample();
+                break;
+
+            case Waveform::Saw:
+                sample = getSawSample();
+                break;
+
+            case Waveform::Square:
+                sample = getSquareSample(0.5f);
+                break;
+
+            case Waveform::Pulse25:
+                sample = getSquareSample(0.25f);
+                break;
+
+            case Waveform::Pulse10:
+                sample = getSquareSample(0.1f);
+                break;
+        }
+
+        // Advance phase
+        phase += phaseIncrement;
+        if (phase >= 1.0f)
+            phase -= 1.0f;
+
+        return sample;
+    }
+
+private:
+    //==========================================================================
+    /**
+     * PolyBLEP correction function
+     *
+     * Applies a polynomial smoothing near discontinuities.
+     * t = phase position, dt = phase increment
+     */
+    static float polyBlep(float t, float dt)
+    {
+        // At the beginning of the cycle (near t = 0)
+        if (t < dt)
+        {
+            t /= dt;
+            return t + t - t * t - 1.0f;
+        }
+        // At the end of the cycle (near t = 1)
+        else if (t > 1.0f - dt)
+        {
+            t = (t - 1.0f) / dt;
+            return t * t + t + t + 1.0f;
+        }
+        return 0.0f;
+    }
+
+    //==========================================================================
+    float getSawSample()
+    {
+        float sample = 2.0f * phase - 1.0f;
+        sample -= polyBlep(phase, phaseIncrement);
+        return sample;
+    }
+
+    float getSquareSample(float pulseWidth)
+    {
+        float sample = phase < pulseWidth ? 1.0f : -1.0f;
+
+        // Apply PolyBLEP at rising edge (phase = 0)
+        sample += polyBlep(phase, phaseIncrement);
+
+        // Apply PolyBLEP at falling edge (phase = pulseWidth)
+        sample -= polyBlep(std::fmod(phase + (1.0f - pulseWidth), 1.0f), phaseIncrement);
+
+        return sample;
+    }
+
+    float getTriangleSample()
+    {
+        // Triangle derived from integrated square wave
+        // First generate a square, then integrate
+        float square = phase < 0.5f ? 1.0f : -1.0f;
+        square += polyBlep(phase, phaseIncrement);
+        square -= polyBlep(std::fmod(phase + 0.5f, 1.0f), phaseIncrement);
+
+        // Leaky integration to create triangle
+        // Scale factor: 4 * frequency / sampleRate
+        float scaleFactor = 4.0f * frequency / static_cast<float>(sampleRate);
+        triangleState += scaleFactor * square;
+
+        // DC-block / reset to prevent drift
+        triangleState *= 0.9999f;
+
+        return triangleState;
+    }
+
+    //==========================================================================
+    double sampleRate = 44100.0;
+    float phase = 0.0f;
+    float phaseIncrement = 0.0f;
+    float frequency = 440.0f;
+    float triangleState = 0.0f;
+    Waveform waveform = Waveform::Sine;
+};

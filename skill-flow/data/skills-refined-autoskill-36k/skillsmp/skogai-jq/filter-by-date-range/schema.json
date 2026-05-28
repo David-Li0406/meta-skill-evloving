@@ -1,0 +1,103 @@
+{
+  "name": "filter-by-date-range",
+  "description": "Filter array of objects by date field within a specified range",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing an array field with date properties"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'items' or 'data.events')"
+    },
+    "date_field": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the date field within array items (e.g., 'created_at')"
+    },
+    "start_date": {
+      "type": "string",
+      "required": false,
+      "description": "ISO 8601 start date (inclusive). Format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ. Omit to have no lower bound."
+    },
+    "end_date": {
+      "type": "string",
+      "required": false,
+      "description": "ISO 8601 end date (inclusive). Format: YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ. Omit to have no upper bound."
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with the same structure, but with filtered array containing only items within the date range"
+  },
+  "examples": [
+    {
+      "description": "Filter events within a specific month",
+      "input": {
+        "events": [
+          {"name": "Event A", "created_at": "2024-01-15"},
+          {"name": "Event B", "created_at": "2024-02-20"},
+          {"name": "Event C", "created_at": "2024-03-10"}
+        ]
+      },
+      "args": {
+        "array_path": "events",
+        "date_field": "created_at",
+        "start_date": "2024-02-01",
+        "end_date": "2024-02-28"
+      },
+      "output": {
+        "events": [
+          {"name": "Event B", "created_at": "2024-02-20"}
+        ]
+      }
+    },
+    {
+      "description": "Filter with only start date (no upper bound)",
+      "input": {
+        "logs": [
+          {"message": "Log 1", "timestamp": "2024-01-01T10:00:00Z"},
+          {"message": "Log 2", "timestamp": "2024-06-15T14:30:00Z"}
+        ]
+      },
+      "args": {
+        "array_path": "logs",
+        "date_field": "timestamp",
+        "start_date": "2024-06-01"
+      },
+      "output": {
+        "logs": [
+          {"message": "Log 2", "timestamp": "2024-06-15T14:30:00Z"}
+        ]
+      }
+    },
+    {
+      "description": "Filter nested array with datetime format",
+      "input": {
+        "data": {
+          "transactions": [
+            {"id": 1, "date": "2024-01-01T00:00:00Z"},
+            {"id": 2, "date": "2024-06-15T12:00:00Z"},
+            {"id": 3, "date": "2024-12-31T23:59:59Z"}
+          ]
+        }
+      },
+      "args": {
+        "array_path": "data.transactions",
+        "date_field": "date",
+        "start_date": "2024-06-01",
+        "end_date": "2024-12-01"
+      },
+      "output": {
+        "data": {
+          "transactions": [
+            {"id": 2, "date": "2024-06-15T12:00:00Z"}
+          ]
+        }
+      }
+    }
+  ],
+  "tags": ["array", "filter", "date", "range", "time"]
+}

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>思维导图示例 - McKinsey Style</title>
+    <style>
+        :root {
+            --bg-color: #FFFFFF;
+            --header-bg: #000000;
+            --text-main: #333333;
+            --text-light: #74788d;
+            --accent-primary: #F85d42;
+            --accent-blue: #556EE6;
+            --accent-green: #34c38f;
+            --accent-blue-light: #50a5f1;
+            --accent-yellow: #f1b44c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", sans-serif;
+            background-color: #f4f4f4;
+            color: var(--text-main);
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--header-bg);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent-primary);
+            margin: 40px 0 20px 0;
+            text-align: center;
+        }
+
+        .description {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .mindmap-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            margin: 40px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .mindmap-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 80px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+
+        .mindmap-branch {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            cursor: pointer;
+            border-left: 4px solid;
+        }
+
+        .mindmap-branch:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            z-index: 5;
+        }
+
+        .branch-1 {
+            left: 15%;
+            top: 15%;
+            border-color: var(--accent-blue);
+        }
+
+        .branch-2 {
+            right: 15%;
+            top: 15%;
+            border-color: var(--accent-green);
+        }
+
+        .branch-3 {
+            left: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-color: var(--accent-blue-light);
+        }
+
+        .branch-4 {
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            border-color: var(--accent-yellow);
+        }
+
+        .branch-5 {
+            left: 20%;
+            bottom: 15%;
+            border-color: var(--accent-primary);
+        }
+
+        .branch-6 {
+            right: 20%;
+            bottom: 15%;
+            border-color: var(--accent-blue);
+        }
+
+        .branch-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .branch-text {
+            flex: 1;
+        }
+
+        .branch-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 5px;
+        }
+
+        .branch-desc {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--accent-blue);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .info-box h4 {
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .use-case-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .use-case-card h4 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #74788d;
+        }
+
+        @media (max-width: 768px) {
+            .mindmap-container {
+                height: 600px;
+                overflow-y: auto;
+            }
+
+            .mindmap-center {
+                position: relative;
+                left: 50%;
+                transform: translateX(-50%);
+                margin-bottom: 30px;
+                top: 20px;
+            }
+
+            .mindmap-branch {
+                position: relative;
+                left: auto;
+                right: auto;
+                top: auto;
+                bottom: auto;
+                transform: none;
+                margin-bottom: 15px;
+                width: 90%;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 思维导图示例</h1>
+        <p class="description">
+            McKinsey 风格思维结构可视化 | 中心主题向四周扩散<br>
+            适用于头脑风暴、项目规划、知识梳理等场景
+        </p>
+
+        <div class="mindmap-container">
+            <div class="mindmap-center">产品战略</div>
+
+            <div class="mindmap-branch branch-1">
+                <div class="branch-dot" style="background: var(--accent-blue);">1</div>
+                <div class="branch-text">
+                    <div class="branch-title">市场定位</div>
+                    <div class="branch-desc">目标客户、价格策略、渠道选择</div>
+                </div>
+            </div>
+
+            <div class="mindmap-branch branch-2">
+                <div class="branch-dot" style="background: var(--accent-green);">2</div>
+                <div class="branch-text">
+                    <div class="branch-title">产品功能</div>
+                    <div class="branch-desc">核心功能、差异化特性、用户体验</div>
+                </div>
+            </div>
+
+            <div class="mindmap-branch branch-3">
+                <div class="branch-dot" style="background: var(--accent-blue-light);">3</div>
+                <div class="branch-text">
+                    <div class="branch-title">技术架构</div>
+                    <div class="branch-desc">技术选型、系统设计、性能优化</div>
+                </div>
+            </div>
+
+            <div class="mindmap-branch branch-4">
+                <div class="branch-dot" style="background: var(--accent-yellow);">4</div>
+                <div class="branch-text">
+                    <div class="branch-title">运营策略</div>
+                    <div class="branch-desc">推广方案、用户增长、数据分析</div>
+                </div>
+            </div>
+
+            <div class="mindmap-branch branch-5">
+                <div class="branch-dot" style="background: var(--accent-primary);">5</div>
+                <div class="branch-text">
+                    <div class="branch-title">团队建设</div>
+                    <div class="branch-desc">组织架构、人才招聘、绩效考核</div>
+                </div>
+            </div>
+
+            <div class="mindmap-branch branch-6">
+                <div class="branch-dot" style="background: var(--accent-blue);">6</div>
+                <div class="branch-text">
+                    <div class="branch-title">财务规划</div>
+                    <div class="branch-desc">预算制定、成本控制、盈利模式</div>
+                </div>
+            </div>
+        </div>
+
+        <h2>📊 适用场景</h2>
+        <div class="use-cases">
+            <div class="use-case-card">
+                <h4>项目规划</h4>
+                <p>项目分解、任务分配、里程碑</p>
+            </div>
+            <div class="use-case-card">
+                <h4>头脑风暴</h4>
+                <p>创意发散、关联思维、分类整理</p>
+            </div>
+            <div class="use-case-card">
+                <h4>知识梳理</h4>
+                <p>知识体系、学习路径、笔记整理</p>
+            </div>
+            <div class="use-case-card">
+                <h4>战略分析</h4>
+                <p>多维战略、关键要素、实施路径</p>
+            </div>
+            <div class="use-case-card">
+                <h4>问题分析</h4>
+                <p>问题拆解、原因分析、解决方案</p>
+            </div>
+            <div class="use-case-card">
+                <h4>会议记录</h4>
+                <p>会议主题、讨论要点、行动项</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>HTML Presentation Beautifier - McKinsey Style Mind Map Example</p>
+            <p>中心主题向四周扩散的思维结构可视化</p>
+        </footer>
+    </div>
+</body>
+</html>

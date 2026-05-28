@@ -1,0 +1,69 @@
+# Example: Protected Branch Guard
+#
+# Configuration for preventing direct edits on protected branches.
+# Uses the guard requirement type (condition auto-evaluated, no manual satisfy).
+
+version: "1.0"
+enabled: true
+inherit: true
+
+requirements:
+  protected_branch:
+    enabled: true
+    type: guard               # Condition-based (auto-evaluated)
+    branches:
+      - main
+      - master
+      - production
+      - staging
+      - release/*             # Glob patterns supported
+    trigger_tools:
+      - Edit
+      - Write
+      - MultiEdit
+    message: |
+      🚫 **Cannot edit files on protected branch**
+
+      You're currently on a protected branch. Direct edits are not allowed.
+
+      **Protected branches**:
+      - main, master (production)
+      - production (live environment)
+      - staging (pre-production)
+      - release/* (release branches)
+
+      **To proceed**:
+      1. Create a feature branch:
+         ```bash
+         git checkout -b feature/your-feature
+         ```
+
+      2. Make your changes there
+
+      3. Create a PR to merge into the protected branch
+
+      **Emergency hotfix** (use sparingly):
+      ```bash
+      req approve protected_branch
+      ```
+      This grants temporary access for the current session only.
+
+# Notes:
+#
+# Guard vs Blocking:
+#
+# GUARD (this type):
+# - Condition is automatically evaluated
+# - Cannot be manually satisfied with `req satisfy`
+# - Perfect for: branch protection, environment checks
+# - Override with: `req approve` (temporary)
+#
+# BLOCKING:
+# - Requires manual `req satisfy`
+# - User confirms they've completed a task
+# - Perfect for: planning, reviews, checklists
+#
+# The guard type is ideal for protected branches because:
+# - It checks the current branch automatically
+# - No way to accidentally satisfy it on wrong branch
+# - Emergency override is explicit and logged

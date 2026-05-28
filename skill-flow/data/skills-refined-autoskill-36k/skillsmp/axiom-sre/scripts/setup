@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# Setup axiom-sre 2-tier memory system (personal + org)
+# Usage: scripts/setup [--force]
+#   --force    Overwrite existing memory without prompting
+#   default    Sets up personal memory + orgs config
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+TEMPLATES_DIR="$SKILL_DIR/templates"
+SKILL_NAME="axiom-sre"
+
+# Paths
+PERSONAL_DIR="$HOME/.config/amp/memory/personal/$SKILL_NAME"
+ORGS_DIR="$HOME/.config/amp/memory/orgs"
+
+# Legacy path (for migration)
+LEGACY_DIR="$HOME/.config/amp/memory/$SKILL_NAME"
+
+FORCE=false
+
+for arg in "$@"; do
+  case $arg in
+    --force) FORCE=true ;;
+  esac
+done
+
+echo "=== axiom-sre Setup ==="
+echo ""
+
+# Check dependencies
+MISSING=""
+command -v jq >/dev/null 2>&1 || MISSING="$MISSING jq"
+command -v curl >/dev/null 2>&1 || MISSING="$MISSING curl"
+
+if [[ -n "$MISSING" ]]; then
+  echo "⚠ Missing required tools:$MISSING"
+  echo ""
+  echo "Install with:"
+  echo "  macOS:  brew install$MISSING"
+  echo "  Ubuntu: sudo apt install$MISSING"
+  echo ""
+  exit 1
+fi
+echo "✓ Dependencies: jq, curl"
+echo ""
+
+# --- Migrate legacy personal memory ---
+if [[ -d "$LEGACY_DIR/kb" && ! -d "$PERSONAL_DIR" ]]; then
+  echo "Migrating legacy memory: $LEGACY_DIR → $PERSONAL_DIR"
+  mkdir -p "$(dirname "$PERSONAL_DIR")"
+  mv "$LEGACY_DIR" "$PERSONAL_DIR"
+  echo "✓ Migration complete"
+  echo ""
+fi
+
+# --- Personal tier ---
+if [[ -d "$PERSONAL_DIR/kb" ]]; then
+  if [[ "$FORCE" == true ]]; then
+    echo "Overwriting personal memory at $PERSONAL_DIR"
+    rm -rf "$PERSONAL_DIR"
+  else
+    echo "✓ Personal memory exists at $PERSONAL_DIR"
+  fi
+fi
+
+if [[ ! -d "$PERSONAL_DIR/kb" ]]; then
+  echo "Creating personal memory at $PERSONAL_DIR"
+  mkdir -p "$PERSONAL_DIR"
+  cp -r "$TEMPLATES_DIR"/* "$PERSONAL_DIR/"
+  echo "✓ Personal memory initialized"
+fi
+
+# --- Orgs directory ---
+mkdir -p "$ORGS_DIR"
+
+echo ""
+echo "=== Setup Complete ==="
+echo ""
+echo "Memory tiers:"
+echo "  Personal: $PERSONAL_DIR"
+echo "  Org:      $ORGS_DIR/<org-name>/$SKILL_NAME"
+echo ""
+echo "Next steps:"
+echo "  1. Add an org: scripts/org-add <name> <git-repo-url>"
+echo "  2. Sync org:   scripts/mem-sync"
+echo ""
+
+# Check for Axiom config
+AXIOM_CONFIG="$HOME/.axiom.toml"
+if [[ -f "$AXIOM_CONFIG" ]]; then
+  echo "✓ Axiom config exists at $AXIOM_CONFIG"
+  echo ""
+  echo "Configured deployments:"
+  grep -E '^\[deployments\.' "$AXIOM_CONFIG" | sed 's/\[deployments\.\(.*\)\]/  - \1/' || true
+else
+  echo "=== Axiom Configuration ==="
+  echo ""
+  echo "To query Axiom, you need to configure ~/.axiom.toml"
+  echo ""
+  echo "You'll need:"
+  echo "  1. org_id:  Settings → Organization (or from URL: app.axiom.co/{org_id}/...)"
+  echo "  2. token:   Settings → Profile → Personal Access Tokens (use a PAT, not API token)"
+  echo ""
+  
+  # Check if we're in an interactive terminal
+  if [[ -t 0 ]]; then
+    read -p "Set up Axiom config now? [y/N] " -n 1 -r
+    echo ""
+    
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      read -p "Deployment name (e.g., prod, staging, dev): " DEPLOY_NAME
+      DEPLOY_NAME=${DEPLOY_NAME:-prod}
+      
+      read -p "Org ID: " ORG_ID
+      read -p "API Token (xaat-...): " API_TOKEN
+      
+      if [[ -n "$ORG_ID" && -n "$API_TOKEN" ]]; then
+        cat > "$AXIOM_CONFIG" << EOF
+[deployments.${DEPLOY_NAME}]
+url = "https://api.axiom.co"
+token = "${API_TOKEN}"
+org_id = "${ORG_ID}"
+EOF
+        chmod 600 "$AXIOM_CONFIG"
+        echo ""
+        echo "✓ Created $AXIOM_CONFIG"
+        echo ""
+        
+        # Test the connection
+        echo "Testing connection..."
+        if "$SCRIPT_DIR/axiom-api" "$DEPLOY_NAME" GET "/v1/datasets" >/dev/null 2>&1; then
+          echo "✓ Connection successful!"
+          echo ""
+          echo "Try: scripts/axiom-query ${DEPLOY_NAME} \"['axiom-audit'] | take 1\""
+        else
+          echo "⚠ Connection test failed. Check your token and org_id."
+          echo ""
+          echo "Debug with: scripts/axiom-api ${DEPLOY_NAME} GET '/v1/datasets'"
+        fi
+      else
+        echo "Skipped - missing org_id or token"
+      fi
+    fi
+  else
+    echo "Create ~/.axiom.toml manually:"
+    echo ""
+    echo '[deployments.prod]'
+    echo 'url = "https://api.axiom.co"'
+    echo 'token = "xaat-your-token-here"'
+    echo 'org_id = "your-org-id"'
+  fi
+fi

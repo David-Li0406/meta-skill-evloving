@@ -1,0 +1,144 @@
+<Window x:Class="V9_ExternalRemote.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="V9 Master Hub Remote" 
+        Height="450" Width="300"
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="Transparent"
+        Topmost="True"
+        BorderThickness="1"
+        BorderBrush="#44FFFFFF">
+    
+    <Window.Resources>
+        <Style x:Key="GlassButton" TargetType="Button">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#44FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border CornerRadius="12" Background="#DD101015" Padding="15">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15" Opacity="0.5" ShadowDepth="2"/>
+        </Border.Effect>
+        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Title Bar -->
+                <RowDefinition Height="Auto"/> <!-- System Status -->
+                <RowDefinition Height="*"/>    <!-- Main Controls -->
+                <RowDefinition Height="Auto"/> <!-- Buttons -->
+                <RowDefinition Height="Auto"/> <!-- Footer Info -->
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar & Symbol Selection -->
+            <Grid Grid.Row="0" MouseDown="TitleBar_MouseDown" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="V9 MASTER" Foreground="Cyan" FontSize="9" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <TextBox x:Name="SymbolInput" Text="MES" Width="40" Background="#11FFFFFF" Foreground="White" BorderThickness="0" TextAlignment="Center" FontSize="10" VerticalAlignment="Center" KeyDown="SymbolInput_KeyDown"/>
+                    <Button Content="SYNC" Click="SetSymbol_Click" FontSize="8" Margin="5,0" Padding="5,1" Style="{StaticResource GlassButton}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="" FontFamily="Segoe MDL2 Assets" Background="Transparent" Foreground="#66FFFFFF" BorderThickness="0" Click="Close_Click" Margin="5,0"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Status Indicators -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,15,0,20">
+                <Border Width="8" Height="8" CornerRadius="4" Background="#FF00FF00" Margin="0,0,5,0" x:Name="HubStatusLed"/>
+                <TextBlock Text="HUB CONNECTED" Foreground="#AAFFFFFF" FontSize="9" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                
+                <Border Width="8" Height="8" CornerRadius="4" Background="#FFFFFF00" Margin="0,0,5,0" x:Name="TosStatusLed"/>
+                <TextBlock Text="TOS RTD: OK" Foreground="#AAFFFFFF" FontSize="9" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Multi-Symbol Dashboard (ItemsControl) -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Symbols}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#11FFFFFF" CornerRadius="8" Margin="0,0,0,10" Padding="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="60"/> <!-- Symbol -->
+                                        <ColumnDefinition Width="*"/>  <!-- Price & EMA -->
+                                        <ColumnDefinition Width="Auto"/> <!-- MTF Flags -->
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Column 0: Symbol & Last -->
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Symbol}" Foreground="Cyan" FontSize="10" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding LastPrice}" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                                    </StackPanel>
+
+                                    <!-- Column 1: Indicators -->
+                                    <StackPanel Grid.Column="1" Margin="10,0">
+                                        <Grid>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="9/15 EMA: " Foreground="#44FFFFFF" FontSize="8" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Ema9}" Foreground="#8800FF00" FontSize="11" Margin="0,0,5,0"/>
+                                                <TextBlock Text="{Binding Ema15}" Foreground="#88FF6600" FontSize="11"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="OR: " Foreground="#44FFFFFF" FontSize="8" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding OrHigh}" Foreground="Lime" FontSize="11" FontWeight="Bold"/>
+                                            <TextBlock Text=" - " Foreground="#22FFFFFF" FontSize="11"/>
+                                            <TextBlock Text="{Binding OrLow}" Foreground="Red" FontSize="11" FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- Column 2: Flags -->
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="12" Height="12" CornerRadius="2" Background="{Binding Flag5m}" Margin="2,0" ToolTip="5M EMA9 Flag"/>
+                                        <Border Width="12" Height="12" CornerRadius="2" Background="{Binding Flag15m}" Margin="2,0" ToolTip="15M EMA9 Flag"/>
+                                        <Border Width="12" Height="12" CornerRadius="2" Background="{Binding Flag60m}" Margin="2,0" ToolTip="1H EMA9 Flag"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Quick Action Palette -->
+            <UniformGrid Grid.Row="3" Columns="3" Margin="0,10,0,0">
+                <Button Style="{StaticResource GlassButton}" Content="LONG" Background="#2200FF00" FontWeight="Bold" Height="30" Click="Long_Click" Margin="0,0,4,0"/>
+                <Button Style="{StaticResource GlassButton}" Content="SHORT" Background="#22FF0000" FontWeight="Bold" Height="30" Click="Short_Click" Margin="4,0"/>
+                <Button Style="{StaticResource GlassButton}" Content="FLAT" Background="#22FFFFFF" Height="30" Click="Flatten_Click" Margin="4,0,0,0"/>
+            </UniformGrid>
+
+            <!-- Signal Border Glow (Concept 54) -->
+            <Border Grid.RowSpan="5" x:Name="GlowBorder" BorderThickness="2" BorderBrush="Transparent" CornerRadius="12" IsHitTestVisible="False"/>
+
+            <!-- Footer / Mode Toggle -->
+            <Grid Grid.Row="4" Margin="0,10,0,0">
+                <CheckBox x:Name="GhostModeCheck" Content="GHOST OVERLAY" Foreground="#66FFFFFF" FontSize="10" Checked="GhostMode_Changed" Unchecked="GhostMode_Changed"/>
+                <TextBlock Text="v9.0.15" Foreground="#44FFFFFF" FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

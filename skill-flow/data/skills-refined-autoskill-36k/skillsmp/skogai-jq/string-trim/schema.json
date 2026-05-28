@@ -1,0 +1,41 @@
+{
+  "name": "string-trim",
+  "description": "Remove leading and trailing whitespace from a string at a specified path",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'data.message')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with trimmed string at path, or unchanged object if path doesn't exist or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Trim leading and trailing spaces",
+      "input": {"message": "  hello world  "},
+      "args": {"path": "message"},
+      "output": {"message": "hello world"}
+    },
+    {
+      "description": "Trim nested string with tabs and newlines",
+      "input": {"user": {"name": "\t\n  skogix  \n\t"}},
+      "args": {"path": "user.name"},
+      "output": {"user": {"name": "skogix"}}
+    },
+    {
+      "description": "Preserve internal whitespace",
+      "input": {"data": {"text": "  hello   world  "}},
+      "args": {"path": "data.text"},
+      "output": {"data": {"text": "hello   world"}}
+    }
+  ],
+  "tags": ["string", "trim", "whitespace", "cleanup"]
+}

@@ -1,0 +1,173 @@
+{
+  "properties": {
+    "displayName": "SharePoint Item Approval Workflow",
+    "description": "When a new item is created in a SharePoint list, start an approval and update status",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "When_an_item_is_created": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_sharepointonline",
+              "operationId": "OnItemCreated",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+            },
+            "parameters": {
+              "dataset": "{{SHAREPOINT_SITE_URL}}",
+              "table": "{{LIST_GUID}}"
+            }
+          }
+        }
+      },
+      "actions": {
+        "Start_and_wait_for_an_approval": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "host": {
+              "connectionName": "shared_approvals",
+              "operationId": "StartAndWaitForAnApproval",
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals"
+            },
+            "parameters": {
+              "approvalType": "Basic",
+              "WebhookApprovalCreationInput/title": "Approval Required: @{triggerOutputs()?['body/Title']}",
+              "WebhookApprovalCreationInput/assignedTo": "{{APPROVER_EMAIL}}",
+              "WebhookApprovalCreationInput/details": "Please review this request.\n\nTitle: @{triggerOutputs()?['body/Title']}\nRequester: @{triggerOutputs()?['body/Author/DisplayName']}\nCreated: @{triggerOutputs()?['body/Created']}",
+              "WebhookApprovalCreationInput/enableNotifications": true,
+              "WebhookApprovalCreationInput/enableReassignment": true
+            }
+          },
+          "runAfter": {}
+        },
+        "Check_approval_outcome": {
+          "type": "If",
+          "expression": {
+            "equals": [
+              "@body('Start_and_wait_for_an_approval')?['outcome']",
+              "Approve"
+            ]
+          },
+          "actions": {
+            "Update_item_Approved": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchItem",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                  "dataset": "{{SHAREPOINT_SITE_URL}}",
+                  "table": "{{LIST_GUID}}",
+                  "id": "@triggerOutputs()?['body/ID']",
+                  "item/ApprovalStatus": "Approved",
+                  "item/ApprovalDate": "@{utcNow()}",
+                  "item/ApproverComments": "@{body('Start_and_wait_for_an_approval')?['responses'][0]['comments']}"
+                }
+              },
+              "runAfter": {}
+            },
+            "Notify_requester_approved": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "host": {
+                  "connectionName": "shared_office365",
+                  "operationId": "SendEmailV2",
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                },
+                "parameters": {
+                  "emailMessage/To": "@{triggerOutputs()?['body/Author/Email']}",
+                  "emailMessage/Subject": "Approved: @{triggerOutputs()?['body/Title']}",
+                  "emailMessage/Body": "<p>Your request has been <b>approved</b>.</p><p>Item: @{triggerOutputs()?['body/Title']}</p><p>Approved by: @{body('Start_and_wait_for_an_approval')?['responses'][0]['approver']['displayName']}</p>",
+                  "emailMessage/Importance": "Normal"
+                }
+              },
+              "runAfter": {
+                "Update_item_Approved": ["Succeeded"]
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Update_item_Rejected": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "PatchItem",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "{{SHAREPOINT_SITE_URL}}",
+                    "table": "{{LIST_GUID}}",
+                    "id": "@triggerOutputs()?['body/ID']",
+                    "item/ApprovalStatus": "Rejected",
+                    "item/ApprovalDate": "@{utcNow()}",
+                    "item/ApproverComments": "@{body('Start_and_wait_for_an_approval')?['responses'][0]['comments']}"
+                  }
+                },
+                "runAfter": {}
+              },
+              "Notify_requester_rejected": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_office365",
+                    "operationId": "SendEmailV2",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                  },
+                  "parameters": {
+                    "emailMessage/To": "@{triggerOutputs()?['body/Author/Email']}",
+                    "emailMessage/Subject": "Not Approved: @{triggerOutputs()?['body/Title']}",
+                    "emailMessage/Body": "<p>Your request was <b>not approved</b>.</p><p>Item: @{triggerOutputs()?['body/Title']}</p><p>Comments: @{body('Start_and_wait_for_an_approval')?['responses'][0]['comments']}</p>",
+                    "emailMessage/Importance": "Normal"
+                  }
+                },
+                "runAfter": {
+                  "Update_item_Rejected": ["Succeeded"]
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Start_and_wait_for_an_approval": ["Succeeded"]
+          }
+        }
+      }
+    },
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "connectionName": "shared_sharepointonline",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+        "tier": "NotSpecified"
+      },
+      "shared_approvals": {
+        "connectionName": "shared_approvals",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+        "tier": "NotSpecified"
+      },
+      "shared_office365": {
+        "connectionName": "shared_office365",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "tier": "NotSpecified"
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  },
+  "schemaVersion": "1.0.0.0",
+  "_paiMetadata": {
+    "placeholders": {
+      "{{SHAREPOINT_SITE_URL}}": "Replace with your SharePoint site URL (e.g., https://contoso.sharepoint.com/sites/YourSite)",
+      "{{LIST_GUID}}": "Replace with your SharePoint list GUID or name",
+      "{{APPROVER_EMAIL}}": "Replace with approver email address"
+    },
+    "requiredConnectors": ["SharePoint", "Approvals", "Office 365 Outlook"],
+    "requiredListColumns": ["Title", "ApprovalStatus", "ApprovalDate", "ApproverComments"]
+  }
+}

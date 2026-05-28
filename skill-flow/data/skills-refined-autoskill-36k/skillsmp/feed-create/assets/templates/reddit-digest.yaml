@@ -1,0 +1,27 @@
+# Reddit subreddit digest template
+version: 1
+
+templates:
+  reddit_digest:
+    select:
+      since: 24h
+      max_items: 20
+    digest:
+      include_comments: top_3
+      group_by: flair
+    style:
+      profile: narrative
+
+feeds:
+  - id: reddit-{{subreddit}}-digest
+    title: 'r/{{subreddit}} — Daily Digest'
+    extends: [reddit_digest]
+
+    source:
+      type: reddit
+      subreddit: {{subreddit}}
+      sort: top
+      period: day
+
+    output:
+      filename: 'r-{{subreddit}}-{{date}}.epub'

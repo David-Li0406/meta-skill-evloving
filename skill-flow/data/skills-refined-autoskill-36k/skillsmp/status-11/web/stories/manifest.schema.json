@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Stories Manifest",
+  "type": "object",
+  "properties": {
+    "stories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "path"],
+        "properties": {
+          "title": { "type": "string" },
+          "path": { "type": "string", "pattern": "^/stories/.+\\.ink$" },
+          "description": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "generated": { "type": "boolean", "default": false },
+          "testable": { "type": "boolean", "default": false },
+          "aiEnabled": { "type": "boolean", "default": true },
+          "aiChoiceCount": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["stories"],
+  "additionalProperties": false
+}

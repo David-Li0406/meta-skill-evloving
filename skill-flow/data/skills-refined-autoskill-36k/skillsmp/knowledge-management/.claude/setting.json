@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/skills/claude-km-skill/scripts/notify.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/skills/claude-km-skill/scripts/notify.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "elicitation_dialog",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/skills/claude-km-skill/scripts/notify.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -f docs/retrospective/$(date +%Y-%m)/retrospective_$(date +%Y-%m-%d)_*.md ] && ~/.claude/skills/claude-km-skill/scripts/auto-capture.sh . 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+# example of a CDK nodejs file to create Tavili tool for use with Bedrock agents and Multi-Agent Collaboration (MAC)
+
+**user intent** set up system, provide the tool to search the web
+
+**this is JUST an example, must be changed to fit project, report steps taken and status** 
+**note while this example indicates certain originAgentCluster, that list may change overtime**
+
+
+**in real Code, the Tavili API key should be stored in environment variables  and referenced here, not hardcoded.
+ there should be a limit of how much is returned, this should be a configuration parameter, default 3**
+
+import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as path from 'path';
+import * as fs from 'fs';
+
+export class FinanceAssistantTavilyStack extends cdk.Stack {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // Load optional config (used for paths or api keys)
+    const configPath = path.join(__dirname, '../config/agent-configuration.json');
+    let config: any = {};
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    } catch (e) {
+      // ignore if config not present; example should still work
+    }
+
+    // Setup Tavily Search (Lambda-based tool)
+    const tavilyLambda = new nodejs.NodejsFunction(this, 'TavilySearchHandler', {
+      entry: path.join(__dirname, '../lambda/tavily-handler.ts'),
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_20_X,
+      environment: {
+        // Recommend storing real keys in Secrets Manager and referencing here
+        TAVILY_API_KEY: (process.env.TAVILY_API_KEY || config?.tavilyApiKey) || 'replace-with-secrets-manager-arn',
+      },
+    });
+
+    // Allow Bedrock service to invoke this Lambda (so it can be used as an Action Group executor)
+    tavilyLambda.addPermission('AllowBedrockInvoke', {
+      principal: new iam.ServicePrincipal('bedrock.amazonaws.com'),
+      sourceAccount: this.account,
+    });
+
+    // Output the Lambda ARN so consuming stacks can reference it when wiring tools
+    new cdk.CfnOutput(this, 'TavilyLambdaArn', { value: tavilyLambda.functionArn });
+  }
+}

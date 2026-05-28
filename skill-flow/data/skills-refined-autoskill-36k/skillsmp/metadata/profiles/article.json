@@ -1,0 +1,61 @@
+{
+  "name": "article",
+  "description": "Metadata profile for articles, blog posts, and news content",
+  "extends": "default",
+  "required": [
+    {
+      "element": "meta",
+      "attributes": { "name": "author" },
+      "message": "author is required for articles"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "og:type", "content": "article" },
+      "message": "og:type must be 'article' for article pages"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "article:published_time" },
+      "constraints": {
+        "format": "iso8601"
+      },
+      "message": "article:published_time is required (ISO 8601 format)"
+    }
+  ],
+  "recommended": [
+    {
+      "element": "meta",
+      "attributes": { "property": "article:modified_time" },
+      "constraints": {
+        "format": "iso8601"
+      },
+      "message": "article:modified_time helps search engines understand freshness"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "article:author" },
+      "message": "article:author provides structured authorship data"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "article:section" },
+      "message": "article:section helps categorize content"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "article:tag" },
+      "multiple": true,
+      "message": "article:tag provides topic keywords"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "twitter:card", "content": "summary_large_image" },
+      "message": "summary_large_image card works best for articles"
+    },
+    {
+      "element": "link",
+      "attributes": { "rel": "author" },
+      "message": "author link provides authorship attribution"
+    }
+  ]
+}

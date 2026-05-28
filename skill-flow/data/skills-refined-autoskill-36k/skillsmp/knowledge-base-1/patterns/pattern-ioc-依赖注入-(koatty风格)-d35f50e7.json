@@ -1,0 +1,38 @@
+{
+  "id": "pattern-ioc-依赖注入-(koatty风格)-d35f50e7",
+  "category": "pattern",
+  "name": "IOC 依赖注入 (Koatty风格)",
+  "triggers": [
+    "(koatty风格)",
+    "architecture",
+    "ioc",
+    "依赖注入"
+  ],
+  "content": {
+    "pattern_name": "IOC 依赖注入 (Koatty风格)",
+    "category": "architecture",
+    "description": "Spring 风格的 IOC 容器，使用装饰器实现自动装配",
+    "when_to_use": "构建企业级 Node.js 应用，需要解耦组件依赖时",
+    "structure": "\n@Service()\nexport class UserService {\n  async findUser(id: number) { ... }\n}\n\n@Controller()\nexport class UserController {\n  @Autowired()\n  private userService: UserService;\n  \n  @GetMapping(\"/users/:id\")\n  async getUser(@PathVariable(\"id\") id: string) {\n    return this.userService.findUser(id);\n  }\n}\n",
+    "example": "",
+    "pros": [
+      "解耦组件依赖",
+      "便于单元测试",
+      "代码更清晰"
+    ],
+    "cons": [
+      "学习曲线",
+      "运行时开销"
+    ]
+  },
+  "sources": [
+    "https://github.com/Koatty/koatty"
+  ],
+  "tags": [
+    "architecture"
+  ],
+  "created_at": "2026-01-23T21:24:42.977931",
+  "updated_at": "2026-01-23T21:24:42.977931",
+  "usage_count": 0,
+  "effectiveness": 0.5
+}

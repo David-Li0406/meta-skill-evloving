@@ -1,0 +1,73 @@
+# Example: Custom Requirement Definition
+#
+# Template for creating your own custom requirements.
+# Add this to your .claude/requirements.yaml or .claude/requirements.local.yaml
+
+requirements:
+  # Basic custom requirement - blocks until manually satisfied
+  my_custom_requirement:
+    enabled: true
+    type: blocking           # blocking | dynamic | guard
+    scope: session           # session | branch | permanent | single_use
+    trigger_tools:
+      - Edit
+      - Write
+      - MultiEdit
+    message: |
+      🎯 **Custom Requirement**
+
+      Describe what needs to be done here.
+
+      **To satisfy**: `req satisfy my_custom_requirement`
+    checklist:
+      - "First step to complete"
+      - "Second step to complete"
+      - "Third step to complete"
+
+  # Requirement with metadata collection
+  ticket_linked:
+    enabled: true
+    type: blocking
+    scope: branch            # Persists across sessions on this branch
+    trigger_tools:
+      - Edit
+      - Write
+    message: |
+      🎫 **Link to GitHub Issue**
+
+      This branch should be linked to a GitHub issue.
+
+      **To satisfy with metadata**:
+      ```bash
+      req satisfy ticket_linked --metadata '{"ticket":"#123"}'
+      ```
+
+  # Time-limited requirement
+  daily_standup:
+    enabled: true
+    type: blocking
+    scope: session
+    message: |
+      📅 **Daily Standup**
+
+      Document today's focus before starting.
+
+      **Satisfy for 8 hours**:
+      ```bash
+      req satisfy daily_standup --ttl 28800
+      ```
+
+  # Requirement triggered by specific Bash commands
+  database_backup:
+    enabled: true
+    type: blocking
+    scope: single_use        # Must satisfy before EACH migration
+    trigger_tools:
+      - tool: Bash
+        command_pattern: "npm\\s+run\\s+migrate|prisma\\s+migrate"
+    message: |
+      💾 **Database Backup Required**
+
+      Ensure database is backed up before running migrations.
+
+      **To satisfy**: `req satisfy database_backup`

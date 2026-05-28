@@ -1,0 +1,20 @@
+{
+  "name": "lead-dev-tests",
+  "version": "1.0.0",
+  "description": "Tests de validation pour le skill lead-dev",
+  "private": true,
+  "comment": "Zero external dependencies - uses only Node.js built-ins (fs, path)",
+  "scripts": {
+    "test": "npm run test:domains && npm run test:agents && npm run test:skill",
+    "test:domains": "node tests/validate-domains.test.js",
+    "test:agents": "node tests/validate-agents.test.js",
+    "test:skill": "node tests/validate-skill.test.js",
+    "test:ci": "npm test",
+    "test:json": "OUTPUT_FORMAT=json npm test"
+  },
+  "keywords": ["claude-skills", "lead-dev", "tests"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

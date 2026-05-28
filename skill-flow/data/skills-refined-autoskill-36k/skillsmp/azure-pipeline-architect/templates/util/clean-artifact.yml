@@ -1,0 +1,40 @@
+# ==============================================================================
+# Template Name: Clean Artifact (clean-artifact.yml)
+# Description: 
+#   Clean up Artifact temporary files downloaded to the Agent.
+#   Usually executed at the end of the deployment process to ensure disk space is released.
+#   Configured with condition: always() to ensure execution regardless of deployment success or failure.
+# ==============================================================================
+
+parameters:
+  - name: artifactName
+    type: string
+  - name: sourcePipeline
+    type: string
+  
+  # Execution Condition
+  - name: runCondition
+    type: string
+    default: 'always()'
+
+steps:
+  - powershell: |
+      $artifactName = "${{ parameters.artifactName }}"
+      $sourcePipeline = "${{ parameters.sourcePipeline }}"
+      
+      # Determine Artifact Path
+      $artifactPath = "$(Pipeline.Workspace)/$artifactName"
+      if ($sourcePipeline -ne 'current') {
+          $artifactPath = "$(Pipeline.Workspace)/$sourcePipeline/$artifactName"
+      }
+      
+      Write-Host "Cleaning up artifact at: $artifactPath"
+      
+      if (Test-Path $artifactPath) {
+          Remove-Item -Path $artifactPath -Recurse -Force -ErrorAction SilentlyContinue
+          Write-Host "Artifact cleaned up successfully."
+      } else {
+          Write-Host "Artifact path not found, nothing to clean."
+      }
+    displayName: 'Clean Artifact Temporary Files'
+    condition: ${{ parameters.runCondition }}

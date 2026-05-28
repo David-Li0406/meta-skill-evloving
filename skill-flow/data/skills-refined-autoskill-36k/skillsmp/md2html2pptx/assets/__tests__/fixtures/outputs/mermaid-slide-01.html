@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="theme.css">
+  <style>
+    :root {
+      --theme-primary: #0891B2;
+      --theme-accent: #22D3EE;
+      --theme-text: #0F172A;
+      --theme-muted: #64748B;
+      --font-body: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      --font-code: 'Consolas', 'Monaco', 'Courier New', monospace;
+    }
+    body { margin: 0; width: 960px; height: 540px; background: #F8FAFC; font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif; }
+    .slide {
+      width: 960px;
+      height: 540px;
+      padding: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    .slide {
+      
+      padding: 32px 60px;
+    }
+    .section-num {
+      color: #0891B2;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+    h1 {
+      color: #0F172A;
+      font-size: 28px;
+      margin: 0 0 16px 0;
+    }
+    .mermaid-container {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      min-height: 300px;
+    }
+    .mermaid {
+      margin: 0;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <p class="section-num">3.1</p>
+    <h1>シーケンス図</h1>
+    <div class="mermaid-container">
+      <pre class="mermaid">sequenceDiagram
+    participant User
+    participant API
+    participant DB
+    User->>API: リクエスト
+    API->>DB: クエリ
+    DB-->>API: データ
+    API-->>User: レスポンス</pre>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+        flowchart: { curve: 'basis' }
+      });
+      // Run mermaid and mark SVGs for rasterization
+      mermaid.run().then(() => {
+        document.querySelectorAll('.mermaid svg').forEach((svg, i) => {
+          svg.setAttribute('data-rasterize', 'mermaid-' + i);
+        });
+      });
+    </script>
+  </div>
+</body>
+</html>

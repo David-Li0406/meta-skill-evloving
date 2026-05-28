@@ -1,0 +1,95 @@
+{
+  "description": "Power Automate Connector Reference Index",
+  "version": "1.0.0",
+  "lastUpdated": "2025-01-21",
+  "docsBaseUrl": "https://learn.microsoft.com/en-us/connectors/",
+  "connectorListUrl": "https://learn.microsoft.com/en-us/connectors/connector-reference/connector-reference-powerautomate-connectors",
+  "connectors": {
+    "shared_office365": {
+      "name": "Office 365 Outlook",
+      "file": "office365-outlook.json",
+      "docsUrl": "https://learn.microsoft.com/en-us/connectors/office365/",
+      "category": "Email & Calendar"
+    },
+    "shared_sharepointonline": {
+      "name": "SharePoint",
+      "file": "sharepoint.json",
+      "docsUrl": "https://learn.microsoft.com/en-us/connectors/sharepointonline/",
+      "category": "Files & Lists"
+    },
+    "shared_commondataserviceforapps": {
+      "name": "Microsoft Dataverse",
+      "file": "dataverse.json",
+      "docsUrl": "https://learn.microsoft.com/en-us/connectors/commondataserviceforapps/",
+      "category": "Database"
+    },
+    "shared_visualstudioteamservices": {
+      "name": "Azure DevOps",
+      "file": "azure-devops.json",
+      "docsUrl": "https://learn.microsoft.com/en-us/connectors/visualstudioteamservices/",
+      "category": "DevOps"
+    },
+    "shared_excelonlinebusiness": {
+      "name": "Excel Online (Business)",
+      "file": "excel-online.json",
+      "docsUrl": "https://learn.microsoft.com/en-us/connectors/excelonlinebusiness/",
+      "category": "Spreadsheets"
+    },
+    "shared_teams": {
+      "name": "Microsoft Teams",
+      "file": "teams.json",
+      "docsUrl": "https://learn.microsoft.com/en-us/connectors/teams/",
+      "category": "Communication"
+    },
+    "shared_onedriveforbusiness": {
+      "name": "OneDrive for Business",
+      "file": "onedrive-business.json",
+      "docsUrl": "https://learn.microsoft.com/en-us/connectors/onedriveforbusiness/",
+      "category": "Files"
+    },
+    "shared_approvals": {
+      "name": "Approvals",
+      "file": "approvals.json",
+      "docsUrl": "https://learn.microsoft.com/en-us/connectors/approvals/",
+      "category": "Workflow"
+    }
+  },
+  "commonConnectionPattern": {
+    "connectionReferences": {
+      "CONNECTOR_ID": {
+        "connectionName": "",
+        "source": "Invoker",
+        "id": "/providers/Microsoft.PowerApps/apis/CONNECTOR_ID",
+        "tier": "NotSpecified"
+      }
+    }
+  },
+  "actionStructure": {
+    "type": "ApiConnection",
+    "inputs": {
+      "host": {
+        "connection": {
+          "name": "@parameters('$connections')['CONNECTOR_ID']['connectionId']"
+        }
+      },
+      "method": "get|post|put|patch|delete",
+      "path": "/api/path",
+      "queries": {},
+      "body": {}
+    },
+    "runAfter": {}
+  },
+  "triggerStructure": {
+    "type": "ApiConnectionNotification|ApiConnectionWebhook",
+    "inputs": {
+      "host": {
+        "connection": {
+          "name": "@parameters('$connections')['CONNECTOR_ID']['connectionId']"
+        }
+      },
+      "path": "/trigger/path",
+      "queries": {}
+    }
+  },
+  "fetchLiveDocsInstruction": "For connectors not in this index, fetch documentation from: https://learn.microsoft.com/en-us/connectors/{connector-name}/"
+}

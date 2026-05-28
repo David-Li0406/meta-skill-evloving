@@ -1,0 +1,302 @@
+# Template Classification Rules
+# Detection signals and routing for each template type
+
+version: "1.0"
+
+classification:
+  min_confidence: 0.6
+  ask_threshold: 0.4
+
+# Signal weights for scoring
+weights:
+  strong: 3
+  medium: 2
+  weak: 1
+
+templates:
+  Meeting:
+    file: assets/templates/Meeting.md
+    type_tag: Type/Meeting
+    default_folder: 01-MeetingNotes
+    project_folder: Communications/Meetings
+    default_status: open
+    signals:
+      strong:
+        - attendees
+        - agenda
+        - "action items"
+        - "meeting notes"
+        - minutes
+        - standup
+        - sync
+        - retro
+      medium:
+        - meeting
+        - call
+        - discussion
+        - participants
+        - scheduled
+      weak:
+        - "talked about"
+        - "we discussed"
+        - "follow up"
+
+  Communication:
+    file: assets/templates/Communication.md
+    type_tag: Type/Communication
+    default_folder: 00-Inbox
+    default_status: open
+    subtypes:
+      email:
+        folder: Communications/Emails
+        signals: ["From:", "To:", "Subject:", "RE:", "FW:"]
+      chat:
+        folder: Communications/Chats
+        signals: [Teams, Slack, replied, thread]
+      decision:
+        folder: Communications/Decisions
+        signals: [decided, approved, agreed, consensus, "go ahead"]
+    signals:
+      strong:
+        - "From:"
+        - "To:"
+        - "Subject:"
+        - "RE:"
+        - "FW:"
+      medium:
+        - email
+        - message
+        - reply
+        - thread
+      weak:
+        - sent
+        - received
+        - wrote
+
+  Incident:
+    file: assets/templates/Incident.md
+    type_tag: Type/Incident
+    default_folder: 40-Incidents/Active
+    project_folder: null
+    default_status: investigating
+    default_severity: medium
+    signals:
+      strong:
+        - incident
+        - outage
+        - INC
+        - P1
+        - P2
+        - critical
+        - emergency
+        - down
+        - unavailable
+      medium:
+        - alert
+        - error
+        - failure
+        - degraded
+        - impacted
+      weak:
+        - issue
+        - problem
+        - broken
+    severity_keywords:
+      critical: [critical, P1, emergency, "complete outage"]
+      high: [high, P2, major, "significant impact"]
+      medium: [medium, P3, partial, degraded]
+      low: [low, P4, minor]
+
+  Troubleshooting:
+    file: assets/templates/Troubleshooting.md
+    type_tag: Type/Troubleshooting
+    default_folder: 00-Inbox
+    project_folder: Troubleshooting
+    default_status: investigating
+    default_severity: medium
+    signals:
+      strong:
+        - troubleshooting
+        - debugging
+        - "root cause"
+        - "stack trace"
+        - "error message"
+        - exception
+      medium:
+        - issue
+        - bug
+        - fix
+        - resolved
+        - investigation
+        - symptoms
+      weak:
+        - problem
+        - "not working"
+        - failed
+        - broken
+
+  ADR:
+    file: assets/templates/ADR.md
+    type_tag: Type/ADR
+    default_folder: 00-Inbox
+    project_folder: Architecture
+    default_status: proposed
+    signals:
+      strong:
+        - ADR
+        - "architecture decision"
+        - "we decided"
+        - "design decision"
+      medium:
+        - decision
+        - alternatives
+        - "trade-off"
+        - "option A"
+        - consequences
+      weak:
+        - approach
+        - strategy
+        - choice
+        - selected
+
+  SOP:
+    file: assets/templates/SOP.md
+    type_tag: Type/SOP
+    default_folder: 50-SOPs
+    project_folder: null
+    default_status: active
+    categories:
+      Deployment:
+        folder: 50-SOPs/Deployment
+        signals: [deploy, release, rollout, publish]
+      IncidentResponse:
+        folder: 50-SOPs/IncidentResponse
+        signals: [incident, response, escalation, "on-call"]
+      Security:
+        folder: 50-SOPs/Security
+        signals: [security, vulnerability, patch, audit]
+      Maintenance:
+        folder: 50-SOPs/Maintenance
+        signals: [maintenance, backup, cleanup, update]
+      Onboarding:
+        folder: 50-SOPs/Onboarding
+        signals: [onboarding, "new team member", setup, access]
+    signals:
+      strong:
+        - SOP
+        - procedure
+        - runbook
+        - playbook
+        - "step-by-step"
+      medium:
+        - "how to"
+        - process
+        - instructions
+        - steps
+        - guide
+      weak:
+        - "do this"
+        - then
+        - next
+        - finally
+
+  Prompt:
+    file: assets/templates/Prompt.md
+    type_tag: Type/Prompt
+    default_folder: 60-AIKnowledge/Prompts
+    project_folder: null
+    signals:
+      strong:
+        - prompt
+        - "system prompt"
+        - Claude
+        - GPT
+        - Copilot
+        - "few-shot"
+      medium:
+        - LLM
+        - AI
+        - model
+        - instruction
+      weak:
+        - generate
+        - assistant
+        - response
+
+  AzureResource:
+    file: assets/templates/AzureResource.md
+    type_tag: Type/AzureResource
+    default_folder: 20-Infrastructure/Azure
+    project_folder: null
+    resource_types:
+      WebApp:
+        folder: 20-Infrastructure/Azure/WebApps
+        signals: ["Web App", "App Service", webapp]
+      Function:
+        folder: 20-Infrastructure/Azure/Functions
+        signals: [Function, "Azure Function", serverless]
+      ContainerRegistry:
+        folder: 20-Infrastructure/Azure/ContainerRegistry
+        signals: [ACR, "Container Registry", registry]
+      KeyVault:
+        folder: 20-Infrastructure/Azure/KeyVault
+        signals: ["Key Vault", secrets, keyvault]
+      MySQL:
+        folder: 20-Infrastructure/Azure/MySQL
+        signals: [MySQL, database, "Azure Database"]
+    signals:
+      strong:
+        - Azure
+        - "resource group"
+        - subscription
+        - ARM
+        - "portal.azure.com"
+      medium:
+        - resource
+        - deployment
+        - provisioning
+      weak:
+        - cloud
+        - hosting
+        - infrastructure
+
+# Technology detection for auto-tagging
+tech_signals:
+  "Tech/Azure":
+    - Azure
+    - ARM
+    - "az "
+  "Tech/Docker":
+    - Docker
+    - container
+    - Dockerfile
+    - docker-compose
+  "Tech/PHP":
+    - PHP
+    - ".php"
+    - Symfony
+    - Laravel
+    - WordPress
+  "Tech/Python":
+    - Python
+    - ".py"
+    - Flask
+    - pip
+  "Tech/React":
+    - React
+    - JSX
+    - useState
+    - useEffect
+  "Tech/JavaScript":
+    - JavaScript
+    - JS
+    - Node
+    - npm
+  "Tech/MySQL":
+    - MySQL
+    - SQL
+    - database
+  "Tech/Elasticsearch":
+    - Elastic
+    - Elasticsearch
+    - Kibana

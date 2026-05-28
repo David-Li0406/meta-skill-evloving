@@ -1,0 +1,24 @@
+# __SERVICE_NAME__
+
+__APP_TITLE__
+
+## Quick start (local)
+
+```bash
+uv sync
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --app-dir src
+```
+
+## Quality
+
+```bash
+uv run task lint_fix
+uv run task test
+```
+
+## Docker
+
+```bash
+docker build -t __SERVICE_NAME__ .
+docker run --rm -p 8000:8000 __SERVICE_NAME__
+```

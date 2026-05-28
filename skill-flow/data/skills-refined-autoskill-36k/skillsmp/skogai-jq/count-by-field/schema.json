@@ -1,0 +1,84 @@
+{
+  "name": "count-by-field",
+  "description": "Count occurrences of each unique value in an array of objects grouped by field",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing an array at the specified path"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'data.items')"
+    },
+    "field_name": {
+      "type": "string",
+      "required": true,
+      "description": "Field name to group by and count (supports nested paths with dot notation)"
+    }
+  },
+  "output": {
+    "type": ["object", "null"],
+    "description": "Object with counts keyed by unique field values, or null if path doesn't exist or value is not an array"
+  },
+  "examples": [
+    {
+      "description": "Count by status field",
+      "input": {
+        "items": [
+          {"name": "alice", "status": "active"},
+          {"name": "bob", "status": "active"},
+          {"name": "charlie", "status": "inactive"}
+        ]
+      },
+      "args": {
+        "array_path": "items",
+        "field_name": "status"
+      },
+      "output": {
+        "active": 2,
+        "inactive": 1
+      }
+    },
+    {
+      "description": "Count by numeric field",
+      "input": {
+        "data": {
+          "results": [
+            {"score": 100},
+            {"score": 85},
+            {"score": 100}
+          ]
+        }
+      },
+      "args": {
+        "array_path": "data.results",
+        "field_name": "score"
+      },
+      "output": {
+        "100": 2,
+        "85": 1
+      }
+    },
+    {
+      "description": "Count with missing fields",
+      "input": {
+        "items": [
+          {"name": "alice", "status": "active"},
+          {"name": "bob"},
+          {"name": "charlie", "status": "active"}
+        ]
+      },
+      "args": {
+        "array_path": "items",
+        "field_name": "status"
+      },
+      "output": {
+        "active": 2,
+        "null": 1
+      }
+    }
+  ],
+  "tags": ["array", "aggregation", "counting", "group-by"]
+}

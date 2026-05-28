@@ -1,0 +1,98 @@
+# Dependabot configuration for NTM
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+
+registries:
+  go-proxy:
+    type: go-modules
+    url: https://proxy.golang.org
+
+updates:
+  # Go modules
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Dicklesworthstone"
+    labels:
+      - "dependencies"
+      - "go"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      # Group all minor/patch updates together to reduce PR noise
+      go-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Charmbracelet packages (TUI framework)
+      charmbracelet:
+        patterns:
+          - "github.com/charmbracelet/*"
+    ignore:
+      # Ignore major version updates for core dependencies (review manually)
+      - dependency-name: "github.com/charmbracelet/bubbletea"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "github.com/spf13/cobra"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Dicklesworthstone"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      # Group all action updates together
+      actions-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Docker (if Dockerfile uses pinned versions)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "docker"
+
+  # npm/Bun dependencies (for OpenAPI tooling)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "deps"

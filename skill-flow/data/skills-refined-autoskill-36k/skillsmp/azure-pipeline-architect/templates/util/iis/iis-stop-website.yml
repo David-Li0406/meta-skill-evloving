@@ -1,0 +1,80 @@
+# ==============================================================================
+# Template Name: Stop IIS Website (iis-stop-website.yml)
+# Description: 
+#   This template is responsible for safely stopping the specified IIS website.
+#   Includes error handling mechanism: Prioritize using PowerShell, if fails (e.g. RPC error), automatically downgrade to use appcmd.exe to force stop.
+# ==============================================================================
+
+parameters:
+  # Website Name (Display name in IIS)
+  - name: websiteName
+    type: string
+  
+  # Execution Condition
+  - name: runCondition
+    type: string
+    default: 'succeeded()'
+
+steps:
+  # ----------------------------------------------------------------------------
+  # Execute PowerShell script to stop IIS Website
+  # ----------------------------------------------------------------------------
+  - powershell: |
+      $websiteName = "${{ parameters.websiteName }}"
+      Write-Host "Attempting to stop website: $websiteName"
+      
+      if ([string]::IsNullOrWhiteSpace($websiteName)) {
+          Write-Error "Website name is empty."
+          exit 1
+      }
+
+      function Stop-Site-WithAppCmd {
+          param($Name)
+          Write-Host "Attempting to stop website using appcmd.exe..."
+          $appCmd = "$env:systemroot\system32\inetsrv\appcmd.exe"
+          if (Test-Path $appCmd) {
+              # Stop using appcmd, ignore possible errors (e.g. website already stopped)
+              $p = Start-Process -FilePath $appCmd -ArgumentList "stop site /site.name:`"$Name`"" -Wait -PassThru -NoNewWindow
+              if ($p.ExitCode -eq 0) {
+                  Write-Host "appcmd: Website stopped."
+              } else {
+                  Write-Warning "appcmd completed, Exit Code: $($p.ExitCode) (This is expected behavior if website was already stopped)."
+              }
+          } else {
+              Write-Error "appcmd.exe not found."
+              exit 1
+          }
+      }
+
+      try {
+          Import-Module WebAdministration
+          # Attempt to get website status
+          $site = Get-Website -Name $websiteName -ErrorAction Stop
+
+          if ($site) {
+              if ($site.State -eq "Stopped") {
+                  Write-Host "Website '$websiteName' is already in stopped state."
+              } else {
+                  Write-Host "Website current state: $($site.State). Stopping..."
+                  Stop-Website -Name $websiteName -ErrorAction Stop
+                  Write-Host "Website '$websiteName' stopped successfully."
+              }
+          } else {
+              Write-Host "Website '$websiteName' does not exist, skipping stop action."
+          }
+      } catch {
+          Write-Warning "Error occurred while managing website using PowerShell (Possible RPC service abnormality): $_"
+          
+          # Check if error is caused by W3SVC service not running
+          $w3svc = Get-Service -Name "W3SVC" -ErrorAction SilentlyContinue
+          if ($w3svc -and $w3svc.Status -ne 'Running') {
+              Write-Host "Detected W3SVC (World Wide Web Publishing Service) is not running (Status: $($w3svc.Status))."
+              Write-Host "Website is naturally in stopped state as IIS service is not running. Skipping stop action."
+              exit 0
+          }
+
+          # Other errors occurred, try using appcmd
+          Stop-Site-WithAppCmd -Name $websiteName
+      }
+    displayName: 'Stop IIS Website'
+    condition: ${{ parameters.runCondition }}

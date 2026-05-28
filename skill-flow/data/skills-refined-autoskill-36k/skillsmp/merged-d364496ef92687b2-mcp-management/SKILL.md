@@ -1,0 +1,166 @@
+---
+name: mcp-management
+description: Manage Model Context Protocol (MCP) servers to discover, analyze, and execute tools, prompts, and resources from configured MCP servers. Use this skill for MCP integrations, capability discovery, task-specific tool execution, and context management.
+---
+
+# MCP Management
+
+Skill for managing and interacting with Model Context Protocol (MCP) servers.
+
+## Overview
+
+MCP is an open protocol enabling AI agents to connect to external tools and data sources. This skill provides scripts and utilities to discover, analyze, and execute MCP capabilities from configured servers without polluting the main context window.
+
+**Key Benefits**:
+- Progressive disclosure of MCP capabilities (load only what's needed)
+- Intelligent tool/prompt/resource selection based on task requirements
+- Multi-server management from a single config file
+- Context-efficient: subagents handle MCP discovery and execution
+- Persistent tool catalog: automatically saves discovered tools to JSON for fast reference
+
+## When to Use This Skill
+
+Use this skill when:
+1. **Discovering MCP Capabilities**: Need to list available tools/prompts/resources from configured servers.
+2. **Task-Based Tool Selection**: Analyzing which MCP tools are relevant for a specific task.
+3. **Executing MCP Tools**: Calling MCP tools programmatically with proper parameter handling.
+4. **MCP Integration**: Building or debugging MCP client implementations.
+5. **Context Management**: Avoiding context pollution by delegating MCP operations to subagents.
+
+## Core Capabilities
+
+### 1. Configuration Management
+
+MCP servers are configured in `.claude/.mcp.json`.
+
+**Gemini CLI Integration** (recommended): Create a symlink to `.gemini/settings.json`:
+```bash
+mkdir -p .gemini && ln -sf .claude/.mcp.json .gemini/settings.json
+```
+
+**GEMINI.md Response Format**: Project root contains `GEMINI.md` that Gemini CLI auto-loads, enforcing structured JSON responses:
+```json
+{"server":"name","tool":"name","success":true,"result":<data>,"error":null}
+```
+
+This ensures parseable, consistent output instead of unpredictable natural language.
+
+### 2. Capability Discovery
+
+```bash
+npx tsx scripts/cli.ts list-tools  # Saves to assets/tools.json
+npx tsx scripts/cli.ts list-prompts
+npx tsx scripts/cli.ts list-resources
+```
+
+Aggregates capabilities from multiple servers with server identification.
+
+### 3. Intelligent Tool Analysis
+
+LLM analyzes `assets/tools.json` directly, providing better results than keyword matching algorithms.
+
+### 4. Tool Execution
+
+**Primary: Gemini CLI** (if available)
+```bash
+# IMPORTANT: Use stdin piping, NOT -p flag (deprecated, skips MCP init)
+echo "Take a screenshot of https://example.com" | gemini -y -m gemini-2.5-flash
+```
+
+**Secondary: Direct Scripts**
+```bash
+npx tsx scripts/cli.ts call-tool memory create_entities '{"entities":[...]}'
+```
+
+**Fallback: mcp-manager Subagent**
+
+## Implementation Patterns
+
+### Pattern 1: Gemini CLI Auto-Execution (Primary)
+
+Use Gemini CLI for automatic tool discovery and execution. 
+
+**Quick Example**:
+```bash
+echo "Take a screenshot of https://example.com. Return JSON only per GEMINI.md instructions." | gemini -y -m gemini-2.5-flash
+```
+
+**Expected Output**:
+```json
+{"server":"puppeteer","tool":"screenshot","success":true,"result":"screenshot.png","error":null}
+```
+
+### Pattern 2: Subagent-Based Execution (Fallback)
+
+Use `mcp-manager` agent when Gemini CLI is unavailable. The subagent discovers tools, selects relevant ones, executes tasks, and reports back.
+
+### Pattern 3: LLM-Driven Tool Selection
+
+LLM reads `assets/tools.json`, intelligently selects relevant tools using context understanding, synonyms, and intent recognition.
+
+### Pattern 4: Multi-Server Orchestration
+
+Coordinate tools across multiple servers. Each tool knows its source server for proper routing.
+
+## Scripts Reference
+
+### scripts/mcp-client.ts
+
+Core MCP client manager class. Handles:
+- Config loading from `.claude/.mcp.json`
+- Connecting to multiple MCP servers
+- Listing tools/prompts/resources across all servers
+- Executing tools with proper error handling
+- Connection lifecycle management
+
+### scripts/cli.ts
+
+Command-line interface for MCP operations. Commands:
+- `list-tools` - Display all tools and save to `assets/tools.json`
+- `list-prompts` - Display all prompts
+- `list-resources` - Display all resources
+- `call-tool <server> <tool> <json>` - Execute a tool
+
+## Quick Start
+
+**Method 1: Gemini CLI** (recommended)
+```bash
+npm install -g gemini-cli
+mkdir -p .gemini && ln -sf .claude/.mcp.json .gemini/settings.json
+echo "Take a screenshot of https://example.com. Return JSON only per GEMINI.md instructions." | gemini -y -m gemini-2.5-flash
+```
+
+**Method 2: Scripts**
+```bash
+cd .claude/skills/mcp-management/scripts && npm install
+npx tsx cli.ts list-tools  # Saves to assets/tools.json
+npx tsx cli.ts call-tool memory create_entities '{"entities":[...]}'
+```
+
+## Technical Details
+
+See [references/mcp-protocol.md](references/mcp-protocol.md) for:
+- JSON-RPC protocol details
+- Message types and formats
+- Error codes and handling
+- Transport mechanisms (stdio, HTTP+SSE)
+- Best practices
+
+## Integration Strategy
+
+### Execution Priority
+
+1. **Gemini CLI** (Primary): Fast, automatic, intelligent tool selection.
+2. **Direct CLI Scripts** (Secondary): Manual tool specification.
+3. **mcp-manager Subagent** (Fallback): Context-efficient delegation.
+
+### Integration with Agents
+
+The `mcp-manager` agent uses this skill to:
+- Check Gemini CLI availability first.
+- Execute via `gemini` command if available.
+- Fallback to direct script execution.
+- Discover MCP capabilities without loading into the main context.
+- Report results back to the main agent.
+
+This keeps the main agent context clean and enables efficient MCP integration.

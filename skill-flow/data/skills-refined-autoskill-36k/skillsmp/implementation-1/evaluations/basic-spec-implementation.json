@@ -1,0 +1,30 @@
+{
+  "name": "Criar Plano de Implementação a partir da Spec",
+  "skills": ["implementation"],
+  "query": "Crie um plano de implementação para a página de spec de Autenticação de Usuário",
+  "expected_behavior": [
+    "Etapa 1: Usa Glob para encontrar arquivos de spec com padrões como '**/*auth*spec*.md' ou '**/*authentication*.md'",
+    "Etapa 2: Se não encontrar ou estiver ambíguo, pede ao usuário o caminho do arquivo de spec",
+    "Etapa 3: Lê o arquivo de spec usando Read",
+    "Etapa 4: Analisa a spec usando padrões de reference/spec-parsing.md para extrair requisitos, critérios de aceitação e restrições",
+    "Etapa 5: Identifica requisitos funcionais (user stories, funcionalidades, fluxos) e não funcionais (performance, segurança)",
+    "Etapa 6: Cria plano de implementação seguindo a estrutura de SKILL.md",
+    "Etapa 7: Inclui seções: Visão Geral, Spec Vinculada, Resumo de Requisitos, Abordagem Técnica, Fases de Implementação",
+    "Etapa 8: Quebra o trabalho em fases lógicas com Objetivo, checklist de Tarefas",
+    "Etapa 9: Identifica dependências e riscos a partir do conteúdo da spec",
+    "Etapa 10: Salva o plano usando Write em docs/planos/ ou similar",
+    "Etapa 11: Cria tarefas usando TodoWrite com content, activeForm e status"
+  ],
+  "success_criteria": [
+    "A spec é encontrada usando Glob antes de tentar ler (ou o usuário fornece o caminho)",
+    "A spec é lida usando Read com o caminho correto",
+    "O plano inclui visão geral clara e referência ao arquivo da spec",
+    "Requisitos são extraídos do conteúdo real da spec (não genéricos)",
+    "O trabalho é quebrado em múltiplas fases (tipicamente 3-5)",
+    "Cada fase tem Objetivo e Tarefas (como checkboxes)",
+    "Seções de dependências e riscos são incluídas",
+    "O plano é salvo usando Write em um arquivo markdown",
+    "Tarefas são criadas no TodoWrite com content e activeForm",
+    "Usa sequência correta das ferramentas: Glob → Read → Write → TodoWrite"
+  ]
+}

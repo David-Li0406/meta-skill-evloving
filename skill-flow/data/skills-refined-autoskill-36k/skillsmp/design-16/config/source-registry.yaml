@@ -1,0 +1,64 @@
+# Design Ops Source Registry
+# ==========================
+# Tracks sources for freshness validation
+# Updated automatically by freshness system
+
+metadata:
+  version: "1.0"
+  created: "2026-01-19"
+  last_updated: "2026-01-19"
+
+# Tier 1: Anthropic Official (always trusted)
+tier_1:
+  - name: "Anthropic Documentation"
+    url: "https://docs.anthropic.com"
+    type: "documentation"
+    check_frequency: "monthly"
+
+  - name: "Anthropic Cookbook"
+    url: "https://github.com/anthropics/anthropic-cookbook"
+    type: "examples"
+    check_frequency: "monthly"
+
+  - name: "Model Context Protocol"
+    url: "https://modelcontextprotocol.io"
+    type: "specification"
+    check_frequency: "monthly"
+
+  - name: "Anthropic Research Blog"
+    url: "https://www.anthropic.com/research"
+    type: "research"
+    check_frequency: "monthly"
+
+# Tier 2: Validated Sources (proven reliable)
+tier_2:
+  - name: "Anthropic Engineering Blog"
+    url: "https://www.anthropic.com/engineering"
+    discovered_date: "2026-01-19"
+    last_checked: "2026-01-19"
+    reliability_score: 9
+    validation_evidence: "Official Anthropic engineering posts, detailed technical patterns"
+    decay_rate: 0.3
+
+  - name: "MCP Blog"
+    url: "https://blog.modelcontextprotocol.io"
+    discovered_date: "2026-01-19"
+    last_checked: "2026-01-19"
+    reliability_score: 9
+    validation_evidence: "Official MCP announcements, spec release notes"
+    decay_rate: 0.3
+
+# Tier 3: Watching (potential, not yet validated)
+tier_3:
+  - name: "AAIF Announcements"
+    url: "https://www.linuxfoundation.org/press/agentic-ai-foundation"
+    discovered_date: "2026-01-19"
+    notes: "New governance body for MCP under Linux Foundation. Watch for spec acceleration."
+
+  - name: "Claude Code CHANGELOG"
+    url: "https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md"
+    discovered_date: "2026-01-19"
+    notes: "Fast-moving, useful for Claude Code-specific features. Would validate with consistent accuracy."
+
+# Archived: Previously valid, now stale/deprecated
+archived: []

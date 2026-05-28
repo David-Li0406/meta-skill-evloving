@@ -1,0 +1,45 @@
+{
+  "id": "eval-201",
+  "name": "跨子系统集成",
+  "complexity": "complex",
+  "description": "跨多个子系统的功能集成",
+  "requirement": "实现音频路由管理系统，支持音频流在多个设备间动态切换（扬声器、耳机、蓝牙设备、USB 设备），需要与设备管理子系统、蓝牙子系统、USB 子系统集成，支持设备热插拔、优先级策略、无缝切换",
+  "context": {
+    "project_type": "音频服务",
+    "files_involved": 15,
+    "estimated_lines": 500,
+    "dependencies": ["音频服务", "设备管理", "蓝牙服务", "USB 服务", "策略管理"]
+  },
+  "expected_output": {
+    "rfc_sections": ["§1", "§2", "§3", "§4", "§5"],
+    "scenarios": {
+      "normal": 3,
+      "exception": 4,
+      "boundary": 3
+    },
+    "dfx_dimensions": 8
+  },
+  "acceptance_criteria": {
+    "execution_time_max": 2400,
+    "token_budget_max": 80000,
+    "user_interactions_max": 6,
+    "first_pass_rate": 0.75,
+    "quality_score_min": 85
+  },
+  "validation": {
+    "must_have": [
+      "跨子系统接口定义",
+      "设备发现和注册机制",
+      "路由策略定义",
+      "设备优先级规则",
+      "热插拔处理流程",
+      "无缝切换方案",
+      "依赖方协调计划"
+    ],
+    "should_have": [
+      "路由历史记录",
+      "用户偏好设置",
+      "A/B 测试方案"
+    ]
+  }
+}

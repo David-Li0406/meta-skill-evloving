@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Add-Skill Registry",
+  "description": "Registry for tracking skills installed via add-skill CLI",
+  "type": "object",
+  "required": ["version", "skills"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Registry schema version"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "description": "Last update timestamp (ISO8601 format, empty string if never updated)"
+    },
+    "skills": {
+      "type": "object",
+      "description": "Map of skill name to source information",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["source", "sourceUrl", "skillPath", "installedAt"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "GitHub shorthand (owner/repo)"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Full Git URL"
+          },
+          "skillPath": {
+            "type": "string",
+            "description": "Path to skill within the repository"
+          },
+          "installedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Installation timestamp (ISO8601)"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

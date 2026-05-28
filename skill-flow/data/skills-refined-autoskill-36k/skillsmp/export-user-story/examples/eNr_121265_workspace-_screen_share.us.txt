@@ -1,0 +1,99 @@
+User Story ID: 121265
+Title: eNcounter Refresh: Workspace- Screen Share
+Type: User Story
+==================================================
+
+ACCEPTANCE CRITERIA:
+
+Scenario 1: Screen Share Button
+Given the eNcounter user has navigated to the workspace page 
+When the page renders
+Then the user will have the ability to select the screen share icon on the bottom right hand corner of the page 
+
+Scenario 2: User selects Screen Share button 
+Given the eNcounter us has navigated to the workspace page
+And the screen share icon has rendered
+When the user selects the screen share icon
+Then the screen share modal will display 
+
+Scenario 3: User selects Screen Share button, loading functionality 
+Given the eNcounter user has selected the screen share icon
+and the screen share modal has displayed
+When the screen options are loading
+Then the system will display a spinning wheel to indicate the page is loading 
+And the system will advise the user "Loading ..." 
+(Note: Match figma file provided) 
+
+Scenario 4: Screen options load
+Given the screen share modal has displayed
+And the screen options are loading 
+When the screen share options have loaded
+Then they will replace the Loading icon on the screen 
+
+Scenario 5: User closes screen share modal 
+Given the eNcounter us has selected the screen share icon
+And the screen share modal has displayed
+When the user selects the "x" in the top right-hand corner of the modal 
+Then the screen share modal will close
+And no screen will be shared  
+
+Scenario 6: Screen Share modal - screens 
+Given the encounter user has selected the screen share icon
+When the screen share modal displays 
+Then the user will have the ability to select from available screens to share with the users on the connected call 
+
+Scenario 7: User selects screen 
+Given the eNcounter user has selected the screen share icon
+And the screen share modal has displayed 
+When the user selects an available screen
+And the user selects "Share" 
+Then the screen will be shared with the users on the connected call 
+And will display as another video feed for the eNcounter user sharing their screen 
+
+Scenario 8: User Selects Cancel 
+Given the eNcounter user has selected the screen share icon 
+And the screen share modal has displayed 
+When the user selects "cancel" 
+Then the screen share modal will close
+And no screen will be shared 
+
+Scenario 9: User Removes Screen Share
+Given the eNcounter user has shared their screen
+And the shared screen has displayed as another video feed
+When the user selects the "x" in the shared screen video feed
+Then the video feed will close for all parties 
+And the users screen will no longer be shared for parties on the call 
+
+Scenario 10: User is sharing and selects share screen icon again 
+Given the encounter user has shared their screen
+When the user selects the share screen icon again 
+Then the screen share modal will display 
+And the user will have the option to "Stop Sharing" 
+And the user can select a different screen to share 
+
+Scenario 11: Stop Sharing 
+Given the eNcounter user has shared their screen
+And the user has selected the screen share icon again 
+And the screen share modal has displayed 
+When the user selects "Stop Sharing" 
+Then the users screen will no longer be shared
+And the screen will close for all 
+And the screen share modal will close 
+
+Scenario 12: Share different screen 
+Given the eNcounter user has shared their screen
+And the user has selected the screen share icon again 
+And the screen share modal has displayed 
+And the "Stop Sharing" option is displayed
+When the user selects another screen to share
+Then "Stop Sharing" will transition to "Share new screen" 
+And the blue border advising the user which screen they will share will transition to the newly chosen screen 
+And the user will have the ability to select "Share new screen"
+
+Scenario 13: User Selects Share New Screen 
+Given the eNcounter user has selected another screen to share
+And the Stop Sharing button has transitioned to Share New Screen
+And the blue border advising the user which screen they will share has transitioned to the newly chosen screen
+When the user selects "Share New Screen"
+Then the newly chosen screen will be shared to all users 
+And the screen share modal will close 

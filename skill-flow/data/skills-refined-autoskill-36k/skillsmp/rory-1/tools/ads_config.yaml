@@ -1,0 +1,120 @@
+# Ads Agent Configuration
+# ========================
+# Safety settings and defaults for ad campaign management.
+# 
+# ⚠️ IMPORTANT: Review and adjust these settings before use.
+# Default settings are conservative for safety.
+
+# Global Safety Settings
+safety:
+  # Always create campaigns in draft/paused mode
+  force_draft_mode: true
+  
+  # Require confirmation for destructive actions
+  require_confirmation: true
+  
+  # Actions that require confirmation
+  destructive_actions:
+    - delete_campaign
+    - delete_ad_group
+    - delete_ad
+    - enable_campaign  # Activating a campaign
+    - increase_budget
+    - change_bidding
+
+# Budget Limits (in USD)
+# Set to 0 to prevent any spend
+budgets:
+  google_ads:
+    max_daily_budget: 0        # Maximum daily budget per campaign ($0 = testing mode)
+    max_total_budget: 0        # Maximum total/lifetime budget ($0 = testing mode)
+    max_cpc_bid: 5.00          # Maximum cost-per-click bid
+    max_cpm_bid: 20.00         # Maximum cost-per-thousand bid
+    
+  linkedin_ads:
+    max_daily_budget: 0        # Maximum daily budget per campaign
+    max_total_budget: 0        # Maximum total/lifetime budget
+    max_cpc_bid: 10.00         # Maximum cost-per-click bid
+    max_cpm_bid: 50.00         # Maximum CPM bid
+    
+  meta_ads:
+    max_daily_budget: 0        # Maximum daily budget per campaign
+    max_total_budget: 0        # Maximum lifetime budget
+    max_cpc_bid: 5.00          # Maximum cost-per-click bid
+
+# Default Campaign Settings
+defaults:
+  google_ads:
+    status: "PAUSED"           # Always start paused
+    bidding_strategy: "MAXIMIZE_CLICKS"
+    network_settings:
+      target_google_search: true
+      target_search_network: false
+      target_content_network: false
+    
+  linkedin_ads:
+    status: "DRAFT"            # Always start as draft
+    objective: "WEBSITE_VISITS"
+    cost_type: "CPC"
+    locale:
+      country: "US"
+      language: "en"
+      
+  meta_ads:
+    status: "PAUSED"           # Always start paused
+    objective: "LINK_CLICKS"
+    billing_event: "IMPRESSIONS"
+
+# API Settings
+api:
+  google_ads:
+    api_version: "v17"
+    timeout_seconds: 60
+    max_retries: 3
+    
+  linkedin_ads:
+    api_version: "202401"
+    timeout_seconds: 60
+    max_retries: 3
+    
+  meta_ads:
+    api_version: "v18.0"
+    timeout_seconds: 60
+    max_retries: 3
+
+# Rate Limiting
+rate_limits:
+  google_ads:
+    requests_per_minute: 60
+    queries_per_day: 10000
+    
+  linkedin_ads:
+    requests_per_minute: 100
+    daily_limit: 100000
+    
+  meta_ads:
+    requests_per_hour: 200
+    daily_limit: 50000
+
+# Logging
+logging:
+  # Log all API calls
+  log_api_calls: true
+  
+  # Log file location (relative to cmo-agent root)
+  log_file: "logs/ads_agent.log"
+  
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  log_level: "INFO"
+  
+  # Keep audit trail of all mutations
+  audit_trail: true
+  audit_file: "logs/ads_audit.log"
+
+# Notifications (future use)
+notifications:
+  enabled: false
+  # Notify on these events
+  on_campaign_created: true
+  on_budget_change: true
+  on_error: true

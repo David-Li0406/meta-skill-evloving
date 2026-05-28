@@ -1,0 +1,61 @@
+#cloud-config
+# =============================================================================
+# SSH Bastion Host
+# =============================================================================
+#
+# Purpose: Secure jump host for SSH access to private network
+#
+# Security features:
+# - UFW firewall allowing only SSH (port 22)
+# - SSH key authentication only (no passwords)
+# - Root login disabled
+# - Fail2ban protection against brute-force attacks
+# - 3 failed attempts = 1 hour ban
+#
+# How it works:
+# 1. Installs fail2ban and ufw
+# 2. Configures UFW to allow only SSH traffic
+# 3. Configures fail2ban to monitor SSH login attempts
+# 4. Hardens SSH configuration (key-only, no root login)
+# 5. Enables fail2ban and UFW services
+#
+# =============================================================================
+package_update: true
+package_upgrade: true
+
+packages:
+  - fail2ban
+  - ufw
+
+write_files:
+  - path: /etc/fail2ban/jail.local
+    content: |
+      [sshd]
+      enabled = true
+      port = ssh
+      filter = sshd
+      logpath = /var/log/auth.log
+      maxretry = 3
+      bantime = 3600
+      findtime = 600
+
+  - path: /etc/ssh/sshd_config.d/hardening.conf
+    content: |
+      PasswordAuthentication no
+      PermitRootLogin no
+      PubkeyAuthentication yes
+      MaxAuthTries 3
+
+runcmd:
+  # Configure UFW firewall
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow ssh
+  - ufw --force enable
+
+  # Enable fail2ban
+  - systemctl enable fail2ban
+  - systemctl start fail2ban
+
+  # Apply SSH hardening
+  - systemctl restart sshd

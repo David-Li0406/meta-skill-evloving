@@ -1,0 +1,35 @@
+/* --modifier() for slash syntax: utility-value/modifier */
+
+@theme {
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+}
+
+/* Font size with line-height modifier */
+@utility type-* {
+  font-size: --value(--text-*, [length]);
+  line-height: --modifier(--leading-*, [length], [*]);
+}
+/* Usage: type-lg, type-lg/tight, type-lg/[1.8], type-[1.25rem]/relaxed */
+
+/* Grid with gap modifier */
+@utility grid-* {
+  display: grid;
+  grid-template-columns: repeat(--value(integer), minmax(0, 1fr));
+  gap: --modifier([length]);
+}
+/* Usage: grid-3, grid-4/[1rem], grid-2/[24px] */
+
+/* Background tint with opacity modifier */
+@utility tint-* {
+  --_color: --value(--color-*);
+  --_alpha: --modifier(integer);
+
+  background: oklch(from var(--_color) l c h / calc(var(--_alpha, 100) * 1%));
+}
+/* Usage: tint-primary/50, tint-accent/25 */

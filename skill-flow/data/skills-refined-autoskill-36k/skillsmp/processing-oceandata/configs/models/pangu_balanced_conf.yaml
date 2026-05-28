@@ -1,0 +1,25 @@
+# Pangu Model Configuration - Balanced Version (Default)
+# Balanced 2D+3D hybrid, recommended for production
+
+# Temporal configuration
+input_len: 7
+output_len: 1
+in_channels: 2  # u and v components
+
+# Spatial configuration
+img_size: [240, 240]
+patch_size: [2, 4, 4]  # 3D patch size [depth, height, width]
+
+# Model architecture - BALANCED
+embed_dim: 128             # Between Light(96) and Full(192)
+num_heads: [4, 8, 8, 4]    # Between Light and Full
+window_size: [2, 6, 12]    # Same as standard
+
+# Regularization
+drop_path_rate: 0.15       # Between Light(0.1) and Full(0.2)
+
+# Training hints
+# - Good balance of speed and accuracy
+# - ~25-35M parameters
+# - Recommended for most use cases
+

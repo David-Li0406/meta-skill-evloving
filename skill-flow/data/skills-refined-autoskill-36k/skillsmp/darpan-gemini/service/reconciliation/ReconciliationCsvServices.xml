@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="compare" noun="CsvFiles">
+        <description>Reconcile two CSV files by mapped ID field and generate a diff JSON (wrapper to unified comparator).</description>
+        <in-parameters>
+            <parameter name="csv1Location" required="true"/>
+            <parameter name="csv2Location" required="true"/>
+            <parameter name="reconciliationMappingId"/>
+            <parameter name="csv1SystemEnumId"/>
+            <parameter name="csv2SystemEnumId"/>
+            <parameter name="idField" default-value="order_id"/>
+            <parameter name="csv1IdField"/>
+            <parameter name="csv2IdField"/>
+            <parameter name="hasHeader" type="Boolean" default-value="true"/>
+            <parameter name="outputLocation" default-value="tmp/reconciliation/csv-diff/output"/>
+            <parameter name="outputFileName"/>
+            <parameter name="logInputCounts" type="Boolean" default-value="true"/>
+            <parameter name="sparkMaster" default-value="local[*]"/>
+            <parameter name="sparkAppName" default-value="ReconciliationCsvCompare"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="onlyInCsv1"><parameter name="compareId"/></parameter>
+            <parameter name="onlyInCsv2"><parameter name="compareId"/></parameter>
+            <parameter name="onlyInCsv1Count" type="Integer"/>
+            <parameter name="onlyInCsv2Count" type="Integer"/>
+            <parameter name="diffLocation"/>
+            <parameter name="diffFileName"/>
+            <parameter name="diffRowCount" type="Integer"/>
+        </out-parameters>
+    </service>
+    <service verb="run" noun="CsvReconciliation">
+        <description>Save uploaded CSVs and run CSV reconciliation using mapping inputs.</description>
+        <in-parameters>
+            <parameter name="csv1File" type="org.apache.commons.fileupload.FileItem"/>
+            <parameter name="csv2File" type="org.apache.commons.fileupload.FileItem"/>
+            <parameter name="reconciliationMappingId"/>
+            <parameter name="csv1SystemEnumId"/>
+            <parameter name="csv2SystemEnumId"/>
+            <parameter name="idField" default-value="order_id"/>
+            <parameter name="csv1IdField"/>
+            <parameter name="csv2IdField"/>
+            <parameter name="hasHeader" type="Boolean" default-value="true"/>
+            <parameter name="sparkMaster" default-value="local[*]"/>
+            <parameter name="sparkAppName" default-value="ReconciliationCsvCompare"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="diffLocation"/>
+            <parameter name="diffFileName"/>
+            <parameter name="diffRowCount" type="Integer"/>
+            <parameter name="onlyInCsv1Count" type="Integer"/>
+            <parameter name="onlyInCsv2Count" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <if condition="!csv1Location || !csv2Location">
+                <return error="true" message="csv1Location and csv2Location are required"/>
+            </if>
+
+            <script><![CDATA[
+                Map<String, Object> params = [
+                        file1Location  : csv1Location,
+                        file2Location  : csv2Location,
+                        file1Type      : "CSV",
+                        file2Type      : "CSV",
+                        file1IdField   : (csv1IdField ?: idField ?: "id"),
+                        file2IdField   : (csv2IdField ?: idField ?: "id"),
+                        hasHeader      : hasHeader,
+                        outputLocation : outputLocation,
+                        outputFileName : outputFileName,
+                        sparkMaster    : sparkMaster,
+                        sparkAppName   : sparkAppName
+                ]
+
+                // If mapping metadata is provided, let FilesByMapping handle overrides and warnings
+                if (reconciliationMappingId && csv1SystemEnumId && csv2SystemEnumId) {
+                    params = [
+                            reconciliationMappingId: reconciliationMappingId,
+                            file1Location          : csv1Location,
+                            file2Location          : csv2Location,
+                            file1SystemEnumId      : csv1SystemEnumId,
+                            file2SystemEnumId      : csv2SystemEnumId,
+                            file1FileTypeEnumId    : "DftCsv",
+                            file2FileTypeEnumId    : "DftCsv",
+                            hasHeader              : hasHeader,
+                            outputLocation         : outputLocation,
+                            sparkMaster            : sparkMaster,
+                            sparkAppName           : sparkAppName
+                    ]
+                    context.useMapping = true
+                } else {
+                    context.useMapping = false
+                }
+
+                context.unifiedParams = params
+            ]]></script>
+
+            <if condition="useMapping">
+                <service-call name="ReconciliationCoreServices.reconcile#FilesByMapping"
+                        in-map="unifiedParams" out-map="unifiedOut"/>
+            </if>
+            <if condition="!useMapping">
+                <service-call name="ReconciliationCoreServices.reconcile#UnifiedFiles"
+                        in-map="unifiedParams" out-map="unifiedOut"/>
+            </if>
+
+            <set field="diffLocation" from="unifiedOut.diffLocation"/>
+            <set field="diffFileName" from="unifiedOut.diffFileName"/>
+            <set field="diffRowCount" from="unifiedOut.differenceCount"/>
+            <set field="onlyInCsv1Count" from="unifiedOut.onlyInFile1Count"/>
+            <set field="onlyInCsv2Count" from="unifiedOut.onlyInFile2Count"/>
+        </actions>
+        <actions>
+            <if condition="csv1File == null || csv2File == null">
+                <return error="true" message="Both CSV 1 and CSV 2 files are required"/>
+            </if>
+
+            <set field="baseDirRef" from="ec.resource.getLocationReference('runtime://tmp/reconciliation/csv-diff')"/>
+            <set field="inputDirRef" from="baseDirRef.makeDirectory('input')"/>
+            <set field="outputDirRef" from="baseDirRef.makeDirectory('output')"/>
+
+            <set field="timestamp" from="ec.l10n.format(ec.user.nowTimestamp, 'yyyyMMdd-HHmmssSSS')"/>
+            <set field="csv1SafeName" from="csv1File.getName()?.replaceAll('[^A-Za-z0-9._-]', '_') ?: 'upload.csv'"/>
+            <set field="csv2SafeName" from="csv2File.getName()?.replaceAll('[^A-Za-z0-9._-]', '_') ?: 'upload.csv'"/>
+
+            <set field="csv1FileRef" from="inputDirRef.makeFile(timestamp + '-csv1-' + csv1SafeName)"/>
+            <set field="csv2FileRef" from="inputDirRef.makeFile(timestamp + '-csv2-' + csv2SafeName)"/>
+
+            <set field="ignoreCsv1Write" from="csv1FileRef.putStream(csv1File.getInputStream())"/>
+            <set field="ignoreCsv2Write" from="csv2FileRef.putStream(csv2File.getInputStream())"/>
+
+            <service-call name="ReconciliationCsvServices.compare#CsvFiles"
+                    in-map="[csv1Location:csv1FileRef.getLocation(), csv2Location:csv2FileRef.getLocation(),
+                    reconciliationMappingId:reconciliationMappingId, csv1SystemEnumId:csv1SystemEnumId, csv2SystemEnumId:csv2SystemEnumId,
+                    idField:idField, csv1IdField:csv1IdField, csv2IdField:csv2IdField,
+                    hasHeader:hasHeader, outputLocation:'runtime://tmp/reconciliation/csv-diff/output', 
+                    sparkMaster:sparkMaster, sparkAppName:sparkAppName]"
+                    out-map="compareOut"/>
+            <set field="diffLocation" from="compareOut.diffLocation"/>
+            <set field="diffFileName" from="compareOut.diffFileName"/>
+            <set field="diffRowCount" from="compareOut.diffRowCount"/>
+            <set field="onlyInCsv1Count" from="compareOut.onlyInCsv1Count"/>
+            <set field="onlyInCsv2Count" from="compareOut.onlyInCsv2Count"/>
+        </actions>
+    </service>
+</services>

@@ -1,0 +1,99 @@
+{
+  "name": "group-by-field",
+  "description": "Group array of objects by field value, returning object with grouped arrays",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing an array at the specified path"
+  },
+  "args": {
+    "array_path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'data.items')"
+    },
+    "field_name": {
+      "type": "string",
+      "required": true,
+      "description": "Field name to group by (supports nested paths with dot notation)"
+    }
+  },
+  "output": {
+    "type": ["object", "null"],
+    "description": "Object with arrays grouped by unique field values, or null if path doesn't exist or value is not an array"
+  },
+  "examples": [
+    {
+      "description": "Group by status field",
+      "input": {
+        "items": [
+          {"name": "alice", "status": "active"},
+          {"name": "bob", "status": "active"},
+          {"name": "charlie", "status": "inactive"}
+        ]
+      },
+      "args": {
+        "array_path": "items",
+        "field_name": "status"
+      },
+      "output": {
+        "active": [
+          {"name": "alice", "status": "active"},
+          {"name": "bob", "status": "active"}
+        ],
+        "inactive": [
+          {"name": "charlie", "status": "inactive"}
+        ]
+      }
+    },
+    {
+      "description": "Group by numeric field",
+      "input": {
+        "data": {
+          "results": [
+            {"name": "alice", "score": 100},
+            {"name": "bob", "score": 85},
+            {"name": "charlie", "score": 100}
+          ]
+        }
+      },
+      "args": {
+        "array_path": "data.results",
+        "field_name": "score"
+      },
+      "output": {
+        "100": [
+          {"name": "alice", "score": 100},
+          {"name": "charlie", "score": 100}
+        ],
+        "85": [
+          {"name": "bob", "score": 85}
+        ]
+      }
+    },
+    {
+      "description": "Group with missing fields",
+      "input": {
+        "items": [
+          {"name": "alice", "status": "active"},
+          {"name": "bob"},
+          {"name": "charlie", "status": "active"}
+        ]
+      },
+      "args": {
+        "array_path": "items",
+        "field_name": "status"
+      },
+      "output": {
+        "active": [
+          {"name": "alice", "status": "active"},
+          {"name": "charlie", "status": "active"}
+        ],
+        "null": [
+          {"name": "bob"}
+        ]
+      }
+    }
+  ],
+  "tags": ["array", "aggregation", "grouping", "group-by"]
+}

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini CLI Dashboard - Comprehensive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0f1117; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; transition: transform 0.2s; }
+        .card:hover { border-color: #60a5fa; transform: translateY(-2px); }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
+        .stat-label { font-size: 0.875rem; color: #94a3b8; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-blue { background-color: #1e40af; color: #dbeafe; }
+        .badge-purple { background-color: #6b21a8; color: #f3e8ff; }
+        .badge-green { background-color: #166534; color: #dcfce7; }
+        .badge-orange { background-color: #c2410c; color: #ffedd5; }
+        .badge-gray { background-color: #374151; color: #d1d5db; }
+        .section-title { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .data-source-badge { font-size: 0.65rem; padding: 0.15rem 0.5rem; background-color: #374151; border-radius: 9999px; color: #9ca3af; }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Header -->
+    <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Gemini CLI Dashboard</h1>
+            <p class="text-sm text-gray-500 mb-2">Comprehensive Edition - All Data Sources</p>
+            <p class="text-gray-400">
+                <span class="text-blue-400 font-semibold">{{USER_EMAIL}}</span>
+            </p>
+            <div class="flex flex-wrap gap-2 mt-2">
+                <span class="badge badge-blue">IDE: {{IDE_ENABLED}}</span>
+                <span class="badge badge-purple">Preview: {{PREVIEW_FEATURES}}</span>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="text-sm text-gray-500">Dashboard Updated</div>
+            <div class="font-mono text-xl text-white">{{TIMESTAMP}}</div>
+        </div>
+    </header>
+
+    <!-- Key Metrics Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+        <div class="card p-4">
+            <div class="stat-label">Total Sessions</div>
+            <div class="stat-value">{{TOTAL_SESSIONS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">CLI Sessions</div>
+            <div class="stat-value text-blue-400">{{CLI_SESSIONS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Brain Sessions</div>
+            <div class="stat-value text-purple-400">{{BRAIN_SESSIONS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Total Messages</div>
+            <div class="stat-value text-green-400">{{TOTAL_MESSAGES}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">User Messages</div>
+            <div class="stat-value">{{USER_MESSAGES}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Total Duration</div>
+            <div class="stat-value text-orange-400">{{TOTAL_DURATION}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Total Tokens</div>
+            <div class="stat-value">{{TOTAL_TOKENS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Tracked Projects</div>
+            <div class="stat-value text-cyan-400">{{TRACKED_PROJECTS}}</div>
+        </div>
+    </div>
+
+    <!-- Storage Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">💬</span>
+                <h3 class="font-semibold text-white">Conversations</h3>
+                <span class="data-source-badge">encrypted .pb</span>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Files:</span>
+                    <span class="text-blue-400 font-bold">{{CONV_FILES}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Size:</span>
+                    <span class="text-white">{{CONV_SIZE_MB}} MB</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">🔮</span>
+                <h3 class="font-semibold text-white">Implicit Sessions</h3>
+                <span class="data-source-badge">encrypted .pb</span>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Files:</span>
+                    <span class="text-purple-400 font-bold">{{IMPLICIT_FILES}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Size:</span>
+                    <span class="text-white">{{IMPLICIT_SIZE_MB}} MB</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">📥</span>
+                <h3 class="font-semibold text-white">Input Tokens</h3>
+            </div>
+            <div class="stat-value text-green-400">{{TOTAL_INPUT_TOKENS}}</div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">📤</span>
+                <h3 class="font-semibold text-white">Output Tokens</h3>
+            </div>
+            <div class="stat-value text-blue-400">{{TOTAL_OUTPUT_TOKENS}}</div>
+        </div>
+    </div>
+
+    <!-- CLI & Browser Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">⌨️</span>
+                <h3 class="font-semibold text-white">CLI Commands</h3>
+                <span class="data-source-badge">logs.json</span>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">User Commands:</span>
+                    <span class="text-cyan-400 font-bold">{{CLI_USER_COMMANDS}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Slash Types:</span>
+                    <span class="text-white">{{SLASH_COMMAND_TYPES}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">🖼️</span>
+                <h3 class="font-semibold text-white">Browser Recordings</h3>
+                <span class="data-source-badge">browser_recordings</span>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Sessions:</span>
+                    <span class="text-yellow-400 font-bold">{{BROWSER_SESSIONS}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Screenshots:</span>
+                    <span class="text-white">{{BROWSER_SCREENSHOTS}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">🌐</span>
+                <h3 class="font-semibold text-white">Browser Allowlist</h3>
+            </div>
+            <div class="stat-value text-teal-400">{{BROWSER_ALLOWLIST_COUNT}}</div>
+            <div class="text-xs text-gray-500 mt-1">allowed domains</div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">📁</span>
+                <h3 class="font-semibold text-white">Code Tracker</h3>
+            </div>
+            <div class="stat-value text-pink-400">{{TRACKED_PROJECTS}}</div>
+            <div class="text-xs text-gray-500 mt-1">active projects</div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Session Type Breakdown</h3>
+            <canvas id="sessionTypeChart"></canvas>
+        </div>
+
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Tool Usage</h3>
+            <canvas id="toolUsageChart"></canvas>
+        </div>
+
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Slash Commands</h3>
+            <canvas id="slashCommandChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Daily Activity Trend -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Daily Activity Trend</h3>
+        <canvas id="dailyActivityChart" height="80"></canvas>
+    </div>
+
+    <!-- Messages by Session Type -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Messages by Session Type</h3>
+        <canvas id="messagesByTypeChart" height="80"></canvas>
+    </div>
+
+    <!-- Token Usage & Duration -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Token Usage Over Time</h3>
+            <canvas id="tokenChart"></canvas>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Session Duration Distribution (minutes)</h3>
+            <canvas id="durationChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Tracked Projects -->
+    <h2 class="section-title">📁 Tracked Projects ({{TRACKED_PROJECTS}})</h2>
+    <div class="card p-6 mb-8 overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="border-b border-gray-600">
+                <tr>
+                    <th class="p-3 text-gray-400">Project Name</th>
+                    <th class="p-3 text-gray-400">Tracked Files</th>
+                    <th class="p-3 text-gray-400">Last Modified</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{PROJECT_ROWS}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Sessions -->
+    <h2 class="section-title">Recent Sessions</h2>
+    <div class="card p-6 mb-8 overflow-x-auto">
+        <table class="w-full text-left">
+            <thead class="border-b border-gray-600">
+                <tr>
+                    <th class="p-3 text-gray-400">Type</th>
+                    <th class="p-3 text-gray-400">Date</th>
+                    <th class="p-3 text-gray-400">Duration</th>
+                    <th class="p-3 text-gray-400">Messages</th>
+                    <th class="p-3 text-gray-400">Tokens (In/Out)</th>
+                    <th class="p-3 text-gray-400">Summary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{RECENT_SESSIONS_ROWS}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Data Sources Footer -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Data Sources (10 Total)</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 text-sm">
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-blue-400 font-semibold">tmp/*/chats/</div>
+                <div class="text-gray-500">CLI session files (JSON)</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-cyan-400 font-semibold">tmp/*/logs.json</div>
+                <div class="text-gray-500">CLI command history</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-purple-400 font-semibold">antigravity/brain/</div>
+                <div class="text-gray-500">Brain session metadata</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-green-400 font-semibold">conversations/*.pb</div>
+                <div class="text-gray-500">Encrypted conversations</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-pink-400 font-semibold">implicit/*.pb</div>
+                <div class="text-gray-500">Implicit sessions</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-yellow-400 font-semibold">browser_recordings/</div>
+                <div class="text-gray-500">Automation screenshots</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-orange-400 font-semibold">code_tracker/active/</div>
+                <div class="text-gray-500">Project file tracking</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-teal-400 font-semibold">browserAllowlist.txt</div>
+                <div class="text-gray-500">Allowed domains</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-red-400 font-semibold">settings.json</div>
+                <div class="text-gray-500">User preferences</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-gray-400 font-semibold">state.json</div>
+                <div class="text-gray-500">State & accounts</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-8 pt-4 border-t border-gray-700 text-center text-gray-500 text-sm">
+        <p>Dashboard generated on {{TIMESTAMP}}</p>
+        <p class="mt-1">Comprehensive Edition - All data sources consolidated</p>
+    </footer>
+
+<script>
+    const chartDates = {{CHART_DATES}};
+    const chartSessions = {{CHART_SESSIONS}};
+    const chartCli = {{CHART_CLI}};
+    const chartBrain = {{CHART_BRAIN}};
+    const chartMessages = {{CHART_MESSAGES}};
+    const chartInputTokens = {{CHART_INPUT_TOKENS}};
+    const chartOutputTokens = {{CHART_OUTPUT_TOKENS}};
+    const chartDurations = {{CHART_DURATIONS}};
+    const chartCliMessages = {{CHART_CLI_MESSAGES}};
+    const chartBrainMessages = {{CHART_BRAIN_MESSAGES}};
+    const toolUsage = {{TOOL_USAGE}};
+    const slashUsage = {{SLASH_USAGE}};
+    const yAxisMax = {{Y_AXIS_MAX}};
+
+    // Session Type Breakdown
+    const totalCli = chartCli.reduce((a, b) => a + b, 0);
+    const totalBrain = chartBrain.reduce((a, b) => a + b, 0);
+
+    new Chart(document.getElementById('sessionTypeChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['CLI Sessions', 'Brain Sessions'],
+            datasets: [{
+                data: [totalCli, totalBrain],
+                backgroundColor: ['rgba(96, 165, 250, 0.7)', 'rgba(168, 85, 247, 0.7)'],
+                borderColor: ['#60a5fa', '#a855f7'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+            }
+        }
+    });
+
+    // Tool Usage Chart
+    if (toolUsage.length > 0) {
+        new Chart(document.getElementById('toolUsageChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: toolUsage.map(t => t.name),
+                datasets: [{
+                    label: 'Usage Count',
+                    data: toolUsage.map(t => t.count),
+                    backgroundColor: 'rgba(96, 165, 250, 0.6)',
+                    borderColor: 'rgba(96, 165, 250, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Slash Commands Chart
+    if (slashUsage.length > 0) {
+        new Chart(document.getElementById('slashCommandChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: slashUsage.map(s => s.name),
+                datasets: [{
+                    label: 'Usage Count',
+                    data: slashUsage.map(s => s.count),
+                    backgroundColor: 'rgba(34, 211, 238, 0.6)',
+                    borderColor: 'rgba(34, 211, 238, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } }
+                }
+            }
+        });
+    } else {
+        document.getElementById('slashCommandChart').parentElement.innerHTML += '<p class="text-gray-500 text-center mt-4">No slash commands recorded</p>';
+    }
+
+    // Daily Activity Chart
+    if (chartDates.length > 0) {
+        new Chart(document.getElementById('dailyActivityChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartDates,
+                datasets: [
+                    {
+                        label: 'Messages',
+                        data: chartMessages,
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'CLI Sessions',
+                        data: chartCli,
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'Brain Sessions',
+                        data: chartBrain,
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { type: 'linear', position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, title: { display: true, text: 'Messages', color: '#94a3b8' } },
+                    y1: { type: 'linear', position: 'right', ticks: { color: '#94a3b8' }, grid: { display: false }, title: { display: true, text: 'Sessions', color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    // Messages by Session Type Chart
+    if (chartDates.length > 0) {
+        new Chart(document.getElementById('messagesByTypeChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartDates,
+                datasets: [
+                    {
+                        label: 'CLI Messages',
+                        data: chartCliMessages,
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.3)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Brain Messages',
+                        data: chartBrainMessages,
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.3)',
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#94a3b8' } },
+                    tooltip: {
+                        callbacks: {
+                            footer: function(tooltipItems) {
+                                const total = tooltipItems.reduce((sum, item) => sum + item.raw, 0);
+                                return 'Total: ' + total;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { stacked: true, beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, title: { display: true, text: 'Messages', color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    // Token Usage Chart
+    if (chartDates.length > 0) {
+        new Chart(document.getElementById('tokenChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartDates,
+                datasets: [
+                    {
+                        label: 'Input Tokens',
+                        data: chartInputTokens,
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.3)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Output Tokens',
+                        data: chartOutputTokens,
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.3)',
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { stacked: true, beginAtZero: true, ticks: { color: '#94a3b8', callback: v => (v/1000).toFixed(0) + 'K' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // Duration Distribution (Boxplot approximation using bar chart)
+    if (chartDurations.length > 0) {
+        // Calculate average duration per day
+        const avgDurations = chartDurations.map(durations => {
+            if (durations.length === 0) return 0;
+            return durations.reduce((a, b) => a + b, 0) / durations.length;
+        });
+
+        new Chart(document.getElementById('durationChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: chartDates,
+                datasets: [{
+                    label: 'Avg Duration (min)',
+                    data: avgDurations,
+                    backgroundColor: 'rgba(251, 146, 60, 0.6)',
+                    borderColor: 'rgba(251, 146, 60, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { beginAtZero: true, max: yAxisMax, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

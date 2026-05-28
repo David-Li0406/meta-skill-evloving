@@ -1,0 +1,181 @@
+{
+  "schema_version": "1.0.0",
+  "indexed_at": "2026-01-22T15:30:00Z",
+  "project_root": "/home/ubuntu/my-polyglot-app",
+  "languages": {
+    "Python": {
+      "file_count": 145,
+      "percentage": 48.3,
+      "primary": true,
+      "manifests": ["requirements.txt", "pyproject.toml", "setup.py"],
+      "entry_points": ["src/main.py", "app.py", "manage.py"]
+    },
+    "Rust": {
+      "file_count": 89,
+      "percentage": 29.7,
+      "primary": false,
+      "manifests": ["Cargo.toml", "Cargo.lock"],
+      "entry_points": ["src/main.rs", "src/lib.rs"]
+    },
+    "Go": {
+      "file_count": 54,
+      "percentage": 18.0,
+      "primary": false,
+      "manifests": ["go.mod", "go.sum"],
+      "entry_points": ["cmd/server/main.go", "cmd/cli/main.go"]
+    },
+    "JavaScript": {
+      "file_count": 12,
+      "percentage": 4.0,
+      "primary": false,
+      "manifests": ["package.json", "package-lock.json"],
+      "entry_points": ["index.js", "server.js"]
+    }
+  },
+  "dependencies": {
+    "Python": {
+      "production": [
+        "requests",
+        "numpy",
+        "pandas",
+        "fastapi",
+        "uvicorn",
+        "pydantic",
+        "sqlalchemy",
+        "alembic"
+      ],
+      "development": [
+        "pytest",
+        "pytest-cov",
+        "black",
+        "ruff",
+        "mypy"
+      ],
+      "total": 13
+    },
+    "Rust": {
+      "dependencies": [
+        "tokio",
+        "serde",
+        "serde_json",
+        "anyhow",
+        "reqwest",
+        "clap"
+      ],
+      "dev_dependencies": [
+        "criterion",
+        "proptest"
+      ],
+      "build_dependencies": [
+        "cc"
+      ],
+      "total": 9
+    },
+    "Go": {
+      "production": [
+        "github.com/gin-gonic/gin",
+        "github.com/sirupsen/logrus",
+        "github.com/spf13/cobra",
+        "gorm.io/gorm"
+      ],
+      "total": 4
+    },
+    "JavaScript": {
+      "dependencies": [
+        "express",
+        "cors",
+        "dotenv"
+      ],
+      "devDependencies": [
+        "jest",
+        "eslint",
+        "prettier"
+      ],
+      "total": 6
+    },
+    "_total": 32
+  },
+  "key_files": {
+    "entry_points": [
+      "src/main.py",
+      "src/main.rs",
+      "cmd/server/main.go",
+      "index.js"
+    ],
+    "configs": [
+      ".env.example",
+      "config/development.yaml",
+      "config/production.yaml",
+      "docker-compose.yml",
+      "alembic.ini"
+    ],
+    "documentation": [
+      "README.md",
+      "docs/architecture.md",
+      "docs/api-reference.md",
+      "docs/deployment.md",
+      "CONTRIBUTING.md",
+      "CLAUDE.md"
+    ],
+    "tests": [
+      "tests/",
+      "src/lib_test.rs",
+      "cmd/server/main_test.go",
+      "test/"
+    ],
+    "build": [
+      "Dockerfile",
+      "docker-compose.yml",
+      ".github/workflows/ci.yml",
+      ".github/workflows/deploy.yml",
+      "Makefile",
+      "build.sh"
+    ]
+  },
+  "structure": {
+    "architecture": "monorepo",
+    "root_dirs": [
+      "src",
+      "cmd",
+      "tests",
+      "docs",
+      "config",
+      "scripts",
+      "migrations"
+    ],
+    "depth": 6,
+    "total_files": 300,
+    "total_size_mb": 15.7,
+    "ignored_dirs": [
+      "node_modules",
+      "target",
+      "venv",
+      ".venv",
+      "__pycache__",
+      "dist",
+      "build",
+      ".pytest_cache"
+    ]
+  },
+  "git": {
+    "branch": "main",
+    "has_changes": true,
+    "last_commit": "a34a001",
+    "remote": "git@github.com:user/my-polyglot-app.git",
+    "tags": [
+      "v2.1.0",
+      "v2.0.0",
+      "v1.9.5"
+    ]
+  },
+  "metadata": {
+    "name": "my-polyglot-app",
+    "description": "Multi-language application with Python API, Rust services, Go CLI tools",
+    "version": "2.1.0",
+    "license": "MIT",
+    "authors": [
+      "Developer <dev@example.com>"
+    ],
+    "homepage": "https://example.com"
+  }
+}

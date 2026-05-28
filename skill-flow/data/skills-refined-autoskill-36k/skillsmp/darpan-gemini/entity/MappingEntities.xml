@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <!-- ========================================================= -->
+    <!-- darpan.mapping -->
+    <!-- ========================================================= -->
+
+    <entity entity-name="ReconciliationMapping" package="darpan.mapping" use="configuration">
+        <description>(DEPRECATED) Named mapping definition for source field values by system. Use RuleSet instead.</description>
+        <field name="reconciliationMappingId" type="id" is-pk="true"/>
+        <field name="mappingName" type="text-short" not-null="true"/>
+        <field name="description" type="text-medium"/>
+        <field name="createdDate" type="date-time"/>
+        <field name="lastUpdatedDate" type="date-time"/>
+    </entity>
+
+    <entity entity-name="ReconciliationMappingMember" package="darpan.mapping" use="configuration">
+        <description>(DEPRECATED) Mapping entry that binds a source field/value to a system.</description>
+        <field name="mappingMemberId" type="id" is-pk="true"/>
+        <field name="reconciliationMappingId" type="id" not-null="true"/>
+        <field name="systemEnumId" type="id" not-null="true"/>
+        <field name="systemFieldName" type="text-medium"/>
+        <field name="fileTypeEnumId" type="id">
+            <description>File type: DftCsv, DftJson, or null for auto-detect</description>
+        </field>
+        <field name="schemaFileName" type="text-medium">
+            <description>JSON schema filename for validation (optional)</description>
+        </field>
+        <field name="idFieldExpression" type="text-medium">
+            <description>ID field: CSV column name (e.g. order_id) or JSONPath (e.g. $.id)</description>
+        </field>
+        <field name="createdDate" type="date-time"/>
+
+        <relationship type="one" related="darpan.mapping.ReconciliationMapping" fk-name="MAPMEM_MAPDEF">
+            <key-map field-name="reconciliationMappingId"/>
+        </relationship>
+        <relationship type="one" related="moqui.basic.Enumeration" fk-name="MAPMEM_SYS_ENUM">
+            <key-map field-name="systemEnumId" related-field-name="enumId"/>
+        </relationship>
+        <relationship type="one" title="FileType" related="moqui.basic.Enumeration" fk-name="MAPMEM_FTYPE_ENUM">
+            <key-map field-name="fileTypeEnumId" related-field-name="enumId"/>
+        </relationship>
+    </entity>
+</entities>

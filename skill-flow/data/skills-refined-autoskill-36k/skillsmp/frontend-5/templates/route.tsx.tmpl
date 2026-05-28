@@ -1,0 +1,19 @@
+import { createFileRoute } from "@tanstack/react-router";
+import * as z from "zod";
+import { WorkspaceLoading } from "@/components/loading/workspace-loading";
+import { {{EntityName}}Page } from "@/components/{{entityKebab}}/{{EntityName}}Page";
+
+const {{entityName}}SearchSchema = z.object({
+  status: z.enum(["active", "paused", "archived"]).optional(),
+  // Add more search params as needed
+});
+
+export type {{EntityName}}SearchParams = z.infer<typeof {{entityName}}SearchSchema>;
+
+export const Route = createFileRoute(
+  "/_authenticated/workspaces/$workspaceSlug/{{entityKebab}}",
+)({
+  validateSearch: {{entityName}}SearchSchema,
+  pendingComponent: WorkspaceLoading,
+  component: {{EntityName}}Page,
+});

@@ -1,0 +1,477 @@
+# Hot Pool Reference
+
+Use `SandboxManager` to maintain pre-warmed sandboxes for instant acquisition (~500ms vs ~30s cold start).
+
+## Ownership Model
+
+**Critical understanding:** Once you acquire a sandbox, YOU own it.
+
+| State | Owned By | On `shutdown()` |
+|-------|----------|-----------------|
+| **Ready** (in pool) | Pool | Destroyed |
+| **Creating** (in-flight) | Pool | Destroyed |
+| **Acquired** (in use) | **You** | NOT touched |
+
+```
+Pool maintains N pre-warmed sandboxes
+       ↓
+acquire() → Sandbox removed from pool, now YOURS
+       ↓
+Use it (exec commands, file ops, etc.)
+       ↓
+delete() → YOUR responsibility to clean up
+       ↓
+Pool auto-replenishes with NEW sandboxes
+```
+
+There is **no recycling**. You cannot "return" a sandbox to the pool. Always call `sandbox.delete()` when done.
+
+---
+
+## When to Use Hot Pool
+
+- AI code interpreters requiring instant response
+- High-throughput scenarios needing concurrent sandboxes
+- Any use case where 30s cold-start latency is unacceptable
+
+For one-off executions where startup time doesn't matter, use [Cold Sandbox](cold-sandbox.md) instead.
+
+---
+
+## Basic Pool Lifecycle (Golden Pattern)
+
+```python
+import asyncio
+from do_app_sandbox import SandboxManager, PoolConfig
+
+async def main():
+    # 1. Configure pool
+    manager = SandboxManager(
+        pools={"python": PoolConfig(target_ready=3)},
+    )
+
+    # 2. Start and warm up (blocks until pool is ready)
+    await manager.start()
+    await manager.warm_up(timeout=180)
+
+    # 3. Acquire instantly (~500ms from pool vs 30s cold start)
+    sandbox = await manager.acquire(image="python")
+
+    # 4. Use it
+    result = sandbox.exec("python3 -c 'print(2+2)'")
+    print(result.stdout)
+
+    # 5. Delete when done - YOUR responsibility!
+    sandbox.delete()
+
+    # 6. Shutdown (cleans up pool, not acquired sandboxes)
+    await manager.shutdown()
+
+asyncio.run(main())
+```
+
+**Reference test:** See `tests/test_pool_basic_integration.py` for a complete working example.
+
+---
+
+## Pool Configuration
+
+### PoolConfig Parameters
+
+```python
+from do_app_sandbox import PoolConfig
+
+config = PoolConfig(
+    target_ready=3,           # Minimum warm sandboxes (always maintained)
+    max_ready=10,             # Maximum sandboxes in pool
+    idle_timeout=60,          # Seconds before scaling down
+    scale_down_delay=60,      # Seconds between destructions
+    cooldown_after_acquire=120,  # Pause scale-down after acquire
+    max_warm_age=1800,        # Max seconds a sandbox can wait in pool
+    health_check_interval=60, # Health check frequency (0 to disable)
+    on_empty="create",        # "create" (fallback) or "fail" (fast-fail)
+    create_retries=3,         # Retry attempts for creation
+)
+```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `target_ready` | 0 | Minimum warm sandboxes (always maintained) |
+| `max_ready` | 10 | Maximum sandboxes to keep in pool |
+| `idle_timeout` | 60 | Seconds of no acquires before scaling down to `target_ready` |
+| `scale_down_delay` | 60 | Seconds between destructions during scale-down |
+| `cooldown_after_acquire` | 120 | Pause scale-down after an acquire |
+| `max_warm_age` | 1800 | Max seconds a sandbox can warm before cycling |
+| `health_check_interval` | 60 | Seconds between health checks (0 to disable) |
+| `on_empty` | `"create"` | `"create"` (cold fallback) or `"fail"` (raise error) |
+| `create_retries` | 3 | Retry attempts for failed creation |
+
+### SandboxManager Parameters
+
+```python
+manager = SandboxManager(
+    pools={
+        "python": PoolConfig(target_ready=3),
+        "node": PoolConfig(target_ready=2),
+    },
+    default_pool_config=PoolConfig(target_ready=1),
+    max_total_sandboxes=50,      # Global limit (cost ceiling)
+    max_concurrent_creates=10,   # API rate limit protection
+    sandbox_defaults={
+        "region": "nyc",
+        "instance_size": "apps-s-1vcpu-1gb",
+    },
+)
+```
+
+---
+
+## Pool Sizing Guidance
+
+| Use Case | Recommended Config | Rationale |
+|----------|-------------------|-----------|
+| Single AI agent | `target_ready=2` | One active + buffer |
+| Multiple concurrent users | `target_ready=users * 1.5` | Account for overlap |
+| Burst workloads | `target_ready=peak * 2` | Handle spikes |
+| Development/testing | `target_ready=1` | Minimize cost |
+
+**Cost calculation:**
+```
+Pool cost = target_ready × instance_cost × hours_running
+Example: 3 sandboxes × $0.02/hr × 8 hrs = $0.48/day
+```
+
+---
+
+## Acquire Pattern
+
+### Basic Pattern (Always Delete)
+
+```python
+sandbox = await manager.acquire(image="python")
+try:
+    result = sandbox.exec("python3 script.py")
+    # Process result
+finally:
+    sandbox.delete()  # YOUR responsibility!
+```
+
+### Context Manager (Recommended)
+
+```python
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def get_sandbox(manager, image="python"):
+    sandbox = await manager.acquire(image=image)
+    try:
+        yield sandbox
+    finally:
+        sandbox.delete()
+
+# Usage
+async with get_sandbox(manager) as sandbox:
+    result = sandbox.exec("python3 -c 'print(42)'")
+```
+
+### Handling Pool Exhaustion
+
+```python
+from do_app_sandbox import PoolExhaustedError
+
+try:
+    sandbox = await manager.acquire(image="python")
+    try:
+        result = sandbox.exec("python3 script.py")
+    finally:
+        sandbox.delete()
+except PoolExhaustedError:
+    # Pool empty and on_empty="fail"
+    print("No sandboxes available")
+```
+
+With `on_empty="create"` (default), the manager falls back to cold creation (~30s) if the pool is empty.
+
+---
+
+## Snapshot-Based Acquisition
+
+Restore sandboxes with pre-installed dependencies from snapshots:
+
+### Create Snapshot (One-Time Setup)
+
+```python
+# Create a golden snapshot with common packages
+sandbox = await manager.acquire(image="python")
+sandbox.exec("pip install pandas numpy scikit-learn requests")
+sandbox.exec("pip install transformers torch")
+
+# Save snapshot for reuse
+meta = sandbox.create_snapshot(
+    snapshot_id="ml-environment-v1",
+    description="ML packages pre-installed"
+)
+print(f"Saved: {meta.snapshot_id}")
+sandbox.delete()
+```
+
+### Acquire with Snapshot
+
+```python
+# Get sandbox with snapshot restored (~5-15s faster than installing)
+sandbox = await manager.acquire_with_snapshot(
+    image="python",
+    snapshot_id="ml-environment-v1"
+)
+
+# Packages already installed
+result = sandbox.exec("python3 -c 'import pandas; print(pandas.__version__)'")
+print(result.stdout)
+
+sandbox.delete()
+```
+
+### Wake Hibernated Sandbox
+
+For resuming a specific hibernated session (not a generic snapshot):
+
+```python
+# Resume a hibernated sandbox through the pool (faster)
+sandbox = await manager.wake_hibernated(hibernated)
+
+# State is restored
+result = sandbox.exec("ls -la /workspace")
+sandbox.delete()
+```
+
+---
+
+## Pool Behavior
+
+The pool always maintains at least `target_ready` sandboxes:
+
+```
+Pool maintains target_ready sandboxes at all times
+       │
+acquire() → Sandbox removed from pool
+       │
+Pool auto-replenishes back to target_ready
+       │
+(pool can temporarily exceed target_ready up to max_ready during burst)
+```
+
+**Scaling behavior:**
+- Pool **never drops below `target_ready`** — this is the baseline
+- Burst traffic can grow pool up to `max_ready`
+- After `idle_timeout` seconds of no acquires, excess sandboxes (above `target_ready`) are scaled down
+- Scale-down destroys 1 sandbox every `scale_down_delay` seconds until reaching `target_ready`
+- After any acquire, scale-down is paused for `cooldown_after_acquire` seconds
+
+This ensures consistent low-latency acquisition while controlling costs.
+
+---
+
+## Warm-Up Before Production Traffic
+
+```python
+manager = SandboxManager(
+    pools={"python": PoolConfig(target_ready=5)},
+)
+await manager.start()
+
+# Block until all pools reach target_ready
+await manager.warm_up(timeout=120)
+
+# Now safe to serve traffic with guaranteed low latency
+print("Pool warmed up, ready to serve requests")
+```
+
+---
+
+## Monitoring with Metrics
+
+```python
+# Get current metrics
+metrics = manager.metrics()
+
+for image, pool_metrics in metrics.items():
+    print(f"{image}:")
+    print(f"  Ready: {pool_metrics.ready}")
+    print(f"  Creating: {pool_metrics.creating}")
+    print(f"  In use: {pool_metrics.in_use}")
+    print(f"  Pool hit rate: {pool_metrics.pool_hit_rate:.1%}")
+    print(f"  Avg latency: {pool_metrics.avg_acquire_latency_ms:.0f}ms")
+```
+
+### Available Metrics
+
+| Metric | Description |
+|--------|-------------|
+| `ready` | Sandboxes waiting in pool |
+| `creating` | Sandboxes being created |
+| `in_use` | Sandboxes currently acquired |
+| `total_acquires` | Total acquisitions |
+| `acquires_from_pool` | Instant acquisitions from pool |
+| `acquires_cold_start` | Acquisitions requiring cold start |
+| `pool_hit_rate` | Ratio of instant to total |
+| `avg_acquire_latency_ms` | Average acquisition time |
+
+---
+
+## AI Agent Workflow Example
+
+```python
+import asyncio
+from do_app_sandbox import SandboxManager, PoolConfig
+
+class CodeInterpreter:
+    def __init__(self):
+        self.manager = SandboxManager(
+            pools={"python": PoolConfig(target_ready=2)},
+        )
+        self._started = False
+
+    async def start(self):
+        await self.manager.start()
+        await self.manager.warm_up(timeout=180)  # Wait for pool to be ready
+        self._started = True
+
+    async def execute(self, code: str) -> dict:
+        if not self._started:
+            await self.start()
+
+        sandbox = await self.manager.acquire(image="python")
+        try:
+            # Write code to file
+            sandbox.filesystem.write_file("/tmp/user_code.py", code)
+
+            # Execute with timeout
+            result = sandbox.exec("python3 /tmp/user_code.py", timeout=30)
+
+            return {
+                "success": result.exit_code == 0,
+                "output": result.stdout,
+                "error": result.stderr if result.exit_code != 0 else None
+            }
+        finally:
+            sandbox.delete()  # YOUR responsibility!
+
+    async def shutdown(self):
+        await self.manager.shutdown()
+
+# Usage
+async def main():
+    interpreter = CodeInterpreter()
+    await interpreter.start()
+
+    result = await interpreter.execute("print('Hello from sandbox!')")
+    print(result)
+
+    await interpreter.shutdown()
+
+asyncio.run(main())
+```
+
+---
+
+## Graceful Shutdown
+
+```python
+import asyncio
+import signal
+
+manager = SandboxManager(
+    pools={"python": PoolConfig(target_ready=3)},
+)
+
+async def shutdown():
+    print("Shutting down pool...")
+    await manager.shutdown()
+
+def signal_handler():
+    asyncio.create_task(shutdown())
+
+async def main():
+    await manager.start()
+
+    loop = asyncio.get_event_loop()
+    loop.add_signal_handler(signal.SIGINT, signal_handler)
+    loop.add_signal_handler(signal.SIGTERM, signal_handler)
+
+    # Your application loop here
+    while True:
+        await asyncio.sleep(1)
+
+asyncio.run(main())
+```
+
+---
+
+## Error Handling
+
+```python
+from do_app_sandbox import (
+    PoolExhaustedError,
+    PoolShutdownError,
+    WarmUpTimeoutError,
+    SandboxCreationError,
+)
+
+try:
+    sandbox = await manager.acquire(image="python")
+    sandbox.delete()
+except PoolExhaustedError:
+    # Pool empty and on_empty="fail"
+    pass
+except PoolShutdownError:
+    # Manager is shutting down
+    pass
+
+try:
+    await manager.warm_up(timeout=60)
+except WarmUpTimeoutError:
+    # Pools didn't reach target in time
+    pass
+```
+
+---
+
+## High-Throughput Example
+
+```python
+from do_app_sandbox import SandboxManager, PoolConfig
+
+async def run_agent_system():
+    manager = SandboxManager(
+        pools={
+            "python": PoolConfig(
+                target_ready=10,      # Keep 10 warm for burst handling
+                max_ready=50,         # Never exceed 50 (cost ceiling)
+                idle_timeout=60,      # Scale down after 1 min idle
+                on_empty="create",    # Fall back to cold start if needed
+            ),
+        },
+        max_total_sandboxes=100,      # Global limit across all images
+        max_concurrent_creates=10,    # Don't overwhelm the API
+        sandbox_defaults={
+            "region": "nyc",
+            "instance_size": "apps-s-1vcpu-2gb",
+        },
+    )
+
+    await manager.start()
+    await manager.warm_up(timeout=300)  # Wait for initial pool fill
+
+    # Handle agent requests
+    async def handle_agent_task(task):
+        sandbox = await manager.acquire(image="python")
+        try:
+            result = sandbox.exec(f"python /app/run_task.py {task.id}")
+            return result
+        finally:
+            sandbox.delete()  # YOUR responsibility!
+
+    # ... run your agent system ...
+
+    await manager.shutdown()
+```

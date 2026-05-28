@@ -1,0 +1,55 @@
+# Surface Ocean Dataset Configuration
+# 表层海洋数据配置
+
+model:
+  name: 'OceanCNN'  # Options: OceanCNN, OceanResNet, OceanTransformer
+
+data:
+  name: 'surface'     # 数据集类型：表层海洋数据
+  dataset: 'surface'  # 用于目录生成
+  data_path: 'datasets/data/uovo_surface_1997-01-01_to_1997-12-31_debug1.h5'
+  patches_per_day: 147  # 表层数据：147 patches/day
+  input_len: 7
+  output_len: 1
+  train_ratio: 0.7
+  valid_ratio: 0.15
+  test_ratio: 0.15
+  train_batchsize: 64
+  eval_batchsize: 64
+  subset: True
+  subset_ratio: 0.01
+  normalize: True
+  normalization_mode: 'normalize'
+  num_workers: 1
+  pin_memory: False
+
+train:
+  random_seed: 42
+  cuda: True
+  device_ids: [0, 1, 2, 3, 4, 5, 6, 7]
+  epochs: 100
+  patience: 15
+  eval_freq: 5
+  saving_best: True
+  saving_checkpoint: True
+  checkpoint_freq: 20
+  
+  distribute_mode: 'DP'
+  local_rank: 0
+
+optimizer:
+  optimizer: 'AdamW'
+  lr: 0.001
+  weight_decay: 0.0001
+
+scheduler:
+  scheduler: 'MultiStepLR'
+  milestones: [30, 60, 90]
+  gamma: 0.5
+
+log:
+  verbose: True
+  log: True
+  log_dir: './logs'
+  wandb: False
+  wandb_project: 'ocean_surface_prediction'

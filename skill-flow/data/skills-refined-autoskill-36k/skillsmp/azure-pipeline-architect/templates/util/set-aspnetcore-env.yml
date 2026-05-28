@@ -1,0 +1,77 @@
+# ==============================================================================
+# Template Name: Set ASP.NET Core Environment (set-aspnetcore-env.yml)
+# Description: 
+#   Modify web.config before deployment to inject or update the ASPNETCORE_ENVIRONMENT environment variable.
+#   This ensures the application starts with the correct environment settings, avoiding a second restart.
+# ==============================================================================
+
+parameters:
+  - name: aspNetCoreEnvironment
+    type: string
+  - name: packagePath
+    type: string
+  
+  # Execution Condition
+  - name: runCondition
+    type: string
+    default: 'succeeded()'
+
+steps:
+  - powershell: |
+      $envValue = "${{ parameters.aspNetCoreEnvironment }}"
+      $packagePath = "${{ parameters.packagePath }}"
+      
+      Write-Host "Target Package Path: $packagePath"
+      
+      # Check if path exists and is a directory
+      if (Test-Path $packagePath -PathType Container) {
+          $webConfigPath = Get-ChildItem -Path $packagePath -Filter "web.config" -Recurse | Select-Object -First 1
+          
+          if ($webConfigPath) {
+              Write-Host "Found web.config at: $($webConfigPath.FullName)"
+              
+              # Read XML
+              $xml = [xml](Get-Content $webConfigPath.FullName)
+              
+              # Use XPath to find aspNetCore node, ignoring structure differences (e.g. wrapped in <location>)
+              $aspNetCore = $xml.SelectSingleNode("//system.webServer/aspNetCore")
+
+              if ($aspNetCore) {
+                  # Ensure environmentVariables node exists
+                  if (-not $aspNetCore.SelectSingleNode("environmentVariables")) {
+                      Write-Host "Creating environmentVariables node..."
+                      $envVars = $xml.CreateElement("environmentVariables")
+                      $aspNetCore.AppendChild($envVars) | Out-Null
+                  }
+                  
+                  # Get environmentVariables node (Use SelectSingleNode to ensure XmlElement)
+                  $envVarsNode = $aspNetCore.SelectSingleNode("environmentVariables")
+
+                  # Check if variable exists, remove old one if so
+                  $existing = $envVarsNode.SelectSingleNode("environmentVariable[@name='ASPNETCORE_ENVIRONMENT']")
+                  if ($existing) {
+                      Write-Host "Removing existing ASPNETCORE_ENVIRONMENT setting..."
+                      $envVarsNode.RemoveChild($existing) | Out-Null
+                  }
+                  
+                  # Create new environment variable node
+                  Write-Host "Injecting ASPNETCORE_ENVIRONMENT='$envValue'..."
+                  $newEnv = $xml.CreateElement("environmentVariable")
+                  $newEnv.SetAttribute("name", "ASPNETCORE_ENVIRONMENT")
+                  $newEnv.SetAttribute("value", $envValue)
+                  $envVarsNode.AppendChild($newEnv) | Out-Null
+                  
+                  # Save
+                  $xml.Save($webConfigPath.FullName)
+                  Write-Host "web.config updated successfully."
+              } else {
+                  Write-Warning "Element system.webServer/aspNetCore not found in web.config (XPath: //system.webServer/aspNetCore). Skipping."
+              }
+          } else {
+              Write-Warning "web.config not found in artifact. Skipping environment variable injection."
+          }
+      } else {
+          Write-Warning "Artifact path is not a directory (possibly a ZIP file?). Cannot modify web.config directly."
+      }
+    displayName: 'Pre-modify web.config (Inject Environment Variable)'
+    condition: ${{ parameters.runCondition }}

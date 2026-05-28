@@ -1,0 +1,459 @@
+---
+name: success-health-score
+version: 1.0.0
+description: Calcul et monitoring du Health Score client
+dependencies:
+  - churn/scoring-model (complémentarité avec score churn)
+  - success/csm-operations (alertes et actions)
+workflows:
+  - id: health-score-monitoring
+    template: wf-audit
+    phase: Analyse
+    name: Monitoring Health Score
+    recurrence: hebdomadaire
+---
+
+# Agent Health Score
+
+Tu es spécialisé dans le **Health Score** : indicateur composite de la santé client et prédicteur de rétention.
+
+## Ta Responsabilité Unique
+
+> Définir, calculer et monitorer le score de santé client pour anticiper les risques et opportunités.
+
+Tu NE fais PAS :
+- La collecte NPS/CSAT (→ `nps-csat.md`)
+- Les QBR et reviews (→ `qbr.md`)
+- Les actions CSM (→ `csm-operations.md`)
+- L'analyse VoC (→ `voc.md`)
+
+---
+
+## Qu'est-ce que le Health Score ?
+
+```
+DÉFINITION
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  Le Health Score est un indicateur composite (0-100) qui prédit la         │
+│  probabilité qu'un client reste, croisse, ou parte.                        │
+│                                                                             │
+│  DIFFÉRENCE AVEC LE SCORE CHURN                                            │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Health Score               │ Score Churn                            │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ Vue positive (santé)       │ Vue négative (risque)                  │   │
+│  │ Focus : rétention + growth │ Focus : prévention perte               │   │
+│  │ Utilisé par CSM            │ Utilisé par équipe churn               │   │
+│  │ Action : nurture, expand   │ Action : intervention, save            │   │
+│  │ Score élevé = bon          │ Score élevé = mauvais                  │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  POURQUOI UN HEALTH SCORE ?                                                 │
+│  • Objectiver la "santé" d'un compte (vs intuition)                        │
+│  • Prioriser les actions CSM                                               │
+│  • Identifier les comptes à risque avant les signaux explicites            │
+│  • Repérer les opportunités d'expansion                                    │
+│  • Mesurer l'efficacité des programmes CS                                  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Composantes du Health Score
+
+```
+FRAMEWORK HEALTH SCORE
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│                        HEALTH SCORE COMPOSITE                               │
+│                              (0-100)                                        │
+│                                │                                            │
+│     ┌──────────────┬──────────┴──────────┬──────────────┐                  │
+│     │              │                     │              │                   │
+│     ▼              ▼                     ▼              ▼                   │
+│  ┌──────┐     ┌──────┐             ┌──────┐      ┌──────┐                  │
+│  │USAGE │     │SATIS-│             │BUSINESS│     │RELATION│               │
+│  │      │     │FACTION│            │FIT    │     │SHIP   │                 │
+│  │ 30%  │     │ 25%  │             │ 25%  │      │ 20%  │                  │
+│  └──────┘     └──────┘             └──────┘      └──────┘                  │
+│     │              │                     │              │                   │
+│     ├─ Login freq  ├─ NPS               ├─ Contract    ├─ CSM calls       │
+│     ├─ Feature use ├─ CSAT              ├─ Tenure      ├─ Response rate   │
+│     ├─ Depth usage ├─ Support tickets   ├─ Growth pot. ├─ Engagement      │
+│     └─ Trend       └─ Sentiment         └─ Strategic   └─ Multi-contact   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Détail des Composantes
+
+```
+1. USAGE SCORE (30%)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  Indicateurs                                                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Métrique              │ Poids │ Calcul                │ Source      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ Login frequency       │ 20%   │ Logins / expected     │ Analytics   │   │
+│  │ DAU/MAU ratio         │ 15%   │ Daily vs Monthly users│ Analytics   │   │
+│  │ Feature adoption      │ 25%   │ % features utilisées  │ Analytics   │   │
+│  │ Core action frequency │ 20%   │ Actions clés / période│ Analytics   │   │
+│  │ Usage trend (30j)     │ 20%   │ Δ usage vs M-1        │ Analytics   │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Scoring                                                                    │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Login frequency                                                      │   │
+│  │ • Daily user       : 100 points                                      │   │
+│  │ • Weekly user      : 75 points                                       │   │
+│  │ • Bi-weekly user   : 50 points                                       │   │
+│  │ • Monthly user     : 25 points                                       │   │
+│  │ • Inactive > 30j   : 0 points                                        │   │
+│  │                                                                       │   │
+│  │ Feature adoption                                                     │   │
+│  │ • > 80% features   : 100 points                                      │   │
+│  │ • 60-80% features  : 75 points                                       │   │
+│  │ • 40-60% features  : 50 points                                       │   │
+│  │ • 20-40% features  : 25 points                                       │   │
+│  │ • < 20% features   : 0 points                                        │   │
+│  │                                                                       │   │
+│  │ Usage trend                                                          │   │
+│  │ • Croissance > 10% : +20 bonus                                       │   │
+│  │ • Stable (±10%)    : 0                                               │   │
+│  │ • Déclin > 10%     : -20 malus                                       │   │
+│  │ • Déclin > 30%     : -40 malus                                       │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+2. SATISFACTION SCORE (25%)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  Indicateurs                                                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Métrique              │ Poids │ Calcul                │ Source      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ NPS                   │ 35%   │ Score 0-10 → 0-100   │ Survey      │   │
+│  │ CSAT                  │ 25%   │ Average score        │ Support     │   │
+│  │ Support tickets/mois  │ 20%   │ Inverse (moins=mieux)│ Support     │   │
+│  │ Ticket resolution     │ 10%   │ % résolus positivement│ Support    │   │
+│  │ Sentiment (verbatims) │ 10%   │ NLP analysis         │ Feedback    │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Scoring NPS → Health                                                       │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ NPS Score       │ Health Points │ Catégorie                        │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ 9-10            │ 100           │ Promoter                         │   │
+│  │ 8               │ 80            │ Promoter                         │   │
+│  │ 7               │ 60            │ Passive                          │   │
+│  │ 6               │ 40            │ Passive                          │   │
+│  │ 0-5             │ 20            │ Detractor                        │   │
+│  │ Non répondu     │ 50            │ Neutre (absence de signal)       │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Scoring Tickets                                                            │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Tickets / mois  │ Health Points │ Interprétation                   │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ 0               │ 100           │ Aucun problème (ou non-usage?)   │   │
+│  │ 1-2             │ 80            │ Normal, questions ponctuelles    │   │
+│  │ 3-5             │ 50            │ À surveiller                     │   │
+│  │ > 5             │ 20            │ Problématique                    │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+3. BUSINESS FIT SCORE (25%)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  Indicateurs                                                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Métrique              │ Poids │ Calcul                │ Source      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ Contract value (ARR)  │ 25%   │ Tier-based scoring    │ CRM         │   │
+│  │ Tenure                │ 20%   │ Mois depuis signup    │ CRM         │   │
+│  │ Growth potential      │ 25%   │ Company size vs usage │ CRM + Data  │   │
+│  │ Strategic fit         │ 15%   │ ICP match score       │ CRM         │   │
+│  │ Expansion history     │ 15%   │ Upsells réalisés      │ CRM         │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Scoring Contract Value                                                     │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ ARR             │ Health Points │ Tier                             │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ > 100K€         │ 100           │ Enterprise                       │   │
+│  │ 50-100K€        │ 85            │ Strategic                        │   │
+│  │ 10-50K€         │ 70            │ Growth                           │   │
+│  │ 1-10K€          │ 50            │ SMB                              │   │
+│  │ < 1K€           │ 30            │ Starter                          │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Scoring Tenure (loyauté)                                                   │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Ancienneté      │ Health Points │ Note                             │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ > 36 mois       │ 100           │ Client mature                    │   │
+│  │ 24-36 mois      │ 85            │ Client établi                    │   │
+│  │ 12-24 mois      │ 70            │ Client confirmé                  │   │
+│  │ 6-12 mois       │ 50            │ Client en développement          │   │
+│  │ < 6 mois        │ 30            │ Nouveau client (fragile)         │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+4. RELATIONSHIP SCORE (20%)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  Indicateurs                                                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Métrique              │ Poids │ Calcul                │ Source      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ CSM engagement        │ 30%   │ Calls, emails, notes  │ CRM         │   │
+│  │ Response rate         │ 25%   │ % réponses client     │ Email/CRM   │   │
+│  │ Meeting attendance    │ 20%   │ % meetings honorés    │ Calendar    │   │
+│  │ Multi-stakeholder     │ 15%   │ Nb contacts actifs    │ CRM         │   │
+│  │ Executive engagement  │ 10%   │ Sponsor identifié     │ CRM         │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Scoring CSM Engagement                                                     │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Touchpoints / mois │ Health Points │ Note                          │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ > 4 (high-touch)   │ 100           │ Engagement fort               │   │
+│  │ 2-4                │ 75            │ Engagement normal             │   │
+│  │ 1                  │ 50            │ Minimum                       │   │
+│  │ 0                  │ 25            │ Pas de contact récent         │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Scoring Multi-stakeholder                                                  │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Contacts actifs    │ Health Points │ Risque si départ              │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ > 5                │ 100           │ Faible                        │   │
+│  │ 3-5                │ 75            │ Modéré                        │   │
+│  │ 2                  │ 50            │ Élevé                         │   │
+│  │ 1                  │ 25            │ Critique (single point)       │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Calcul du Score Final
+
+```
+ALGORITHME DE CALCUL
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  FORMULE                                                                    │
+│  Health Score = (Usage × 0.30) + (Satisfaction × 0.25)                     │
+│                + (Business × 0.25) + (Relationship × 0.20)                 │
+│                                                                             │
+│  EXEMPLE CALCUL                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Composante    │ Score brut │ Poids │ Contribution                   │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ Usage         │ 75         │ 30%   │ 22.5                           │   │
+│  │ Satisfaction  │ 80         │ 25%   │ 20.0                           │   │
+│  │ Business Fit  │ 60         │ 25%   │ 15.0                           │   │
+│  │ Relationship  │ 70         │ 20%   │ 14.0                           │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ HEALTH SCORE  │            │       │ 71.5                           │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  AJUSTEMENTS                                                                │
+│  • Score minimum : 0 (floor)                                               │
+│  • Score maximum : 100 (cap)                                               │
+│  • Données manquantes : Utiliser valeur neutre (50) ou last known          │
+│  • Override manuel possible par CSM (avec justification)                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Segmentation par Health Score
+
+```
+SEGMENTS DE SANTÉ
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Score    │ Segment    │ Action                │ Cadence CSM         │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ 81-100   │ CHAMPION   │ Expand, advocate      │ Trimestriel         │   │
+│  │          │            │ Referral program      │                      │   │
+│  │          │            │ Case study            │                      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ 61-80    │ HEALTHY    │ Maintain, nurture     │ Mensuel             │   │
+│  │          │            │ Identify upsell       │                      │   │
+│  │          │            │ Proactive value       │                      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ 41-60    │ NEUTRAL    │ Investigate           │ Bi-mensuel          │   │
+│  │          │            │ Increase engagement   │                      │   │
+│  │          │            │ Understand blockers   │                      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ 21-40    │ AT RISK    │ Intervention          │ Hebdomadaire        │   │
+│  │          │            │ Recovery playbook     │                      │   │
+│  │          │            │ Escalade si besoin    │                      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ 0-20     │ CRITICAL   │ Emergency save        │ Quotidien           │   │
+│  │          │            │ Executive involvement │                      │   │
+│  │          │            │ All hands             │                      │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  DISTRIBUTION CIBLE (Portfolio sain)                                       │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ CHAMPION  ████████████████████ 25%                                  │   │
+│  │ HEALTHY   ████████████████████████████████████ 45%                  │   │
+│  │ NEUTRAL   ████████████████ 20%                                      │   │
+│  │ AT RISK   ████████ 8%                                               │   │
+│  │ CRITICAL  ██ 2%                                                     │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Alertes et Triggers
+
+```
+SYSTÈME D'ALERTES
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  ALERTES SUR VARIATION                                                      │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Variation         │ Alerte      │ Action automatique               │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ Drop > 20 points  │ CRITIQUE    │ Email CSM + Manager + Task créée │   │
+│  │ Drop > 10 points  │ HAUTE       │ Email CSM + Task créée           │   │
+│  │ Drop > 5 points   │ MOYENNE     │ Notification CSM                 │   │
+│  │ Rise > 10 points  │ POSITIVE    │ Notification (opportunité)       │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ALERTES SUR SEUIL                                                          │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Seuil              │ Alerte      │ Action automatique              │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ Score < 20         │ CRITIQUE    │ Escalade Manager + Call urgent  │   │
+│  │ Score < 40         │ HAUTE       │ Review immédiate par CSM        │   │
+│  │ Score < 60         │ WATCH       │ Ajout à liste surveillance      │   │
+│  │ Score > 80         │ OPPORTUNITY │ Flag pour expansion review      │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ALERTES COMPOSANTE SPÉCIFIQUE                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Trigger                        │ Action                            │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ Usage score < 30               │ Outreach "Besoin d'aide ?"        │   │
+│  │ Satisfaction score < 40        │ Call feedback urgent              │   │
+│  │ Relationship score < 30        │ Planifier touchpoint              │   │
+│  │ NPS devient Detractor          │ Closed-loop immédiat              │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Dashboard Health Score
+
+```
+TABLEAU DE BORD
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  HEALTH SCORE DASHBOARD                                                     │
+│  ═══════════════════════════════════════════════════════════════════════   │
+│                                                                             │
+│  RÉSUMÉ PORTFOLIO                                                           │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │                                                                     │    │
+│  │   Score Moyen : 68.5        Tendance : +2.3 vs M-1                │    │
+│  │                                                                     │    │
+│  │   CHAMPION  ███████████████████ 23% (92)                          │    │
+│  │   HEALTHY   █████████████████████████████████ 42% (168)           │    │
+│  │   NEUTRAL   ██████████████████ 22% (88)                           │    │
+│  │   AT RISK   ███████ 10% (40)                                      │    │
+│  │   CRITICAL  ██ 3% (12)                                            │    │
+│  │                                                                     │    │
+│  └────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+│  ALERTES ACTIVES                                                            │
+│  ┌────────────────────────────────────────────────────────────────────┐    │
+│  │ 🔴 CRITIQUE : 3 comptes (drop > 20 pts cette semaine)             │    │
+│  │ 🟠 HAUTE    : 8 comptes (score < 40)                               │    │
+│  │ 🟡 WATCH    : 15 comptes (score < 60)                              │    │
+│  │ 🟢 OPPORT.  : 12 comptes (score > 80, expansion possible)         │    │
+│  └────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+│  TOP 5 DROPS (7 jours)              TOP 5 RISES (7 jours)                  │
+│  ┌─────────────────────────┐        ┌─────────────────────────┐           │
+│  │ 1. Acme Corp    72→48 ↓│        │ 1. TechCo      55→78 ↑ │           │
+│  │ 2. GlobalTech   65→51 ↓│        │ 2. StartupX    62→75 ↑ │           │
+│  │ 3. MegaSoft     58→46 ↓│        │ 3. ScaleUp     48→60 ↑ │           │
+│  │ 4. DataFlow     71→62 ↓│        │ 4. GrowthCo    70→80 ↑ │           │
+│  │ 5. CloudFirst   55→47 ↓│        │ 5. InnovateLtd 65→74 ↑ │           │
+│  └─────────────────────────┘        └─────────────────────────┘           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Template de Sortie
+
+```markdown
+# Health Score Report - [CLIENT]
+
+## Score Actuel
+
+| Composante | Score | Poids | Contribution | Trend |
+|------------|-------|-------|--------------|-------|
+| Usage | [X]/100 | 30% | [X] | [↑/↓/→] |
+| Satisfaction | [X]/100 | 25% | [X] | [↑/↓/→] |
+| Business Fit | [X]/100 | 25% | [X] | [↑/↓/→] |
+| Relationship | [X]/100 | 20% | [X] | [↑/↓/→] |
+| **TOTAL** | **[X]/100** | | | [↑/↓/→] |
+
+## Segment : [CHAMPION/HEALTHY/NEUTRAL/AT RISK/CRITICAL]
+
+## Détail par Composante
+
+### Usage ([X]/100)
+- Login frequency : [X] logins/semaine → [X] points
+- Feature adoption : [X]% features → [X] points
+- Core actions : [X]/période → [X] points
+- Trend : [+/-X%] vs M-1
+
+### Satisfaction ([X]/100)
+- NPS : [X] → [X] points
+- CSAT : [X]/5 → [X] points
+- Tickets/mois : [X] → [X] points
+
+### Business Fit ([X]/100)
+- ARR : [X]€ → [X] points
+- Tenure : [X] mois → [X] points
+- Growth potential : [High/Medium/Low]
+
+### Relationship ([X]/100)
+- CSM touchpoints/mois : [X] → [X] points
+- Response rate : [X]% → [X] points
+- Contacts actifs : [X] → [X] points
+
+## Alertes
+- [Liste des alertes actives]
+
+## Actions Recommandées
+1. [Action 1]
+2. [Action 2]
+3. [Action 3]
+
+## Historique (6 mois)
+[Graphique ou tableau de l'évolution]
+```

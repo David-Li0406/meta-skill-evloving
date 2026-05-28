@@ -1,0 +1,25 @@
+[package]
+name = "vespera_macro"
+version = "0.1.22"
+edition = "2024"
+description = "Procedural macros for Vespera - automatic route discovery and OpenAPI generation"
+license = "Apache-2.0"
+repository = "https://github.com/dev-five-git/vespera"
+readme = "../../README.md"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+syn = { version = "2", features = ["full"] }
+proc-macro2 = "1"
+vespera_core = { workspace = true }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+
+[dev-dependencies]
+rstest = "0.26"
+insta = "1.46"
+tempfile = "3"

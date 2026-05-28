@@ -1,0 +1,92 @@
+#cloud-config
+# =============================================================================
+# Flask Application Server
+# =============================================================================
+#
+# Purpose: Python application server with systemd service management
+#
+# Features:
+# - Dedicated service user (no login access)
+# - Python virtual environment for isolated dependencies
+# - Shared ownership (admin user deploys, flask-app runs)
+# - Secure environment file for database credentials
+# - systemd automatic restart on failure
+#
+# How it works:
+# 1. Installs Python and PostgreSQL client
+# 2. Creates systemd service unit file
+# 3. Creates service user and directories
+# 4. Sets up Python virtual environment
+# 5. Configures permissions for deployment and runtime
+# 6. Registers service (but does not start - no app code yet)
+#
+# Configuration:
+# - Replace 'adminuser' with your cloud provider's default SSH user
+# - Environment variables go in /etc/flask-app/environment
+#
+# Default SSH users by cloud provider:
+# - AWS (Amazon Linux): ec2-user
+# - AWS (Ubuntu AMI): ubuntu
+# - Azure: azureuser
+# - GCP: Your Google account username
+# - DigitalOcean: root
+#
+# =============================================================================
+package_update: true
+package_upgrade: true
+
+packages:
+  - python3
+  - python3-pip
+  - python3-venv
+  - postgresql-client
+
+write_files:
+  - path: /etc/systemd/system/flask-app.service
+    content: |
+      [Unit]
+      Description=Flask Application
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=flask-app
+      Group=flask-app
+      WorkingDirectory=/opt/flask-app
+      EnvironmentFile=/etc/flask-app/environment
+      ExecStart=/opt/flask-app/venv/bin/gunicorn --bind 0.0.0.0:5001 wsgi:app
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Create service user (system account, no interactive login)
+  - useradd --system --shell /usr/sbin/nologin --no-create-home flask-app
+
+  # Create directories
+  - mkdir -p /opt/flask-app
+  - mkdir -p /etc/flask-app
+
+  # Set up Python virtual environment
+  - python3 -m venv /opt/flask-app/venv
+  - /opt/flask-app/venv/bin/pip install --upgrade pip wheel setuptools
+
+  # Set permissions for deployment
+  # Owner: adminuser (for SSH deployment) - replace with your cloud provider's default user
+  # Group: flask-app (for service to read files)
+  - chown -R adminuser:flask-app /opt/flask-app
+  - chmod 775 /opt/flask-app
+  - chmod 775 /opt/flask-app/venv
+  - usermod -aG flask-app adminuser
+
+  # Secure configuration directory
+  - chown root:flask-app /etc/flask-app
+  - chmod 750 /etc/flask-app
+  - touch /etc/flask-app/environment
+  - chown root:flask-app /etc/flask-app/environment
+  - chmod 640 /etc/flask-app/environment
+
+  # Register service (don't start - no application code yet)
+  - systemctl daemon-reload

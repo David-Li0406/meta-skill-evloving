@@ -1,0 +1,313 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Progress Tracking Artifact Schema"
+type: object
+description: "JSON Schema for progress tracking artifacts (YAML frontmatter validation)"
+
+required:
+  - type
+  - prd
+  - phase
+  - title
+  - status
+  - started
+  - overall_progress
+  - total_tasks
+  - completed_tasks
+  - in_progress_tasks
+  - blocked_tasks
+  - tasks             # REQUIRED: All tasks with assignments and dependencies
+
+properties:
+  type:
+    type: string
+    enum: ["progress"]
+    description: "Artifact type identifier"
+
+  prd:
+    type: string
+    minLength: 3
+    maxLength: 64
+    pattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+    description: "PRD identifier in kebab-case (e.g., 'advanced-editing-v2')"
+
+  phase:
+    type: integer
+    minimum: 1
+    maximum: 99
+    description: "Phase number (1, 2, 3, etc.)"
+
+  title:
+    type: string
+    minLength: 5
+    maxLength: 256
+    description: "Phase title describing the work (e.g., 'Prompt Creation Modal Enhancements')"
+
+  status:
+    type: string
+    enum: ["planning", "in-progress", "review", "complete", "blocked"]
+    description: "Current phase status"
+
+  started:
+    type: string
+    format: "date"
+    description: "Phase start date in YYYY-MM-DD format"
+
+  completed:
+    oneOf:
+      - type: "null"
+      - type: string
+        format: "date"
+    default: null
+    description: "Phase completion date in YYYY-MM-DD format (null if not complete)"
+
+  overall_progress:
+    type: integer
+    minimum: 0
+    maximum: 100
+    description: "Overall progress percentage (0-100)"
+
+  completion_estimate:
+    type: string
+    enum: ["on-track", "at-risk", "blocked", "ahead"]
+    default: "on-track"
+    description: "Estimated completion status based on current progress"
+
+  total_tasks:
+    type: integer
+    minimum: 0
+    description: "Total number of tasks in phase"
+
+  completed_tasks:
+    type: integer
+    minimum: 0
+    description: "Number of completed tasks"
+
+  in_progress_tasks:
+    type: integer
+    minimum: 0
+    description: "Number of in-progress tasks"
+
+  blocked_tasks:
+    type: integer
+    minimum: 0
+    description: "Number of blocked tasks"
+
+  owners:
+    type: array
+    minItems: 1
+    maxItems: 10
+    items:
+      type: string
+      minLength: 3
+      maxLength: 64
+      pattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+    default: []
+    description: "Primary agents responsible for phase (kebab-case identifiers)"
+
+  contributors:
+    type: array
+    maxItems: 20
+    items:
+      type: string
+      minLength: 3
+      maxLength: 64
+      pattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+    default: []
+    description: "Secondary agents contributing to phase"
+
+  # === ORCHESTRATION QUICK REFERENCE (REQUIRED) ===
+  tasks:
+    type: array
+    minItems: 1
+    maxItems: 100
+    items:
+      type: object
+      required: ["id", "description", "status", "assigned_to", "dependencies"]
+      properties:
+        id:
+          type: string
+          minLength: 6
+          maxLength: 32
+          pattern: "^TASK-[0-9]+\\.[0-9]+$"
+          description: "Task identifier (e.g., 'TASK-1.1', 'TASK-2.3')"
+
+        description:
+          type: string
+          minLength: 10
+          maxLength: 512
+          description: "Brief task description"
+
+        status:
+          type: string
+          enum: ["pending", "in_progress", "complete", "blocked", "at_risk"]
+          description: "Current task status"
+
+        assigned_to:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items:
+            type: string
+            minLength: 3
+            maxLength: 64
+            pattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+          description: "Agent(s) assigned to this task (REQUIRED)"
+
+        dependencies:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            pattern: "^TASK-[0-9]+\\.[0-9]+$"
+          description: "Task IDs that must complete before this task (REQUIRED, empty array if none)"
+
+        estimated_effort:
+          type: string
+          maxLength: 16
+          pattern: "^[0-9]+(\\.[0-9]+)?[hd]$"
+          description: "Estimated effort (e.g., '2h', '1.5h', '3d')"
+
+        priority:
+          type: string
+          enum: ["low", "medium", "high", "critical"]
+          default: "medium"
+          description: "Task priority"
+
+    description: "All tasks with required assigned_to and dependencies fields for orchestration"
+
+  parallelization:
+    type: object
+    properties:
+      batch_1:
+        type: array
+        items:
+          type: string
+          pattern: "^TASK-[0-9]+\\.[0-9]+$"
+        description: "Tasks in first batch (can run in parallel)"
+
+      batch_2:
+        type: array
+        items:
+          type: string
+          pattern: "^TASK-[0-9]+\\.[0-9]+$"
+        description: "Tasks in second batch"
+
+      batch_3:
+        type: array
+        items:
+          type: string
+          pattern: "^TASK-[0-9]+\\.[0-9]+$"
+        description: "Tasks in third batch"
+
+      batch_4:
+        type: array
+        items:
+          type: string
+          pattern: "^TASK-[0-9]+\\.[0-9]+$"
+        description: "Tasks in fourth batch"
+
+      critical_path:
+        type: array
+        items:
+          type: string
+          pattern: "^TASK-[0-9]+\\.[0-9]+$"
+        description: "Longest dependency chain (critical path)"
+
+      estimated_total_time:
+        type: string
+        maxLength: 16
+        pattern: "^[0-9]+(\\.[0-9]+)?[hd]$"
+        description: "Total time if batches run optimally (e.g., '5h')"
+
+    description: "Parallelization strategy computed from dependencies"
+
+  blockers:
+    type: array
+    maxItems: 50
+    items:
+      type: object
+      required: ["id", "title", "status"]
+      properties:
+        id:
+          type: string
+          minLength: 2
+          maxLength: 32
+          pattern: "^[A-Z]+-[0-9]+$"
+          description: "Blocker identifier (e.g., 'BLOCKER-1')"
+
+        title:
+          type: string
+          minLength: 5
+          maxLength: 256
+          description: "Blocker title"
+
+        description:
+          type: string
+          maxLength: 1024
+          description: "Detailed blocker description"
+
+        status:
+          type: string
+          enum: ["active", "resolved", "workaround"]
+          description: "Current blocker status"
+
+        depends_on:
+          oneOf:
+            - type: "null"
+            - type: array
+              maxItems: 20
+              items:
+                type: string
+                pattern: "^TASK-[0-9]+\\.[0-9]+$"
+          default: null
+          description: "Task IDs this blocker depends on (e.g., ['TASK-1.1', 'TASK-2.3'])"
+
+        severity:
+          type: string
+          enum: ["critical", "high", "medium", "low"]
+          default: "high"
+          description: "Blocker severity level"
+
+        workaround:
+          type: string
+          maxLength: 1024
+          description: "Workaround if status is 'workaround'"
+
+    default: []
+    description: "Array of blocking issues preventing progress"
+
+  success_criteria:
+    type: array
+    maxItems: 50
+    items:
+      type: object
+      required: ["id", "description"]
+      properties:
+        id:
+          type: string
+          minLength: 2
+          maxLength: 16
+          pattern: "^SC-[0-9]+$"
+          description: "Success criteria identifier (e.g., 'SC-1')"
+
+        description:
+          type: string
+          minLength: 10
+          maxLength: 512
+          description: "What must be true for success"
+
+        status:
+          type: string
+          enum: ["pending", "met"]
+          default: "pending"
+          description: "Whether criteria has been met"
+
+    default: []
+    description: "Measurable success criteria for phase completion"
+
+  notes:
+    type: string
+    maxLength: 2048
+    description: "Additional context or notes for future agents"
+
+additionalProperties: false

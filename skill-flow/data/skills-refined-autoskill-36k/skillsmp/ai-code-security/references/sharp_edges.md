@@ -1,0 +1,507 @@
+# Ai Code Security - Sharp Edges
+
+## Llm Hallucinated Apis
+
+### **Id**
+llm-hallucinated-apis
+### **Summary**
+LLM generates calls to non-existent APIs or deprecated methods
+### **Severity**
+high
+### **Situation**
+AI-generated code references APIs that don't exist or have been deprecated
+### **Why**
+  LLMs trained on older data.
+  Confidence doesn't equal correctness.
+  Hallucinated APIs may have security implications.
+  
+### **Solution**
+  // Validate AI-generated API calls against known schemas
+  
+  class APIValidator {
+      private readonly knownAPIs: Map<string, APISchema> = new Map();
+  
+      async validateGeneratedCode(code: string, language: string): Promise<ValidationResult> {
+          const apiCalls = this.extractAPICalls(code, language);
+          const issues: APIIssue[] = [];
+  
+          for (const call of apiCalls) {
+              // Check if API exists
+              const schema = this.knownAPIs.get(call.name);
+              if (!schema) {
+                  issues.push({
+                      type: 'hallucinated',
+                      api: call.name,
+                      line: call.line,
+                      severity: 'error',
+                      message: `API '${call.name}' does not exist`
+                  });
+                  continue;
+              }
+  
+              // Check if method exists on API
+              if (!schema.methods.includes(call.method)) {
+                  issues.push({
+                      type: 'invalid_method',
+                      api: call.name,
+                      method: call.method,
+                      line: call.line,
+                      severity: 'error',
+                      message: `Method '${call.method}' does not exist on '${call.name}'`
+                  });
+              }
+  
+              // Check for deprecated APIs
+              if (schema.deprecated) {
+                  issues.push({
+                      type: 'deprecated',
+                      api: call.name,
+                      line: call.line,
+                      severity: 'warning',
+                      message: `API '${call.name}' is deprecated: ${schema.deprecationReason}`,
+                      replacement: schema.replacement
+                  });
+              }
+          }
+  
+          return { valid: issues.length === 0, issues };
+      }
+  
+      // Populate from OpenAPI specs, TypeScript definitions, etc.
+      async loadAPISchemas(sources: string[]): Promise<void> {
+          for (const source of sources) {
+              const schema = await this.parseSchema(source);
+              this.knownAPIs.set(schema.name, schema);
+          }
+      }
+  }
+  
+### **Symptoms**
+  - Runtime errors referencing unknown methods
+  - Import errors for non-existent packages
+  - TypeScript errors on AI-generated code
+### **Detection Pattern**
+import\s+.*from|require\s*\(|fetch\s*\(
+
+## Ai Generated Sql Injection
+
+### **Id**
+ai-generated-sql-injection
+### **Summary**
+LLM generates SQL with string concatenation instead of parameterization
+### **Severity**
+critical
+### **Situation**
+AI-generated database queries are vulnerable to SQL injection
+### **Why**
+  LLMs see many examples of insecure code.
+  String concatenation is common in training data.
+  LLMs don't understand runtime context.
+  
+### **Solution**
+  // Validate and transform AI-generated SQL
+  
+  class SQLSecurityValidator {
+      // Detect SQL injection patterns in generated code
+      detectInjectionVulnerabilities(code: string): SQLVulnerability[] {
+          const vulnerabilities: SQLVulnerability[] = [];
+  
+          // Pattern 1: String concatenation in SQL
+          const concatPattern = /(?:SELECT|INSERT|UPDATE|DELETE|WHERE).*\+.*(?:req\.|params\.|body\.)/gi;
+          const concatMatches = code.match(concatPattern);
+          if (concatMatches) {
+              vulnerabilities.push({
+                  type: 'string_concatenation',
+                  severity: 'critical',
+                  pattern: concatMatches[0],
+                  fix: 'Use parameterized queries'
+              });
+          }
+  
+          // Pattern 2: Template literals with user input
+          const templatePattern = /`[^`]*\$\{[^}]*(?:req|params|body|user)[^}]*\}[^`]*`/g;
+          const templateMatches = code.match(templatePattern);
+          if (templateMatches) {
+              vulnerabilities.push({
+                  type: 'template_literal',
+                  severity: 'critical',
+                  pattern: templateMatches[0],
+                  fix: 'Use parameterized queries'
+              });
+          }
+  
+          // Pattern 3: f-strings in Python
+          const fstringPattern = /f["'][^"']*\{[^}]*(?:request|params|input)[^}]*\}/g;
+          const fstringMatches = code.match(fstringPattern);
+          if (fstringMatches) {
+              vulnerabilities.push({
+                  type: 'fstring_injection',
+                  severity: 'critical',
+                  pattern: fstringMatches[0],
+                  fix: 'Use parameterized queries with cursor.execute(sql, params)'
+              });
+          }
+  
+          return vulnerabilities;
+      }
+  
+      // Auto-fix common SQL injection patterns
+      autoFix(code: string): { fixed: string; changes: string[] } {
+          const changes: string[] = [];
+  
+          // Transform: `SELECT * FROM users WHERE id = ${userId}`
+          // To: prepared statement pattern
+          const fixed = code.replace(
+              /`(SELECT[^`]*)\$\{(\w+)\}([^`]*)`/g,
+              (match, before, variable, after) => {
+                  changes.push(`Converted template literal to parameterized query`);
+                  return `{ text: \`${before}$1${after}\`, values: [${variable}] }`;
+              }
+          );
+  
+          return { fixed, changes };
+      }
+  }
+  
+### **Symptoms**
+  - SQL errors with unexpected syntax
+  - Database queries containing user input directly
+  - Security scanner flagging SQL injection
+### **Detection Pattern**
+SELECT.*\+|INSERT.*\+|UPDATE.*\+|DELETE.*\+
+
+## Leaked Secrets In Ai Output
+
+### **Id**
+leaked-secrets-in-ai-output
+### **Summary**
+LLM includes API keys, passwords, or tokens in generated code
+### **Severity**
+critical
+### **Situation**
+AI output contains hardcoded secrets or copies secrets from context
+### **Why**
+  LLM may echo back secrets from system prompts.
+  Training data contains many hardcoded secrets.
+  LLM doesn't understand secret sensitivity.
+  
+### **Solution**
+  // Comprehensive secret detection for AI outputs
+  
+  import Anthropic from '@anthropic-ai/sdk';
+  
+  class SecretDetector {
+      private readonly patterns: SecretPattern[] = [
+          {
+              name: 'AWS Access Key',
+              pattern: /AKIA[0-9A-Z]{16}/g,
+              severity: 'critical'
+          },
+          {
+              name: 'AWS Secret Key',
+              pattern: /[A-Za-z0-9/+=]{40}/g,
+              context: 'aws_secret',
+              severity: 'critical'
+          },
+          {
+              name: 'GitHub Token',
+              pattern: /gh[pousr]_[A-Za-z0-9_]{36,}/g,
+              severity: 'critical'
+          },
+          {
+              name: 'OpenAI API Key',
+              pattern: /sk-[A-Za-z0-9]{48}/g,
+              severity: 'critical'
+          },
+          {
+              name: 'Anthropic API Key',
+              pattern: /sk-ant-[A-Za-z0-9-]{95}/g,
+              severity: 'critical'
+          },
+          {
+              name: 'Generic API Key',
+              pattern: /(?:api[_-]?key|apikey|secret[_-]?key)\s*[:=]\s*["']([^"']+)["']/gi,
+              severity: 'high'
+          },
+          {
+              name: 'Private Key',
+              pattern: /-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----/g,
+              severity: 'critical'
+          },
+          {
+              name: 'JWT Token',
+              pattern: /eyJ[A-Za-z0-9-_]+\.eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/g,
+              severity: 'high'
+          },
+          {
+              name: 'Database URL',
+              pattern: /(?:postgres|mysql|mongodb):\/\/[^:]+:[^@]+@[^\s]+/g,
+              severity: 'critical'
+          }
+      ];
+  
+      async scan(content: string): Promise<SecretScanResult> {
+          const findings: SecretFinding[] = [];
+  
+          for (const pattern of this.patterns) {
+              const matches = content.matchAll(pattern.pattern);
+              for (const match of matches) {
+                  // Verify it's not a placeholder
+                  if (this.isPlaceholder(match[0])) continue;
+  
+                  findings.push({
+                      type: pattern.name,
+                      value: this.mask(match[0]),
+                      index: match.index,
+                      severity: pattern.severity,
+                      line: this.getLineNumber(content, match.index!)
+                  });
+              }
+          }
+  
+          return {
+              hasSecrets: findings.length > 0,
+              findings,
+              recommendation: findings.length > 0
+                  ? 'BLOCK: Remove secrets before using AI output'
+                  : 'OK: No secrets detected'
+          };
+      }
+  
+      private isPlaceholder(value: string): boolean {
+          const placeholders = [
+              'YOUR_API_KEY', 'xxx', 'REPLACE_ME', 'your-api-key',
+              'sk-...', 'INSERT_KEY_HERE', '<api-key>'
+          ];
+          return placeholders.some(p =>
+              value.toLowerCase().includes(p.toLowerCase())
+          );
+      }
+  
+      private mask(secret: string): string {
+          if (secret.length <= 8) return '***';
+          return secret.slice(0, 4) + '***' + secret.slice(-4);
+      }
+  }
+  
+  // Usage in AI output pipeline
+  async function processAIOutput(output: string): Promise<string> {
+      const detector = new SecretDetector();
+      const result = await detector.scan(output);
+  
+      if (result.hasSecrets) {
+          console.error('Secrets detected in AI output:', result.findings);
+          throw new SecurityError('AI output contains secrets');
+      }
+  
+      return output;
+  }
+  
+### **Symptoms**
+  - Secrets appearing in logs or outputs
+  - Security scanners flagging committed code
+  - Credential exposure alerts
+### **Detection Pattern**
+api[_-]?key|secret|password|token|credential
+
+## Ai Generated Xss
+
+### **Id**
+ai-generated-xss
+### **Summary**
+LLM generates frontend code vulnerable to XSS attacks
+### **Severity**
+high
+### **Situation**
+AI-generated React/Vue/HTML contains innerHTML or unsanitized user content
+### **Why**
+  LLMs generate code that "works" without security considerations.
+  innerHTML is simpler than safe alternatives.
+  Training data contains legacy unsafe patterns.
+  
+### **Solution**
+  // XSS vulnerability detection and prevention
+  
+  class XSSValidator {
+      detectVulnerabilities(code: string, framework: string): XSSVulnerability[] {
+          const vulnerabilities: XSSVulnerability[] = [];
+  
+          // React vulnerabilities
+          if (framework === 'react') {
+              // dangerouslySetInnerHTML
+              const dangerPattern = /dangerouslySetInnerHTML\s*=\s*\{\s*\{\s*__html:\s*([^}]+)\}/g;
+              for (const match of code.matchAll(dangerPattern)) {
+                  if (!this.isSanitized(match[1])) {
+                      vulnerabilities.push({
+                          type: 'dangerouslySetInnerHTML',
+                          line: this.getLine(code, match.index!),
+                          severity: 'high',
+                          fix: 'Use DOMPurify.sanitize() or avoid innerHTML'
+                      });
+                  }
+              }
+          }
+  
+          // Vue vulnerabilities
+          if (framework === 'vue') {
+              // v-html directive
+              const vhtmlPattern = /v-html\s*=\s*["']([^"']+)["']/g;
+              for (const match of code.matchAll(vhtmlPattern)) {
+                  vulnerabilities.push({
+                      type: 'v-html',
+                      line: this.getLine(code, match.index!),
+                      severity: 'high',
+                      fix: 'Use v-text or sanitize with DOMPurify'
+                  });
+              }
+          }
+  
+          // Generic innerHTML
+          const innerHTMLPattern = /\.innerHTML\s*=\s*([^;]+)/g;
+          for (const match of code.matchAll(innerHTMLPattern)) {
+              if (!this.isSanitized(match[1])) {
+                  vulnerabilities.push({
+                      type: 'innerHTML',
+                      line: this.getLine(code, match.index!),
+                      severity: 'high',
+                      fix: 'Use textContent or sanitize input'
+                  });
+              }
+          }
+  
+          // document.write
+          if (code.includes('document.write')) {
+              vulnerabilities.push({
+                  type: 'document.write',
+                  severity: 'high',
+                  fix: 'Avoid document.write entirely'
+              });
+          }
+  
+          return vulnerabilities;
+      }
+  
+      private isSanitized(expression: string): boolean {
+          const sanitizers = ['DOMPurify', 'sanitize', 'escape', 'encode'];
+          return sanitizers.some(s => expression.includes(s));
+      }
+  
+      // Auto-fix XSS vulnerabilities
+      autoFix(code: string): string {
+          // Add DOMPurify import if needed
+          if (code.includes('dangerouslySetInnerHTML') && !code.includes('DOMPurify')) {
+              code = `import DOMPurify from 'dompurify';\n` + code;
+          }
+  
+          // Wrap unsanitized innerHTML
+          code = code.replace(
+              /dangerouslySetInnerHTML=\{\{\s*__html:\s*([^}]+)\}\}/g,
+              (match, content) => {
+                  if (content.includes('DOMPurify')) return match;
+                  return `dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(${content}) }}`;
+              }
+          );
+  
+          return code;
+      }
+  }
+  
+### **Symptoms**
+  - Security scanner XSS warnings
+  - innerHTML usage with user content
+  - Script injection in rendered pages
+### **Detection Pattern**
+innerHTML|dangerouslySetInnerHTML|v-html|document\.write
+
+## Excessive Permissions In Ai Agents
+
+### **Id**
+excessive-permissions-in-ai-agents
+### **Summary**
+AI-generated agent code requests more permissions than needed
+### **Severity**
+high
+### **Situation**
+Agent code has broad file system, network, or system access
+### **Why**
+  LLMs optimize for functionality, not security.
+  Broader permissions are easier to implement.
+  No built-in principle of least privilege.
+  
+### **Solution**
+  // Permission auditing for AI-generated agent code
+  
+  class PermissionAuditor {
+      private readonly dangerousPatterns = {
+          filesystem: {
+              read_all: /fs\.readdir\(['"]\/['"]\)|glob\(['"]\*\*\/\*['"]\)/,
+              write_anywhere: /fs\.writeFile(?:Sync)?\(['"][^.]+['"]\)/,
+              delete: /fs\.unlink|fs\.rmdir|rimraf/
+          },
+          network: {
+              any_fetch: /fetch\(['"]http/,
+              any_request: /axios\.|request\(/
+          },
+          system: {
+              exec: /exec(?:Sync)?\(|spawn\(|child_process/,
+              eval: /eval\(|new Function\(/,
+              require_dynamic: /require\([^'"]/
+          },
+          database: {
+              raw_query: /\.raw\(|\.query\(/,
+              drop: /DROP\s+(?:TABLE|DATABASE)/i,
+              truncate: /TRUNCATE/i
+          }
+      };
+  
+      audit(code: string): PermissionAuditResult {
+          const findings: PermissionFinding[] = [];
+  
+          for (const [category, patterns] of Object.entries(this.dangerousPatterns)) {
+              for (const [name, pattern] of Object.entries(patterns)) {
+                  if (pattern.test(code)) {
+                      findings.push({
+                          category,
+                          permission: name,
+                          severity: this.getSeverity(category, name),
+                          recommendation: this.getRecommendation(category, name)
+                      });
+                  }
+              }
+          }
+  
+          return {
+              riskLevel: this.calculateRiskLevel(findings),
+              findings,
+              requiresHumanReview: findings.some(f => f.severity === 'critical')
+          };
+      }
+  
+      private getSeverity(category: string, permission: string): 'low' | 'medium' | 'high' | 'critical' {
+          const criticalPatterns = ['exec', 'eval', 'drop', 'delete'];
+          const highPatterns = ['write_anywhere', 'raw_query', 'require_dynamic'];
+  
+          if (criticalPatterns.includes(permission)) return 'critical';
+          if (highPatterns.includes(permission)) return 'high';
+          return 'medium';
+      }
+  
+      private getRecommendation(category: string, permission: string): string {
+          const recommendations: Record<string, string> = {
+              exec: 'Use specific command allowlist instead of arbitrary execution',
+              eval: 'Never use eval with AI-generated content',
+              write_anywhere: 'Restrict writes to specific directories',
+              delete: 'Require confirmation for destructive operations',
+              drop: 'Never allow DDL operations from AI agents',
+              raw_query: 'Use ORM methods instead of raw queries'
+          };
+          return recommendations[permission] || 'Review and restrict permissions';
+      }
+  }
+  
+### **Symptoms**
+  - Agent accessing unexpected files or URLs
+  - Audit logs showing broad access patterns
+  - Unexpected system resource usage
+### **Detection Pattern**
+exec\(|spawn\(|eval\(|writeFile|unlink|rmdir

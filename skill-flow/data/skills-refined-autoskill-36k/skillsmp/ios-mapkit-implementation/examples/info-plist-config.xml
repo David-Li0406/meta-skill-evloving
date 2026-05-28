@@ -1,0 +1,189 @@
+<!--
+    MapKit Info.plist 設定テンプレート
+    iOS 17+ 向け位置情報・地図機能の設定
+
+    このファイルの内容をプロジェクトの Info.plist に追加してください。
+-->
+
+<!-- ============================================== -->
+<!-- 位置情報権限 (必須) -->
+<!-- ============================================== -->
+
+<!--
+    使用中のみ位置情報にアクセス (WhenInUse)
+    - 地図表示、現在地取得、周辺検索などに必要
+    - 必ず設定が必要
+-->
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>現在地を地図上に表示し、周辺のスポットを検索するために位置情報を使用します。</string>
+
+<!--
+    常時位置情報にアクセス (Always)
+    - バックグラウンドでの位置追跡が必要な場合のみ
+    - ナビゲーション、ジオフェンスなど
+    - WhenInUse と両方設定が必要
+-->
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>目的地への到着を通知したり、バックグラウンドでナビゲーションを継続するために位置情報を使用します。</string>
+
+<!--
+    iOS 10以前との互換性 (オプション)
+    - 古いデバイスをサポートする場合のみ必要
+-->
+<key>NSLocationAlwaysUsageDescription</key>
+<string>バックグラウンドでのナビゲーションのために位置情報を使用します。</string>
+
+
+<!-- ============================================== -->
+<!-- 一時的な高精度位置情報 (オプション) -->
+<!-- ============================================== -->
+
+<!--
+    一時的に正確な位置情報をリクエストする場合の目的別説明
+    - iOS 14+ でユーザーが「おおよその位置」を選択した場合に使用
+    - requestTemporaryFullAccuracyAuthorization で使用するキー
+-->
+<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+<dict>
+    <!--
+        ナビゲーション用途
+        - キー名は任意（コード内で参照）
+    -->
+    <key>NavigationPurpose</key>
+    <string>正確なナビゲーションのために、一時的に正確な位置情報が必要です。</string>
+
+    <!--
+        検索用途
+    -->
+    <key>SearchPurpose</key>
+    <string>より正確な検索結果を表示するために、一時的に正確な位置情報が必要です。</string>
+
+    <!--
+        チェックイン用途
+    -->
+    <key>CheckInPurpose</key>
+    <string>現在地にチェックインするために、正確な位置情報が必要です。</string>
+</dict>
+
+
+<!-- ============================================== -->
+<!-- バックグラウンドモード (オプション) -->
+<!-- ============================================== -->
+
+<!--
+    バックグラウンドで位置情報を使用する場合
+    - ナビゲーションアプリ、フィットネスアプリなど
+    - App Store審査で使用理由が求められる
+-->
+<key>UIBackgroundModes</key>
+<array>
+    <!-- 位置情報更新 -->
+    <string>location</string>
+
+    <!-- 外部アクセサリとの通信（BluetoothGPSなど）-->
+    <!-- <string>external-accessory</string> -->
+
+    <!-- オーディオ再生（ナビ音声案内）-->
+    <!-- <string>audio</string> -->
+</array>
+
+
+<!-- ============================================== -->
+<!-- 説明文のベストプラクティス -->
+<!-- ============================================== -->
+
+<!--
+    良い説明文の例:
+    - 「現在地周辺のレストランを検索するために位置情報を使用します」
+    - 「地図上であなたの位置を表示し、目的地への経路を案内するために位置情報を使用します」
+    - 「お気に入りの場所に近づいた時に通知するために位置情報を使用します」
+
+    悪い説明文の例:
+    - 「位置情報が必要です」（具体的な理由がない）
+    - 「Location access required」（日本語アプリで英語）
+    - 「機能のために必要」（曖昧すぎる）
+
+    App Store審査のポイント:
+    - 位置情報の使用目的を明確に
+    - ユーザーにとってのメリットを記載
+    - 必要最小限の権限を要求
+    - WhenInUseで十分ならAlwaysは不要
+-->
+
+
+<!-- ============================================== -->
+<!-- 多言語対応 (ローカライズ) -->
+<!-- ============================================== -->
+
+<!--
+    InfoPlist.strings ファイルで各言語の説明文を設定:
+
+    日本語 (ja.lproj/InfoPlist.strings):
+    "NSLocationWhenInUseUsageDescription" = "現在地を地図上に表示し、周辺のスポットを検索するために位置情報を使用します。";
+    "NSLocationAlwaysAndWhenInUseUsageDescription" = "目的地への到着を通知したり、バックグラウンドでナビゲーションを継続するために位置情報を使用します。";
+
+    英語 (en.lproj/InfoPlist.strings):
+    "NSLocationWhenInUseUsageDescription" = "We use your location to show your position on the map and search for nearby places.";
+    "NSLocationAlwaysAndWhenInUseUsageDescription" = "We use your location to notify you when you arrive at your destination and continue navigation in the background.";
+-->
+
+
+<!-- ============================================== -->
+<!-- 完全な Info.plist 例 -->
+<!-- ============================================== -->
+
+<!--
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>現在地を地図上に表示し、周辺のスポットを検索するために位置情報を使用します。</string>
+
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>目的地への到着を通知したり、バックグラウンドでナビゲーションを継続するために位置情報を使用します。</string>
+
+    <key>NSLocationTemporaryUsageDescriptionDictionary</key>
+    <dict>
+        <key>NavigationPurpose</key>
+        <string>正確なナビゲーションのために、一時的に正確な位置情報が必要です。</string>
+    </dict>
+
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+    </array>
+</dict>
+</plist>
+-->
+
+
+<!-- ============================================== -->
+<!-- トラブルシューティング -->
+<!-- ============================================== -->
+
+<!--
+    権限ダイアログが表示されない場合:
+    1. Info.plist に正しいキーが設定されているか確認
+    2. キー名にタイポがないか確認（NSLocationWhenInUseUsageDescription）
+    3. シミュレータをリセット（設定 > 一般 > リセット または Simulator > Reset Content and Settings）
+    4. 実機の場合、アプリを削除して再インストール
+
+    App Store審査でリジェクトされる場合:
+    1. 説明文が具体的かつユーザーメリットを記載しているか
+    2. 不要な権限（Always）を要求していないか
+    3. 位置情報なしでも基本機能が使えるようにしているか
+    4. 権限が拒否された場合の代替UIがあるか
+-->

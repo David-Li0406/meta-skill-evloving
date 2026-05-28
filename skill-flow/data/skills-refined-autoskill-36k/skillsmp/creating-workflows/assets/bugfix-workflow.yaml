@@ -1,0 +1,64 @@
+# Bug Fix Workflow Template
+# Streamlined workflow for diagnosing and fixing bugs
+#
+# Usage: Reference in sprint workflow's for-each phase
+#   phases:
+#     - id: bugfixes
+#       for-each: step
+#       workflow: bugfix-workflow
+
+name: Bug Fix
+description: Focused workflow for diagnosing and fixing bugs with minimal overhead.
+
+phases:
+  - id: diagnose
+    prompt: |
+      ## Bug Description
+      {{step.prompt}}
+
+      ## Instructions
+      1. Reproduce the bug if possible
+      2. Analyze relevant logs and error messages
+      3. Trace the code path to identify root cause
+      4. Document findings
+
+      ## Output
+      Write diagnosis to: context/{{step.id}}-diagnosis.md
+
+      Include:
+      - Steps to reproduce
+      - Root cause analysis
+      - Affected code locations
+
+  - id: fix
+    prompt: |
+      ## Bug Description
+      {{step.prompt}}
+
+      ## Instructions
+      1. Read diagnosis from context/{{step.id}}-diagnosis.md
+      2. Implement the minimal fix required
+      3. Avoid scope creep - only fix the bug
+      4. Commit the fix with clear message
+
+      ## Guidelines
+      - Smallest possible change
+      - No refactoring in bug fixes
+      - No new features
+      - Keep fix isolated
+
+  - id: verify
+    prompt: |
+      ## Bug Description
+      {{step.prompt}}
+
+      ## Instructions
+      1. Confirm the bug no longer occurs
+      2. Run related test suite
+      3. Check for regressions
+      4. Add regression test if appropriate
+
+      ## Output
+      - Bug is verified fixed
+      - No regressions introduced
+      - Test added if feasible

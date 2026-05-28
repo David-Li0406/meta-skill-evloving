@@ -1,0 +1,42 @@
+# Fixture: Tyler self-discloses personal email to Joe Schooler
+description: "Tyler shares his personal email, should be promoted to alias"
+
+entities:
+  must_have:
+    - name_contains: "Tyler"
+      entity_type: Person
+      
+    - name_contains: "Joe"
+      entity_type: Person
+      
+  optional:
+    # Document entity might be extracted from "prds"
+    - entity_type: Document
+
+aliases:
+  must_have:
+    # Tyler's email should be promoted to alias
+    - entity_name_contains: "Tyler"
+      alias_like: "%tnapathy@gmail.com%"
+      alias_type: email
+      is_shared: false
+
+relationships:
+  # Identity relationships should NOT be in relationships table
+  # They go to aliases via identity promotion
+  must_not_have:
+    - relation_type: HAS_EMAIL
+
+episode_relationship_mentions:
+  must_have:
+    # Provenance record for the identity extraction
+    - extracted_fact_contains: "email"
+      source_type: self_disclosed
+      target_literal_like: "%tnapathy@gmail.com%"
+      # relationship_id should be NULL (identity-only)
+      relationship_id: null
+
+episode_entity_mentions:
+  must_have:
+    - entity_name_contains: "Tyler"
+    - entity_name_contains: "Joe"

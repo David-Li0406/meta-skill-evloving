@@ -1,0 +1,76 @@
+# React Development Template
+# Pre-curated artifact collection for React/Next.js projects
+
+[template]
+name = "react"
+display_name = "React Development"
+description = "Essential skills for React/Next.js development with modern UI patterns, testing, and debugging"
+version = "1.0.0"
+tags = ["frontend", "react", "nextjs", "web", "typescript"]
+
+# Frontend UI Development
+[[artifacts]]
+name = "frontend-design"
+type = "skill"
+source = "anthropics/skills/frontend-design"
+required = true
+description = "Modern UI component patterns, Tailwind CSS, and responsive design"
+
+# React Testing
+[[artifacts]]
+name = "webapp-testing"
+type = "skill"
+source = "anthropics/skills/webapp-testing"
+required = false
+description = "React testing with Jest, Testing Library, and component testing patterns"
+
+# Browser Automation & Debugging
+[[artifacts]]
+name = "chrome-devtools"
+type = "skill"
+source = "project:chrome-devtools"
+required = false
+description = "Browser automation, debugging, and performance profiling"
+
+# Package Management
+[[artifacts]]
+name = "npm-package-manager"
+type = "skill"
+source = "project:npm-package-manager"
+required = false
+description = "NPM/Yarn package management, dependency resolution, and workspace handling"
+
+[dependencies]
+node = ">=18.0.0"
+npm = ">=9.0.0"
+
+[recommendations]
+# Suggested project setup
+vscode_extensions = [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+]
+
+# Suggested package.json scripts
+scripts = [
+    "dev: next dev",
+    "build: next build",
+    "test: jest --watch",
+    "test:ci: jest --ci --coverage",
+]
+
+[notes]
+setup_guide = """
+This template is optimized for:
+- React 18+ with Next.js 14/15
+- TypeScript with strict mode
+- Tailwind CSS for styling
+- Jest + Testing Library for testing
+- ESLint + Prettier for code quality
+
+Quick start:
+1. Apply template: skillmeat template apply react
+2. Install dependencies: npm install
+3. Start dev server: npm run dev
+"""

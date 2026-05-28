@@ -1,0 +1,47 @@
+# GEngine local configuration (example)
+# Place a copy at .gengine/config.yaml to set local defaults for development.
+
+# Base URL for the upstream AI endpoint (host only is preferred)
+GENGINE_AI_ENDPOINT: "https://your-endpoint.openai.azure.com"
+
+# Port for the local CORS proxy
+GENGINE_CORS_PROXY_PORT: 8010
+
+# Verbose logging for the proxy (true/false)
+GENGINE_CORS_PROXY_VERBOSE: false
+
+# Director tuning defaults
+# You can override these by adding a `directorConfig:` mapping here.
+# Supported keys: weights, pacingTargets, pacingToleranceFactor, placeholderDefault
+# Example values are shown below.
+
+directorConfig:
+  weights:
+    proposal_confidence: 0.7
+    narrative_pacing: 0.15
+    return_path_confidence: 0.1
+    player_preference: 0.05
+    thematic_consistency: 0
+    lore_adherence: 0
+    character_voice: 0
+
+  pacingTargets:
+    exposition: 300
+    rising_action: 400
+    climax: 700
+    falling_action: 350
+    resolution: 300
+
+  pacingToleranceFactor: 0.6
+  placeholderDefault: 0.3
+
+  # Default director risk threshold used by the demo UI and Director when not set per-call
+  # Value between 0.0 (strict) and 1.0 (lenient). Default: 0.4
+  riskThreshold: 0.4
+  
+  # Enable use of embeddings in the local GEngine environment (true/false)
+  enableEmbeddings: true
+
+# Notes:
+# - The proxy prefers CLI args, then environment variables, then this file.
+# - To expand settings, update scripts/cors-proxy.js and package.json.

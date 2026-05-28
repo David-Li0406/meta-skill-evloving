@@ -1,0 +1,146 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix paper: <https://kg.corca.ai/paper#> .
+
+# Ontology
+
+<https://kg.corca.ai/paper#> a owl:Ontology ;
+    rdfs:label "Academic Paper Knowledge Graph Ontology" ;
+    rdfs:comment "Ontology for academic papers, authors, claims, and concepts" ;
+    owl:versionInfo "1.0" .
+
+# Classes
+
+paper:Paper a owl:Class ;
+    rdfs:comment "A research paper" .
+
+paper:Author a owl:Class ;
+    rdfs:comment "A paper author" .
+
+paper:Claim a owl:Class ;
+    rdfs:comment "A claim, finding, or contribution" .
+
+paper:Concept a owl:Class ;
+    rdfs:comment "A scientific concept, method, theory, or entity" .
+
+paper:Venue a owl:Class ;
+    rdfs:comment "A publication venue (conference, journal, workshop, or preprint server)" .
+
+[] a owl:AllDisjointClasses ;
+    owl:members (paper:Paper paper:Author paper:Claim paper:Concept paper:Venue) .
+
+# Paper Properties
+
+paper:year a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range xsd:integer .
+
+paper:doi a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range xsd:string .
+
+paper:arxivId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range xsd:string .
+
+paper:semanticScholarId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Semantic Scholar Paper ID" .
+
+paper:abstract a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range xsd:string .
+
+paper:author a owl:ObjectProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range paper:Author .
+
+paper:primaryAuthor a owl:ObjectProperty ;
+    rdfs:subPropertyOf paper:author ;
+    rdfs:domain paper:Paper ;
+    rdfs:range paper:Author ;
+    rdfs:comment "First/corresponding author(s). One or more per paper." .
+
+paper:about a owl:ObjectProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range paper:Concept .
+
+paper:hasClaim a owl:ObjectProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range paper:Claim .
+
+paper:publishedIn a owl:ObjectProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range paper:Venue .
+
+paper:cites a owl:ObjectProperty, owl:IrreflexiveProperty ;
+    rdfs:domain paper:Paper ;
+    rdfs:range paper:Paper ;
+    rdfs:comment "Bibliographic citation. Not asymmetric: mutual citations are valid (simultaneous publications or later revisions)" .
+
+# Author Properties
+
+paper:orcidId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Author ;
+    rdfs:range xsd:string .
+
+paper:semanticScholarAuthorId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Author ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Semantic Scholar Author ID (numeric string)" .
+
+# Concept Properties
+
+paper:wikidataId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Concept ;
+    rdfs:range xsd:string .
+
+paper:broader a owl:ObjectProperty, owl:TransitiveProperty,
+              owl:AsymmetricProperty, owl:IrreflexiveProperty ;
+    rdfs:domain paper:Concept ;
+    rdfs:range paper:Concept ;
+    rdfs:comment "Taxonomic hierarchy (is-a relationship)" .
+
+paper:partOf a owl:ObjectProperty, owl:TransitiveProperty,
+             owl:AsymmetricProperty, owl:IrreflexiveProperty ;
+    rdfs:domain paper:Concept ;
+    rdfs:range paper:Concept ;
+    rdfs:comment "Mereological relationship (part-whole composition)" .
+
+paper:dependsOn a owl:ObjectProperty, owl:AsymmetricProperty, owl:IrreflexiveProperty ;
+    rdfs:domain paper:Concept ;
+    rdfs:range paper:Concept ;
+    rdfs:comment "Prerequisite relationship (A requires understanding of B)" .
+
+# Claim Properties
+
+paper:extends a owl:ObjectProperty, owl:TransitiveProperty,
+              owl:AsymmetricProperty, owl:IrreflexiveProperty ;
+    rdfs:domain paper:Claim ;
+    rdfs:range paper:Claim .
+
+paper:refutes a owl:ObjectProperty, owl:AsymmetricProperty, owl:IrreflexiveProperty ;
+    rdfs:domain paper:Claim ;
+    rdfs:range paper:Claim .
+
+paper:supports a owl:ObjectProperty, owl:AsymmetricProperty, owl:IrreflexiveProperty ;
+    rdfs:domain paper:Claim ;
+    rdfs:range paper:Claim .
+
+paper:regarding a owl:ObjectProperty ;
+    rdfs:domain paper:Claim ;
+    rdfs:range paper:Concept ;
+    rdfs:comment "Concepts this claim is about. Zero or more per claim." .
+
+# Venue Properties
+
+paper:venueType a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Venue ;
+    rdfs:range xsd:string .
+
+paper:semanticScholarVenueId a owl:DatatypeProperty, owl:FunctionalProperty ;
+    rdfs:domain paper:Venue ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Semantic Scholar Venue ID" .

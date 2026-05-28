@@ -1,0 +1,59 @@
+User Story ID: 122019
+Title: eNcounter Refresh- User Directory - Participants Tab
+Type: User Story
+==================================================
+
+ACCEPTANCE CRITERIA:
+
+Scenario 1: User Opens Participants Tab
+Given the eNcounter user has navigated to the workspace page
+When the user selects the "Participants" button from the bottom right hand corner of the workspace
+Then the participants tab will open
+
+Scenario 2: User is not yet on a call with another user
+Given the eNcounter user has selected the "Participants" button from the bottom right hand corner of the workspace screen
+When the "Participants" tab opens
+Then the user will see only their
+- Avatar
+- User Name
+- Role
+
+Scenario 3: User is on a call with 1 or more other users
+Given the eNcounter user has selected the "Participants" button from the bottom right hand corner of the workspace screen
+When the "Participants" tab opens
+And the user is on a call with one or more other users
+Then the user will see the below information for themselves
+And for all other users currently on the call
+- Avatar
+- User Name
+- Role
+
+Scenario 4: User selects "Copy URL"
+Given the eNcounter user has selected the "Participants" button from the bottom right hand corner of the workspace screen
+And the "Participants" tab has opened
+When the user selects "Copy URL"
+Then the system will copy the URL for the current eNcounter session to the clipboard
+(Note: so that they can manually send to another person to add them to the existing consult, this person does not need to be a signed in eNcounter user- they can be a "Guest")
+
+Scenario 5: User joins call who is NOT a registered eNcounter user
+Given the eNcounter user has selected" Copy URL"
+And outside of the system has sent the URL to another person
+When that person joins the consult
+And that person is NOT signed in as a registered eNcounter user
+Then the user will see the below information for the user
+- User Name (as entered in eView)
+- Role -"Guest"
+
+Scenario 6: Close Participant Tab
+Given the eNcounter user has selected the "Participants" button from the bottom right hand corner of the workspace screen
+And the "Participants" tab has opened
+When the user selects the "x" in the upper right-hand corner of the tab
+Then the "participants" tab will close
+
+Scenario 7: User selects Add Participant
+Given the eNcounter user has selected the "Participants" button from the bottom right hand corner of the workspace screen
+And the "Participants" tab has opened
+When the user selects the "Add Participant" button
+Then the "User Directory" will open
+And the user will have the ability to find the participant that they would like to call to join the consult
+(as outlined in -User Story 122023 eNcounter Refresh- User Directory- Default/Institutions)

@@ -1,0 +1,65 @@
+{
+  "name": "to-string",
+  "description": "Convert value at path to string (numbers, booleans, null, arrays/objects JSON-stringified)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing value to convert"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to value to convert to string (e.g., 'user.name')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with value at path converted to string"
+  },
+  "examples": [
+    {
+      "description": "Pass through existing string",
+      "input": {"name": "skogix"},
+      "args": {"path": "name"},
+      "output": {"name": "skogix"}
+    },
+    {
+      "description": "Convert number to string",
+      "input": {"age": 42},
+      "args": {"path": "age"},
+      "output": {"age": "42"}
+    },
+    {
+      "description": "Convert boolean true to string",
+      "input": {"active": true},
+      "args": {"path": "active"},
+      "output": {"active": "true"}
+    },
+    {
+      "description": "Convert boolean false to string",
+      "input": {"enabled": false},
+      "args": {"path": "enabled"},
+      "output": {"enabled": "false"}
+    },
+    {
+      "description": "Convert null to string 'null'",
+      "input": {"value": null},
+      "args": {"path": "value"},
+      "output": {"value": "null"}
+    },
+    {
+      "description": "Convert array to JSON string",
+      "input": {"items": [1, 2, 3]},
+      "args": {"path": "items"},
+      "output": {"items": "[1,2,3]"}
+    },
+    {
+      "description": "Convert object to JSON string",
+      "input": {"user": {"name": "test"}},
+      "args": {"path": "user"},
+      "output": {"user": "{\"name\":\"test\"}"}
+    }
+  ],
+  "tags": ["conversion", "string", "stringify", "type-conversion"]
+}

@@ -1,0 +1,199 @@
+# Dockerfile template for Claude Code sandbox
+# This is a complete working example showing all features
+
+FROM ubuntu:24.04
+
+# Prevent interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set timezone (optional, prevents tzdata prompts)
+ENV TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install base packages
+RUN apt-get update && apt-get install -y \
+    # Essential build tools
+    curl \
+    wget \
+    git \
+    build-essential \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    # Useful utilities
+    vim \
+    nano \
+    less \
+    man-db \
+    sudo \
+    # Network tools
+    net-tools \
+    iputils-ping \
+    dnsutils \
+    # Required for some installations
+    software-properties-common \
+    apt-transport-https \
+    # Shell
+    zsh \
+    # Cleanup
+    && rm -rf /var/lib/apt/lists/*
+
+# Install GitHub CLI
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Rust
+# Note: Use rustup for flexibility (stable, beta, nightly)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    --default-toolchain stable \
+    --profile default \
+    --component clippy rustfmt
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Install Python (use deadsnakes PPA for specific versions if needed)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv (fast Python package installer)
+RUN pip3 install --no-cache-dir uv ruff
+
+# Install Node.js via nvm
+# Using nvm allows easy version switching (current, lts, nightly)
+ENV NVM_DIR="/root/.nvm"
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash \
+    && . "$NVM_DIR/nvm.sh" \
+    && nvm install node \
+    && nvm alias default node \
+    && nvm use default
+
+ENV NODE_PATH="$NVM_DIR/versions/node/$(cat $NVM_DIR/alias/default)/lib/node_modules"
+ENV PATH="$NVM_DIR/versions/node/$(cat $NVM_DIR/alias/default)/bin:$PATH"
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Install CLI tools
+# Install from apt where available
+RUN apt-get update && apt-get install -y \
+    jq \
+    ripgrep \
+    fd-find \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create symlinks for fd (installed as fd-find on Ubuntu)
+RUN ln -s $(which fdfind) /usr/local/bin/fd
+
+# Install tools via cargo
+RUN cargo install \
+    eza \
+    just \
+    repomix \
+    scc \
+    bfs \
+    xan \
+    git-cliff \
+    has \
+    cargo-dist \
+    cargo-deny \
+    cargo-release \
+    cocogitto
+
+# Install additional tools
+# sg (AST-based grep)
+RUN cargo install ast-grep
+
+# rga (ripgrep for PDFs, archives, etc.)
+RUN cargo install ripgrep_all
+
+# pdfgrep
+RUN apt-get update && apt-get install -y pdfgrep && rm -rf /var/lib/apt/lists/*
+
+# fq (jq for binary formats)
+RUN wget https://github.com/wader/fq/releases/latest/download/fq_linux_amd64.tar.gz \
+    && tar xzf fq_linux_amd64.tar.gz \
+    && mv fq /usr/local/bin/ \
+    && rm fq_linux_amd64.tar.gz
+
+# shellcheck
+RUN apt-get update && apt-get install -y shellcheck && rm -rf /var/lib/apt/lists/*
+
+# zizmor (GitHub Actions security scanner)
+RUN cargo install zizmor
+
+# Install oh-my-zsh
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+
+# Install starship prompt
+RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+# Configure zsh with custom aliases
+RUN echo 'export PATH="/root/.cargo/bin:$PATH"' >> /root/.zshrc \
+    && echo 'export NVM_DIR="/root/.nvm"' >> /root/.zshrc \
+    && echo '[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"' >> /root/.zshrc \
+    && echo 'eval "$(starship init zsh)"' >> /root/.zshrc \
+    # Custom aliases
+    && echo "alias l='eza -ao --sort=old -F=always --icons=auto --color=always --color-scale=size --color-scale-mode=gradient --group-directories-first --git --git-ignore --no-quotes --time-style=relative --no-permissions --no-user'" >> /root/.zshrc \
+    && echo "alias ll='l -l'" >> /root/.zshrc \
+    && echo "alias lk='eza -a -F=never --icons=never --group-directories-first'" >> /root/.zshrc \
+    && echo 'lt() { eza -alT --icons=always --color=always --color-scale=all --color-scale-mode=gradient --group-directories-first --git --git-ignore --no-quotes --level=${1:-2}; }' >> /root/.zshrc
+
+# Configure starship with container indicator
+RUN mkdir -p /root/.config \
+    && cat > /root/.config/starship.toml << 'EOF'
+add_newline = true
+
+[container]
+disabled = false
+symbol = "🐳 "
+style = "bold red"
+format = "[$symbol]($style)"
+
+[hostname]
+ssh_only = false
+format = "[$hostname]($style) "
+style = "bold red"
+
+[directory]
+style = "cyan"
+truncation_length = 3
+fish_style_pwd_dir_length = 1
+
+[character]
+success_symbol = "[❯](bold red)"
+error_symbol = "[❯](bold red)"
+
+[git_branch]
+format = "[$symbol$branch]($style) "
+style = "bold purple"
+
+[git_status]
+style = "bold yellow"
+
+# Disable slow modules
+[gcloud]
+disabled = true
+
+[kubernetes]
+disabled = true
+EOF
+
+# Install Claude Code CLI
+# Note: Update this URL when Claude Code releases
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
+# Set working directory
+WORKDIR /workspace
+
+# Default command - keep container running
+CMD ["/bin/zsh", "-c", "tail -f /dev/null"]
+
+# Health check (optional)
+# HEALTHCHECK --interval=30s --timeout=3s \
+#   CMD curl -f http://localhost:3000/ || exit 1

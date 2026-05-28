@@ -1,0 +1,71 @@
+# ==============================================================================
+# Template Name: Deploy to Azure App Service (deploy-app-service.yml)
+# Description:
+#   This template encapsulates the standard process for deploying a website to Azure App Service.
+#   It includes two main steps:
+#   1. Download Pipeline Artifact
+#   2. Deploy to Azure App Service
+# ==============================================================================
+
+parameters:
+  # Azure Service Connection Name
+  - name: azureSubscription
+    type: string
+
+  # App Service Name
+  - name: webAppName
+    type: string
+
+  # App Service Type
+  - name: appType
+    type: string
+    default: "webApp"
+    values:
+      - "webApp" # Windows Web App
+      - "webAppLinux" # Linux Web App
+
+  # Source Pipeline Name (used for downloading Artifacts)
+  - name: sourcePipeline
+    type: string
+    default: "current"
+
+  # Name of the Artifact to download
+  - name: artifactName
+    type: string
+    default: "drop"
+
+  # Deployment package path (supports wildcards, e.g., $(Pipeline.Workspace)/drop/**/*.zip)
+  - name: packagePath
+    type: string
+    default: "$(Pipeline.Workspace)/drop/**/*.zip"
+
+  # Deployment slot name (default is production; if not production, it will try to deploy to that Slot)
+  - name: slotName
+    type: string
+    default: "production"
+
+  # Resource Group Name
+  - name: resourceGroupName
+    type: string
+
+steps:
+  # ----------------------------------------------------------------------------
+  # Step 1: Download Artifact
+  # ----------------------------------------------------------------------------
+  - download: ${{ parameters.sourcePipeline }}
+    artifact: ${{ parameters.artifactName }}
+    displayName: "Download Website Publish Files"
+
+  # ----------------------------------------------------------------------------
+  # Step 2: Deploy to Azure App Service
+  # ----------------------------------------------------------------------------
+  - task: AzureWebApp@1
+    displayName: "Deploy to Azure App Service"
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }} # Azure subscription service connection name
+      appType: ${{ parameters.appType }} # Web App type (webApp or webAppLinux)
+      appName: ${{ parameters.webAppName }} # Azure App Service name
+      package: ${{ parameters.packagePath }} # Deployment package path (.zip)
+      deployToSlotOrASE: ${{ ne(parameters.slotName, 'production') }} # Whether to deploy to Slot or App Service Environment
+      resourceGroupName: ${{ parameters.resourceGroupName }} # Resource group name (required when deploying to Slot)
+      slotName: ${{ parameters.slotName }} # Deployment Slot name (default is production)

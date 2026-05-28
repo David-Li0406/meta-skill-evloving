@@ -1,0 +1,123 @@
+{
+  "branchName": "memory-fixtures-validation",
+  "projectName": "cortex-fixtures-debug",
+  "description": "Debug and validate the memory system verification fixtures until all 7 fixtures pass",
+  "specFiles": [
+    "docs/MEMORY_SYSTEM_SPEC.md",
+    "scripts/ralph-memory/fixtures/README.md"
+  ],
+  "userStories": [
+    {
+      "id": "FIX-001",
+      "title": "Run verification harness and capture errors",
+      "acceptanceCriteria": [
+        "Run: go run ./cmd/verify-memory -fixtures scripts/ralph-memory/fixtures -verbose",
+        "Capture the full output including any error messages",
+        "If all fixtures pass, mark this as complete and move to FIX-008",
+        "If fixtures fail, document each failure type"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Completed: 2 pass (identity-disclosure, work-thread), 5 fail. Failures documented in progress.txt."
+    },
+    {
+      "id": "FIX-002",
+      "title": "Fix schema mismatches between harness and production",
+      "acceptanceCriteria": [
+        "Compare cmd/verify-memory/main.go initSchema() with internal/db/schema.sql",
+        "Compare internal/memory/verify_test.go setupVerifyTestDB() with production schema",
+        "Fix any column name, type, or constraint differences",
+        "Ensure merge_candidates table matches (not entity_merge_candidates)",
+        "Ensure embeddings table has embedding_blob, dimension columns",
+        "go test ./internal/memory passes",
+        "go build ./cmd/verify-memory succeeds"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Completed: Fixed merge_candidates and embeddings tables. All tests pass."
+    },
+    {
+      "id": "FIX-003",
+      "title": "Fix entity extraction issues",
+      "acceptanceCriteria": [
+        "Run single fixture: go run ./cmd/verify-memory -fixture imessage/identity-disclosure -verbose",
+        "Verify entities are extracted (Tyler, Casey)",
+        "If extraction fails, check entity_extractor.go prompt and parsing",
+        "If wrong entities extracted, adjust expectations or fix extractor",
+        "Document what the LLM actually returns vs expected"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Fixed: Added AI assistant filtering to entity_extractor.go (Claude was being extracted as Person). Added CUSTOMER_OF relationship type to relationship_extractor.go."
+    },
+    {
+      "id": "FIX-004",
+      "title": "Fix entity resolution issues",
+      "acceptanceCriteria": [
+        "Verify entity resolution creates new entities (first run = no existing graph)",
+        "Check that aliases are created for new entities",
+        "Verify uuid_map is populated correctly",
+        "If embedding similarity search fails, check query and schema",
+        "Document resolution decisions"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Resolution was working correctly. No changes needed."
+    },
+    {
+      "id": "FIX-005",
+      "title": "Fix identity promotion issues",
+      "acceptanceCriteria": [
+        "Run identity-disclosure fixture and check aliases table",
+        "Casey's email should become an alias (type=email)",
+        "episode_relationship_mentions should have target_literal and alias_id",
+        "relationships table should NOT have HAS_EMAIL rows",
+        "If promotion fails, check identity_promoter.go logic"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Identity promotion was working correctly. No changes needed."
+    },
+    {
+      "id": "FIX-006",
+      "title": "Fix expectation matching logic",
+      "acceptanceCriteria": [
+        "Review verify.go matching functions (entityMatches, relationshipMatches, etc.)",
+        "Ensure name_contains is case-insensitive",
+        "Ensure entity_type 'any' matches everything",
+        "Ensure *_like patterns work with SQL LIKE semantics",
+        "Add debug logging if needed to see what's being compared"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Fixed: Added proper null handling for valid_at and invalid_at in relationshipMatches(). YAML null values weren't being matched correctly."
+    },
+    {
+      "id": "FIX-007",
+      "title": "Fix remaining fixture-specific issues",
+      "acceptanceCriteria": [
+        "Run all fixtures: go run ./cmd/verify-memory -fixtures scripts/ralph-memory/fixtures -verbose",
+        "For each failing fixture, identify the specific issue",
+        "Fix extraction prompts, expectations, or pipeline code as needed",
+        "Adjust expectations if LLM output is reasonable but different from expected",
+        "Document any expectation changes with rationale"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Fixed: Relaxed expectations for LLM variability (phone alias optional, flexible temporal dates, accept BBQ as Event). Enhanced temporal guidance in relationship_extractor.go prompt. Fixed contradiction detector to properly handle valid_at ordering."
+    },
+    {
+      "id": "FIX-008",
+      "title": "All 7 fixtures pass",
+      "acceptanceCriteria": [
+        "go run ./cmd/verify-memory -fixtures scripts/ralph-memory/fixtures exits with code 0",
+        "Output shows: 'Verification Summary: 7 passed, 0 failed, 7 total'",
+        "Commit all fixes with message: 'fix(memory): all verification fixtures passing'",
+        "Output <promise>COMPLETE</promise> when done"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "All 7 fixtures now pass: aix/personal-info, aix/project-discussion, gmail/newsletter-sender, gmail/work-thread, imessage/identity-disclosure, imessage/job-change, imessage/social-relationship"
+    }
+  ]
+}

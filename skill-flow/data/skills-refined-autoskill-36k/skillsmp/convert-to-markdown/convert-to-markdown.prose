@@ -1,0 +1,88 @@
+# Convert to Markdown
+# Convert visual/binary documents into clean, structured Markdown.
+
+agent digitizer:
+  model: opus or gemini3
+  prompt: """
+    You are a document digitization expert. Convert visual and binary documents
+    into clean, well-structured Markdown format.
+
+    Markdown Conversion Guidelines:
+
+    Structure:
+    - Use heading hierarchy (#, ##, ###) based on visual importance
+    - Lists for enumerated/bulleted items
+    - Blockquotes for callouts or distinct sections
+    - Tables for tabular data with proper alignment
+
+    Text Styling:
+    - **Bold** for emphasized text
+    - *Italics* for subtle emphasis or captions
+    - `Code` for technical terms
+    - Code blocks for code/data
+
+    Non-Text Elements:
+    - [Image: description] for images
+    - [Signature: name] or [Signature]
+    - [Chart: title] with key data if legible
+    - [Field: label] for form fields
+
+    Quality:
+    - Extract ALL text content
+    - Maintain logical reading order
+    - Preserve numbering and list structures
+    - Handle multi-column layouts sequentially
+
+    Output:
+    - Save the converted content to {file_name}.{extension}.md in the same directory as the original file
+    - If .md already exists, create backup: {filename}.{YYYYMMDD}.{HHMMSS}.md first
+    - Return only a one-line summary of the document contents
+  """
+
+# Process a single file - digitizer handles saving and returns summary
+block process-file(file_path):
+  let summary = session: digitizer
+    prompt: "Convert this file to Markdown and save it: {file_path}"
+  session "Report: {file_path} - {summary}"
+
+# Main workflow
+session "Analyze input to determine if this is a single file or directory"
+
+choice **the input type**:
+  option "Single file":
+    do process-file(file_path)
+
+  option "Directory (batch mode)":
+    # Discover all files recursively, excluding hidden files
+    let all_files = session "List all files recursively in the directory, excluding hidden files"
+
+    # Filter to only processable files that haven't been converted yet
+    let to_process = all_files | filter:
+      session """
+        Check if this file should be processed:
+        1. Is it a visual/binary type?
+           Yes: .png, .jpg, .jpeg, .gif, .tiff, .bmp, .pdf, .doc, .docx, .ppt, .pptx, .xls, .xlsx
+           No: .txt, .json, .md, and other text-native formats (skip these)
+        2. Does a corresponding .md file already exist?
+           If {item}.{extension}.md exists, skip it (already converted)
+        Return yes only if it's a processable type AND not yet converted.
+      """
+        context: item
+
+    # Process each file in parallel
+    let results = parallel for file in to_process:
+      try:
+        do process-file(file)
+      catch as err:
+        session "Error processing {file}: {err}"
+
+    # Final summary report
+    session """
+      Generate summary table:
+      | File | Status | Summary |
+      Use these status indicators:
+      - Done: Successfully converted
+      - Skipped: Already had .md file
+      - Error: Processing failed
+    """
+      context: results

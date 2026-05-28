@@ -1,0 +1,35 @@
+identity:
+  name: md_to_html
+  author: bowenliang123
+  label:
+    en_US: Markdown ⮕ HTML
+    zh_Hans: Markdown ⮕ HTML
+description:
+  human:
+    en_US: Generate HTML file from Markdown.
+    zh_Hans: 将 Markdown 转换为 HTML 文件的工具
+  llm: Generate HTML file from Markdown text
+parameters:
+  - name: md_text
+    type: string
+    required: true
+    label:
+      en_US: Markdown text
+      zh_Hans: Markdown格式文本
+    human_description:
+      en_US: Markdown text
+      zh_Hans: Markdown格式文本
+    form: llm
+  - name: output_filename
+    type: string
+    required: false
+    label:
+      en_US: Output Filename
+      zh_Hans: 输出文件名
+    human_description:
+      en_US: Optional custom output file name, and the filename suffix is not required.
+      zh_Hans: 可选的自定义输出文件名，后缀名无需指定
+    form: llm
+extra:
+  python:
+    source: tools/md_to_html/md_to_html.py

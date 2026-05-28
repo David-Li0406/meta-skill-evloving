@@ -1,0 +1,71 @@
+{
+  "mode": "transcribe_audio",
+  "roots": [
+    "C:\\Users\\yousu\\Desktop\\CARDV\\Movie_F\\YYYYMMDD"
+  ],
+  "output_dir": "C:\\Users\\yousu\\Desktop\\CARDV\\Movie_F\\YYYYMMDD\\transcripts",
+
+  "whisper": {
+    "engine": "faster-whisper",
+    "model_size": "base",
+    "device": "cuda",
+    "batch_size": 8,
+    "compute_type": "float16",
+    "language": "en",
+    "detect_language": false,
+    "task": "transcribe"
+  },
+
+  "audio": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "codec": "pcm_s16le",
+    "format": "wav",
+    "keep_intermediate": false,
+    "ffmpeg_retry": {
+      "enabled": true,
+      "codec_fallback": "flac",
+      "demuxer_args": ["-fflags", "+genpts", "-rw_timeout", "30000000"],
+      "probe_args": ["-analyzeduration", "100M", "-probesize", "100M"]
+    }
+  },
+
+  "segmentation": {
+    "mode": "fixed",
+    "chunk_length_sec": 30,
+    "min_silence_gap_sec": 0.2,
+    "vad_min_len_sec": 2,
+    "vad_max_len_sec": 60
+  },
+
+  "diarization": {
+    "enabled": false,
+    "backend": "pyannote",
+    "hf_token_env": "HF_TOKEN",
+    "min_speakers": 1,
+    "max_speakers": 10,
+    "normalize_labels": true
+  },
+
+  "post": {
+    "timestamps": true,
+    "summarize": true,
+    "categorize": true,
+    "min_confidence": 0.5,
+    "redact": {
+      "enabled": false,
+      "rules": ["phone", "email", "license_plate"]
+    }
+  },
+
+  "formats": ["txt", "json", "srt"],
+
+  "parallel": {
+    "max_workers": 3
+  },
+
+  "limits": {
+    "max_duration_per_run_sec": 7200,
+    "skip_if_silent": true
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "name": "@{{SCOPE}}/{{REPO_NAME}}",
+  "version": "1.0.0",
+  "description": "{{DESCRIPTION}}",
+  "type": "module",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./{{PACKAGE_1}}": {
+      "types": "./src/packages/{{PACKAGE_1}}/dist/index.d.ts",
+      "import": "./src/packages/{{PACKAGE_1}}/dist/index.js"
+    },
+    "./{{PACKAGE_2}}": {
+      "types": "./src/packages/{{PACKAGE_2}}/dist/index.d.ts",
+      "import": "./src/packages/{{PACKAGE_2}}/dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src/packages/{{PACKAGE_1}}/dist",
+    "src/packages/{{PACKAGE_2}}/dist"
+  ],
+  "workspaces": [
+    "src/packages/{{PACKAGE_1}}",
+    "src/packages/{{PACKAGE_2}}",
+    "examples/{{EXAMPLE_1}}"
+  ],
+  "scripts": {
+    "build": "npm run type-check && tsgo -b .",
+    "type-check": "tsgo -b . --noEmit",
+    "build:all:workspaces": "npm run build --workspaces",
+    "clean": "rimraf dist tsconfig.tsbuildinfo src/packages/*/.rslib src/packages/*/dist src/packages/*/tsconfig.tsbuildinfo src/packages/*/tsconfig.build.tsbuildinfo",
+    "format": "prettier --write 'src/packages/**/*.{ts,js,md}'",
+    "format:check": "prettier --check 'src/packages/**/*.{ts,js,md}'",
+    "lint": "eslint . --ext .ts --flag unstable_native_nodejs_ts_config --cache --cache-strategy content --cache-location .eslintcache --report-unused-disable-directives --no-warn-ignored",
+    "prepublishOnly": "npm run build",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.ts": ["eslint --fix", "prettier --write"]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "@eslint/js": "^9.39.1",
+    "@rsbuild/core": "^1.6.6",
+    "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "latest",
+    "@typescript/native-preview": "7.0.0-dev.20251203.1",
+    "esbuild": "^0.27.0",
+    "eslint": "latest",
+    "eslint-config-prettier": "latest",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-functional": "^9.0.2",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "latest",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-visitor-keys": "^5.0.0",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "prettier": "latest",
+    "rimraf": "^6.1.0",
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/{{ORG}}/{{REPO_NAME}}.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/{{ORG}}/{{REPO_NAME}}/issues"
+  },
+  "homepage": "https://github.com/{{ORG}}/{{REPO_NAME}}#readme",
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

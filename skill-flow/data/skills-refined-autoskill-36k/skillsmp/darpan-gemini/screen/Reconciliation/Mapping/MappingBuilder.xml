@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="New Mapping" default-menu-include="false" require-authentication="false">
+
+    <transition name="createMapping" begin-transaction="true">
+        <parameter name="mappingName"/>
+        <parameter name="system1EnumId"/>
+        <parameter name="system1FileTypeEnumId"/>
+        <parameter name="system1IdExpression"/>
+        <parameter name="system1SchemaFileName"/>
+        <parameter name="system2EnumId"/>
+        <parameter name="system2FileTypeEnumId"/>
+        <parameter name="system2IdExpression"/>
+        <parameter name="system2SchemaFileName"/>
+        <actions>
+            <if condition="saveButton">
+                <then>
+                    <set field="mappingName" from="mappingName?.trim()"/>
+                    <set field="system1EnumId" from="system1EnumId?.trim()"/>
+                    <set field="system2EnumId" from="system2EnumId?.trim()"/>
+                    <set field="system1IdExpression" from="system1IdExpression?.trim()"/>
+                    <set field="system2IdExpression" from="system2IdExpression?.trim()"/>
+
+                    <if condition="!mappingName">
+                        <return error="true" message="Mapping name is required"/>
+                    </if>
+                    <if condition="!system1EnumId || !system2EnumId">
+                        <return error="true" message="Both systems are required"/>
+                    </if>
+                    <if condition="system1EnumId == system2EnumId">
+                        <return error="true" message="Please select two different systems"/>
+                    </if>
+                    <if condition="!system1IdExpression || !system2IdExpression">
+                        <return error="true" message="ID expression is required for both systems"/>
+                    </if>
+
+                    <if condition="system1FileTypeEnumId == 'DftJson' &amp;&amp; system1IdExpression &amp;&amp; !system1IdExpression.startsWith('$')">
+                        <if condition="!system1SchemaFileName">
+                            <return error="true" message="System 1 JSON Schema is required to resolve the ID field. Select a schema or enter a full JSONPath."/>
+                        </if>
+                        <service-call name="jsonschema.JsonSchemaServices.resolve#JsonPathForKey" in-map="[schemaFileName:system1SchemaFileName, key:system1IdExpression]" out-map="system1PathOut"/>
+                        <if condition="!system1PathOut?.matchingPaths || system1PathOut.matchingPaths.size() == 0">
+                            <return error="true" message="System 1 ID field ${system1IdExpression} not found in schema ${system1SchemaFileName}. Enter a full JSONPath."/>
+                        </if>
+                        <if condition="system1PathOut.matchingPaths.size() > 1">
+                            <return error="true" message="System 1 ID field ${system1IdExpression} is ambiguous in schema ${system1SchemaFileName}. Matches: ${system1PathOut.matchingPaths}. Enter a full JSONPath."/>
+                        </if>
+                        <set field="system1IdExpression" from="system1PathOut.resolvedJsonPath"/>
+                    </if>
+
+                    <if condition="system2FileTypeEnumId == 'DftJson' &amp;&amp; system2IdExpression &amp;&amp; !system2IdExpression.startsWith('$')">
+                        <if condition="!system2SchemaFileName">
+                            <return error="true" message="System 2 JSON Schema is required to resolve the ID field. Select a schema or enter a full JSONPath."/>
+                        </if>
+                        <service-call name="jsonschema.JsonSchemaServices.resolve#JsonPathForKey" in-map="[schemaFileName:system2SchemaFileName, key:system2IdExpression]" out-map="system2PathOut"/>
+                        <if condition="!system2PathOut?.matchingPaths || system2PathOut.matchingPaths.size() == 0">
+                            <return error="true" message="System 2 ID field ${system2IdExpression} not found in schema ${system2SchemaFileName}. Enter a full JSONPath."/>
+                        </if>
+                        <if condition="system2PathOut.matchingPaths.size() > 1">
+                            <return error="true" message="System 2 ID field ${system2IdExpression} is ambiguous in schema ${system2SchemaFileName}. Matches: ${system2PathOut.matchingPaths}. Enter a full JSONPath."/>
+                        </if>
+                        <set field="system2IdExpression" from="system2PathOut.resolvedJsonPath"/>
+                    </if>
+
+                    <set field="mappingIdBase" from="mappingName.replaceAll('[^A-Za-z0-9]', '')"/>
+                    <if condition="!mappingIdBase">
+                        <set field="mappingIdBase" value="Mapping"/>
+                    </if>
+                    <if condition="mappingIdBase.length() > 38">
+                        <set field="mappingIdBase" from="mappingIdBase.substring(0, 38)"/>
+                    </if>
+                    <set field="mappingId" from="mappingIdBase"/>
+                    <entity-find-one entity-name="darpan.mapping.ReconciliationMapping" value-field="existingMapping" cache="false">
+                        <field-map field-name="reconciliationMappingId" from="mappingId"/>
+                    </entity-find-one>
+                    <if condition="existingMapping != null">
+                        <set field="idSuffix" from="ec.l10n.format(ec.user.nowTimestamp, 'yyMMddHHmmss')"/>
+                        <set field="baseMax" from="38 - idSuffix.length() - 1"/>
+                        <set field="mappingId" from="(mappingIdBase.length() > baseMax ? mappingIdBase.substring(0, baseMax) : mappingIdBase) + '-' + idSuffix"/>
+                    </if>
+
+                    <set field="nowTs" from="ec.user.nowTimestamp"/>
+                    <set field="mappingValue" from="ec.entity.makeValue('darpan.mapping.ReconciliationMapping')"/>
+                    <set field="mappingValue.reconciliationMappingId" from="mappingId"/>
+                    <set field="mappingValue.mappingName" from="mappingName"/>
+                    <set field="mappingValue.createdDate" from="nowTs"/>
+                    <set field="mappingValue.lastUpdatedDate" from="nowTs"/>
+                    <entity-create value-field="mappingValue"/>
+
+                    <set field="member1" from="ec.entity.makeValue('darpan.mapping.ReconciliationMappingMember')"/>
+                    <set field="member1.mappingMemberId" from="mappingId + '-1'"/>
+                    <set field="member1.reconciliationMappingId" from="mappingId"/>
+                    <set field="member1.systemEnumId" from="system1EnumId"/>
+                    <set field="member1.fileTypeEnumId" from="system1FileTypeEnumId"/>
+                    <set field="member1.idFieldExpression" from="system1IdExpression"/>
+                    <set field="member1.systemFieldName" from="system1IdExpression"/>
+                    <set field="member1.schemaFileName" from="system1SchemaFileName"/>
+                    <set field="member1.createdDate" from="nowTs"/>
+                    <entity-create value-field="member1"/>
+
+                    <set field="member2" from="ec.entity.makeValue('darpan.mapping.ReconciliationMappingMember')"/>
+                    <set field="member2.mappingMemberId" from="mappingId + '-2'"/>
+                    <set field="member2.reconciliationMappingId" from="mappingId"/>
+                    <set field="member2.systemEnumId" from="system2EnumId"/>
+                    <set field="member2.fileTypeEnumId" from="system2FileTypeEnumId"/>
+                    <set field="member2.idFieldExpression" from="system2IdExpression"/>
+                    <set field="member2.systemFieldName" from="system2IdExpression"/>
+                    <set field="member2.schemaFileName" from="system2SchemaFileName"/>
+                    <set field="member2.createdDate" from="nowTs"/>
+                    <entity-create value-field="member2"/>
+
+                    <message>Mapping ${mappingName} created.</message>
+                </then>
+            </if>
+        </actions>
+        <default-response url=".">
+            <parameter name="createdMappingId" from="mappingId"/>
+            <parameter name="createdMappingName" from="mappingName"/>
+            <!-- Pass back all form fields to preserve state on refresh -->
+            <parameter name="mappingName"/>
+            <parameter name="system1EnumId"/>
+            <parameter name="system1FileTypeEnumId"/>
+            <parameter name="system1IdExpression"/>
+            <parameter name="system1SchemaFileName"/>
+            <parameter name="system2EnumId"/>
+            <parameter name="system2FileTypeEnumId"/>
+            <parameter name="system2IdExpression"/>
+            <parameter name="system2SchemaFileName"/>
+        </default-response>
+    </transition>
+
+    <pre-actions>
+        <entity-find entity-name="moqui.basic.Enumeration" list="systemEnumList" cache="false">
+            <econdition field-name="enumTypeId" value="DarpanSystemSource"/>
+            <order-by field-name="sequenceNum,description"/>
+        </entity-find>
+        <entity-find entity-name="moqui.basic.Enumeration" list="fileTypeEnumList" cache="false">
+            <econdition field-name="enumTypeId" value="DarpanFileType"/>
+            <order-by field-name="sequenceNum,description"/>
+        </entity-find>
+        <entity-find entity-name="darpan.reconciliation.JsonSchema" list="jsonSchemas">
+            <order-by field-name="schemaName"/>
+        </entity-find>
+        <set field="schemaFiles" from="jsonSchemas"/>
+    </pre-actions>
+
+    <widgets>
+        <container style="container">
+            <container style="page-header">
+                <label text="Create New Mapping" type="h2"/>
+                <label text="Define a mapping between two systems by naming the mapping and the column to compare in each system." type="p" style="text-muted"/>
+                <label text="Saved mapping ${createdMappingName}. It is now available in Reconciliation." type="p" style="text-success" condition="createdMappingId"/>
+            </container>
+
+            <form-single name="MappingSetupForm" transition="createMapping">
+                <field name="mappingName">
+                    <default-field title="Mapping Name" tooltip="This name appears in the reconciliation mapping list.">
+                        <text-line size="40"/>
+                    </default-field>
+                </field>
+
+                <field name="system1EnumId">
+                    <default-field title="System 1">
+                        <drop-down>
+                            <option key="" text="Select system"/>
+                            <list-options list="systemEnumList" key="${enumId}" text="${description ?: enumId}"/>
+                        </drop-down>
+                    </default-field>
+                </field>
+                <field name="system1FileTypeEnumId">
+                    <default-field title="File Type">
+                        <drop-down required-manual-select="true">
+                            <list-options list="fileTypeEnumList" key="${enumId}" text="${description}"/>
+                        </drop-down>
+                    </default-field>
+                </field>
+                <field name="system1IdExpression">
+                    <default-field title="ID Field" tooltip="CSV column name (e.g. order_id) or JSONPath attribute">
+                        <text-line size="30"/>
+                    </default-field>
+                </field>
+                <field name="system1ResolvedJsonPath">
+                    <conditional-field title="Resolved JSONPath" condition="system1FileTypeEnumId == 'DftJson' &amp;&amp; system1IdExpression">
+                        <display text="Resolved JSONPath: ${system1IdExpression}" style="text-muted"/>
+                    </conditional-field>
+                </field>
+                <field name="system1SchemaFileName">
+                    <default-field title="JSON Schema">
+                        <drop-down allow-empty="true">
+                            <option key="" text="No validation"/>
+                            <list-options list="schemaFiles" key="${schemaName}" text="${schemaName}"/>
+                        </drop-down>
+                        <visible-when field="system1FileTypeEnumId" value="DftJson"/>
+                    </default-field>
+                </field>
+
+                <field name="system2EnumId">
+                    <default-field title="System 2">
+                        <drop-down>
+                            <option key="" text="Select system"/>
+                            <list-options list="systemEnumList" key="${enumId}" text="${description ?: enumId}"/>
+                        </drop-down>
+                    </default-field>
+                </field>
+                <field name="system2FileTypeEnumId">
+                    <default-field title="File Type">
+                        <drop-down required-manual-select="true">
+                            <list-options list="fileTypeEnumList" key="${enumId}" text="${description}"/>
+                        </drop-down>
+                    </default-field>
+                </field>
+                <field name="system2IdExpression">
+                    <default-field title="ID Field" tooltip="CSV column name (e.g. order_id) or JSONPath attribute">
+                        <text-line size="30"/>
+                    </default-field>
+                </field>
+                <field name="system2ResolvedJsonPath">
+                    <conditional-field title="Resolved JSONPath" condition="system2FileTypeEnumId == 'DftJson' &amp;&amp; system2IdExpression">
+                        <display text="Resolved JSONPath: ${system2IdExpression}" style="text-muted"/>
+                    </conditional-field>
+                </field>
+                <field name="system2SchemaFileName">
+                    <default-field title="JSON Schema">
+                        <drop-down allow-empty="true">
+                            <option key="" text="No validation"/>
+                            <list-options list="schemaFiles" key="${schemaName}" text="${schemaName}"/>
+                        </drop-down>
+                        <visible-when field="system2FileTypeEnumId" value="DftJson"/>
+                    </default-field>
+                </field>
+
+                <field name="saveButton">
+                    <default-field title="Save Mapping">
+                        <submit/>
+                    </default-field>
+                </field>
+
+                <field-layout>
+                    <field-row-big>
+                        <field-ref name="mappingName"/>
+                    </field-row-big>
+                    <field-row>
+                        <field-ref name="system1EnumId"/>
+                        <field-ref name="system1FileTypeEnumId"/>
+                    </field-row>
+                    <field-row>
+                        <field-ref name="system1IdExpression"/>
+                        <field-ref name="system1SchemaFileName"/>
+                    </field-row>
+                    <field-row-big>
+                        <field-ref name="system1ResolvedJsonPath"/>
+                    </field-row-big>
+                    <field-row>
+                        <field-ref name="system2EnumId"/>
+                        <field-ref name="system2FileTypeEnumId"/>
+                    </field-row>
+                    <field-row>
+                        <field-ref name="system2IdExpression"/>
+                        <field-ref name="system2SchemaFileName"/>
+                    </field-row>
+                    <field-row-big>
+                        <field-ref name="system2ResolvedJsonPath"/>
+                    </field-row-big>
+                    <field-row-big>
+                        <field-ref name="saveButton"/>
+                    </field-row-big>
+                </field-layout>
+            </form-single>
+        </container>
+    </widgets>
+</screen>

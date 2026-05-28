@@ -1,0 +1,44 @@
+# Pattern Categories
+
+- naming
+  - variables: camelCase, snake_case, SCREAMING_SNAKE
+  - functions: camelCase, snake_case
+  - classes/types: PascalCase
+  - files: kebab-case, camelCase, snake_case
+  - constants: SCREAMING_SNAKE
+  - prefixes: is_, has_, on_, handle_
+- imports
+  - ordering: grouped, alphabetical
+  - paths: absolute, relative, aliases
+  - barrel_exports: index files
+  - dynamic_imports: when allowed
+- api_calls
+  - wrappers: service hook, fetch wrapper
+  - error_handling: try/catch, .catch, Result type
+  - retry_logic: exponential backoff
+  - caching: react-query, swr, custom cache
+- state_management
+  - local_state: useState patterns
+  - global_state: redux, zustand, context
+  - form_state: react-hook-form, formik
+  - server_state: react-query, swr
+- component_structure
+  - file_organization: feature-based, type-based
+  - prop_patterns: destructuring, spreading, required vs optional props
+  - composition: hooks, render props, HOCs
+  - separation: container/presentational or smart/dumb
+- error_handling
+  - boundaries placement
+  - logging approach
+  - user_feedback: toast, modal, inline
+  - recovery: retry, fallback, redirect
+- testing
+  - file_location: colocated, __tests__, spec/
+  - naming: *.test.*, *.spec.*
+  - mocking: manual, jest.mock, msw
+  - coverage: thresholds, ignore lists
+- documentation
+  - comments strategy
+  - jsdoc/type annotations
+  - readme structure
+  - adr format

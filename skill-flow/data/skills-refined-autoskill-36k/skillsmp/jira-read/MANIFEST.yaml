@@ -1,0 +1,124 @@
+# Skill Manifest - Progressive Disclosure Index
+# This file describes available resources for agents that support lazy loading.
+# Agents without progressive disclosure support can safely ignore this file.
+
+skill: jira-read
+version: "1.0"
+specification: agentskills.io/v1
+
+# =============================================================================
+# TOKEN ESTIMATION METHODOLOGY
+# =============================================================================
+# Rule of thumb: 1 token ≈ 0.75 words in English (or ~4 characters)
+#
+# Content type multipliers (formatting overhead):
+#   - Prose/paragraphs: 1.0x (baseline)
+#   - Code blocks: 1.2x (syntax adds tokens)
+#   - Tables: 1.3x (markdown formatting)
+#   - Cheatsheets with examples: 1.4x (mixed content, many symbols)
+#
+# How to estimate: (word_count / 0.75) * content_multiplier
+# =============================================================================
+
+progressive_disclosure:
+  # ---------------------------------------------------------------------------
+  # LEVEL 1: METADATA
+  # ---------------------------------------------------------------------------
+  # Range: 80-150 tokens
+  # We use: 120 tokens
+  #
+  # Rationale:
+  #   - name field: ~5-10 tokens (short identifier)
+  #   - description field: ~80-120 tokens (2-4 useful lines)
+  #   - YAML overhead: ~10 tokens (keys, formatting)
+  #   - 50 tokens is too optimistic for real-world descriptions
+  #   - 120 tokens accommodates keyword-rich descriptions for agent discovery
+  # ---------------------------------------------------------------------------
+  metadata:
+    estimated_tokens: 120
+    fields: [name, description]
+
+  # ---------------------------------------------------------------------------
+  # LEVEL 2: INSTRUCTIONS (SKILL.md body)
+  # ---------------------------------------------------------------------------
+  # Range: 1000-2500 tokens
+  # We use: 1600 tokens
+  #
+  # Rationale:
+  #   - Minimum viable skill body: ~800 tokens (very sparse)
+  #   - Operational skill with examples: ~1600 tokens (our target)
+  #   - Comprehensive guide: ~2500 tokens (approaching reference territory)
+  #   - We keep SKILL.md focused on "what to do" not "all the details"
+  #   - Detailed content moves to references/ for on-demand loading
+  # ---------------------------------------------------------------------------
+  instructions:
+    estimated_tokens: 1600
+    file: SKILL.md
+
+  # ---------------------------------------------------------------------------
+  # LEVEL 3: RESOURCES (on-demand)
+  # ---------------------------------------------------------------------------
+  # Loaded only when explicitly needed during execution.
+  # Each resource has its own estimate based on content type.
+  # ---------------------------------------------------------------------------
+  resources:
+    # -------------------------------------------------------------------------
+    # JQL-CHEATSHEET.md
+    # -------------------------------------------------------------------------
+    # Range for cheatsheets: 1500-2500 tokens
+    # We use: 2000 tokens
+    #
+    # Rationale:
+    #   - Heavy on code examples and tables (1.4x multiplier)
+    #   - ~180 lines of mixed content
+    #   - Many JQL snippets with operators and special characters
+    #   - Cheatsheets tokenize poorly due to formatting density
+    # -------------------------------------------------------------------------
+    - path: references/JQL-CHEATSHEET.md
+      purpose: Detailed JQL syntax, operators, and query patterns
+      estimated_tokens: 2000
+      load_when:
+        - User asks about JQL syntax
+        - User needs help writing queries
+        - Query returns syntax errors
+      keywords: [jql, query, search, filter, syntax]
+
+    # -------------------------------------------------------------------------
+    # ERROR-HANDLING.md
+    # -------------------------------------------------------------------------
+    # Range for error references: 1000-1800 tokens
+    # We use: 1400 tokens
+    #
+    # Rationale:
+    #   - Tables of HTTP codes (1.3x multiplier)
+    #   - Moderate code examples
+    #   - ~120 lines of content
+    #   - More prose than cheatsheet, but still table-heavy
+    # -------------------------------------------------------------------------
+    - path: references/ERROR-HANDLING.md
+      purpose: Complete error codes, retry strategies, and troubleshooting
+      estimated_tokens: 1400
+      load_when:
+        - API returns an error
+        - User asks about error handling
+        - Debugging connection issues
+      keywords: [error, 401, 403, 404, 429, retry, timeout]
+
+# Loading hints for consuming agents
+loading_strategy:
+  recommendation: |
+    1. Start with SKILL.md only (Level 2)
+    2. Load JQL-CHEATSHEET.md when user needs query help
+    3. Load ERROR-HANDLING.md when encountering or discussing errors
+    4. Never preload all resources - load on demand
+
+  fallback: |
+    If your agent does not support progressive disclosure,
+    SKILL.md contains all essential instructions to operate.
+    Reference files provide supplementary detail only.
+
+# Total token budget across all levels
+token_summary:
+  metadata_only: 120           # Just discovery
+  with_instructions: 1720      # Active skill usage
+  with_all_resources: 5120     # Full context (avoid if possible)

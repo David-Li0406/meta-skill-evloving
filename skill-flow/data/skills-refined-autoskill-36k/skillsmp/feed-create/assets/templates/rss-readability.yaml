@@ -1,0 +1,22 @@
+# Blog/article feed with content extraction
+version: 1
+
+templates:
+  rss_readability:
+    transform:
+      - readability
+      - sanitize_html
+      - normalize_code_blocks
+
+feeds:
+  - id: {{id}}
+    title: {{title}}
+    extends: [rss_readability]
+
+    source: {{url}}
+
+    select:
+      since: {{frequency}}
+      max_items: {{max_items}}
+
+    style: {{style_profile}}

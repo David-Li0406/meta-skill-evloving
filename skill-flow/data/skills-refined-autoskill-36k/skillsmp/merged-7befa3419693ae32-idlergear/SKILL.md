@@ -1,0 +1,267 @@
+---
+name: idlergear
+description: Use this skill for knowledge management in AI-assisted development, including task tracking, note capturing, and project context retrieval.
+---
+
+# IdlerGear Knowledge Management
+
+IdlerGear provides structured knowledge persistence across AI sessions.
+
+## Session Start (MANDATORY)
+
+**Call this MCP tool at the start of EVERY session:**
+
+```
+idlergear_session_start()
+```
+
+This returns:
+- Project vision and goals
+- Current plan and open tasks
+- Recent notes and session state
+- Recommendations for what to work on
+
+## Quick Reference
+
+### Creating Knowledge
+
+| Action | MCP Tool |
+|--------|----------|
+| Create task | `idlergear_task_create(title="...", labels=["bug"])` |
+| Quick note | `idlergear_note_create(content="...", tags=["idea"])` |
+| Research | `idlergear_note_create(content="...", tags=["explore"])` |
+| Documentation | `idlergear_reference_add(title="...", body="...")` |
+
+### Retrieving Knowledge
+
+| Action | MCP Tool |
+|--------|----------|
+| List tasks | `idlergear_task_list(state="open")` |
+| Search all | `idlergear_search(query="...")` |
+| Show vision | `idlergear_vision_show()` |
+| Project status | `idlergear_status()` |
+
+### File Status Tracking
+
+Track which files are current, deprecated, archived, or problematic to prevent using outdated code:
+
+| Action | MCP Tool |
+|--------|----------|
+| Register file | `idlergear_file_register(path="...", status="current")` |
+| Deprecate file | `idlergear_file_deprecate(path="...", successor="...", reason="...")` |
+| Check file status | `idlergear_file_status(path="...")` |
+| List files by status | `idlergear_file_list(status="deprecated")` |
+
+**File statuses:**
+- `current` - Active, should be used
+- `deprecated` - Outdated, successor available
+- `archived` - Old version kept for reference
+- `problematic` - Has known issues
+
+**Automatic Protection:**
+When files are registered with non-current statuses, IdlerGear's MCP server automatically intercepts file operations:
+- **Deprecated files**: Reads are blocked with suggestions to use the successor. Writes are allowed with warnings.
+- **Archived/Problematic files**: All access is blocked with explanatory messages.
+- All access attempts are logged to `.idlergear/access_log.jsonl` for audit purposes.
+- Use `_allow_deprecated=True` parameter to bypass checks when intentionally accessing deprecated files.
+
+### File Annotations (Token-Efficient Discovery) ⭐
+
+**IMPORTANT: Annotate files proactively to enable 93% token savings on file discovery!**
+
+Instead of grep + reading 10-15 files (~15,000 tokens), annotate once and search efficiently (~200 tokens).
+
+| Action | MCP Tool |
+|--------|----------|
+| Annotate file | `idlergear_file_annotate(path="...", description="...", tags=[], components=[])` |
+| Find files | `idlergear_file_search(query="authentication")` or `tags=["api"]` |
+| Get annotation | `idlergear_file_get_annotation(path="...")` |
+| List all tags | `idlergear_file_list_tags()` |
+
+**When to Annotate:**
+- ✅ After creating a new file (immediate context for future sessions)
+- ✅ When you understand what a file does (capture that knowledge)
+- ✅ When refactoring (update annotations to stay accurate)
+- ✅ When you see missing annotations during file search
+
+**Good Annotation Practices:**
+1. **Description**: Clear, concise summary (1-2 sentences)
+   - Good: "REST API endpoints for user authentication, JWT generation, session management"
+   - Bad: "API stuff" (too vague)
+
+2. **Tags**: 2-5 searchable keywords
+   - Good: `["api", "auth", "endpoints", "jwt"]`
+   - Bad: `["file", "code"]` (too generic)
+
+3. **Components**: Key classes/functions users will search for
+   - Good: `["AuthController", "TokenManager", "login", "verify_token"]`
+   - Bad: `["helper", "utils"]` (not specific)
+
+4. **Related Files**: Files that work together
+   - Good: `["src/models/user.py", "src/middleware/auth.py"]`
+
+### Knowledge Graph (Token-Efficient Context Retrieval) ⚡
+
+**CRITICAL: Use knowledge graph queries instead of grep/file reads for 95-98% token savings.**
+
+The knowledge graph indexes your codebase structure (commits, files, symbols) in an embedded database for instant, token-efficient queries.
+
+**Current Status:**
+- 📊 **2,003+ nodes indexed** (100 commits, 422 files, 1,481 symbols)
+- 🚀 **Sub-40ms queries** (vs seconds for grep)
+- 💾 **~50-100MB** database at `~/.idlergear/graph.db`
+
+**Available Queries:**
+
+| Query Type | MCP Tool | Use Instead Of | Token Savings |
+|------------|----------|----------------|---------------|
+| Find symbols | `idlergear_graph_query_symbols(pattern="...")` | grep -r "symbol" | 98.7% (100 vs 7,500) |
+| Task context | `idlergear_graph_query_task(task_id=N)` | Read 5+ files | 98% (100 vs 5,000) |
+| File context | `idlergear_graph_query_file(file_path="...")` | cat + grep | 95% (150 vs 3,000) |
+| Schema info | `idlergear_graph_schema_info()` | N/A | Check graph status |
+
+**Populate Commands:**
+
+| Command | Purpose | When to Run |
+|---------|---------|-------------|
+| `idlergear_graph_populate_git(max_commits=100)` | Index git history | Once per project, or after major commits |
+| `idlergear_graph_populate_code(directory="src")` | Index code symbols | Once per project, or after adding new files |
+| Both use `incremental=True` by default | Skip already-indexed data | Re-run anytime (safe, fast) |
+
+**Query Patterns:**
+
+```python
+# Find where a function is defined (instead of grep)
+result = idlergear_graph_query_symbols(pattern="ProcessManager", limit=10)
+# Returns: [{"name": "ProcessManager", "type": "class", "file": "src/idlergear/pm.py", "line": 19}]
+
+# Get all context for a task (instead of reading files)
+context = idlergear_graph_query_task(task_id=325)
+# Returns: {"task": {...}, "files": ["src/idlergear/pm.py"], "commits": [...], "symbols": [...]}
+
+# Understand a file's relationships (instead of cat + grep)
+file_info = idlergear_graph_query_file(file_path="src/idlergear/mcp_server.py")
+# Returns: {"file": {...}, "tasks": [278, 289], "symbols": ["list_tools", "call_tool"], "imports": [...]}
+```
+
+**Rules:**
+- ✅ **ALWAYS try graph queries FIRST** before grep/read
+- ✅ Query graph at session start to check if populated
+- ✅ Populate once per project (incremental updates are fast)
+- ✅ Fall back to grep only if graph returns no results
+- ❌ Don't use grep for symbol searches (graph is 98% faster)
+- ❌ Don't read multiple files for context (graph has relationships)
+
+**If Graph Empty:**
+```python
+# Check status
+info = idlergear_graph_schema_info()
+# If info["total_nodes"] == 0, populate:
+idlergear_graph_populate_git(max_commits=100, incremental=True)
+idlergear_graph_populate_code(directory="src", incremental=True)
+```
+
+### Task Labels
+
+- `bug` - Something broken
+- `enhancement` - New feature
+- `tech-debt` - Code to improve later
+- `decision` - Architectural choice made
+
+### Note Tags
+
+- `explore` - Research questions
+- `idea` - Future possibilities
+- `bug` - Bug observations
+
+## Forbidden Actions
+
+**DO NOT create files:**
+- `TODO.md`, `NOTES.md`, `SESSION_*.md`, `SCRATCH.md`
+
+**DO NOT write comments:**
+- `// TODO:`, `# FIXME:`, `/* HACK: */`
+
+**INSTEAD:** Use `idlergear_task_create()` or `idlergear_note_create()`
+
+## Session End
+
+Before ending a session, consider:
+```
+idlergear_session_end(notes="what was accomplished")
+```
+
+This saves state for the next session.
+
+## Python Documentation (API Exploration)
+
+Quickly explore Python APIs with token-efficient summaries:
+
+### Token-Efficient Summaries ⚡
+```
+idlergear_docs_summary(package="requests", mode="minimal")   # ~500 tokens
+idlergear_docs_summary(package="requests", mode="standard")  # ~2000 tokens
+idlergear_docs_summary(package="requests", mode="detailed")  # ~5000 tokens
+```
+
+### Other Docs Tools
+
+| Action | MCP Tool |
+|--------|----------|
+| Check pdoc available | `idlergear_docs_check()` |
+| Single module docs | `idlergear_docs_module(module="json")` |
+| Full package docs | `idlergear_docs_generate(package="...", format="json")` |
+| Build HTML docs | `idlergear_docs_build(package="...")` |
+| Detect project | `idlergear_docs_detect()` |
+
+**Requires:** `pip install 'idlergear[docs]'`
+
+## Health Check (Doctor)
+
+To check if IdlerGear is properly configured and up-to-date:
+```
+idlergear_doctor()
+```
+
+This checks:
+- Configuration health (version, initialization)
+- File installation status (MCP, hooks, rules, skills)
+- Legacy files from older versions
+- Unmanaged knowledge files (TODO.md, NOTES.md)
+
+To auto-fix issues:
+```
+idlergear_doctor(fix=True)
+```
+
+## Sudo Handling
+
+When a command requires sudo, IdlerGear provides assistance:
+
+### Pre-authentication (Preferred)
+If a GUI prompt isn't available, ask the user to pre-authenticate:
+```
+"Please run 'sudo -v' in another terminal, then I'll run the command."
+```
+
+### GUI Password Prompt (Automatic)
+If zenity, kdialog, or osascript is available, a GUI password dialog will appear automatically when sudo is needed. The pre-tool-use hook detects sudo commands and:
+1. Checks if already authenticated (`sudo -n true`)
+2. If not, checks for GUI askpass availability
+3. Informs user if a password dialog will appear
+
+### Manual Execution
+For complex commands or when no GUI is available:
+```
+"Please run this command directly in your terminal:
+  sudo <command>"
+```
+
+### Utility Scripts
+IdlerGear installs helper scripts in `.claude/scripts/`:
+- `ig-askpass` - Multi-platform GUI password prompt (zenity, kdialog, osascript)
+- `ig-sudo` - Wrapper that auto-uses askpass when available
+
+---
+
+For detailed documentation, see `references/` in this skill directory.

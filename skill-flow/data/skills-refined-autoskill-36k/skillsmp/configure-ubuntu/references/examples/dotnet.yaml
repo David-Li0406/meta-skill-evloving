@@ -1,0 +1,86 @@
+#cloud-config
+# =============================================================================
+# .NET Application Server
+# =============================================================================
+#
+# Purpose: .NET application server using ASP.NET Core runtime with Kestrel
+#
+# Features:
+# - ASP.NET Core 10.0 runtime
+# - Dedicated service user (no login access)
+# - Secure environment file for configuration
+# - systemd automatic restart on failure
+#
+# How it works:
+# 1. Installs Microsoft package repository
+# 2. Installs ASP.NET Core 10.0 runtime
+# 3. Creates systemd service unit file
+# 4. Creates service user and directories
+# 5. Configures permissions for deployment and runtime
+# 6. Registers service (but does not start - no app code yet)
+#
+# Configuration:
+# - Replace 'adminuser' with your cloud provider's default SSH user
+# - Environment variables go in /etc/dotnet-app/environment
+# - Deploy your DLL to /opt/dotnet-app/MyApp.dll
+#
+# Note: Update the Microsoft package URL and runtime version for different Ubuntu versions.
+# Current: Ubuntu 24.04 with .NET 10.0
+#
+# Default SSH users by cloud provider:
+# - AWS (Amazon Linux): ec2-user
+# - AWS (Ubuntu AMI): ubuntu
+# - Azure: azureuser
+# - GCP: Your Google account username
+# - DigitalOcean: root
+#
+# =============================================================================
+package_update: true
+package_upgrade: true
+
+write_files:
+  - path: /etc/systemd/system/dotnet-app.service
+    content: |
+      [Unit]
+      Description=.NET Application
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=dotnet-app
+      Group=dotnet-app
+      WorkingDirectory=/opt/dotnet-app
+      EnvironmentFile=/etc/dotnet-app/environment
+      ExecStart=/usr/bin/dotnet /opt/dotnet-app/MyApp.dll
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Install .NET runtime (update URL for different Ubuntu versions)
+  - wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+  - dpkg -i packages-microsoft-prod.deb
+  - rm packages-microsoft-prod.deb
+  - apt-get update
+  - apt-get install -y aspnetcore-runtime-10.0
+
+  # Create service user
+  - useradd --system --shell /usr/sbin/nologin --no-create-home dotnet-app
+
+  # Create directories
+  - mkdir -p /opt/dotnet-app
+  - mkdir -p /etc/dotnet-app
+
+  # Set permissions (replace 'adminuser' with your cloud provider's default SSH user)
+  - chown -R adminuser:dotnet-app /opt/dotnet-app
+  - chmod 775 /opt/dotnet-app
+  - chown root:dotnet-app /etc/dotnet-app
+  - chmod 750 /etc/dotnet-app
+  - touch /etc/dotnet-app/environment
+  - chown root:dotnet-app /etc/dotnet-app/environment
+  - chmod 640 /etc/dotnet-app/environment
+
+  # Register service
+  - systemctl daemon-reload

@@ -1,0 +1,76 @@
+{
+  "name": "example-task",
+  "created_at": "2025-01-09T12:00:00Z",
+  "status": "draft",
+  "type": "plan",
+  "task_type": "implementation",
+  "goal": "Add a health check endpoint that returns server status and uptime",
+  "input_sources": [],
+  "integrations": [],
+  "success_criteria": [
+    "GET /health returns 200 with {status: 'ok'}",
+    "Response includes server uptime in seconds",
+    "All existing tests still pass",
+    "Endpoint responds in <100ms"
+  ],
+  "verification": {
+    "method": "test",
+    "command": "npm test",
+    "description": "Run Jest test suite including new health endpoint tests"
+  },
+  "out_of_scope": [
+    "Authentication for health endpoint",
+    "Database health checks",
+    "Kubernetes liveness/readiness probe configuration"
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Understand Current Setup",
+      "steps": [
+        "Review existing route structure in src/routes/",
+        "Identify appropriate location for health endpoint",
+        "Check for existing health check patterns in codebase"
+      ],
+      "verification": "Can describe where health endpoint should be added",
+      "complete": false,
+      "notes": ""
+    },
+    {
+      "id": "P2",
+      "name": "Implement Health Endpoint",
+      "steps": [
+        "Create health route handler",
+        "Return status and uptime in response",
+        "Add route to main router"
+      ],
+      "verification": "curl localhost:3000/health returns 200 with expected JSON",
+      "complete": false,
+      "notes": ""
+    },
+    {
+      "id": "P3",
+      "name": "Add Tests",
+      "steps": [
+        "Write integration test for health endpoint",
+        "Test success response format",
+        "Test response time requirement"
+      ],
+      "verification": "npm test passes with new health tests",
+      "complete": false,
+      "notes": ""
+    },
+    {
+      "id": "P4",
+      "name": "Final Verification",
+      "steps": [
+        "Run full test suite",
+        "Manually test endpoint",
+        "Verify no regressions in existing functionality"
+      ],
+      "verification": "All tests pass, endpoint works as expected",
+      "complete": false,
+      "notes": ""
+    }
+  ]
+}

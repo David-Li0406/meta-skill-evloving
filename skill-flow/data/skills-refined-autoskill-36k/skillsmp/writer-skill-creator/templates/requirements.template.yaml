@@ -1,0 +1,71 @@
+# 需求字段模板
+# 使用时替换 {{variables}}
+
+fields:
+  - id: {{field_id}}
+    name: {{field_name}}
+    description: {{field_description}}
+    type: {{field_type}}  # text/textarea/select
+    required: {{is_required}}  # true/false
+    collection: {{collection}}  # required/optional/infer
+    priority: {{priority}}  # 1=高, 2=中, 3=低
+    example: {{example_text}}
+    placeholder: {{placeholder_text}}
+    validation_prompt: {{validation_prompt}}  # 用于 AI 验证输入质量
+    options:  # 仅 select 类型需要
+      - {{option_1}}
+      - {{option_2}}
+
+# 收集策略配置
+collection_strategy:
+  # 核心字段：必须收集，不可跳过
+  core_fields:
+    - {{core_field_1}}
+    - {{core_field_2}}
+
+  # 补充字段：可选收集
+  optional_fields:
+    - {{optional_field_1}}
+    - {{optional_field_2}}
+
+  # 推断字段：尽量从材料中提取
+  infer_fields:
+    - {{infer_field_1}}
+
+  # 每轮最多询问的字段数
+  max_fields_per_turn: 2
+
+  # 是否允许跳过可选字段
+  allow_skip_optional: true
+
+# 字段类型说明
+# - text: 单行文本，适合简短输入（名称、标题等）
+# - textarea: 多行文本，适合详细描述（问题描述、方法说明等）
+# - select: 单选，适合固定选项（类型选择、级别等）
+# - multiselect: 多选，适合可多选的固定选项
+
+# 示例字段（专利申请书）
+# fields:
+#   - id: invention_name
+#     name: 发明名称
+#     description: 您的发明的名称
+#     type: text
+#     required: true
+#     placeholder: 例如：一种基于深度学习的图像识别方法
+#
+#   - id: technical_problem
+#     name: 解决的技术问题
+#     description: 本发明要解决的主要技术问题是什么？
+#     type: textarea
+#     required: true
+#     placeholder: 描述现有技术存在的问题以及本发明如何解决
+#
+#   - id: patent_type
+#     name: 专利类型
+#     description: 申请的专利类型
+#     type: select
+#     required: true
+#     options:
+#       - 发明专利
+#       - 实用新型
+#       - 外观设计

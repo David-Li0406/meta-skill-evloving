@@ -1,0 +1,53 @@
+type: team
+name: editAndSave
+description: |
+  编辑已有图片并保存到指定路径。
+  支持图片翻译、样式调整、内容修改等场景。
+
+mode: sequential
+
+skills:
+  - ./prepare-edit-input.mjs
+  - ./generate-image.yaml
+  - ./save-image.mjs
+
+input_schema:
+  type: object
+  properties:
+    desc:
+      type: string
+      description: 编辑要求/修改说明
+    sourcePath:
+      type: string
+      description: 源图片路径（要编辑的图片）
+    savePath:
+      type: string
+      description: 输出文件路径
+    sourceLocale:
+      type: string
+      description: 源图片的语言
+      default: zh
+    targetLocale:
+      type: string
+      description: 目标语言（用于翻译场景）
+      default: ""
+    aspectRatio:
+      type: string
+      description: 宽高比
+      enum: ["1:1", "5:4", "4:3", "3:2", "16:9", "21:9"]
+      default: "4:3"
+    size:
+      type: string
+      description: 图片尺寸
+      default: "2K"
+  required:
+    - desc
+    - sourcePath
+    - savePath
+
+output_schema:
+  type: object
+  properties:
+    message:
+      type: string
+      description: 执行结果的自然语言描述

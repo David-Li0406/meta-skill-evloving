@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InkJS Smoke Demo</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1116;
+      color: #e8ecf0;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      padding: 12px 16px;
+      background: #161b22;
+      border-bottom: 1px solid #222733;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      flex: 1;
+    }
+    #story {
+      background: #161b22;
+      border: 1px solid #222733;
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 160px;
+      white-space: pre-wrap;
+    }
+    #choices {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .choice-btn {
+      background: #2d3342;
+      color: #e8ecf0;
+      border: 1px solid #3c4457;
+      border-radius: 6px;
+      padding: 10px 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+    .choice-btn:hover,
+    .choice-btn:focus {
+      background: #3b4356;
+      border-color: #4f5a73;
+      outline: none;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .controls button {
+      background: #2d3342;
+      color: #e8ecf0;
+      border: 1px solid #3c4457;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+    .controls input {
+      width: 60px;
+      background: #0f1116;
+      border: 1px solid #3c4457;
+      color: #e8ecf0;
+      border-radius: 4px;
+      padding: 4px 6px;
+    }
+    #tags {
+      font-size: 13px;
+      color: #9fb3c8;
+    }
+    #smoke-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+    @media (max-width: 600px) {
+      main {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>InkJS Smoke Demo</h1>
+    <div class="controls">
+      <button id="save-btn" type="button">Save</button>
+      <button id="load-btn" type="button">Load</button>
+      <label>Duration (s)<input id="smoke-duration" type="number" min="1" max="10" value="3" step="0.5" /></label>
+      <label>Intensity<input id="smoke-intensity" type="number" min="1" max="10" value="5" /></label>
+      <span id="tags">Tags: none</span>
+    </div>
+  </header>
+  <main>
+    <div id="story" aria-live="polite"></div>
+    <div id="choices"></div>
+  </main>
+  <canvas id="smoke-layer"></canvas>
+  <!-- Local vendored InkJS compiler build (ink-full). Update by replacing vendor/ink.js. -->
+  <script src="vendor/ink.js"></script>
+  <!-- Smoke and runner scripts (runner compiles the embedded .ink). -->
+  <script src="js/telemetry.js"></script>
+  <script src="js/smoke.js"></script>
+  <!-- AI Writer modules -->
+  <script src="js/lore-assembler.js"></script>
+  <script src="js/director-config-loader.js"></script>
+  <script src="js/embedding-service.js"></script>
+  <script src="js/prompt-engine.js"></script>
+  <script src="js/llm-adapter.js"></script>
+  <script src="js/api-key-manager.js"></script>
+  <script src="js/proposal-validator.js"></script>
+  <script src="js/director.js"></script>
+  <!-- Main runner (must be after AI Writer modules and director) -->
+  <!-- Prefer bundled HookManager when present (build step writes hook-manager.bundled.js) -->
+  <script>
+    (function(){
+      var el = document.createElement('script');
+      el.src = 'js/hook-manager.bundled.js';
+      el.onload = function() { console.info('[demo] loaded bundled HookManager'); };
+      el.onerror = function() {
+        console.info('[demo] bundled HookManager not present, falling back to runtime shim');
+        var shim = document.createElement('script');
+        shim.src = 'js/runtime-hooks-shim.js';
+        document.head.appendChild(shim);
+      };
+      document.head.appendChild(el);
+    })();
+  </script>
+  <script src="js/inkrunner.js"></script>
+</body>
+</html>

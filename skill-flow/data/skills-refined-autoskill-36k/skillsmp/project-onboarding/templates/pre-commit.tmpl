@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# 1. Branch Protection
+CURRENT_BRANCH=$(git branch --show-current)
+if [[ "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "master" ]]; then
+  echo "❌ ERROR: Direct commits to '$CURRENT_BRANCH' are forbidden. Use a feature branch."
+  exit 1
+fi
+
+# 2. Security Scan (PII-Guard)
+echo "🛡️ Running PII-Guard (Template-Aware)..."
+
+# Capture result to catch 'FAIL' strings or exit status 1
+# We explicitly trigger the 'HEADLESS' logic in the SKILL.md
+RESULT=$(opencode run --agent product-owner "HEADLESS: pii-guard scan. Ignore patterns wrapped in {}. Return 'FAIL' if real PII found.")
+
+if [[ "$RESULT" == *"FAIL"* ]] || [[ "$RESULT" == *"status 1"* ]] || [[ "$RESULT" == *"VIOLATION"* ]]; then
+  echo "❌ COMMIT BLOCKED: PII/PHI detected by security agent."
+  echo "----------------------------------------------------"
+  echo "$RESULT"
+  exit 1
+fi
+
+# 3. Documentation Sync
+if [ -f "scripts/doc_manager.py" ]; then
+  echo "🔄 Syncing documentation & verifying integrity..."
+  # doc_manager now includes verify_git_integrity internally
+  python3 scripts/doc_manager.py
+  
+  # Automatically stage manifest updates if successful
+  if [ -f "docs_manifest.json" ]; then
+    git add docs_manifest.json docs/README.md
+  fi
+fi
+
+echo "✅ All staff checks passed. Proceeding with commit."
+

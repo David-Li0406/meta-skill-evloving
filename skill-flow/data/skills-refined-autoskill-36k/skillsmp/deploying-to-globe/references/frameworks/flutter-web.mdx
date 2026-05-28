@@ -1,0 +1,67 @@
+---
+title: Deploying a Flutter Web Application
+description: Deploy Flutter Web applications to Globe's global CDN with optimized builds and edge caching for high-performance SPAs.
+---
+
+Deploying Flutter Web on Globe enables you to host high-performance single-page applications (SPAs) globally with minimal setup. Globe applies optimized defaults for build, deploy, and caching. This page outlines requirements and deployment behavior.
+
+## Project Setup
+
+To create a new Flutter Web project:
+
+1. Open your terminal and run:
+
+   ```bash
+   flutter create my_flutter_app
+   cd my_flutter_app
+   ```
+
+2. Test your application locally with:
+   ```bash
+   flutter run -d chrome
+   ```
+
+## Deploying to Globe
+
+1. Run the deployment command from your project root:
+
+   ```bash
+   globe deploy
+   ```
+
+2. For first-time deployments:
+
+   - Confirm setup when prompted (press Y)
+   - Enter a name for your project (e.g., my-flutter-app)
+   - Accept the detected Flutter preset when prompted
+
+3. Wait for the deployment to complete. You'll receive a unique URL for accessing your web application.
+
+## Viewing your application
+
+Once deployed, your app is available at the unique URL shown in your dashboard (e.g., https://my-flutter-app.globeapp.dev). Reloading the page or opening in multiple tabs will show the same consistent deployment state.
+
+![Flutter Web Application](/assets/flutter-web.png)
+
+## Deployment Behavior
+
+Globe builds your Flutter Web project and uploads the compiled output (build/web) to its CDN network.
+
+- **Preset detection**: Flutter Web projects are automatically recognized
+- **Environment**: No manual configuration required
+- **Build runner**: If used, it is auto-detected and executed before deployment
+- **Asset handling**:
+  - Assets are hashed and fingerprinted for cache optimization
+  - Base href is automatically set to /
+
+## Best Practices
+
+- Use responsive design principles for optimal display across different devices
+- Test your application across multiple browsers before deployment
+- Consider using web-specific optimizations like lazy loading for better performance
+
+## Related Topics
+
+- [Connect a Flutter App to Backend](/guides/connect-flutter-app) - Connect Flutter frontend to backend
+- [Managing deployments](/core-concepts/deployments) - Understand deployment lifecycle
+- [Globe CLI reference](/core-concepts/cli) - Command-line deployment tools

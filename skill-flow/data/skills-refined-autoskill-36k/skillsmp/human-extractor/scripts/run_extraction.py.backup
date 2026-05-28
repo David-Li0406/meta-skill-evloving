@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""
+Human Extractor Skill - Main Entry Point
+Wrapper script for invoking the human detection pipeline
+"""
+import sys
+import json
+import subprocess
+from pathlib import Path
+from typing import Dict, Any
+
+# Path to Human_Detection project
+PROJECT_ROOT = Path(r"G:\My Drive\PROJECTS\APPS\Human_Detection")
+CLI_PATH = PROJECT_ROOT / "src" / "cli"
+
+def validate_config(config: Dict[str, Any]) -> tuple[bool, str]:
+    """Validate configuration parameters"""
+
+    # Check required fields
+    if "roots" not in config:
+        return False, "Missing required field: 'roots'"
+
+    if not isinstance(config["roots"], list) or len(config["roots"]) == 0:
+        return False, "'roots' must be a non-empty list"
+
+    # Validate paths exist
+    for root in config["roots"]:
+        if not Path(root).exists():
+            return False, f"Path does not exist: {root}"
+
+    # Validate numeric ranges
+    confidence = config.get("confidence", 0.35)
+    if not (0.0 <= confidence <= 1.0):
+        return False, f"confidence must be 0.0-1.0, got {confidence}"
+
+    iou = config.get("iou", 0.50)
+    if not (0.0 <= iou <= 1.0):
+        return False, f"iou must be 0.0-1.0, got {iou}"
+
+    return True, "OK"
+
+
+def build_command(config: Dict[str, Any]) -> list[str]:
+    """Build command line arguments for the CLI script"""
+
+    cmd = [
+        sys.executable,
+        "-m", "src.cli.batch_process_all_dates",
+        "--root", config["roots"][0],  # Primary root
+        "--out", config.get("single_output_dir", "parsed\\ALL_CROPS"),
+        "--conf", str(config.get("confidence", 0.35)),
+        "--iou", str(config.get("iou", 0.50)),
+        "--yolo-batch", str(config.get("yolo_batch", 64)),
+    ]
+
+    # Optional: NVDEC
+    if config.get("nvdec", True):
+        cmd.append("--use-nvdec")
+
+    # Optional: CLIP filtering
+    if config.get("clip_filter", {}).get("enabled", False):
+        cmd.extend([
+            "--clip-threshold", str(config["clip_filter"].get("threshold", 0.80)),
+            "--clip-batch", str(config["clip_filter"].get("batch", 384))
+        ])
+
+    # Optional: Full frames
+    if config.get("save_full_frame", False):
+        cmd.append("--save-full-frame")
+        if config.get("draw_boxes", True):
+            cmd.append("--draw-boxes")
+        if "full_frame_maxw" in config:
+            cmd.extend(["--max-width", str(config["full_frame_maxw"])])
+
+    # Dates (if using parallel processing)
+    if "parallel" in config and "dates" in config["parallel"]:
+        cmd.extend(["--dates"] + config["parallel"]["dates"])
+        cmd.extend(["--max-workers", str(config["parallel"].get("max_workers", 3))])
+
+    return cmd
+
+
+def run_extraction(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute the human extraction pipeline"""
+
+    # Validate configuration
+    valid, msg = validate_config(config)
+    if not valid:
+        return {
+            "status": "error",
+            "error": f"Configuration validation failed: {msg}"
+        }
+
+    # Build command
+    cmd = build_command(config)
+
+    # Change to project directory
+    original_cwd = Path.cwd()
+    try:
+        import os
+        os.chdir(PROJECT_ROOT)
+
+        # Execute
+        print(f"Executing: {' '.join(cmd)}")
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=18000  # 5 hour timeout
+        )
+
+        if result.returncode == 0:
+            return {
+                "status": "ok",
+                "summary": {
+                    "videos_processed": "See logs",
+                    "crops_saved": "See INDEX.csv",
+                    "stdout": result.stdout,
+                },
+                "artifacts": {
+                    "output_dir": config.get("single_output_dir", "parsed\\ALL_CROPS"),
+                    "index_csv": str(Path(config.get("single_output_dir", "parsed\\ALL_CROPS")) / "INDEX.csv")
+                }
+            }
+        else:
+            return {
+                "status": "error",
+                "error": f"Process failed with code {result.returncode}",
+                "stderr": result.stderr,
+                "stdout": result.stdout
+            }
+
+    except subprocess.TimeoutExpired:
+        return {
+            "status": "error",
+            "error": "Process timeout (>5 hours)"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e)
+        }
+    finally:
+        os.chdir(original_cwd)
+
+
+if __name__ == "__main__":
+    # Read config from stdin or file
+    if len(sys.argv) > 1:
+        with open(sys.argv[1]) as f:
+            config = json.load(f)
+    else:
+        config = json.load(sys.stdin)
+
+    # Run extraction
+    result = run_extraction(config)
+
+    # Output result
+    print(json.dumps(result, indent=2))
+    sys.exit(0 if result["status"] == "ok" else 1)

@@ -1,0 +1,76 @@
+#cloud-config
+# WordPress/PHP Server Setup (LAMP Stack)
+# For Truesharing, Rockcult, Mobility Backend type servers
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - apache2
+  - php8.1
+  - php8.1-mysql
+  - php8.1-curl
+  - php8.1-gd
+  - php8.1-mbstring
+  - php8.1-xml
+  - php8.1-zip
+  - php8.1-intl
+  - php8.1-opcache
+  - php8.1-redis
+  - libapache2-mod-php8.1
+  - mysql-server
+  - redis-server
+  - fail2ban
+  - ufw
+  - certbot
+  - python3-certbot-apache
+
+users:
+  - name: admin
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh-authorized-keys:
+      - ssh-rsa YOUR_PUBLIC_KEY_HERE
+
+runcmd:
+  # Enable Apache modules
+  - a2enmod rewrite
+  - a2enmod headers
+  - a2enmod ssl
+  - a2enmod expires
+  
+  # Configure PHP OPcache
+  - |
+    cat >> /etc/php/8.1/apache2/conf.d/10-opcache.ini << 'EOF'
+    opcache.enable=1
+    opcache.memory_consumption=256
+    opcache.interned_strings_buffer=16
+    opcache.max_accelerated_files=10000
+    opcache.revalidate_freq=60
+    opcache.fast_shutdown=1
+    EOF
+  
+  # Set proper permissions for web directory
+  - find /var/www -type d -exec chmod 2775 {} \;
+  - find /var/www -type f -exec chmod 0664 {} \;
+  - chown -R www-data:www-data /var/www
+  
+  # Enable UFW
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow ssh
+  - ufw allow http
+  - ufw allow https
+  - ufw --force enable
+  
+  # Configure fail2ban
+  - systemctl enable fail2ban
+  - systemctl start fail2ban
+  
+  # Enable Redis
+  - systemctl enable redis-server
+  - systemctl start redis-server
+  
+  # Restart Apache
+  - systemctl restart apache2

@@ -1,0 +1,37 @@
+{
+  "name": "@mdr/lib-utils",
+  "version": "1.0.1",
+  "type": "module",
+  "packageManager": "bun@1.1.45",
+  "typesVersions": {
+    "*": {
+      "logger": ["dist/logger.d.ts"],
+      "env": ["dist/env.d.ts"],
+      "browser": ["dist/browser-logger.d.ts"]
+    }
+  },
+  "exports": {
+    "./logger": {
+      "types": "./dist/logger.d.ts",
+      "default": "./src/logger.ts"
+    },
+    "./env": {
+      "types": "./dist/env.d.ts",
+      "default": "./src/env.ts"
+    },
+    "./browser": {
+      "types": "./dist/browser-logger.d.ts",
+      "default": "./src/browser-logger.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.check.json",
+    "check": "bun run typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "20.13.0",
+    "dotenv": "^17.2.3",
+    "typescript": "5.4.5"
+  }
+}

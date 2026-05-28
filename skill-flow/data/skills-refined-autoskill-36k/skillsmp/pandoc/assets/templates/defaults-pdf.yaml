@@ -1,0 +1,41 @@
+# Pandoc Defaults File for PDF Output
+# Usage: pandoc document.md --defaults=defaults-pdf.yaml
+
+# Input/Output
+from: markdown
+to: pdf
+
+# PDF Engine
+pdf-engine: pdflatex     # Options: pdflatex, xelatex, lualatex
+
+# Citation Processing
+citeproc: true           # Enable citation processing
+
+# Document Options
+standalone: true         # Create standalone document
+number-sections: true    # Number sections automatically
+
+# Metadata Defaults
+metadata:
+  lang: en-GB
+  fontsize: 12pt
+  geometry: margin=1in
+  linestretch: 1.5
+  documentclass: article
+
+# Table of Contents
+table-of-contents: false
+toc-depth: 3
+
+# Variables
+variables:
+  colorlinks: true
+  linkcolor: blue
+  urlcolor: blue
+  citecolor: blue
+
+# Include paths for images/assets
+resource-path:
+  - .
+  - images
+  - assets

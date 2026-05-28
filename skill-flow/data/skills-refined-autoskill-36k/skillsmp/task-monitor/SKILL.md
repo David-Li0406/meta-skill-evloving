@@ -1,0 +1,130 @@
+---
+name: task-monitor
+description: >
+  Monitor long-running tasks with Rich TUI and HTTP API. Includes scheduler integration and auto-restart.
+allowed-tools: Bash, Read
+triggers:
+  - monitor tasks
+  - check task progress
+  - task status
+  - start task monitor
+metadata:
+  short-description: Task monitoring TUI, API, and Scheduler
+---
+
+# Task Monitor Skill
+
+nvtop-style Rich TUI and HTTP API for monitoring long-running tasks across projects.
+Integrated with **Scheduler** to show upcoming jobs.
+
+## Features
+
+- **Rich TUI** - Real-time terminal UI with progress bars, rates, ETAs, and **Scheduler** panel.
+- **Python Adapter** - Drop-in `tqdm` replacement (`Monitor`) for easy integration.
+- **HTTP API** - FastAPI endpoints for cross-agent monitoring (Pull & Push).
+- **Task Registry** - Global registry at `~/.pi/task-monitor/registry.json`.
+- **Filtering** - Filter visible tasks by name.
+- **Auto-Restart** - Systemd service integration.
+
+## Quick Start
+
+```bash
+cd .pi/skills/task-monitor
+
+# Start TUI (interactive)
+uv run python monitor.py tui
+
+# Filter specific tasks
+uv run python monitor.py tui --filter youtube
+
+# Start API server
+uv run python monitor.py serve --port 8765
+```
+
+## Python Integration (Adapter)
+
+Use the `Monitor` class to wrap iterables (like `tqdm`). automatically updating the monitor state.
+
+```python
+from monitor_adapter import Monitor
+
+# Local Mode (updates .batch_state.json)
+for item in Monitor(items, name="my-task", total=1000):
+    process(item)
+
+# Remote Mode (pushes to API)
+for item in Monitor(items, name="my-task", api_url="http://localhost:8765"):
+    process(item)
+```
+
+## Scheduler Integration
+
+The TUI automatically reads `~/.pi/scheduler/jobs.json` and displays an "Upcoming Schedule" panel showing:
+
+- Job Name
+- Cron Schedule
+- Next Run Time
+- Status (Active/Disabled)
+
+## Commands
+
+### Register a Task
+
+```bash
+uv run python monitor.py register \
+    --name "youtube-luetin09" \
+    --state /path/to/.batch_state.json \
+    --total 1946
+```
+
+### List & Status
+
+```bash
+uv run python monitor.py list
+uv run python monitor.py status
+```
+
+### Start TUI
+
+```bash
+uv run python monitor.py tui [--filter youtube] [--refresh 2]
+```
+
+### Start API Server
+
+```bash
+uv run python monitor.py serve --port 8765
+```
+
+## HTTP API Endpoints
+
+| Endpoint              | Method | Description                       |
+| --------------------- | ------ | --------------------------------- |
+| `/all`                | GET    | Get status of all tasks + totals  |
+| `/tasks/{name}`       | GET    | Get status of specific task       |
+| `/tasks/{name}/state` | POST   | **Push** state update (JSON body) |
+| `/tasks`              | POST   | Register a new task               |
+
+## Auto-Restart (Systemd)
+
+To install the API and Scheduler as systemd services (auto-restart on crash):
+
+```bash
+# Run the installation script
+./install_services.sh
+```
+
+This creates user-level systemd units:
+
+- `pi-task-monitor.service`
+- `pi-scheduler.service`
+
+Manage them with:
+`systemctl --user status pi-task-monitor`
+`systemctl --user restart pi-scheduler`
+
+## Architecture
+
+- **Registry**: `~/.pi/task-monitor/registry.json` (Global)
+- **State Files**: tasks update their own JSON files (or push to API).
+- **Monitor**: Polls state files (or receives pushes) and displays TUI.

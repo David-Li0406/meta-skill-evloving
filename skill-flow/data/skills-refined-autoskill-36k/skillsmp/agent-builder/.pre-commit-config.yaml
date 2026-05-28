@@ -1,0 +1,29 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v6.0.0"
+    hooks:
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: check-json
+        exclude: ^.devcontainer/devcontainer.json
+      - id: pretty-format-json
+        exclude: ^.devcontainer/devcontainer.json
+        args: [--autofix]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 1.0.0
+    hooks:
+      - id: mdformat
+        args: [--number]
+        exclude: ^(pai_agent_sdk/.*\.md|examples/.*\.md|paintress_cli/.*\.md|paintress_cli/paintress_cli/skills/)$
+        additional_dependencies:
+          [mdformat-gfm, mdformat-front-matters, mdformat-footnote]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.14.13"
+    hooks:
+      - id: ruff
+        args: [--exit-non-zero-on-fix]
+      - id: ruff-format

@@ -1,0 +1,277 @@
+---
+name: epic-security
+description: Use this skill when you need to implement security practices including CSP, rate limiting, session security, and input validation for the Epic Stack.
+---
+
+# Epic Stack: Security
+
+## When to use this skill
+
+Use this skill when you need to:
+- Configure Content Security Policy (CSP)
+- Implement spam protection (honeypot)
+- Configure rate limiting
+- Manage session security
+- Implement input validation
+- Configure secure headers
+- Manage secrets
+
+## Patterns and conventions
+
+### Security Philosophy
+
+Following Epic Web principles:
+
+**Design to fail fast and early** - Validate security constraints as early as possible. Check authentication, authorization, and input validation before processing requests. Fail immediately with clear error messages rather than allowing potentially malicious data to flow through the system.
+
+**Optimize for the debugging experience** - When security checks fail, provide clear, actionable error messages that help developers understand what went wrong. Log security events with enough context to debug issues without exposing sensitive information.
+
+### Content Security Policy (CSP)
+
+Epic Stack uses CSP to prevent XSS and other attacks.
+
+**Configuration in `server/index.ts`:**
+```typescript
+import { helmet } from '@nichtsam/helmet/node-http'
+
+app.use((_, res, next) => {
+	helmet(res, { general: { referrerPolicy: false } })
+	next()
+})
+```
+
+**Note:** By default, CSP is in `report-only` mode to avoid blocking resources during development. In production, remove `reportOnly: true` to enable it fully.
+
+### Honeypot Fields
+
+Epic Stack uses honeypot fields to protect against spam bots.
+
+**In public forms:**
+```typescript
+import { HoneypotInputs } from 'remix-utils/honeypot/react'
+
+<Form method="POST" {...getFormProps(form)}>
+	<HoneypotInputs /> {/* Always include in public forms */}
+	{/* Rest of fields */}
+</Form>
+```
+
+**In the action (fail fast):**
+```typescript
+import { checkHoneypot } from '#app/utils/honeypot.server.ts'
+
+export async function action({ request }: Route.ActionArgs) {
+	const formData = await request.formData()
+	
+	// Check honeypot first - fail fast if spam detected
+	await checkHoneypot(formData) // Throws error if spam
+	
+	// Only proceed if honeypot check passes
+	// ... rest of the code
+}
+```
+
+### Rate Limiting
+
+Epic Stack uses `express-rate-limit` to prevent abuse.
+
+**Basic configuration:**
+```typescript
+import rateLimit from 'express-rate-limit'
+
+const rateLimitDefault = {
+	windowMs: 60 * 1000, // 1 minute
+	limit: 1000, // 1000 requests per minute
+	standardHeaders: true,
+	legacyHeaders: false,
+	validate: { trustProxy: false },
+	keyGenerator: (req: express.Request) => {
+		return req.get('fly-client-ip') ?? `${req.ip}`
+	},
+}
+
+const generalRateLimit = rateLimit(rateLimitDefault)
+```
+
+**Different levels of rate limiting:**
+```typescript
+// Stricter rate limit for sensitive routes
+const strongestRateLimit = rateLimit({
+	...rateLimitDefault,
+	limit: 10, // Only 10 requests per minute
+})
+
+// Strong rate limit for important actions
+const strongRateLimit = rateLimit({
+	...rateLimitDefault,
+	limit: 100, // 100 requests per minute
+})
+```
+
+**Apply to specific routes:**
+```typescript
+app.use((req, res, next) => {
+	const strongPaths = [
+		'/login',
+		'/signup',
+		'/verify',
+		'/admin',
+		'/reset-password',
+	]
+	
+	if (req.method !== 'GET' && req.method !== 'HEAD') {
+		if (strongPaths.some((p) => req.path.includes(p))) {
+			return strongestRateLimit(req, res, next)
+		}
+		return strongRateLimit(req, res, next)
+	}
+	
+	return generalRateLimit(req, res, next)
+})
+```
+
+### Session Security
+
+**Secure session configuration:**
+```typescript
+// app/utils/session.server.ts
+export const authSessionStorage = createCookieSessionStorage({
+	cookie: {
+		name: 'en_session',
+		sameSite: 'lax', // CSRF protection advised if changing to 'none'
+		path: '/',
+		httpOnly: true, // Prevents access from JavaScript
+		secrets: process.env.SESSION_SECRET.split(','), // Secret rotation
+		secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+	},
+})
+```
+
+### Password Security
+
+**Hashing passwords:**
+```typescript
+import bcrypt from 'bcryptjs'
+
+export async function getPasswordHash(password: string) {
+	const hash = await bcrypt.hash(password, 10) // 10 rounds
+	return hash
+}
+
+export async function verifyUserPassword(
+	where: Pick<User, 'username'> | Pick<User, 'id'>,
+	password: string,
+) {
+	const userWithPassword = await prisma.user.findUnique({
+		where,
+		select: { id: true, password: { select: { hash: true } } },
+	})
+
+	if (!userWithPassword || !userWithPassword.password) {
+		return null
+	}
+
+	const isValid = await bcrypt.compare(password, userWithPassword.password.hash)
+	return isValid ? { id: userWithPassword.id } : null
+}
+```
+
+### Input Validation and Sanitization
+
+**Always validate inputs with Zod:**
+```typescript
+import { z } from 'zod'
+
+const UserSchema = z.object({
+	email: z.string().email().min(3).max(100).transform(val => val.toLowerCase()),
+	username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/),
+	password: z.string().min(6).max(72), // bcrypt limit
+})
+
+// Validate before using
+const result = UserSchema.safeParse(data)
+if (!result.success) {
+	return json({ errors: result.error.flatten() }, { status: 400 })
+}
+```
+
+### XSS Prevention
+
+React prevents XSS automatically by escaping all values.
+
+**Never use `dangerouslySetInnerHTML` with user data:**
+```typescript
+// ❌ NEVER do this with user data
+<div dangerouslySetInnerHTML={{ __html: userContent }} />
+
+// ✅ React escapes automatically
+<div>{userContent}</div>
+```
+
+### Secure Headers
+
+Epic Stack uses Helmet for secure headers.
+
+**Configuration:**
+```typescript
+import { helmet } from '@nichtsam/helmet/node-http'
+
+app.use((_, res, next) => {
+	helmet(res, { general: { referrerPolicy: false } })
+	next()
+})
+```
+
+### HTTPS Only
+
+**Redirect HTTP to HTTPS:**
+```typescript
+app.use((req, res, next) => {
+	if (req.method !== 'GET') return next()
+	const proto = req.get('X-Forwarded-Proto')
+	const host = getHost(req)
+	if (proto === 'http') {
+		res.set('X-Forwarded-Proto', 'https')
+		res.redirect(`https://${host}${req.originalUrl}`)
+		return
+	}
+	next()
+})
+```
+
+### Secrets Management
+
+**Environment variables:**
+```bash
+# .env
+SESSION_SECRET=secret1,secret2,secret3 # Secret rotation
+HONEYPOT_SECRET=your-honeypot-secret
+DATABASE_URL=file:./data/db.sqlite
+```
+
+**Never commit secrets:**
+- Use `.env.example` to document required variables
+- `.env` is in `.gitignore`
+
+## Common mistakes to avoid
+
+- ❌ **Delayed security checks**: Validate authentication, authorization, and input as early as possible - fail fast.
+- ❌ **Generic error messages**: Provide clear, actionable error messages that help with debugging (without exposing sensitive data).
+- ❌ **Forgetting honeypot in public forms**: Always include `HoneypotInputs` in forms accessible without authentication.
+- ❌ **Not validating session expiration**: Always verify `expirationDate` when getting sessions - check early.
+- ❌ **Using `dangerouslySetInnerHTML` with user data**: Never render user HTML without sanitizing.
+- ❌ **Not using rate limiting**: Protect sensitive routes with rate limiting.
+- ❌ **Secrets in code**: Never hardcode secrets, use environment variables.
+- ❌ **Not sanitizing inputs**: Always sanitize inputs with `.transform()` from Zod.
+- ❌ **Not validating common passwords**: Check passwords against Have I Been Pwned.
+- ❌ **Sessions without httpOnly**: Always use `httpOnly: true` in session cookies.
+- ❌ **Not using HTTPS in production**: Make sure to redirect HTTP to HTTPS.
+- ❌ **CSP too permissive**: Review and adjust CSP according to your needs.
+- ❌ **Not logging security events**: Log security failures with context for debugging (without sensitive data).
+
+## References
+
+- [Epic Stack Security Docs](../epic-stack/docs/security.md)
+- [Epic Web Principles](https://www.epicweb.dev/principles)
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)

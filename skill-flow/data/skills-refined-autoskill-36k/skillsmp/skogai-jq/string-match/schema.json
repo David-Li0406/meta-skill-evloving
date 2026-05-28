@@ -1,0 +1,46 @@
+{
+  "name": "string-match",
+  "description": "Test if a string at a specified path matches a regex pattern",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing a string value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the string field (e.g., 'user.email')"
+    },
+    "pattern": {
+      "type": "string",
+      "required": true,
+      "description": "Regex pattern to test against (e.g., '^[a-z]+$', '[0-9]+')"
+    }
+  },
+  "output": {
+    "type": "boolean",
+    "description": "true if string matches pattern, false if doesn't match or path doesn't exist or value is not a string"
+  },
+  "examples": [
+    {
+      "description": "Test if email field matches email pattern",
+      "input": {"user": {"email": "test@example.com"}},
+      "args": {"path": "user.email", "pattern": "^[^@]+@[^@]+\\.[^@]+$"},
+      "output": true
+    },
+    {
+      "description": "Test if field contains only digits",
+      "input": {"data": {"code": "12345"}},
+      "args": {"path": "data.code", "pattern": "^[0-9]+$"},
+      "output": true
+    },
+    {
+      "description": "Test pattern that doesn't match",
+      "input": {"name": "John123"},
+      "args": {"path": "name", "pattern": "^[a-zA-Z]+$"},
+      "output": false
+    }
+  ],
+  "tags": ["string", "regex", "pattern", "match", "validation"]
+}

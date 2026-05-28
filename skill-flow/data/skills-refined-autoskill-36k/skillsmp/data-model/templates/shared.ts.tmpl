@@ -1,0 +1,37 @@
+import * as z from "zod";
+
+// =============================================================================
+// API Input Schemas
+// =============================================================================
+
+export const Create{{EntityName}}Input = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().optional(),
+});
+export type Create{{EntityName}}Input = z.infer<typeof Create{{EntityName}}Input>;
+
+export const Update{{EntityName}}Input = z.object({
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().optional(),
+  status: z.enum(["active", "paused", "archived"]).optional(),
+});
+export type Update{{EntityName}}Input = z.infer<typeof Update{{EntityName}}Input>;
+
+export const List{{EntityName}}Input = z.object({
+  status: z.enum(["active", "paused", "archived"]).optional(),
+});
+export type List{{EntityName}}Input = z.infer<typeof List{{EntityName}}Input>;
+
+// =============================================================================
+// API Response Types
+// =============================================================================
+
+export const {{EntityName}}Response = z.object({
+  id: z.string(),
+  name: z.string(),
+  status: z.enum(["active", "paused", "archived"]),
+  description: z.string().nullable(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+export type {{EntityName}}Response = z.infer<typeof {{EntityName}}Response>;

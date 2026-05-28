@@ -1,0 +1,49 @@
+# 文档结构模板
+# 使用时替换 {{variables}}
+
+sections:
+  - id: {{section_id}}
+    title: {{section_title}}
+    level: 1
+    type: required  # required/optional/conditional
+    description: {{section_description}}
+    word_limit: [{{min_words}}, {{max_words}}]
+    writing_guide: |
+      {{writing_guide}}
+    evaluation_points:
+      - {{evaluation_point_1}}
+      - {{evaluation_point_2}}
+    children:
+      - id: {{child_section_id}}
+        title: {{child_section_title}}
+        level: 2
+        description: {{child_description}}
+        word_limit: [{{child_min}}, {{child_max}}]
+        writing_guide: |
+          {{child_writing_guide}}
+
+# 示例结构（专利申请书）
+# sections:
+#   - id: invention_name
+#     title: 发明名称
+#     level: 1
+#     type: required
+#     word_limit: [10, 50]
+#     writing_guide: 简洁明了，体现发明的技术特征
+#
+#   - id: technical_field
+#     title: 技术领域
+#     level: 1
+#     type: required
+#     word_limit: [50, 200]
+#     writing_guide: 描述本发明所属的技术领域
+#
+#   - id: background
+#     title: 背景技术
+#     level: 1
+#     type: required
+#     word_limit: [500, 2000]
+#     writing_guide: |
+#       1. 描述现有技术的主要方案
+#       2. 分析现有技术的缺点
+#       3. 引出本发明要解决的问题

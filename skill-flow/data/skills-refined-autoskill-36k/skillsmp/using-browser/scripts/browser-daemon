@@ -1,0 +1,18 @@
+#!/bin/bash
+# Wrapper for browser-daemon.py
+# Handles uv sync on first run and uses uv run
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+VENV_DIR="$SKILL_DIR/.venv"
+
+# If venv doesn't exist, run uv sync first
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Initializing browser skill environment..." >&2
+    cd "$SKILL_DIR"
+    uv sync >&2
+fi
+
+# Run the daemon with uv run, passing all arguments
+cd "$SKILL_DIR"
+exec uv run scripts/browser-daemon.py "$@"

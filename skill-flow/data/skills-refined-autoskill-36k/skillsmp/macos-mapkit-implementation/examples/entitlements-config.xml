@@ -1,0 +1,125 @@
+<!-- macOS MapKit エンタイトルメント設定テンプレート -->
+<!-- このファイルの内容を .entitlements ファイルに追加してください -->
+<!-- Xcode: プロジェクト設定 > Signing & Capabilities > App Sandbox -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+    <!-- =================================================== -->
+    <!-- App Sandbox（Mac App Store必須） -->
+    <!-- =================================================== -->
+
+    <!--
+    com.apple.security.app-sandbox
+    App Sandboxを有効化。Mac App Store配布には必須。
+    開発中でもSandbox環境での動作確認を推奨。
+    -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+
+
+    <!-- =================================================== -->
+    <!-- 位置情報アクセス（必須） -->
+    <!-- =================================================== -->
+
+    <!--
+    com.apple.security.personal-information.location
+    位置情報へのアクセスを許可。
+    Info.plistのNSLocationUsageDescriptionと併せて設定が必要。
+    -->
+    <key>com.apple.security.personal-information.location</key>
+    <true/>
+
+
+    <!-- =================================================== -->
+    <!-- ネットワークアクセス（位置情報に必要） -->
+    <!-- =================================================== -->
+
+    <!--
+    com.apple.security.network.client
+    送信ネットワーク接続（クライアント）を許可。
+
+    重要: 位置情報サービスにも必要！
+    位置情報は内部的にネットワークを使用するため、
+    このエンタイトルメントがないと位置情報取得に失敗する場合があります。
+
+    参考: https://oleb.net/blog/2013/01/mac-sandboxing-location-services-outgoing-connections/
+    -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+
+    <!-- =================================================== -->
+    <!-- 追加オプション -->
+    <!-- =================================================== -->
+
+    <!--
+    com.apple.security.network.server
+    受信ネットワーク接続（サーバー）を許可。
+    位置情報共有機能など、サーバー機能が必要な場合のみ追加。
+    -->
+    <!-- <key>com.apple.security.network.server</key>
+    <true/> -->
+
+
+    <!-- =================================================== -->
+    <!-- ハードコードされた権限（Mac App Store外配布用） -->
+    <!-- =================================================== -->
+
+    <!--
+    Hardened Runtime使用時（非Sandbox）のエンタイトルメント
+    Mac App Store外で配布する場合に使用。
+
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    -->
+
+
+    <!-- =================================================== -->
+    <!-- Xcodeでの設定方法 -->
+    <!-- =================================================== -->
+
+    <!--
+    1. プロジェクトナビゲータでプロジェクトを選択
+    2. ターゲットを選択
+    3. "Signing & Capabilities" タブを選択
+    4. "+ Capability" をクリック
+    5. "App Sandbox" を追加
+    6. 以下にチェック:
+       - Location にチェック
+       - Network > Outgoing Connections (Client) にチェック
+
+    注意:
+    - エンタイトルメントファイルは自動生成されます
+    - 手動編集も可能ですが、Xcodeからの設定を推奨
+    - ビルド設定でエンタイトルメントファイルのパスが正しいか確認
+    -->
+
+
+    <!-- =================================================== -->
+    <!-- トラブルシューティング -->
+    <!-- =================================================== -->
+
+    <!--
+    よくある問題:
+
+    1. 位置情報が取得できない
+       - network.client エンタイトルメントを確認
+       - Info.plist の NSLocationUsageDescription を確認
+       - システム環境設定で位置情報が許可されているか確認
+
+    2. Mac App Store 審査でリジェクト
+       - 位置情報の使用目的が明確か確認
+       - 不要なエンタイトルメントを削除
+       - プライバシーポリシーに位置情報の使用を記載
+
+    3. 開発中に動作するが配布版で動作しない
+       - コード署名の確認
+       - エンタイトルメントファイルがビルドに含まれているか確認
+       - Provisioning Profileの確認
+    -->
+
+</dict>
+</plist>

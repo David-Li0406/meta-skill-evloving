@@ -1,0 +1,12 @@
+import logging
+from logging.config import dictConfig
+
+from core.config import settings
+from core.log_config import LogConfig
+
+
+log_config = LogConfig().model_dump()
+dictConfig(log_config)
+
+logger = logging.getLogger(settings.SERVICE_NAME)
+logger.info("Logger initialized")

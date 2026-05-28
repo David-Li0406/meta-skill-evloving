@@ -1,0 +1,25 @@
+{
+  "name": "e3-integration-tests",
+  "version": "0.0.1-beta.0",
+  "private": true,
+  "type": "module",
+  "description": "Integration tests for e3 - tests CLI and runner together",
+  "scripts": {
+    "build": "tsc --build",
+    "test": "npm run build && node --enable-source-maps --test 'dist/**/*.spec.js'",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@elaraai/e3": "*",
+    "@elaraai/e3-cli": "*",
+    "@elaraai/e3-core": "*",
+    "@elaraai/e3-api-server": "*",
+    "@elaraai/e3-api-client": "*",
+    "@elaraai/e3-api-tests": "*",
+    "@elaraai/east": "^0.0.1-beta.31"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

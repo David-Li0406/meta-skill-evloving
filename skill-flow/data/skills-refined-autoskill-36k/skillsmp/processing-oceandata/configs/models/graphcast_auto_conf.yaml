@@ -1,0 +1,36 @@
+# GraphCast Model Configuration - Autoregressive Version
+# Designed for long-term forecasting through iterative predictions
+# Single-step prediction rolled out multiple times
+
+# Temporal configuration
+input_len: 7        # Number of input frames for context
+output_len: 1       # Always 1 for autoregressive mode
+in_channels: 2      # Ocean velocity components (u, v)
+
+# Spatial resolution
+input_res: [240, 240]  # Spatial resolution (H, W)
+
+# Graph mesh configuration
+mesh_level: 4       # Balanced mesh refinement
+multimesh: true     # Multi-resolution mesh hierarchy
+
+# Model architecture parameters
+hidden_dim: 128     # Hidden dimension for all MLPs
+processor_layers: 8 # Number of processor layers
+mlp_layers: 1      # Number of MLP layers
+aggregation: "sum"  # Aggregation method
+
+# Processing options
+add_3d_dim: true         # Enable pseudo-3D processing
+temporal_encoding: "concat"  # Concatenate temporal frames
+
+# Autoregressive specific settings
+rollout_steps: 10   # Number of autoregressive prediction steps
+                    # Can be overridden at inference time
+
+# Training recommendations
+# - Train with teacher forcing initially
+# - Then fine-tune with scheduled sampling
+# - Use curriculum learning: start with 1-2 rollout steps, gradually increase
+# - Monitor error accumulation across rollout steps
+# - Consider using noise injection during training for robustness

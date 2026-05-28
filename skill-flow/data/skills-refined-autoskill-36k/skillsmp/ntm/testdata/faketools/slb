@@ -1,0 +1,88 @@
+#!/bin/bash
+# Fake slb tool for testing
+# Supports MODE environment variable: normal (default), timeout, error
+
+MODE="${FAKE_TOOL_MODE:-normal}"
+
+case "$MODE" in
+    timeout)
+        exec sleep 3600
+        ;;
+    error)
+        echo "slb: simulated error" >&2
+        exit 1
+        ;;
+esac
+
+# Normal mode - check arguments
+case "$1" in
+    --version)
+        echo "slb 0.1.0"
+        echo "  commit:  abc123fake"
+        echo "  built:   2025-01-01T00:00:00Z"
+        echo "  go:      go1.24.0"
+        exit 0
+        ;;
+    status)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"daemon": {"running": true, "pid": 12345}, "pending_count": 0}'
+        else
+            echo "Daemon: running (pid 12345)"
+            echo "Pending: 0 requests"
+        fi
+        exit 0
+        ;;
+    pending)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '[]'
+        else
+            echo "No pending requests"
+        fi
+        exit 0
+        ;;
+    request)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"id": "req-001", "command": "'"$2"'", "status": "pending", "created_at": "2025-01-01T00:00:00Z"}'
+        else
+            echo "Created request req-001"
+            echo "Waiting for approval..."
+        fi
+        exit 0
+        ;;
+    approve)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"id": "'"$2"'", "status": "approved", "approved_at": "2025-01-01T00:00:00Z"}'
+        else
+            echo "Approved request $2"
+        fi
+        exit 0
+        ;;
+    deny)
+        if [[ "$*" == *"--json"* ]]; then
+            echo '{"id": "'"$2"'", "status": "denied", "denied_at": "2025-01-01T00:00:00Z"}'
+        else
+            echo "Denied request $2"
+        fi
+        exit 0
+        ;;
+    daemon)
+        echo "slb daemon running (fake)"
+        exit 0
+        ;;
+    --help|-h)
+        echo "slb - Simultaneous Launch Button (fake for testing)"
+        echo "Usage: slb [command] [options]"
+        echo "  --version          Show version"
+        echo "  status             Show daemon status"
+        echo "  pending            List pending requests"
+        echo "  request <cmd>      Create approval request"
+        echo "  approve <id>       Approve a request"
+        echo "  deny <id>          Deny a request"
+        echo "  daemon             Start daemon"
+        exit 0
+        ;;
+    *)
+        echo "slb: unknown command: $1" >&2
+        exit 1
+        ;;
+esac

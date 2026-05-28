@@ -1,0 +1,110 @@
+{{!--
+  Example Template - Aurora CLI Pattern
+
+  This template demonstrates common patterns used in Aurora CLI
+  for generating TypeScript/NestJS code.
+
+  Available context variables:
+  - schema.boundedContextName: The bounded context name
+  - schema.moduleName: The module name
+  - schema.aggregateName: The aggregate name
+  - schema.aggregateProperties: Array of Property objects
+  - config: Configuration object
+  - propertyType: Enum with property types (ID, VARCHAR, ENUM, etc.)
+  - relationshipType: Enum with relationship types (ONE_TO_ONE, etc.)
+--}}
+{{!--
+  STEP 1: Initialize imports array
+  Using setVar to create a mutable array for collecting imports
+--}}
+{{
+    setVar 'importsArray' (
+        array
+            (object items=(array 'Injectable' 'Inject') path='@nestjs/common')
+            (object items='CommandHandler' path='@nestjs/cqrs')
+    )
+~}}
+{{!--
+  STEP 2: Conditionally add imports based on properties
+--}}
+{{#if (hasEnumProperties schema.aggregateProperties)}}
+{{#each (getEnumProperties schema.aggregateProperties)}}
+{{
+    push ../importsArray
+        (object
+            items=(sumStrings ../schema.aggregateName (toPascalCase name))
+            path='@api/graphql'
+        )
+~}}
+{{/each}}
+{{/if}}
+{{!--
+  STEP 3: Add relationship imports
+--}}
+{{#each (getWithImportRelationshipOneToOneProperties schema.aggregateProperties)}}
+{{#unlessEq relationship.aggregateName ../schema.aggregateName}}
+{{
+    push ../importsArray
+        (object
+            items=(sumStrings (toPascalCase relationship.aggregateName) 'Service')
+            path=(sumStrings '../' (toKebabCase relationship.modulePath))
+        )
+~}}
+{{/unlessEq}}
+{{/each}}
+{{!--
+  STEP 4: Render imports (triple braces for unescaped output)
+--}}
+{{{ importManager (object imports=importsArray) }}}
+
+/**
+ * @aurora-generated
+ * @source cliter/{{ toKebabCase schema.boundedContextName }}/{{ toKebabCase schema.moduleName }}.aurora.yaml
+ */
+@Injectable()
+export class {{ toPascalCase schema.boundedContextName }}{{ toPascalCase schema.moduleName }}Service
+{
+    constructor(
+{{!--
+  STEP 5: Generate constructor injections
+--}}
+{{#each (getWithRelationshipManyToOneProperties schema.aggregateProperties)}}
+{{#unless (isI18nRelationProperty ../schema.moduleName this)}}
+        @Inject({{ toPascalCase relationship.aggregateName }}Service)
+        private readonly {{ toCamelCase relationship.aggregateName }}Service: {{ toPascalCase relationship.aggregateName }}Service,
+{{/unless}}
+{{/each}}
+    )
+    { }
+
+{{!--
+  STEP 6: Generate method with property iteration
+--}}
+    async create(
+        input: {{ toPascalCase schema.moduleName }}Input,
+    ): Promise<{{ toPascalCase schema.moduleName }}>
+    {
+        return {
+{{#each (getWithoutTimestampsProperties schema.aggregateProperties)}}
+{{#if (isAllowProperty ../schema.moduleName this)}}
+{{!-- Use setVar for conditional logic within each block --}}
+{{setVar 'isHandled' false ~}}
+{{!-- Handle ENUM type --}}
+{{#eq type ../propertyType.ENUM}}
+{{setVar 'isHandled' true ~}}
+            {{ toCamelCase name }}: input.{{ toCamelCase name }} as {{ toPascalCase ../schema.moduleName }}{{ toPascalCase name }},
+{{/eq}}
+{{!-- Handle ID type --}}
+{{#eq type ../propertyType.ID}}
+{{setVar 'isHandled' true ~}}
+            {{ toCamelCase name }}: input.{{ toCamelCase name }} ?? {{ uuid name }},
+{{/eq}}
+{{!-- Handle default case --}}
+{{#unless ../isHandled}}
+            {{ toCamelCase name }}: input.{{ toCamelCase name }}{{#if nullable }} ?? null{{/if}},
+{{/unless}}
+{{/if}}
+{{/each}}
+        };
+    }
+}

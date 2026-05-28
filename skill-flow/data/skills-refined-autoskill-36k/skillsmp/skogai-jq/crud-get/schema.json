@@ -1,0 +1,46 @@
+{
+  "name": "crud-get",
+  "description": "Get value at a nested path in a JSON object with optional default",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to the value (e.g., 'user.profile.name')"
+    },
+    "default": {
+      "type": "string",
+      "required": false,
+      "description": "Default value to return if path doesn't exist"
+    }
+  },
+  "output": {
+    "type": ["string", "number", "boolean", "object", "array", "null"],
+    "description": "Value at the specified path, or default if not found"
+  },
+  "examples": [
+    {
+      "description": "Get existing nested value",
+      "input": {"user": {"name": "skogix"}},
+      "args": {"path": "user.name"},
+      "output": "skogix"
+    },
+    {
+      "description": "Get with default when path doesn't exist",
+      "input": {"user": {}},
+      "args": {"path": "user.email", "default": "unknown"},
+      "output": "unknown"
+    },
+    {
+      "description": "Get deeply nested value",
+      "input": {"data": {"user": {"profile": {"age": 30}}}},
+      "args": {"path": "data.user.profile.age"},
+      "output": 30
+    }
+  ],
+  "tags": ["crud", "read", "object", "access"]
+}

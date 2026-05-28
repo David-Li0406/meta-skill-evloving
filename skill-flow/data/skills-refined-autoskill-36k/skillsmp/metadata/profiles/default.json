@@ -1,0 +1,112 @@
+{
+  "name": "default",
+  "description": "Default metadata profile for all pages",
+  "required": [
+    {
+      "element": "meta",
+      "attributes": { "charset": "utf-8" },
+      "position": "first",
+      "message": "charset must be the first element in <head>"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "viewport" },
+      "message": "viewport meta is required for responsive design"
+    },
+    {
+      "element": "title",
+      "constraints": {
+        "minLength": 10,
+        "maxLength": 60
+      },
+      "message": "title is required (10-60 characters)"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "description" },
+      "constraints": {
+        "minLength": 50,
+        "maxLength": 160
+      },
+      "message": "description meta is required (50-160 characters)"
+    }
+  ],
+  "recommended": [
+    {
+      "element": "link",
+      "attributes": { "rel": "canonical" },
+      "message": "canonical URL helps prevent duplicate content issues"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "robots" },
+      "message": "robots directive makes bot control explicit"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "view-transition" },
+      "message": "view-transition enables smooth page-to-page animations"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "theme-color" },
+      "message": "theme-color customizes browser chrome and PWA appearance"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "og:title" },
+      "message": "Open Graph title improves social sharing"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "og:description" },
+      "message": "Open Graph description improves social sharing"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "og:image" },
+      "constraints": {
+        "absoluteUrl": true
+      },
+      "message": "Open Graph image improves social sharing (use absolute URL)"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "og:url" },
+      "constraints": {
+        "absoluteUrl": true
+      },
+      "message": "Open Graph URL should match canonical"
+    },
+    {
+      "element": "meta",
+      "attributes": { "property": "og:type" },
+      "message": "Open Graph type helps platforms categorize content"
+    },
+    {
+      "element": "meta",
+      "attributes": { "name": "twitter:card" },
+      "message": "Twitter card type enables rich Twitter previews"
+    },
+    {
+      "element": "link",
+      "attributes": { "rel": "icon" },
+      "message": "favicon improves brand recognition"
+    }
+  ],
+  "order": [
+    { "element": "meta", "attributes": { "charset": "*" } },
+    { "element": "meta", "attributes": { "name": "viewport" } },
+    { "element": "title" },
+    { "element": "meta", "attributes": { "name": "description" } },
+    { "element": "link", "attributes": { "rel": "canonical" } },
+    { "element": "meta", "attributes": { "name": "*" } },
+    { "element": "meta", "attributes": { "property": "og:*" } },
+    { "element": "meta", "attributes": { "name": "twitter:*" } },
+    { "element": "link", "attributes": { "rel": "preconnect" } },
+    { "element": "link", "attributes": { "rel": "dns-prefetch" } },
+    { "element": "link", "attributes": { "rel": "preload" } },
+    { "element": "link", "attributes": { "rel": "icon" } },
+    { "element": "link", "attributes": { "rel": "stylesheet" } }
+  ]
+}

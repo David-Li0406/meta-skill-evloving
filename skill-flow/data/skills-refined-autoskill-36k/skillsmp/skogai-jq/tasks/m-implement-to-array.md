@@ -1,0 +1,46 @@
+---
+name: m-implement-to-array
+branch: feature/m-implement-to-array
+status: pending
+created: 2025-11-14
+submodules: [list of git submodules affected (delete if not super-repo)]
+---
+
+# [Human-Readable Title]
+
+## Problem/Goal
+[Clear description of what we're solving/building]
+
+## Success Criteria
+- [ ] Specific, measurable outcome
+- [ ] Another concrete goal
+
+## Context Manifest
+<!-- Added by context-gathering agent -->
+
+## User Notes
+<!-- Any specific notes or requirements from the developer -->
+
+## Work Log
+<!-- Updated as work progresses -->
+- [YYYY-MM-DD] Started task, initial research
+
+## Problem/Goal
+
+Ensure value is array
+
+Following the established pattern in config/jq-transforms/:
+- Create to-array/transform.jq with jq transformation logic
+- Create to-array/schema.json (input/args/output schemas)
+- Create to-array/test-input.json and test-expected.json
+- Add test cases to test.sh
+- Follow crud-get/crud-set structure exactly
+
+## Success Criteria
+
+- [ ] to-array/transform.jq created with proper jq logic
+- [ ] to-array/schema.json created with input/args/output schemas
+- [ ] to-array/test-input.json and test-expected.json created
+- [ ] Test cases added to test.sh
+- [ ] All tests pass (./test.sh exits 0)
+- [ ] Pattern matches existing transformations (crud-get/crud-set)

@@ -1,0 +1,40 @@
+# Monthly Report
+# Generate monthly development metrics and reports
+# Runs on the 1st of every month
+
+name: Monthly Report
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'  # Monthly on the 1st
+  workflow_dispatch:
+
+jobs:
+  generate-report:
+    name: Generate Monthly Report
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate metrics
+        id: metrics
+        run: |
+          echo "### Monthly Development Report" > report.md
+          echo "" >> report.md
+          echo "#### Commits this month" >> report.md
+          git log --since="1 month ago" --pretty=format:"- %s" >> report.md || echo "No commits" >> report.md
+          echo "" >> report.md
+          echo "#### Contributors" >> report.md
+          git shortlog --since="1 month ago" -sn >> report.md || echo "No contributors" >> report.md
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-report
+          path: report.md

@@ -1,0 +1,293 @@
+# PPT Generation Skill 模板定义
+# 用于快速启动 PPT 生成任务
+
+templates:
+  - id: ppt_business_proposal
+    name: 商业提案
+    description: 说服决策者、赢得项目机会、推动业务落地
+    icon: "briefcase"
+    category: document
+    tags: [business, proposal, presentation, 商业, 提案]
+    prompt_template: |
+      我需要准备一份「{title}」的商业提案，用于向决策者展示。
+
+      目标受众：{audience}
+      演示时长：{duration}
+
+      主要内容：
+      {main_content}
+
+      风格要求：{style}
+    variables:
+      - name: title
+        label: 提案标题
+        type: text
+        required: true
+        placeholder: "例如：2024 年度营销策略、新产品上市计划"
+      - name: audience
+        label: 目标受众
+        type: text
+        required: true
+        placeholder: "例如：公司高管、投资人、客户"
+      - name: duration
+        label: 演示时长
+        type: select
+        required: false
+        options:
+          - label: 5 分钟
+            value: "5分钟（约10页）"
+          - label: 15 分钟
+            value: "15分钟（约20页）"
+          - label: 30 分钟
+            value: "30分钟（约35页）"
+        default: "15分钟（约20页）"
+      - name: main_content
+        label: 主要内容
+        type: textarea
+        required: true
+        placeholder: |
+          例如：
+          - 市场分析和机会
+          - 产品方案介绍
+          - 实施计划和时间表
+          - 预期收益和 ROI
+      - name: style
+        label: 风格要求
+        type: text
+        required: false
+        placeholder: "例如：简洁专业、数据驱动、创意活泼"
+    example_input: "AI 产品商业化提案"
+
+  - id: ppt_project_report
+    name: 项目汇报
+    description: 展示工作成果、同步项目进展、获得资源支持
+    icon: "clipboard-document-list"
+    category: document
+    tags: [project, report, summary, 项目, 汇报]
+    prompt_template: |
+      我需要准备一份「{project_name}」的项目汇报，向团队和领导同步进展。
+
+      汇报类型：{report_type}
+      汇报周期：{period}
+
+      需要包含：
+      - 项目概述和目标
+      - 进展和里程碑
+      - 关键成果和数据
+      - 问题和风险
+      - 下一步计划
+
+      补充信息：
+      {additional_info}
+    variables:
+      - name: project_name
+        label: 项目名称
+        type: text
+        required: true
+        placeholder: "例如：用户增长项目、系统重构项目"
+      - name: report_type
+        label: 汇报类型
+        type: select
+        required: true
+        options:
+          - label: 周报
+            value: "周报"
+          - label: 月报
+            value: "月报"
+          - label: 季度总结
+            value: "季度总结"
+          - label: 年度总结
+            value: "年度总结"
+          - label: 结项报告
+            value: "结项报告"
+        default: "月报"
+      - name: period
+        label: 汇报周期
+        type: text
+        required: false
+        placeholder: "例如：2024年1月、Q1、2024全年"
+      - name: additional_info
+        label: 补充信息
+        type: textarea
+        required: false
+        placeholder: "例如：关键数据、重要事件、需要强调的成果"
+    example_input: "TokenDance 项目 Q1 季度汇报"
+
+  - id: ppt_product_intro
+    name: 产品介绍
+    description: 打动潜在用户、展示产品价值、促成合作转化
+    icon: "rocket-launch"
+    category: document
+    tags: [product, introduction, demo, 产品, 介绍]
+    prompt_template: |
+      我需要准备一份「{product_name}」的产品介绍，向潜在用户展示价值。
+
+      产品类型：{product_type}
+      目标用户：{target_users}
+
+      需要展示：
+      - 产品定位和价值主张
+      - 核心功能和特点
+      - 使用场景和案例
+      - 竞争优势
+      - 定价和获取方式
+
+      产品描述：
+      {product_description}
+    variables:
+      - name: product_name
+        label: 产品名称
+        type: text
+        required: true
+        placeholder: "例如：TokenDance、智能助手"
+      - name: product_type
+        label: 产品类型
+        type: text
+        required: true
+        placeholder: "例如：SaaS 工具、移动应用、硬件设备"
+      - name: target_users
+        label: 目标用户
+        type: text
+        required: true
+        placeholder: "例如：开发者、企业用户、个人消费者"
+      - name: product_description
+        label: 产品描述
+        type: textarea
+        required: true
+        placeholder: "简要描述产品的核心功能和价值..."
+    example_input: "TokenDance AI Agent 平台产品介绍"
+
+  - id: ppt_training
+    name: 培训课件
+    description: 传递知识技能、提升团队能力、标准化培训流程
+    icon: "book-open"
+    category: document
+    tags: [training, education, course, 培训, 课件]
+    prompt_template: |
+      我需要准备一份「{course_title}」的培训课件，帮助学员掌握相关技能。
+
+      培训对象：{audience}
+      培训时长：{duration}
+      难度级别：{level}
+
+      课程大纲：
+      {outline}
+
+      教学目标：
+      {objectives}
+    variables:
+      - name: course_title
+        label: 课程标题
+        type: text
+        required: true
+        placeholder: "例如：Python 入门、项目管理基础"
+      - name: audience
+        label: 培训对象
+        type: text
+        required: true
+        placeholder: "例如：新员工、技术团队、管理层"
+      - name: duration
+        label: 培训时长
+        type: select
+        required: false
+        options:
+          - label: 1 小时
+            value: "1小时"
+          - label: 半天
+            value: "半天（3-4小时）"
+          - label: 全天
+            value: "全天（6-8小时）"
+        default: "1小时"
+      - name: level
+        label: 难度级别
+        type: select
+        required: false
+        options:
+          - label: 入门
+            value: "入门"
+          - label: 进阶
+            value: "进阶"
+          - label: 高级
+            value: "高级"
+        default: "入门"
+      - name: outline
+        label: 课程大纲
+        type: textarea
+        required: true
+        placeholder: |
+          例如：
+          1. 基础概念介绍
+          2. 核心功能演示
+          3. 实战练习
+          4. 常见问题解答
+      - name: objectives
+        label: 教学目标
+        type: textarea
+        required: false
+        placeholder: "例如：学员能够独立完成基础操作..."
+    example_input: "AI 工具使用培训"
+
+  - id: ppt_pitch_deck
+    name: 融资路演
+    description: 打动投资人、获得融资机会、推动公司发展
+    icon: "currency-dollar"
+    category: document
+    tags: [pitch, investor, funding, 融资, 路演]
+    prompt_template: |
+      我需要准备一份「{company_name}」的融资路演材料，向投资人展示公司价值。
+
+      融资轮次：{round}
+      融资金额：{amount}
+
+      公司信息：
+      {company_info}
+
+      需要包含：
+      - 问题和痛点
+      - 解决方案
+      - 市场规模
+      - 商业模式
+      - 竞争优势
+      - 团队介绍
+      - 财务数据和预测
+      - 融资用途
+    variables:
+      - name: company_name
+        label: 公司名称
+        type: text
+        required: true
+        placeholder: "例如：TokenDance Inc."
+      - name: round
+        label: 融资轮次
+        type: select
+        required: true
+        options:
+          - label: 种子轮
+            value: "种子轮"
+          - label: 天使轮
+            value: "天使轮"
+          - label: Pre-A 轮
+            value: "Pre-A轮"
+          - label: A 轮
+            value: "A轮"
+          - label: B 轮
+            value: "B轮"
+          - label: C 轮及以后
+            value: "C轮及以后"
+        default: "A轮"
+      - name: amount
+        label: 融资金额
+        type: text
+        required: false
+        placeholder: "例如：500万美元、3000万人民币"
+      - name: company_info
+        label: 公司信息
+        type: textarea
+        required: true
+        placeholder: |
+          简要描述：
+          - 公司做什么
+          - 核心产品/服务
+          - 当前阶段和数据
+          - 团队背景
+    example_input: "AI Agent 创业公司 A 轮融资路演"

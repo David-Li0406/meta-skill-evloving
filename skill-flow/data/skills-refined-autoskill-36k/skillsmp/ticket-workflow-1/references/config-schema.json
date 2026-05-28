@@ -1,0 +1,262 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Ticket Workflow Configuration",
+  "description": "Configuration for the ticket resolution workflow system",
+  "type": "object",
+  "properties": {
+    "default_source": {
+      "type": "string",
+      "enum": ["auto", "youtrack", "github", "file"],
+      "default": "auto",
+      "description": "Default source for ticket retrieval. 'auto' detects based on ticket ID pattern"
+    },
+    "youtrack": {
+      "type": "object",
+      "description": "YouTrack-specific configuration",
+      "properties": {
+        "project_prefix": {
+          "type": "string",
+          "description": "Default project prefix for YouTrack tickets (e.g., 'PROJ')",
+          "pattern": "^[A-Z][A-Z0-9]*$"
+        },
+        "base_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "YouTrack instance base URL (optional if MCP is configured)"
+        }
+      }
+    },
+    "github": {
+      "type": "object",
+      "description": "GitHub-specific configuration",
+      "properties": {
+        "repo": {
+          "type": "string",
+          "description": "Default repository in owner/repo format",
+          "pattern": "^[^/]+/[^/]+$"
+        },
+        "issue_prefix": {
+          "type": "string",
+          "default": "#",
+          "description": "Prefix used to identify GitHub issues"
+        }
+      }
+    },
+    "branches": {
+      "type": "object",
+      "description": "Branch naming and management configuration",
+      "properties": {
+        "default_base": {
+          "type": "string",
+          "default": "main",
+          "description": "Default base branch for new feature branches"
+        },
+        "prefix_mapping": {
+          "type": "object",
+          "description": "Mapping of ticket types to branch prefixes",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {
+            "bug": "fix",
+            "feature": "feat",
+            "task": "feat",
+            "improvement": "feat",
+            "refactoring": "refactor",
+            "documentation": "docs"
+          }
+        },
+        "include_ticket_id": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include ticket ID in branch name"
+        },
+        "slug_max_length": {
+          "type": "integer",
+          "default": 50,
+          "description": "Maximum length for the slug part of branch name"
+        }
+      }
+    },
+    "complexity": {
+      "type": "object",
+      "description": "Complexity detection configuration",
+      "properties": {
+        "auto_detect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect complexity from ticket content"
+        },
+        "default_level": {
+          "type": "string",
+          "enum": ["simple", "medium", "complex"],
+          "default": "medium",
+          "description": "Default complexity when auto-detection is disabled"
+        },
+        "simple_labels": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["quick-fix", "typo", "documentation", "trivial"],
+          "description": "Labels that indicate simple complexity"
+        },
+        "complex_labels": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["needs-analysis", "architecture", "breaking-change", "migration"],
+          "description": "Labels that indicate complex complexity"
+        },
+        "simple_threshold": {
+          "type": "integer",
+          "default": 2,
+          "description": "Score threshold below which ticket is considered simple"
+        },
+        "complex_threshold": {
+          "type": "integer",
+          "default": 6,
+          "description": "Score threshold above which ticket is considered complex"
+        }
+      }
+    },
+    "planning": {
+      "type": "object",
+      "description": "Planning phase configuration",
+      "properties": {
+        "use_architect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use Architect skill for complex tickets"
+        },
+        "use_aep": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use AEP methodology for exploration"
+        },
+        "max_explore_agents": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Maximum parallel explore agents for AEP"
+        }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "description": "Storage paths configuration",
+      "properties": {
+        "feature_dir": {
+          "type": "string",
+          "default": ".claude/feature",
+          "description": "Directory for feature-specific files (relative to project root)"
+        },
+        "keep_completed": {
+          "type": "boolean",
+          "default": true,
+          "description": "Keep files after ticket completion"
+        }
+      }
+    },
+    "pr": {
+      "type": "object",
+      "description": "Pull request configuration",
+      "properties": {
+        "draft_by_default": {
+          "type": "boolean",
+          "default": true,
+          "description": "Create PRs as draft by default"
+        },
+        "default_target": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Default target branch for PRs. If null, uses branches.default_base"
+        },
+        "include_ticket_link": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include ticket link in PR body"
+        },
+        "include_test_plan": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include validation steps from plan in PR body"
+        },
+        "auto_push": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically push branch before creating PR"
+        },
+        "title_format": {
+          "type": "string",
+          "default": "{type}: {title} ({ticket_id})",
+          "description": "PR title format. Placeholders: {type}, {title}, {ticket_id}"
+        },
+        "body_template": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Custom PR body template. If null, uses default template"
+        }
+      }
+    },
+    "simplify": {
+      "type": "object",
+      "description": "Code simplification configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable code simplification phase after implementation"
+        },
+        "agent": {
+          "type": "string",
+          "enum": ["auto", "generic", "symfony", "laravel"],
+          "default": "auto",
+          "description": "Which simplifier agent to use. 'auto' detects based on project type"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["modified", "phase", "all"],
+          "default": "modified",
+          "description": "Scope of simplification: 'modified' (changed files), 'phase' (files in current phase), 'all' (entire codebase)"
+        },
+        "auto_apply": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically apply simplifications without asking (auto mode only)"
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "description": "Code review phase configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable code review phase after simplification"
+        },
+        "auto_fix": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically apply suggested fixes (auto mode only, non-critical issues)"
+        },
+        "severity_threshold": {
+          "type": "string",
+          "enum": ["critical", "important", "minor"],
+          "default": "important",
+          "description": "Minimum severity level to report"
+        },
+        "model": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Override model for review analysis (different perspective)"
+        },
+        "block_on_critical": {
+          "type": "boolean",
+          "default": true,
+          "description": "Prevent PR creation if critical issues exist"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

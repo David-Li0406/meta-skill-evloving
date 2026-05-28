@@ -1,0 +1,151 @@
+// REFERENCE PATTERN - Follow this structure when generating components
+//
+// This template shows the pattern for ALL component types:
+// - Plain HTML (no Kobalte): Set USE_KOBALTE=false
+// - Kobalte component (no variants): Set HAS_VARIANTS=false
+// - Kobalte component (with variants): Set both true
+//
+// Generate code following this pattern, including/excluding sections as needed.
+
+// ============================================================================
+// IMPORTS (conditional based on component type)
+// ============================================================================
+
+// Include ONLY if using Kobalte primitive (USE_KOBALTE=true):
+// import { Button as ButtonPrimitive } from "@kobalte/core/button";
+
+// Include ONLY if component has variants (HAS_VARIANTS=true):
+// import { cva, type VariantProps } from "class-variance-authority";
+
+// Always include:
+import type { JSX } from "solid-js";
+import { splitProps } from "solid-js";
+import { cn } from "@/lib/utils";
+
+// ============================================================================
+// CVA VARIANTS (include ONLY if HAS_VARIANTS=true)
+// ============================================================================
+
+// const buttonVariants = cva(
+// 	[
+// 		"whitespace-nowrap",
+// 		"rounded-radius",
+// 		"border",
+// 		"font-medium",
+// 		"tracking-wide",
+// 		"transition",
+// 		"hover:opacity-75",
+// 		"cursor-pointer",
+// 	],
+// 	{
+// 		variants: {
+// 			variant: {
+// 				primary: [
+// 					"bg-primary",
+// 					"border-primary",
+// 					"text-on-primary",
+// 					"dark:bg-primary-dark",
+// 					"dark:border-primary-dark",
+// 					"dark:text-on-primary-dark",
+// 				],
+// 				// ... more variants
+// 			},
+// 			size: {
+// 				sm: ["text-xs", "px-2", "py-1"],
+// 				md: ["text-sm", "px-4", "py-2"],
+// 			},
+// 		},
+// 		defaultVariants: {
+// 			variant: "primary",
+// 			size: "md",
+// 		},
+// 	},
+// );
+
+// ============================================================================
+// TYPE DEFINITION
+// ============================================================================
+
+export type ComponentProps = {
+	// Always include these:
+	children?: JSX.Element;
+	class?: string;
+
+	// Add accessibility props based on component type:
+	// See: /skills/.claude/skills/component-generator/accessibility-guidelines.md
+	// Examples:
+	// "aria-label"?: string;
+	// disabled?: boolean;
+	// role?: "status" | "note";
+
+	// Add component-specific props:
+	// onClick?: JSX.EventHandlerUnion<HTMLButtonElement, MouseEvent>;
+}; // If HAS_VARIANTS=true, add: & VariantProps<typeof componentVariants>
+
+// ============================================================================
+// COMPONENT IMPLEMENTATION
+// ============================================================================
+
+export const Component = (props: ComponentProps) => {
+	// splitProps array should include:
+	// - "children", "class" (always)
+	// - All variant names (if HAS_VARIANTS=true): "variant", "size", etc.
+	// - Any other props you want to extract
+	const [local, others] = splitProps(props, ["children", "class"]);
+
+	return (
+		// If USE_KOBALTE=true:  <ButtonPrimitive
+		// If USE_KOBALTE=false: <button
+		<button
+			class={cn(
+				// If HAS_VARIANTS=true:
+				//   componentVariants({ variant: local.variant, size: local.size }),
+				// If HAS_VARIANTS=false (plain component with base classes):
+				//   "base-class-1", "base-class-2",
+				local.class,
+			)}
+			// If USE_KOBALTE=true:
+			//   {...others}
+			// If USE_KOBALTE=false:
+			//   {...(others as JSX.HTMLAttributes<HTMLButtonElement>)}
+			{...others}
+		>
+			{local.children}
+		</button>
+		// Close tag matches opening: </ButtonPrimitive> or </button>
+	);
+};
+
+// ============================================================================
+// GENERATION CHECKLIST
+// ============================================================================
+//
+// Before generating, read these files:
+// 1. /skills/.claude/skills/component-generator/kobalte-primitives.md
+//    → Find the right Kobalte primitive (if using one)
+//
+// 2. /skills/.claude/skills/component-generator/accessibility-guidelines.md
+//    → Determine which accessibility props to expose in types
+//
+// 3. /skills/.claude/skills/component-generator/color-reference.md
+//    → Use correct theme tokens for variant classes
+//
+// 4. /skills/services/frontend/src/components/ui/button/button.tsx
+//    → PRIMARY REFERENCE - Follow this pattern exactly
+//
+// ============================================================================
+// DECISION TREE
+// ============================================================================
+//
+// Question 1: Does the component use a Kobalte primitive?
+// - YES → Set USE_KOBALTE=true, import primitive
+// - NO  → Set USE_KOBALTE=false, use plain HTML element
+//
+// Question 2: Does the component have color/size variants?
+// - YES → Set HAS_VARIANTS=true, include CVA section
+// - NO  → Set HAS_VARIANTS=false, use static base classes
+//
+// Examples:
+// - Button: USE_KOBALTE=true, HAS_VARIANTS=true (Kobalte Button + CVA)
+// - Badge: USE_KOBALTE=false, HAS_VARIANTS=true (span + CVA)
+// - Label: USE_KOBALTE=false, HAS_VARIANTS=false (label + base classes)

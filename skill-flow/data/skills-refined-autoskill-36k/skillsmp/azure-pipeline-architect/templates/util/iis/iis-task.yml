@@ -1,0 +1,157 @@
+# ==============================================================================
+# Template Name: IIS Task Scheduler (iis-task.yml)
+# Description: 
+#   This is a unified interface (Facade) for calling various IIS related sub-tasks.
+#   Determines the specific action to execute by passing the `command` parameter.
+#   
+# Supported Commands (command):
+#   - manage:   Create or update website and AppPool (iis-manage-website.yml)
+#   - start:    Start website (iis-start-website.yml)
+#   - stop:     Stop website (iis-stop-website.yml)
+#   - backup:   Backup website files (iis-backup.yml)
+#   - deploy:   Deploy files (iis-deploy-files.yml)
+#   - rollback: Restore backup and restart (iis-rollback.yml)
+# ==============================================================================
+
+parameters:
+  # Specify the task command to execute
+  - name: command
+    type: string
+    values:
+      - manage
+      - start
+      - stop
+      - backup
+      - deploy
+      - rollback
+
+  # --- Common/Shared Parameters ---
+  # Website Name (Used by manage, start, stop, rollback)
+  - name: websiteName
+    type: string
+    default: ''
+  
+  # Website Physical Path (Used by manage, backup, deploy, rollback)
+  - name: websitePhysicalPath
+    type: string
+    default: ''
+
+  # Execution Condition (Default is empty string, will be automatically filled based on default behavior of each command)
+  - name: runCondition
+    type: string
+    default: ''
+
+  # --- Manage Specific Parameters ---
+  # Application Pool Name
+  - name: appPoolName
+    type: string
+    default: ''
+  
+  # AppPool .NET CLR Version
+  - name: appPoolDotNetVersion
+    type: string
+    default: 'No Managed Code'
+
+  # Site Binding Settings (JSON List)
+  - name: bindings
+    type: string
+    default: '[]'
+
+  # --- Backup Specific Parameters ---
+  # Backup Storage Path
+  - name: backupPath
+    type: string
+    default: ''
+  
+  # Backup Retention Count
+  - name: backupRetentionCount
+    type: number
+    default: 5
+
+  # --- Deploy Specific Parameters ---
+  # Source Path (Artifact)
+  - name: sourcePath
+    type: string
+    default: ''
+  
+  # Destination Path (If not specified, defaults to websitePhysicalPath)
+  - name: destinationPath
+    type: string
+    default: ''
+  
+  # Whether to clean destination
+  - name: cleanDestination
+    type: boolean
+    default: true
+
+steps:
+
+  # ----------------------------------------------------------------------------
+  # Command: manage
+  # ----------------------------------------------------------------------------
+  - ${{ if eq(parameters.command, 'manage') }}:
+    - template: iis-manage-website.yml
+      parameters:
+        websiteName: ${{ parameters.websiteName }}
+        websitePhysicalPath: ${{ parameters.websitePhysicalPath }}
+        appPoolName: ${{ parameters.appPoolName }}
+        appPoolDotNetVersion: ${{ parameters.appPoolDotNetVersion }}
+        bindings: ${{ parameters.bindings }}
+        # Default: succeeded()
+        runCondition: ${{ coalesce(parameters.runCondition, 'succeeded()') }}
+
+  # ----------------------------------------------------------------------------
+  # Command: start
+  # ----------------------------------------------------------------------------
+  - ${{ if eq(parameters.command, 'start') }}:
+    - template: iis-start-website.yml
+      parameters:
+        websiteName: ${{ parameters.websiteName }}
+        # Default: always() (Ensure restart attempt even if deployment failed, or adjust as needed)
+        runCondition: ${{ coalesce(parameters.runCondition, 'always()') }}
+
+  # ----------------------------------------------------------------------------
+  # Command: stop
+  # ----------------------------------------------------------------------------
+  - ${{ if eq(parameters.command, 'stop') }}:
+    - template: iis-stop-website.yml
+      parameters:
+        websiteName: ${{ parameters.websiteName }}
+        # Default: succeeded()
+        runCondition: ${{ coalesce(parameters.runCondition, 'succeeded()') }}
+
+  # ----------------------------------------------------------------------------
+  # Command: backup
+  # ----------------------------------------------------------------------------
+  - ${{ if eq(parameters.command, 'backup') }}:
+    - template: iis-backup.yml
+      parameters:
+        websitePhysicalPath: ${{ parameters.websitePhysicalPath }}
+        backupPath: ${{ parameters.backupPath }}
+        backupRetentionCount: ${{ parameters.backupRetentionCount }}
+        # Default: succeeded()
+        runCondition: ${{ coalesce(parameters.runCondition, 'succeeded()') }}
+
+  # ----------------------------------------------------------------------------
+  # Command: deploy
+  # ----------------------------------------------------------------------------
+  - ${{ if eq(parameters.command, 'deploy') }}:
+    - template: iis-deploy-files.yml
+      parameters:
+        sourcePath: ${{ parameters.sourcePath }}
+        # If destinationPath is empty, use websitePhysicalPath
+        destinationPath: ${{ coalesce(parameters.destinationPath, parameters.websitePhysicalPath) }}
+        cleanDestination: ${{ parameters.cleanDestination }}
+        # Default: succeeded()
+        runCondition: ${{ coalesce(parameters.runCondition, 'succeeded()') }}
+
+  # ----------------------------------------------------------------------------
+  # Command: rollback
+  # ----------------------------------------------------------------------------
+  - ${{ if eq(parameters.command, 'rollback') }}:
+    - template: iis-rollback.yml
+      parameters:
+        websiteName: ${{ parameters.websiteName }}
+        websitePhysicalPath: ${{ parameters.websitePhysicalPath }}
+        # Default: failed() (Execute only on failure)
+        runCondition: ${{ coalesce(parameters.runCondition, 'failed()') }}

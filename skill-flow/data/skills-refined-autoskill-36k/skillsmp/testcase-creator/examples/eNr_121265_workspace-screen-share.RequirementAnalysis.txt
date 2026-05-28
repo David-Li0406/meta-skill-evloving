@@ -1,0 +1,131 @@
+# eNcounter Refresh: Workspace - Screen Share Feature Test Plan
+
+## Requirements Analysis
+
+| Scenario Name | Requirement | Test Case |
+|---------------|-------------|-----------|
+| Scenario 1: Screen Share Button 
+|  | 1.1 Screen share icon should be visible on the workspace page | 1.1.1 Verify screen share icon is visible on workspace page |
+|  | 1.2 Screen share icon should be located on the bottom right corner | 1.2.1 Verify screen share icon is positioned in the bottom right corner |
+|
+| Scenario 2: User selects Screen Share button 
+|  | 2.1 Screen share icon should be clickable | 2.1.1 Verify screen share icon is clickable |
+|  | 2.2 Screen share modal should display when icon is clicked | 2.2.1 Verify screen share modal displays when icon is clicked |
+|
+| Scenario 3: User selects Screen Share button, loading functionality 
+|  | 3.1 Loading indicator should display when screen options are loading | 3.1.1 Verify loading spinner displays while screen options load |
+|  | 3.2 "Loading ..." text should display during loading | 3.2.1 Verify "Loading ..." text is displayed during loading process |
+|  | 3.3 Loading UI should match Figma design specifications | 3.3.1 Verify loading UI matches Figma design file |
+|
+| Scenario 4: Screen options load 
+|  | 4.1 Screen options should replace loading indicator when loaded | 4.1.1 Verify screen options replace loading indicator after loading completes |
+|  | 4.2 Available screens should be displayed for selection | 4.2.1 Verify available screens are displayed in the modal |
+|
+| Scenario 5: User closes screen share modal 
+|  | 5.1 Modal should have a close button (X) in top right corner | 5.1.1 Verify close button (X) is visible in top right corner of modal |
+|  | 5.2 Clicking X should close the modal | 5.2.1 Verify clicking X closes the screen share modal |
+|  | 5.3 No screen should be shared when modal is closed via X | 5.3.1 Verify no screen is shared when modal is closed with X button |
+|
+| Scenario 6: Screen Share modal - screens 
+|  | 6.1 Modal should display available screens for selection | 6.1.1 Verify modal displays all available screens |
+|  | 6.2 User should be able to select from available screens | 6.2.1 Verify user can select any available screen from the list |
+|
+| Scenario 7: User selects screen 
+|  | 7.1 User should be able to select a screen from available options | 7.1.1 Verify user can select a screen to share |
+|  | 7.2 "Share" button should be available after screen selection | 7.2.1 Verify "Share" button is available after selecting a screen |
+|  | 7.3 Selected screen should be shared when Share button is clicked | 7.3.1 Verify selected screen is shared when Share button is clicked |
+|  | 7.4 Shared screen should display as video feed for sharing user | 7.4.1 Verify shared screen displays as video feed for the user sharing |
+|  | 7.5 Shared screen should be visible to all users on the call | 7.5.1 Verify shared screen is visible to all users on the connected call |
+|
+| Scenario 8: User Selects Cancel 
+|  | 8.1 "Cancel" button should be available in the modal | 8.1.1 Verify "Cancel" button is visible in the modal |
+|  | 8.2 Clicking Cancel should close the modal | 8.2.1 Verify clicking Cancel closes the screen share modal |
+|  | 8.3 No screen should be shared when Cancel is clicked | 8.3.1 Verify no screen is shared when Cancel is clicked |
+|
+| Scenario 9: User Removes Screen Share 
+|  | 9.1 Shared screen video feed should have a close button (X) | 9.1.1 Verify shared screen video feed has a close button (X) |
+|  | 9.2 Clicking X should close the video feed for all parties | 9.2.1 Verify clicking X closes shared screen feed for all parties |
+|  | 9.3 Screen should no longer be shared after closing feed | 9.3.1 Verify screen is no longer shared after closing the feed |
+|
+| Scenario 10: User is sharing and selects share screen icon again 
+|  | 10.1 Screen share icon should be clickable while already sharing | 10.1.1 Verify screen share icon is clickable while screen is being shared |
+|  | 10.2 Modal should display when icon is clicked during active share | 10.2.1 Verify modal displays when icon is clicked during active sharing |
+|  | 10.3 "Stop Sharing" option should be available in the modal | 10.3.1 Verify "Stop Sharing" option is displayed in the modal |
+|  | 10.4 User should be able to select a different screen to share | 10.4.1 Verify user can select a different screen while currently sharing |
+|
+| Scenario 11: Stop Sharing 
+|  | 11.1 "Stop Sharing" button should be functional | 11.1.1 Verify "Stop Sharing" button can be clicked |
+|  | 11.2 Clicking Stop Sharing should stop the screen share | 11.2.1 Verify clicking Stop Sharing stops the screen share |
+|  | 11.3 Shared screen should close for all parties | 11.3.1 Verify shared screen closes for all parties when Stop Sharing is clicked |
+|  | 11.4 Modal should close after Stop Sharing is clicked | 11.4.1 Verify modal closes after Stop Sharing is completed |
+|
+| Scenario 12: Share different screen 
+|  | 12.1 User should be able to select another screen while sharing | 12.1.1 Verify user can select a different screen while currently sharing |
+|  | 12.2 "Stop Sharing" should transition to "Share new screen" when different screen is selected | 12.2.1 Verify button text changes from "Stop Sharing" to "Share new screen" |
+|  | 12.3 Blue border should indicate the newly chosen screen | 12.3.1 Verify blue border transitions to newly selected screen |
+|  | 12.4 "Share new screen" button should be clickable | 12.4.1 Verify "Share new screen" button is enabled and clickable |
+|
+| Scenario 13: User Selects Share New Screen 
+|  | 13.1 Clicking Share New Screen should share the newly selected screen | 13.1.1 Verify clicking Share New Screen shares the newly selected screen |
+|  | 13.2 New screen should be shared to all users | 13.2.1 Verify newly selected screen is visible to all users on the call |
+|  | 13.3 Modal should close after sharing new screen | 13.3.1 Verify modal closes after Share New Screen is completed |
+
+## Detailed Test Cases
+
+| Test Case ID | Test Scenario | Expected Result | Test Data |
+|--------------|---------------|-----------------|-----------|
+| 1.1.1 | Navigate to workspace page and observe screen share icon | Screen share icon is visible on the workspace page | N/A |
+| 1.2.1 | Verify position of screen share icon | Screen share icon is located in the bottom right corner of the page | N/A |
+| 2.1.1 | Click on the screen share icon | Screen share icon responds to click action | N/A |
+| 2.2.1 | Click screen share icon and observe modal | Screen share modal displays after clicking the icon | N/A |
+| 3.1.1 | Open screen share modal and observe loading state | Loading spinner displays while screen options are loading | N/A |
+| 3.2.1 | Observe loading text during modal loading | "Loading ..." text is displayed during loading process | N/A |
+| 3.3.1 | Compare loading UI with Figma design | Loading UI matches the design specifications from Figma file | Figma design file |
+| 4.1.1 | Wait for screen options to finish loading | Screen options replace the loading indicator after loading completes | N/A |
+| 4.2.1 | Observe modal after loading completes | Available screens are displayed in the modal for selection | N/A |
+| 5.1.1 | Open screen share modal and locate close button | Close button (X) is visible in the top right corner of the modal | N/A |
+| 5.2.1 | Click the X button in the modal | Screen share modal closes | N/A |
+| 5.3.1 | Close modal with X and verify no sharing occurs | No screen is shared when modal is closed via X button | N/A |
+| 6.1.1 | Open screen share modal and view available screens | Modal displays all available screens for the user | Multiple screens available |
+| 6.2.1 | Click on different screens in the modal | User can select any available screen from the list | Multiple screens available |
+| 7.1.1 | Select a screen from available options | Screen is selected and highlighted | Multiple screens available |
+| 7.2.1 | Select a screen and observe Share button | "Share" button is available and enabled after selecting a screen | N/A |
+| 7.3.1 | Click Share button after selecting a screen | Selected screen is shared to users on the call | Active call with participants |
+| 7.4.1 | Share a screen and observe local video feed | Shared screen displays as a video feed for the user who is sharing | N/A |
+| 7.5.1 | Share a screen and verify visibility for other users | Shared screen is visible to all users on the connected call | Active call with multiple participants |
+| 8.1.1 | Open screen share modal and locate Cancel button | "Cancel" button is visible in the modal | N/A |
+| 8.2.1 | Click the Cancel button | Screen share modal closes when Cancel is clicked | N/A |
+| 8.3.1 | Click Cancel and verify no sharing occurs | No screen is shared when Cancel button is clicked | N/A |
+| 9.1.1 | Share a screen and observe the video feed | Shared screen video feed has a close button (X) | Active screen share |
+| 9.2.1 | Click X on shared screen video feed | Video feed closes for all parties on the call | Active screen share with multiple participants |
+| 9.3.1 | Remove screen share and verify it stops | Screen is no longer shared after closing the video feed | Active screen share |
+| 10.1.1 | Share a screen then click screen share icon again | Screen share icon is clickable while screen is being shared | Active screen share |
+| 10.2.1 | Click screen share icon during active sharing | Modal displays when icon is clicked during active sharing | Active screen share |
+| 10.3.1 | Open modal while sharing and observe options | "Stop Sharing" option is displayed in the modal | Active screen share |
+| 10.4.1 | View available screens while currently sharing | User can select a different screen while currently sharing | Active screen share with multiple screens available |
+| 11.1.1 | Open modal while sharing and click Stop Sharing button | Stop Sharing button is functional and responds to click | Active screen share |
+| 11.2.1 | Click Stop Sharing button | Screen share stops when Stop Sharing is clicked | Active screen share |
+| 11.3.1 | Stop sharing and verify for all parties | Shared screen closes for all parties when Stop Sharing is clicked | Active screen share with multiple participants |
+| 11.4.1 | Click Stop Sharing and observe modal | Modal closes after Stop Sharing is completed | Active screen share |
+| 12.1.1 | Open modal while sharing and select different screen | User can select a different screen while currently sharing | Active screen share with multiple screens available |
+| 12.2.1 | Select different screen while sharing | Button text changes from "Stop Sharing" to "Share new screen" | Active screen share with multiple screens available |
+| 12.3.1 | Select different screen and observe visual indicator | Blue border transitions to the newly selected screen | Active screen share with multiple screens available |
+| 12.4.1 | Observe Share new screen button after selecting different screen | "Share new screen" button is enabled and clickable | Active screen share with different screen selected |
+| 13.1.1 | Click Share New Screen button | Newly selected screen is shared when Share New Screen is clicked | Active screen share with different screen selected |
+| 13.2.1 | Share new screen and verify visibility for all users | Newly selected screen is visible to all users on the call | Active screen share with multiple participants |
+| 13.3.1 | Share new screen and observe modal | Modal closes after Share New Screen is completed | Active screen share with different screen selected |
+
+## Test Coverage Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Scenarios | 13 |
+| Total Requirements | 43 |
+| Total Test Cases | 43 |
+| CSV Test Cases | 13 |
+
+**Notes:**
+- Each scenario has been analyzed and broken down into specific, testable requirements
+- 43 individual test case IDs were defined (1.1.1 through 13.3.1) during requirement analysis
+- Related test case IDs were logically grouped into 13 CSV test cases for efficient test execution
+- Complete traceability maintained between scenarios → requirements → test case IDs → CSV test cases

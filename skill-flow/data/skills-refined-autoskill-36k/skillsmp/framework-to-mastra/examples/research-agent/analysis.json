@@ -1,0 +1,243 @@
+{
+  "frameworkId": "research",
+  "frameworkName": "Research Skill",
+  "states": [
+    {
+      "id": "R1",
+      "name": "No Analysis",
+      "symptoms": [
+        "Jumping straight to searching without analyzing the topic"
+      ],
+      "test": "Can you articulate stakeholders, temporal scope, and domain mapping?",
+      "intervention": "Run Phase 0 Analysis Template before generating queries"
+    },
+    {
+      "id": "R1.5",
+      "name": "No Vocabulary Map",
+      "symptoms": [
+        "Using outsider/introductory terminology",
+        "Finding only surface-level material"
+      ],
+      "test": "Have you identified expert vs. outsider terms? Terms across domains?",
+      "intervention": "Build vocabulary map. Hunt for 'also known as,' 'technically called' in early sources."
+    },
+    {
+      "id": "R2",
+      "name": "Single-Perspective Search",
+      "symptoms": [
+        "All queries support one viewpoint",
+        "Missing counterarguments"
+      ],
+      "test": "Have you explicitly searched for opposing perspectives?",
+      "intervention": "Generate competing perspectives queries. Search for strongest counterargument."
+    },
+    {
+      "id": "R3",
+      "name": "Domain Blindness",
+      "symptoms": [
+        "Searching only in familiar field",
+        "Missing cross-disciplinary insights"
+      ],
+      "test": "Have you mapped terminology variants across fields?",
+      "intervention": "Identify what adjacent fields call this topic. Search in at least 2 domains."
+    },
+    {
+      "id": "R4",
+      "name": "Recency Bias",
+      "symptoms": [
+        "Only recent sources",
+        "Missing historical context"
+      ],
+      "test": "Can you explain when this topic emerged and how it evolved?",
+      "intervention": "Add historical context queries. Find seminal works."
+    },
+    {
+      "id": "R5",
+      "name": "Breadth Without Depth",
+      "symptoms": [
+        "Many tabs, no synthesis",
+        "Can't explain core concepts"
+      ],
+      "test": "Can you define key terms in your own words?",
+      "intervention": "Apply 3-source rule per perspective. Summarize before searching more."
+    },
+    {
+      "id": "R6",
+      "name": "Completion Uncertainty",
+      "symptoms": [
+        "Unsure whether to continue or stop",
+        "Research expanding indefinitely"
+      ],
+      "test": "Can you answer the tiered completion criteria?",
+      "intervention": "Run completion checklist. Look for diminishing returns signals."
+    },
+    {
+      "id": "R7",
+      "name": "Research Complete",
+      "symptoms": [
+        "Can explain topic, identify uncertainties, and take action"
+      ],
+      "test": "",
+      "intervention": "Proceed to synthesis and action."
+    },
+    {
+      "id": "R8",
+      "name": "No Persistence",
+      "symptoms": [
+        "Starting from scratch each session",
+        "Re-discovering same vocabulary"
+      ],
+      "test": "Did you check for prior research before starting? Are you storing findings?",
+      "intervention": "Store vocabulary map, sources, digested notes, and gaps for future use."
+    },
+    {
+      "id": "R9",
+      "name": "Scope Mismatch",
+      "symptoms": [
+        "Over-researching trivial questions",
+        "Under-researching critical decisions"
+      ],
+      "test": "Is research depth proportional to decision stakes?",
+      "intervention": "Apply scope calibration. Match confidence level to decision reversibility and stakes."
+    },
+    {
+      "id": "R10",
+      "name": "No Confidence Signaling",
+      "symptoms": [
+        "Hedging language everywhere",
+        "Reader can't tell what's certain vs. speculative"
+      ],
+      "test": "Can reader distinguish established facts from speculation?",
+      "intervention": "Use explicit confidence markers. State source quality and consensus status."
+    }
+  ],
+  "vocabulary": [
+    {
+      "term": "Phase 0 Analysis",
+      "context": "Structured analysis of topic before searching: concepts, stakeholders, temporal scope, domains, controversies",
+      "depth": "expert"
+    },
+    {
+      "term": "Vocabulary Map",
+      "context": "Primary research deliverable mapping expert vs. outsider terms, cross-domain synonyms, depth indicators",
+      "depth": "expert"
+    },
+    {
+      "term": "Core Terms",
+      "context": "Essential vocabulary requiring precise definition within the research domain",
+      "depth": "working"
+    },
+    {
+      "term": "Depth Levels",
+      "context": "Introductory, working, expert - levels of terminology that surface different content",
+      "depth": "expert"
+    },
+    {
+      "term": "Diminishing Returns",
+      "context": "Signals that research is complete: circular references, repetitive findings, marginal additions",
+      "depth": "working"
+    },
+    {
+      "term": "Single-Shot Research",
+      "context": "Research completed without follow-up questions - agent-executed, time-boxed queries",
+      "depth": "expert"
+    },
+    {
+      "term": "Scope Calibration",
+      "context": "Matching research depth to decision stakes: reversibility, consequences, time available",
+      "depth": "expert"
+    },
+    {
+      "term": "Confidence Markers",
+      "context": "Explicit phrases signaling certainty level: established fact, strong evidence, limited evidence, unknown",
+      "depth": "working"
+    },
+    {
+      "term": "Stakeholder Analysis",
+      "context": "Mapping primary actors, affected groups, opposing interests",
+      "depth": "working"
+    },
+    {
+      "term": "Domain Mapping",
+      "context": "Identifying primary and adjacent fields that study this topic",
+      "depth": "working"
+    },
+    {
+      "term": "Query Types",
+      "context": "Foundational, historical, current, competing, evidence - different search approaches",
+      "depth": "working"
+    },
+    {
+      "term": "Completion Criteria",
+      "context": "Minimum viable, working knowledge, deep expertise - tiered research stopping points",
+      "depth": "expert"
+    }
+  ],
+  "processes": [
+    {
+      "phaseId": "0",
+      "name": "Topic Analysis",
+      "description": "Analyze topic through multiple lenses before searching: core concepts, stakeholders, temporal context, domains, controversies"
+    },
+    {
+      "phaseId": "1.5",
+      "name": "Vocabulary Mapping",
+      "description": "Build vocabulary map as primary deliverable: core terms, synonyms, depth indicators"
+    },
+    {
+      "phaseId": "2",
+      "name": "Query Construction",
+      "description": "Generate specific search queries: foundational, historical, current, competing, evidence"
+    }
+  ],
+  "integrations": [
+    {
+      "skill": "context-networks",
+      "connectionType": "storage",
+      "description": "Store research findings in appropriate network node"
+    },
+    {
+      "skill": "doppelganger",
+      "connectionType": "verification",
+      "description": "Apply /truth-check to findings"
+    }
+  ],
+  "antiPatterns": [
+    {
+      "name": "Confirmation Trap",
+      "symptom": "Searching for evidence that supports existing belief",
+      "fix": "Explicitly search for strongest counterargument"
+    },
+    {
+      "name": "Authority Fallacy",
+      "symptom": "Accepting claims by source prestige rather than evidence",
+      "fix": "Evaluate evidence, not source"
+    },
+    {
+      "name": "Recency Trap",
+      "symptom": "Only recent sources, missing foundational work",
+      "fix": "Explicitly search historical periods"
+    },
+    {
+      "name": "Breadth Trap",
+      "symptom": "50 tabs, none read thoroughly",
+      "fix": "3-source rule, summarize before continuing"
+    },
+    {
+      "name": "Single-Source",
+      "symptom": "Wikipedia as final answer",
+      "fix": "Require 3 independent sources"
+    },
+    {
+      "name": "Jargon Blind Spot",
+      "symptom": "Missing other fields' terminology",
+      "fix": "Map variants, search multiple domains"
+    },
+    {
+      "name": "Infinite Rabbit Hole",
+      "symptom": "Lost original purpose",
+      "fix": "Write decision/action anchor, return to it"
+    }
+  ],
+  "analyzedAt": "2025-12-28T00:00:00.000Z"
+}

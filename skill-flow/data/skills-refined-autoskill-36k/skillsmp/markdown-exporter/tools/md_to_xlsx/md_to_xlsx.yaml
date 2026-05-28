@@ -1,0 +1,56 @@
+identity:
+  name: md_to_xlsx
+  author: bowenliang123
+  label:
+    en_US: Markdown tables⮕ XLSX
+    zh_Hans: Markdown 表格 ⮕ XLSX
+description:
+  human:
+    en_US: Generate XLSX file from Markdown tables
+    zh_Hans: 将 Markdown 表格转换为 XLSX 文件的工具
+  llm: Generate XLSX file from Markdown tables
+parameters:
+  - name: md_text
+    type: string
+    required: true
+    label:
+      en_US: Markdown table text
+      zh_Hans: Markdown 表格文本
+    human_description:
+      en_US: "Input text of single or multiple Markdown tables, with worksheets supported. All the heading texts (eg. #, ##) will be used as worksheet names in order."
+      zh_Hans: "单个或多个 Markdown 表格的文本输入，支持工作表。所有标题文本（例如 #, ##）将依次用作工作表名称。"
+    form: llm
+  - name: force_text_value
+    type: select
+    required: true
+    default: "true"
+    options:
+      - value: "true"
+        label:
+          en_US: "Yes"
+          zh_Hans: 是
+      - value: "false"
+        label:
+          en_US: "No"
+          zh_Hans: 否
+    label:
+      en_US: Enforce text type
+      zh_Hans: 强制单元格值为文本类型
+    human_description:
+      en_US: Convert cell values into text type to void decimal precision loss in display
+      zh_Hans: 转换单元格值为文本类型，避免显示时的小数精度丢失
+    llm_description: Whether to convert cell values into string type, default to "true"
+    form: form
+  - name: output_filename
+    type: string
+    required: false
+    label:
+      en_US: Output Filename
+      zh_Hans: 输出文件名
+    human_description:
+      en_US: Optional custom output file name, and the filename suffix is not required.
+      zh_Hans: 可选的自定义输出文件名，后缀名无需指定
+    form: llm
+extra:
+  python:
+    source: tools/md_to_xlsx/md_to_xlsx.py

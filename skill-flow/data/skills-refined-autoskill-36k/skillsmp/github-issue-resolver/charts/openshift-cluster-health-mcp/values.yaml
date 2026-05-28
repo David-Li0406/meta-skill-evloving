@@ -1,0 +1,170 @@
+# Default values for openshift-cluster-health-mcp
+# This is a YAML-formatted file.
+
+# Number of replicas (HA setup)
+replicaCount: 2
+
+# Container image configuration
+image:
+  repository: quay.io/openshift-aiops/cluster-health-mcp
+  pullPolicy: IfNotPresent
+  tag: "0.1.0"
+
+# Image pull secrets (if using private registry)
+imagePullSecrets: []
+
+# Override chart name
+# The default fullnameOverride "mcp-server" aligns with ADR-036 Option 2
+# This provides a simpler, more memorable service name: mcp-server.self-healing-platform.svc:8080
+nameOverride: ""
+fullnameOverride: "mcp-server"
+
+# MCP Transport configuration (http or stdio)
+transport: http  # Use http for OpenShift Lightspeed integration
+httpPort: 8080
+
+# ServiceAccount configuration
+serviceAccount:
+  create: true
+  annotations: {}
+  name: mcp-server
+
+# RBAC configuration
+rbac:
+  create: true
+
+# Pod annotations
+podAnnotations: {}
+
+# Pod security context (ADR-007, ADR-008)
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532  # nonroot user in distroless
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container security context (ADR-007, ADR-008)
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532  # nonroot user in distroless
+  capabilities:
+    drop:
+      - ALL
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+
+# Resource limits and requests (ADR-005)
+resources:
+  limits:
+    memory: 128Mi
+    cpu: 200m
+  requests:
+    memory: 64Mi
+    cpu: 50m
+
+# Liveness and readiness probes
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity rules
+affinity: {}
+
+# Integration configuration (ADR-006)
+integrations:
+  # Kubernetes API (Required - always enabled)
+  kubernetes:
+    enabled: true
+    inCluster: true  # Use ServiceAccount token
+
+  # Prometheus integration (Optional)
+  prometheus:
+    enabled: true
+    url: https://prometheus-k8s.openshift-monitoring.svc:9091
+    # ServiceAccount token will be used for authentication
+    tokenSecret: ""  # Optional: specify secret name if using different token
+
+  # Coordination Engine integration (Optional - for remediation workflows)
+  coordinationEngine:
+    enabled: false  # Enable when Coordination Engine is deployed
+    url: http://coordination-engine:8080/api/v1
+    namespace: self-healing-platform
+    timeout: 10s
+
+  # KServe ML models integration (Optional - for anomaly detection)
+  kserve:
+    enabled: false  # Enable when KServe is deployed
+    namespace: self-healing-platform
+    predictorPort: 8080  # 8080 for RawDeployment mode, 80 for Serverless mode
+    timeout: 15s
+    models:
+      - name: predictive-analytics
+        endpoint: predictive-analytics-predictor
+
+# Circuit breaker configuration (ADR-006)
+circuitBreaker:
+  maxFailures: 5
+  resetTimeout: 30s
+
+# Cache configuration (ADR-005)
+cache:
+  # Cluster health cache TTL
+  clusterHealthTTL: 10s
+  # Node list cache TTL
+  nodeListTTL: 30s
+  # KServe status cache TTL
+  kserveStatusTTL: 20s
+
+# Logging configuration
+logging:
+  level: info  # debug, info, warn, error
+  format: json  # json or text
+
+# Prometheus metrics configuration
+metrics:
+  enabled: true
+  port: 8080
+  path: /metrics
+
+# Network policy (Optional - for enhanced security)
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow from OpenShift Lightspeed namespace
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            name: openshift-lightspeed
+      ports:
+      - protocol: TCP
+        port: 8080

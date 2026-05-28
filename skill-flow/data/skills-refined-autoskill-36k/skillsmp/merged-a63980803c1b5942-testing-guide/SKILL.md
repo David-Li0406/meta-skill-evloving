@@ -1,0 +1,225 @@
+---
+name: testing-guide
+description: Use this skill when writing tests, discussing test coverage, test strategy, or test naming, following the testing pyramid standards.
+---
+
+# Testing Guide
+
+> **Language**: English | [繁體中文](../../../locales/zh-TW/skills/claude-code/testing-guide/SKILL.md)
+
+**Version**: 1.1.0  
+**Last Updated**: 2025-12-29  
+**Applicability**: Claude Code Skills
+
+---
+
+## Purpose
+
+This skill provides testing pyramid standards and best practices for systematic testing, supporting both ISTQB and Industry Pyramid frameworks.
+
+## Framework Selection
+
+| Framework | Levels | Best For |
+|-----------|--------|----------|
+| **ISTQB** | UT → IT/SIT → ST → AT/UAT | Enterprise, compliance, formal QA |
+| **Industry Pyramid** | UT (70%) → IT (20%) → E2E (10%) | Agile, DevOps, CI/CD |
+
+**Note on Integration Testing abbreviation:**
+- **IT** (Integration Testing): Agile/DevOps communities
+- **SIT** (System Integration Testing): Enterprise/ISTQB contexts
+- Both refer to the same testing level.
+
+## Quick Reference
+
+### Testing Pyramid (Industry Standard)
+
+```
+              ┌─────────┐
+              │   E2E   │  ← 10% (Fewer, slower)
+             ─┴─────────┴─
+            ┌─────────────┐
+            │   IT/SIT    │  ← 20% (Integration)
+           ─┴─────────────┴─
+          ┌─────────────────┐
+          │       UT        │  ← 70% (Unit)
+          └─────────────────┘
+```
+
+### Test Levels Overview
+
+| Level | Scope | Speed | Dependencies |
+|-------|-------|-------|-------------|
+| **UT** | Single function/class | < 100ms | Mocked |
+| **IT/SIT** | Component interaction | 1-10s | Real DB (containerized) |
+| **ST** | Full system (ISTQB) | Minutes | Production-like |
+| **E2E** | User journeys | 30s+ | Everything real |
+| **AT/UAT** | Business validation (ISTQB) | Varies | Everything real |
+
+### Coverage Targets
+
+| Metric | Minimum | Recommended |
+|--------|---------|-------------|
+| Line | 70% | 85% |
+| Branch | 60% | 80% |
+| Function | 80% | 90% |
+
+## Detailed Guidelines
+
+For complete standards, see:
+- [Testing Pyramid](./testing-pyramid.md)
+
+### AI-Optimized Format (Token-Efficient)
+
+For AI assistants, use the YAML format files for reduced token usage:
+- Base standard: `ai/standards/testing.ai.yaml`
+- Framework options:
+  - ISTQB Framework: `ai/options/testing/istqb-framework.ai.yaml`
+  - Industry Pyramid: `ai/options/testing/industry-pyramid.ai.yaml`
+- Test level options:
+  - Unit Testing: `ai/options/testing/unit-testing.ai.yaml`
+  - Integration Testing: `ai/options/testing/integration-testing.ai.yaml`
+  - System Testing: `ai/options/testing/system-testing.ai.yaml`
+  - E2E Testing: `ai/options/testing/e2e-testing.ai.yaml`
+
+## Naming Conventions
+
+### File Naming
+
+```
+[ClassName]Tests.cs       # C#
+[ClassName].test.ts       # TypeScript
+[class_name]_test.py      # Python
+[class_name]_test.go      # Go
+```
+
+### Method Naming
+
+```
+[MethodName]_[Scenario]_[ExpectedResult]()
+should_[behavior]_when_[condition]()
+test_[method]_[scenario]_[expected]()
+```
+
+## Test Doubles
+
+| Type | Purpose | When to Use |
+|------|---------|-------------|
+| **Stub** | Returns predefined values | Fixed API responses |
+| **Mock** | Verifies interactions | Check method called |
+| **Fake** | Simplified implementation | In-memory database |
+| **Spy** | Records calls, delegates | Partial mocking |
+
+### When to Use What
+
+- **UT**: Use mocks/stubs for all external dependencies.
+- **IT**: Use fakes for DB, stubs for external APIs.
+- **ST**: Real components, fake only external services.
+- **E2E**: Real everything.
+
+## AAA Pattern
+
+```typescript
+test('method_scenario_expected', () => {
+    // Arrange - Setup test data
+    const input = createTestInput();
+    const sut = new SystemUnderTest();
+
+    // Act - Execute behavior
+    const result = sut.execute(input);
+
+    // Assert - Verify result
+    expect(result).toBe(expected);
+});
+```
+
+## FIRST Principles
+
+- **F**ast - Tests run quickly.
+- **I**ndependent - Tests don't affect each other.
+- **R**epeatable - Same result every time.
+- **S**elf-validating - Clear pass/fail.
+- **T**imely - Written with production code.
+
+## Anti-Patterns to Avoid
+
+- ❌ Test Interdependence (tests must run in order).
+- ❌ Flaky Tests (sometimes pass, sometimes fail).
+- ❌ Testing Implementation Details.
+- ❌ Over-Mocking.
+- ❌ Missing Assertions.
+- ❌ Magic Numbers/Strings.
+
+---
+
+## Configuration Detection
+
+This skill supports project-specific configuration.
+
+### Detection Order
+
+1. Check `CONTRIBUTING.md` for "Disabled Skills" section.
+   - If this skill is listed, it is disabled for this project.
+2. Check `CONTRIBUTING.md` for "Testing Standards" section.
+3. If not found, **default to standard coverage targets**.
+
+### First-Time Setup
+
+If no configuration found and context is unclear:
+
+1. Ask the user: "This project hasn't configured testing standards. Would you like to customize coverage targets?"
+2. After user selection, suggest documenting in `CONTRIBUTING.md`:
+
+```markdown
+## Testing Standards
+
+### Coverage Targets
+| Metric | Target |
+|--------|--------|
+| Line | 80% |
+| Branch | 70% |
+| Function | 85% |
+```
+
+### Configuration Example
+
+In project's `CONTRIBUTING.md`:
+
+```markdown
+## Testing Standards
+
+### Coverage Targets
+| Metric | Target |
+|--------|--------|
+| Line | 80% |
+| Branch | 70% |
+| Function | 85% |
+
+### Testing Framework
+- Unit Tests: Jest
+- Integration Tests: Supertest
+- E2E Tests: Playwright
+```
+
+---
+
+## Related Standards
+
+- [Testing Standards](../../core/testing-standards.md)
+- [Code Review Checklist](../../core/code-review-checklist.md)
+
+---
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.1.0 | 2025-12-29 | Added: Framework selection (ISTQB/Industry Pyramid), IT/SIT abbreviation explanation. |
+| 1.0.0 | 2025-12-24 | Added: Standard sections (Purpose, Related Standards, Version History, License). |
+
+---
+
+## License
+
+This skill is released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+**Source**: [universal-dev-standards](https://github.com/AsiaOstrich/universal-dev-standards)

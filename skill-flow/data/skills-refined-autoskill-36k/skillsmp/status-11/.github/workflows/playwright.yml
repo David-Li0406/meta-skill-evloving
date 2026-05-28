@@ -1,0 +1,95 @@
+name: Playwright E2E
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  changes:
+    name: Detect non-markdown changes
+    runs-on: ubuntu-latest
+    outputs:
+      run_tests: ${{ steps.detect.outputs.run_tests }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine base ref
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "base=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            echo "base=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          else
+            if git rev-parse HEAD^ >/dev/null 2>&1; then
+              echo "base=$(git rev-parse HEAD^)" >> "$GITHUB_OUTPUT"
+            else
+              echo "base=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Detect non-markdown changes
+        id: detect
+        run: |
+          set -euo pipefail
+          base_ref="${{ steps.base.outputs.base }}"
+          changed_files=$(git diff --name-only "$base_ref"...HEAD || true)
+          if [ -z "$changed_files" ]; then
+            run_tests=true
+          else
+            non_md=$(printf "%s
+" "$changed_files" | grep -vE '\.md$' || true)
+            if [ -z "$non_md" ]; then
+              run_tests=false
+            else
+              run_tests=true
+            fi
+          fi
+          {
+            echo "run_tests=${run_tests}"
+            printf 'changed_files<<EOF\n%s\nEOF\n' "$changed_files"
+          } >> "$GITHUB_OUTPUT"
+
+  tests:
+    needs: changes
+    if: needs.changes.outputs.run_tests == 'true'
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run demo E2E tests
+        run: npm run test:demo
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-${{ github.run_id }}
+          path: |
+            test-results/**
+            test-results/replay/**
+            playwright-report/**
+          if-no-files-found: ignore
+          retention-days: 30

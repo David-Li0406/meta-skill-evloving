@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Agent Observability Server - launchd service template
+
+  Installation:
+    1. Copy to ~/Library/LaunchAgents/com.pai.observability-server.plist
+    2. Replace {{USER}} with your username
+    3. Update bun path if needed (run: which bun)
+    4. Load: launchctl load ~/Library/LaunchAgents/com.pai.observability-server.plist
+
+  Management:
+    launchctl list | grep observability     # Check status
+    launchctl stop com.pai.observability-server   # Stop
+    launchctl start com.pai.observability-server  # Start
+    launchctl unload ~/Library/LaunchAgents/com.pai.observability-server.plist  # Disable
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pai.observability-server</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Update path based on: which bun -->
+        <!-- Homebrew: /opt/homebrew/bin/bun -->
+        <!-- Manual install: /Users/{{USER}}/.bun/bin/bun -->
+        <string>/opt/homebrew/bin/bun</string>
+        <string>run</string>
+        <!-- Use 'start' for production (no watch), 'dev' for development -->
+        <string>start</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/{{USER}}/.claude/Skills/AgentObservability/apps/server</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/{{USER}}/.claude/Skills/AgentObservability/logs/server-stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/{{USER}}/.claude/Skills/AgentObservability/logs/server-stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>PAI_DIR</key>
+        <string>/Users/{{USER}}/.claude</string>
+    </dict>
+</dict>
+</plist>

@@ -1,0 +1,140 @@
+#cloud-config
+# =============================================================================
+# Nginx Reverse Proxy with HTTPS (Self-Signed Certificate)
+# =============================================================================
+#
+# Purpose: Public-facing web server with HTTPS termination
+#
+# Features:
+# - HTTP to HTTPS redirect
+# - Self-signed SSL certificate with public IP as Common Name
+# - Modern TLS configuration (TLSv1.2, TLSv1.3)
+# - Security headers
+# - Reverse proxy to internal application
+#
+# How it works:
+# 1. Installs nginx, openssl, and curl
+# 2. Creates nginx site configuration for HTTPS reverse proxy
+# 3. Runs setup script that fetches public IP and generates certificate
+# 4. Enables site and restarts nginx
+#
+# Public IP detection:
+# - Uses ifconfig.me to get the public IP (cloud-agnostic)
+# - Falls back to 'localhost' if public IP cannot be determined
+# - For provider-specific metadata services, see cloud-init-patterns.md
+#
+# Configuration:
+# - Replace 'APP_SERVER:5001' with your backend server address
+# - Use private IP (e.g., 10.0.3.4:5001) or hostname (e.g., vm-app:5001)
+# - For same-server deployment, use 127.0.0.1:5001
+#
+# Note: Use proxy-http.yaml as the DEFAULT.
+# Only use this pattern when HTTPS is explicitly required.
+#
+# =============================================================================
+package_update: true
+package_upgrade: true
+
+packages:
+  - nginx
+  - openssl
+  - curl
+
+write_files:
+  # Nginx HTTPS reverse proxy configuration
+  - path: /etc/nginx/sites-available/app
+    content: |
+      # HTTP to HTTPS redirect
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+          server_name _;
+
+          return 301 https://$host$request_uri;
+      }
+
+      # HTTPS server with reverse proxy
+      server {
+          listen 443 ssl default_server;
+          listen [::]:443 ssl default_server;
+          server_name _;
+
+          # SSL certificate paths
+          ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+          ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+
+          # SSL configuration (modern settings)
+          ssl_protocols TLSv1.2 TLSv1.3;
+          ssl_prefer_server_ciphers off;
+          ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+
+          # Security headers
+          add_header X-Frame-Options "SAMEORIGIN" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header X-XSS-Protection "1; mode=block" always;
+
+          # Reverse proxy to application
+          # Replace APP_SERVER with backend IP or hostname
+          location / {
+              proxy_pass http://APP_SERVER:5001;
+              proxy_http_version 1.1;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          }
+      }
+    owner: root:root
+    permissions: '0644'
+
+  # Setup script to generate certificate and configure nginx
+  - path: /usr/local/bin/setup-https.sh
+    content: |
+      #!/bin/bash
+      set -e
+
+      echo "=== Setting up HTTPS with self-signed certificate ==="
+
+      # Fetch public IP address for certificate CN (Common Name)
+      echo "Fetching public IP..."
+
+      # Use external service to get public IP (cloud-agnostic)
+      PUBLIC_IP=$(curl -s --max-time 10 ifconfig.me 2>/dev/null)
+
+      # Fall back to localhost if external service fails
+      if [ -z "$PUBLIC_IP" ]; then
+        echo "Warning: Could not get public IP, using 'localhost' as CN"
+        PUBLIC_IP="localhost"
+      else
+        echo "Public IP: $PUBLIC_IP"
+      fi
+
+      # Generate self-signed certificate with the public IP as CN
+      echo "Generating self-signed SSL certificate for $PUBLIC_IP..."
+      openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+          -keyout /etc/ssl/private/nginx-selfsigned.key \
+          -out /etc/ssl/certs/nginx-selfsigned.crt \
+          -subj "/C=SE/O=Learning/CN=$PUBLIC_IP"
+
+      # Set secure permissions on certificate files
+      chmod 600 /etc/ssl/private/nginx-selfsigned.key
+      chmod 644 /etc/ssl/certs/nginx-selfsigned.crt
+
+      # Enable site and disable default
+      ln -sf /etc/nginx/sites-available/app /etc/nginx/sites-enabled/app
+      rm -f /etc/nginx/sites-enabled/default
+
+      # Test configuration and restart nginx
+      nginx -t
+      systemctl restart nginx
+      systemctl enable nginx
+
+      echo "=== HTTPS Setup Complete ==="
+      echo "HTTP:  Port 80 (redirects to HTTPS)"
+      echo "HTTPS: Port 443 (proxies to backend)"
+    owner: root:root
+    permissions: '0755'
+
+runcmd:
+  # Run the setup script after packages are installed and files are created
+  - /usr/local/bin/setup-https.sh

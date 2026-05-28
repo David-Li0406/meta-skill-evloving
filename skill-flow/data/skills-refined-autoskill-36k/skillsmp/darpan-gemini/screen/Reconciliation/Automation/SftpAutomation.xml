@@ -1,0 +1,757 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="SFTP Automation" require-authentication="false">
+
+    <parameter name="editJobName"/>
+
+    <transition name="saveSftpSchedule">
+        <actions>
+            <set field="jobName" from="jobName?.trim()"/>
+            <set field="description" from="description?.trim()"/>
+            <if condition="!jobName">
+                <message type="error" text="Job name is required."/>
+                <return error="true"/>
+            </if>
+            <if condition="!reconciliationMappingId">
+                <message type="error" text="Mapping is required."/>
+                <return error="true"/>
+            </if>
+            <if condition="!file1SystemEnumId || !file2SystemEnumId">
+                <message type="error" text="System sources for File 1 and File 2 are required."/>
+                <return error="true"/>
+            </if>
+            <if condition="!file1SftpServerId || !file2SftpServerId">
+                <message type="error" text="SFTP remote selection required for both files."/>
+                <return error="true"/>
+            </if>
+
+            <script><![CDATA[
+                def normalize = { it?.toString()?.trim() }
+                String serviceName = "reconciliation.ReconciliationAutomationServices.poll#SftpAndReconcile"
+                String cronExpr = normalize(cronExpression)
+                String unit = normalize(scheduleUnit) ?: "minutes"
+                Integer interval = scheduleInterval ? (scheduleInterval as Integer) : null
+                Integer dailyHourVal = scheduleDailyHour ? (scheduleDailyHour as Integer) : null
+                Integer dailyMinuteVal = scheduleDailyMinute ? (scheduleDailyMinute as Integer) : null
+                List<String> scheduleErrors = []
+
+                if (!cronExpr) {
+                    switch (unit) {
+                        case "minutes":
+                            if (!interval) {
+                                scheduleErrors << "Enter how many minutes apart to run."
+                            } else if (interval < 1 || interval > 59) {
+                                scheduleErrors << "Minute interval must be between 1 and 59."
+                            } else {
+                                cronExpr = "0 0/${interval} * * * ?"
+                            }
+                            break
+                        case "hours":
+                            if (!interval) {
+                                scheduleErrors << "Enter how many hours apart to run."
+                            } else if (interval < 1 || interval > 72) {
+                                scheduleErrors << "Hour interval must be between 1 and 72."
+                            } else {
+                                cronExpr = "0 0 0/${interval} * * ?"
+                            }
+                            break
+                        case "daily":
+                            int hourVal = dailyHourVal != null ? dailyHourVal : 0
+                            int minuteVal = dailyMinuteVal != null ? dailyMinuteVal : 0
+                            if (hourVal < 0 || hourVal > 23) scheduleErrors << "Hour must be between 0 and 23 for a daily run."
+                            if (minuteVal < 0 || minuteVal > 59) scheduleErrors << "Minute must be between 0 and 59 for a daily run."
+                            if (scheduleErrors.isEmpty()) {
+                                cronExpr = "0 ${minuteVal} ${hourVal} * * ?"
+                            }
+                            break
+                        default:
+                            scheduleErrors << "Select a schedule preset or provide a cron expression."
+                    }
+                }
+
+                if (!cronExpr) {
+                    scheduleErrors << "Cron expression could not be determined."
+                }
+
+                if (!scheduleErrors.isEmpty()) {
+                    context.scheduleErrors = scheduleErrors
+                    return
+                }
+
+                def normalizeBool = { val ->
+                    if (val == null) return null
+                    def s = val.toString().toLowerCase()
+                    return (s == "y" || s == "true" || s == "1" || s == "on") ? "true" : "false"
+                }
+
+                Map<String, String> paramMap = [:]
+                [
+                        reconciliationMappingId   : reconciliationMappingId,
+                        file1SystemEnumId         : file1SystemEnumId,
+                        file2SystemEnumId         : file2SystemEnumId,
+                        file1SftpServerId         : file1SftpServerId,
+                        file2SftpServerId         : file2SftpServerId,
+                        file1FileTypeEnumId       : file1FileTypeEnumId,
+                        file2FileTypeEnumId       : file2FileTypeEnumId,
+                        file1SchemaFileName       : file1SchemaFileName,
+                        file2SchemaFileName       : file2SchemaFileName,
+                        file1RemotePath           : file1RemotePath,
+                        file2RemotePath           : file2RemotePath,
+                        stageLocation             : stageLocation ?: "runtime://tmp/reconciliation/automation/input",
+                        outputLocation            : outputLocation ?: "runtime://tmp/reconciliation/automation/output",
+                        archiveSubdir             : archiveSubdir ?: "archive",
+                        sparkMaster               : sparkMaster,
+                        sparkAppName              : sparkAppName ?: "SftpReconciliation"
+                ].each { key, val ->
+                    def normalized = normalize(val)
+                    if (normalized) paramMap[key] = normalized
+                }
+                def headerFlag = normalizeBool(hasHeader)
+                if (headerFlag != null) paramMap["hasHeader"] = headerFlag
+
+                context.resolvedCronExpression = cronExpr
+                context.serviceName = serviceName
+                context.jobParams = paramMap
+                context.pausedFlag = (paused?.toString()?.toLowerCase() == "y") ? "Y" : "N"
+            ]]>            </script>
+
+            <if condition="scheduleErrors">
+                <message type="error" text="${scheduleErrors?.join('; ')}"/>
+                <return error="true"/>
+            </if>
+
+            <service-call name="store#moqui.service.job.ServiceJob" in-map="[jobName:jobName, description:description, serviceName:serviceName, cronExpression:resolvedCronExpression, paused:pausedFlag]"/>
+
+            <entity-find entity-name="moqui.service.job.ServiceJobParameter" list="existingParams">
+                <econdition field-name="jobName" from="jobName"/>
+            </entity-find>
+            <iterate list="existingParams" entry="paramRow">
+                <service-call name="delete#moqui.service.job.ServiceJobParameter" in-map="[jobName:jobName, parameterName:paramRow.parameterName]"/>
+            </iterate>
+
+            <iterate list="jobParams.entrySet()" entry="entry">
+                <service-call name="create#moqui.service.job.ServiceJobParameter" in-map="[jobName:jobName, parameterName:entry.key, parameterValue:entry.value]"/>
+            </iterate>
+
+            <message>Saved SFTP reconciliation schedule ${jobName}.</message>
+        </actions>
+        <default-response url=".">
+            <parameter name="editJobName" from="jobName"/>
+        </default-response>
+    </transition>
+
+    <transition name="pauseJob">
+        <parameter name="jobName"/>
+        <actions>
+            <if condition="!jobName">
+                <return/>
+            </if>
+            <service-call name="update#moqui.service.job.ServiceJob" in-map="[jobName:jobName, paused:'Y']"/>
+            <message>Paused ${jobName}.</message>
+        </actions>
+        <default-response url="."/>
+    </transition>
+
+    <transition name="resumeJob">
+        <parameter name="jobName"/>
+        <actions>
+            <if condition="!jobName">
+                <return/>
+            </if>
+            <service-call name="update#moqui.service.job.ServiceJob" in-map="[jobName:jobName, paused:'N']"/>
+            <message>Resumed ${jobName}.</message>
+        </actions>
+        <default-response url="."/>
+    </transition>
+
+    <transition name="runJob">
+        <parameter name="jobName"/>
+        <actions>
+            <if condition="!jobName">
+                <message type="error" text="Job name is required to run."/>
+                <return error="true"/>
+            </if>
+            <script><![CDATA[
+                try {
+                    def jobRunId = ec.service.job(jobName).run()
+                    ec.message.addMessage("Triggered run for ${jobName} (runId=${jobRunId}).")
+                } catch (Exception e) {
+                    ec.message.addError("Failed to trigger run for ${jobName}: ${e.message}")
+                }
+            ]]></script>
+        </actions>
+        <default-response url="."/>
+    </transition>
+
+    <pre-actions>
+        <entity-find entity-name="moqui.basic.Enumeration" list="systemEnumList" cache="false">
+            <econdition field-name="enumTypeId" value="DarpanSystemSource"/>
+            <order-by field-name="sequenceNum,description"/>
+        </entity-find>
+        <entity-find entity-name="darpan.mapping.ReconciliationMapping" list="mappingList" cache="false">
+            <order-by field-name="mappingName"/>
+        </entity-find>
+        <entity-find entity-name="moqui.basic.Enumeration" list="fileTypeEnumList" cache="false">
+            <econdition field-name="enumTypeId" value="DarpanFileType"/>
+            <order-by field-name="sequenceNum,description"/>
+        </entity-find>
+        <entity-find entity-name="darpan.reconciliation.JsonSchema" list="schemaFiles" cache="false">
+            <order-by field-name="schemaName"/>
+        </entity-find>
+
+        <script><![CDATA[
+            def normalize = { it?.toString()?.trim() }
+
+            // Load SftpServers for dropdown
+            def servers = []
+            ec.entity.find("darpan.reconciliation.SftpServer")
+                    .useCache(false)
+                    .orderBy(["description", "sftpServerId"])
+                    .list()
+                    ?.each { s ->
+                        servers.add([
+                                sftpServerId: s.sftpServerId,
+                                label: s.description ?: s.sftpServerId
+                        ])
+                    }
+            context.sftpServers = servers
+
+            Map systemLabels = [:]
+            systemEnumList?.each { systemLabels[it.enumId] = it.description ?: it.enumId }
+            Map mappingLabels = [:]
+            mappingList?.each { mappingLabels[it.reconciliationMappingId] = it.mappingName ?: it.reconciliationMappingId }
+            Map serverLabels = [:]
+            servers?.each { serverLabels[it.sftpServerId] = it.label }
+
+
+            String serviceName = "reconciliation.ReconciliationAutomationServices.poll#SftpAndReconcile"
+            List jobRows = []
+            ec.entity.find("moqui.service.job.ServiceJob")
+                    .condition("serviceName", serviceName)
+                    .useCache(false)
+                    .orderBy("jobName")
+                    .list()
+                    ?.each { job ->
+                        Map paramMap = [:]
+                        ec.entity.find("moqui.service.job.ServiceJobParameter")
+                                .condition("jobName", job.jobName)
+                                .useCache(false)
+                                .list()
+                                ?.each { paramMap[it.parameterName] = it.parameterValue }
+
+                        jobRows.add([
+                                jobName          : job.jobName,
+                                description      : job.description,
+                                cronExpression   : job.cronExpression,
+                                paused           : job.paused,
+                                mappingLabel     : mappingLabels[paramMap.reconciliationMappingId] ?: paramMap.reconciliationMappingId,
+                                file1SystemLabel : systemLabels[paramMap.file1SystemEnumId] ?: paramMap.file1SystemEnumId,
+                                file2SystemLabel : systemLabels[paramMap.file2SystemEnumId] ?: paramMap.file2SystemEnumId,
+                                file1RemoteLabel : serverLabels[paramMap.file1SftpServerId] ?: paramMap.file1SftpServerId,
+                                file2RemoteLabel : serverLabels[paramMap.file2SftpServerId] ?: paramMap.file2SftpServerId
+                        ])
+                    }
+            context.sftpJobs = jobRows
+
+            // Load recent runs
+            def recentRuns = []
+            if (sftpJobs) {
+                 def jobNames = sftpJobs.collect { it.jobName }
+                 recentRuns = ec.entity.find("moqui.service.job.ServiceJobRun")
+                    .condition("jobName", "in", jobNames)
+                    .orderBy("-startTime")
+                    .limit(20)
+                    .list()
+            }
+            context.jobRuns = recentRuns
+        ]]>        </script>
+
+        <if condition="editJobName">
+            <script><![CDATA[
+                String jobKey = editJobName?.toString()?.trim()
+                if (jobKey) {
+                    def job = ec.entity.find("moqui.service.job.ServiceJob")
+                            .condition("jobName", jobKey)
+                            .useCache(false)
+                            .one()
+                    if (job) {
+                        context.jobName = job.jobName
+                        context.description = job.description
+                        context.cronExpression = job.cronExpression
+                        context.paused = job.paused
+
+                        ec.entity.find("moqui.service.job.ServiceJobParameter")
+                                .condition("jobName", jobKey)
+                                .useCache(false)
+                                .list()
+                                ?.each { param ->
+                                    context[(param.parameterName)] = param.parameterValue
+                                }
+                    }
+                }
+            ]]>            </script>
+        </if>
+
+        <script><![CDATA[
+            if (context.hasHeader == null) context.hasHeader = "true"
+            if (!context.scheduleUnit) context.scheduleUnit = "minutes"
+            if (!context.scheduleInterval && !context.editJobName) context.scheduleInterval = "15"
+            // Defaults
+            if (!context.stageLocation) context.stageLocation = "runtime://tmp/reconciliation/automation/input"
+            if (!context.outputLocation) {
+                 def base = context.stageLocation
+                 context.outputLocation = base.endsWith("/") ? (base + "reconciled") : (base + "/reconciled")
+            }
+            if (!context.archiveSubdir) context.archiveSubdir = "archive"
+            if (!context.sparkAppName) context.sparkAppName = "SftpReconciliation"
+
+            boolean hasAdvancedValues = false
+            if (context.stageLocation && context.stageLocation != "runtime://tmp/reconciliation/automation/input") hasAdvancedValues = true
+            def defaultOutput = context.stageLocation ? (context.stageLocation.endsWith("/") ? (context.stageLocation + "reconciled") : (context.stageLocation + "/reconciled")) : "runtime://tmp/reconciliation/automation/input/reconciled"
+            if (context.outputLocation && context.outputLocation != defaultOutput) hasAdvancedValues = true
+            if (context.archiveSubdir && context.archiveSubdir != "archive") hasAdvancedValues = true
+            if (context.sparkMaster) hasAdvancedValues = true
+            if (context.sparkAppName && context.sparkAppName != "SftpReconciliation") hasAdvancedValues = true
+            if (context.showAdvanced == null) {
+                context.showAdvanced = hasAdvancedValues ? "Y" : "N"
+            }
+        ]]>        </script>
+    </pre-actions>
+
+    <widgets>
+        <container style="container">
+            <container style="page-header">
+                <label text="SFTP Reconciliation Automation" type="h2"/>
+                <label text="Schedule recurring reconciliation runs using configured SFTP remotes." type="p" style="text-muted"/>
+            </container>
+
+            <section name="ScheduleFormSection">
+                <widgets>
+                    <label text="${jobName ? 'Edit Schedule' : 'Create Schedule'}" type="h4"/>
+                    <form-single name="SftpScheduleForm" transition="saveSftpSchedule">
+                        <field name="jobName">
+                            <default-field title="Job Name">
+                                <text-line size="40"/>
+                            </default-field>
+                        </field>
+                        <field name="description">
+                            <default-field title="Description">
+                                <text-line size="60"/>
+                            </default-field>
+                        </field>
+
+                        <field name="reconciliationMappingId">
+                            <default-field title="Mapping">
+                                <drop-down>
+                                    <option key="" text="Select mapping"/>
+                                    <list-options list="mappingList" key="${reconciliationMappingId}" text="${(mappingName ?: reconciliationMappingId) + (description ? ' - ' + description : '')}"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+
+                        <field name="file1Header">
+                            <default-field title="">
+                                <display text="File 1" type="h5"/>
+                            </default-field>
+                        </field>
+                        <field name="file1SystemEnumId">
+                            <default-field title="System 1">
+                                <drop-down>
+                                    <option key="" text="Select system"/>
+                                    <list-options list="systemEnumList" key="${enumId}" text="${description ?: enumId}"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+                        <field name="file1SftpServerId">
+                            <default-field title="SFTP Remote 1">
+                                <drop-down>
+                                    <option key="" text="Select remote"/>
+                                    <list-options list="sftpServers" key="${sftpServerId}" text="${label}"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+                        <field name="file1FileTypeEnumId">
+                            <default-field title="File Type 1">
+                                <drop-down>
+                                    <list-options list="fileTypeEnumList" key="${enumId}" text="${description}"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+                        <field name="file1SchemaFileName">
+                            <default-field title="Schema 1">
+                                <drop-down allow-empty="true">
+                                    <option key="" text="None"/>
+                                    <list-options list="schemaFiles" key="${schemaName}" text="${schemaName}"/>
+                                </drop-down>
+                                <visible-when field="file1FileTypeEnumId" value="DftJson"/>
+                            </default-field>
+                        </field>
+                        <field name="file1RemotePath">
+                            <default-field title="Remote Path 1">
+                                <text-line size="50" default-value=""/>
+                            </default-field>
+                        </field>
+
+                        <field name="file2Header">
+                            <default-field title="">
+                                <display text="File 2" type="h5"/>
+                            </default-field>
+                        </field>
+                        <field name="file2SystemEnumId">
+                            <default-field title="System 2">
+                                <drop-down>
+                                    <option key="" text="Select system"/>
+                                    <list-options list="systemEnumList" key="${enumId}" text="${description ?: enumId}"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+                        <field name="file2SftpServerId">
+                            <default-field title="SFTP Remote 2">
+                                <drop-down>
+                                    <option key="" text="Select remote"/>
+                                    <list-options list="sftpServers" key="${sftpServerId}" text="${label}"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+                        <field name="file2FileTypeEnumId">
+                            <default-field title="File Type 2">
+                                <drop-down>
+                                    <list-options list="fileTypeEnumList" key="${enumId}" text="${description}"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+                        <field name="file2SchemaFileName">
+                            <default-field title="Schema 2">
+                                <drop-down allow-empty="true">
+                                    <option key="" text="None"/>
+                                    <list-options list="schemaFiles" key="${schemaName}" text="${schemaName}"/>
+                                </drop-down>
+                                <visible-when field="file2FileTypeEnumId" value="DftJson"/>
+                            </default-field>
+                        </field>
+                        <field name="file2RemotePath">
+                            <default-field title="Remote Path 2">
+                                <text-line size="50" default-value=""/>
+                            </default-field>
+                        </field>
+
+                        <field name="scheduleHeader">
+                            <default-field title="">
+                                <display text="Schedule" type="h5"/>
+                            </default-field>
+                        </field>
+                        <field name="scheduleUnit">
+                            <default-field title="Schedule Preset">
+                                <drop-down>
+                                    <option key="minutes" text="Every N minutes"/>
+                                    <option key="hours" text="Every N hours"/>
+                                    <option key="daily" text="Daily at a time"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+                        <field name="scheduleInterval">
+                            <default-field title="N (for minutes/hours)">
+                                <text-line size="5"/>
+                            </default-field>
+                        </field>
+                        <field name="scheduleDailyHour">
+                            <default-field title="Daily Hour (0-23)">
+                                <text-line size="5"/>
+                            </default-field>
+                        </field>
+                        <field name="scheduleDailyMinute">
+                            <default-field title="Daily Minute (0-59)">
+                                <text-line size="5"/>
+                            </default-field>
+                        </field>
+                        <field name="cronExpression">
+                            <default-field title="Cron Expression (advanced)">
+                                <text-line size="40" default-value=""/>
+                            </default-field>
+                        </field>
+                        <field name="paused">
+                            <default-field title="Start Paused?">
+                                <check checked-value="Y" unchecked-value="N"/>
+                            </default-field>
+                        </field>
+                        <field name="advancedHeader">
+                            <default-field title="">
+                                <display text="Advanced Settings" type="h5"/>
+                            </default-field>
+                        </field>
+                        <field name="showAdvanced">
+                            <default-field title="Show Advanced">
+                                <drop-down no-current-selected-key="N">
+                                    <option key="N" text="No"/>
+                                    <option key="Y" text="Yes"/>
+                                </drop-down>
+                            </default-field>
+                        </field>
+                        <field name="stageLocation">
+                            <default-field title="Stage Location">
+                                <text-line size="60" default-value="runtime://tmp/reconciliation/automation/input"/>
+                                <visible-when field="showAdvanced" value="Y"/>
+                            </default-field>
+                        </field>
+                        <field name="outputLocation">
+                            <default-field title="Output Location">
+                                <text-line size="60"/>
+                                <visible-when field="showAdvanced" value="Y"/>
+                            </default-field>
+                        </field>
+                        <field name="archiveSubdir">
+                            <default-field title="Archive Folder Name">
+                                <text-line size="30" default-value="archive"/>
+                                <visible-when field="showAdvanced" value="Y"/>
+                            </default-field>
+                        </field>
+                        <field name="sparkMaster">
+                            <default-field title="Spark Master (optional)">
+                                <text-line size="40"/>
+                                <visible-when field="showAdvanced" value="Y"/>
+                            </default-field>
+                        </field>
+                        <field name="sparkAppName">
+                            <default-field title="Spark App Name">
+                                <text-line size="40" default-value="SftpReconciliation"/>
+                                <visible-when field="showAdvanced" value="Y"/>
+                            </default-field>
+                        </field>
+
+                        <field name="saveButton">
+                            <default-field title="">
+                                <submit text="Save Schedule" btn-type="primary"/>
+                            </default-field>
+                        </field>
+
+                        <field-layout>
+                            <field-row>
+                                <field-ref name="jobName"/>
+                                <field-ref name="description"/>
+                            </field-row>
+                            <field-row-big>
+                                <field-ref name="reconciliationMappingId"/>
+                            </field-row-big>
+
+                            <field-row-big>
+                                <field-ref name="file1Header"/>
+                            </field-row-big>
+                            <field-row>
+                                <field-ref name="file1SystemEnumId"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="file1SftpServerId"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="file1FileTypeEnumId"/>
+                                <field-ref name="file1SchemaFileName"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="file1RemotePath"/>
+                            </field-row>
+
+                            <field-row-big>
+                                <field-ref name="file2Header"/>
+                            </field-row-big>
+                            <field-row>
+                                <field-ref name="file2SystemEnumId"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="file2SftpServerId"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="file2FileTypeEnumId"/>
+                                <field-ref name="file2SchemaFileName"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="file2RemotePath"/>
+                            </field-row>
+                            <field-row-big>
+                                <field-ref name="scheduleHeader"/>
+                            </field-row-big>
+                            <field-row>
+                                <field-ref name="scheduleUnit"/>
+                                <field-ref name="scheduleInterval"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="scheduleDailyHour"/>
+                                <field-ref name="scheduleDailyMinute"/>
+                            </field-row>
+                            <field-row-big>
+                                <field-ref name="cronExpression"/>
+                            </field-row-big>
+                            <field-row>
+                                <field-ref name="paused"/>
+                            </field-row>
+                            <field-row-big>
+                                <field-ref name="advancedHeader"/>
+                            </field-row-big>
+                            <field-row>
+                                <field-ref name="showAdvanced"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="stageLocation"/>
+                                <field-ref name="outputLocation"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="archiveSubdir"/>
+                                <field-ref name="sparkMaster"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="sparkAppName"/>
+                            </field-row>
+
+                            <field-row-big>
+                                <field-ref name="saveButton"/>
+                            </field-row-big>
+                        </field-layout>
+                    </form-single>
+                </widgets>
+            </section>
+
+            <container type="hr"/>
+
+            <section name="ExistingSchedulesSection">
+                <widgets>
+                    <label text="Existing SFTP Schedules" type="h4"/>
+                    <section name="NoJobsSection" condition="!sftpJobs">
+                        <widgets>
+                            <label text="No schedules found yet." type="p" style="text-muted"/>
+                        </widgets>
+                    </section>
+
+                    <section name="JobsTableSection" condition="sftpJobs">
+                        <widgets>
+                            <form-list name="SftpJobsList" list="sftpJobs" skip-form="true" paginate="true" paginate-always-show="true" style="table table-striped table-condensed">
+                                <field name="jobName">
+                                    <header-field title="Job"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="description">
+                                    <header-field title="Description"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="mappingLabel">
+                                    <header-field title="Mapping"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="file1SystemLabel">
+                                    <header-field title="System 1"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="file2SystemLabel">
+                                    <header-field title="System 2"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="file1RemoteLabel">
+                                    <header-field title="Remote 1"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="file2RemoteLabel">
+                                    <header-field title="Remote 2"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="cronExpression">
+                                    <header-field title="Schedule (cron)"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="paused">
+                                    <header-field title="Status"/>
+                                    <default-field>
+                                        <label text="${paused == 'Y' ? 'Paused' : 'Active'}" type="span" style="${paused == 'Y' ? 'text-warning' : 'text-success'}"/>
+                                    </default-field>
+                                </field>
+                                <field name="actions">
+                                    <header-field title=""/>
+                                    <default-field>
+                                        <link url="/qapps/system/ServiceJob/Jobs/ServiceJobDetail" text="Run Now" link-type="anchor-button" btn-type="primary" style="btn-xs">
+                                            <parameter name="jobName" from="jobName"/>
+                                        </link>
+                                        <link url="." text="Edit" link-type="anchor-button" btn-type="info" style="btn-xs">
+                                            <parameter name="editJobName" from="jobName"/>
+                                        </link>
+                                        <link url="pauseJob" text="Pause" link-type="anchor-button" btn-type="default" style="btn-xs" condition="paused != 'Y'">
+                                            <parameter name="jobName" from="jobName"/>
+                                        </link>
+                                        <link url="resumeJob" text="Resume" link-type="anchor-button" btn-type="success" style="btn-xs" condition="paused == 'Y'">
+                                            <parameter name="jobName" from="jobName"/>
+                                        </link>
+                                    </default-field>
+                                </field>
+                            </form-list>
+                        </widgets>
+                    </section>
+                </widgets>
+            </section>
+        </container>
+    </widgets>
+    <container type="hr"/>
+
+    <section name="JobRunHistorySection">
+        <widgets>
+            <label text="Recent Execution History" type="h4"/>
+            <section name="NoRunsSection" condition="!jobRuns">
+                <widgets>
+                    <label text="No recent runs found." type="p" style="text-muted"/>
+                </widgets>
+            </section>
+            <section name="RunsTableSection" condition="jobRuns">
+                <widgets>
+                    <form-list name="JobRunsList" list="jobRuns" skip-form="true" paginate="false" style="table table-striped table-condensed">
+                        <field name="jobRunId">
+                            <header-field title="Run ID"/>
+                            <default-field>
+                                <display/>
+                            </default-field>
+                        </field>
+                        <field name="jobName">
+                            <header-field title="Job Name"/>
+                            <default-field>
+                                <display/>
+                            </default-field>
+                        </field>
+                        <field name="startTime">
+                            <header-field title="Start Time"/>
+                            <default-field>
+                                <display/>
+                            </default-field>
+                        </field>
+                        <field name="endTime">
+                            <header-field title="End Time"/>
+                            <default-field>
+                                <display/>
+                            </default-field>
+                        </field>
+                        <field name="hasError">
+                            <header-field title="Status"/>
+                            <default-field>
+                                <label text="${hasError == 'Y' ? 'Error' : 'Success'}" type="span" style="${hasError == 'Y' ? 'text-danger' : 'text-success'}"/>
+                            </default-field>
+                        </field>
+                        <field name="messages">
+                            <header-field title="Messages"/>
+                            <default-field>
+                                <display/>
+                            </default-field>
+                        </field>
+                    </form-list>
+                </widgets>
+            </section>
+        </widgets>
+    </section>
+</screen>

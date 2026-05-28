@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FILES="$(git diff --cached --name-only --diff-filter=ACM | grep -E '^(scripts|bin)/.*\\.(sh|py)$' || true)"
+if [[ -n "${FILES}" ]]; then
+  while IFS= read -r file; do
+    [[ -z "${file}" ]] && continue
+    if head -n 1 "${file}" 2>/dev/null | grep -q "^#\\!" ; then
+      chmod +x "${file}"
+      git add "${file}"
+    fi
+  done <<< "${FILES}"
+fi

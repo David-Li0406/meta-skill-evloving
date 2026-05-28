@@ -1,0 +1,27 @@
+# Learning Backlog Template
+# Copy to .claude/learnings/backlog.yaml in your project
+
+version: 1
+extracted-from: null  # session-id or sprint-id
+extracted-at: null    # ISO 8601 timestamp
+
+learnings: []
+
+# Example learning entry (uncomment and modify):
+# - id: yq-variable-quoting
+#   status: pending
+#   title: Quote Variables in yq Expressions
+#   problem: |
+#     yq commands fail silently when shell variables aren't quoted
+#     in the expression. The variable expands before yq parses it,
+#     leading to syntax errors or empty results.
+#   solution: |
+#     Always wrap yq expressions in single quotes and use shell
+#     variable expansion explicitly:
+#     yq eval '.phases['"$IDX"'].status' PROGRESS.yaml
+#   target: scripts/CLAUDE.md
+#   confidence: high
+#   source:
+#     tool: Bash
+#     command: "yq '.phases[$IDX].status' PROGRESS.yaml"
+#     error: "returned empty string instead of expected status value"

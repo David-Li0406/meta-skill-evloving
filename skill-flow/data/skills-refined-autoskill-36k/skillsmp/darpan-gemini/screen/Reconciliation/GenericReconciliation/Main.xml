@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="File Reconciliation"
+        default-menu-include="false"
+        require-authentication="false">
+
+    <transition name="runGenericReconciliation" begin-transaction="false">
+        <actions>
+            <service-call name="reconciliation.ReconciliationGenericServices.reconcile#GenericFiles"
+                    in-map="[file1:file1, file2:file2, file1SystemEnumId:file1SystemEnumId, file2SystemEnumId:file2SystemEnumId, reconciliationMappingId:reconciliationMappingId]"
+                    out-map="context"/>
+            <if condition="diffFileName"><then>
+                <message>Reconciliation complete: ${reconciliationType} - ${differenceCount} differences found</message>
+            </then></if>
+        </actions>
+        <conditional-response url="../GenericReconciliationView" parameter-map="[viewFile:diffFileName]">
+            <condition><expression>diffFileName &amp;&amp; diffFileName.toLowerCase().endsWith('.json')</expression></condition>
+        </conditional-response>
+        <default-response url=".">
+            <parameter name="latestFile" from="diffFileName"/>
+        </default-response>
+    </transition>
+
+    <transition name="viewDiff" read-only="true" begin-transaction="false">
+        <parameter name="viewFile"/>
+        <default-response url="../GenericReconciliationView"/>
+    </transition>
+
+    <transition name="downloadDiff" read-only="true" begin-transaction="false">
+        <parameter name="filename"/>
+        <actions>
+            <set field="filename" from="filename?.trim()"/>
+            <if condition="!filename"><return/></if>
+            <if condition="filename.contains('..') || filename.contains('/') || filename.contains('\\')">
+                <return error="true" message="Invalid filename"/>
+            </if>
+            <set field="outputDirRef" from="ec.resource.getLocationReference('runtime://tmp/reconciliation/generic/output')"/>
+            <set field="fileRef" from="outputDirRef != null ? outputDirRef.getChild(filename) : null"/>
+            <if condition="fileRef == null || !fileRef.getExists()">
+                <return error="true" message="Diff file not found"/>
+            </if>
+            <set field="sendResponse" from="ec.web.sendResourceResponse(fileRef.getLocation())"/>
+            <return/>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <pre-actions>
+        <entity-find entity-name="moqui.basic.Enumeration" list="systemEnumList" cache="false">
+            <econdition field-name="enumTypeId" value="DarpanSystemSource"/>
+            <order-by field-name="sequenceNum,description"/>
+        </entity-find>
+        <entity-find entity-name="darpan.mapping.ReconciliationMapping" list="mappingList" cache="false">
+            <order-by field-name="mappingName"/>
+        </entity-find>
+        <script><![CDATA[
+            def diffDirRef = ec.resource.getLocationReference('runtime://tmp/reconciliation/generic/output')
+            diffFiles = []
+            if (diffDirRef != null && diffDirRef.getExists()) {
+                def entries = diffDirRef.getDirectoryEntries() ?: []
+                entries.findAll { it.isFile() && it.getFileName() != null && (it.getFileName().endsWith('.csv') || it.getFileName().endsWith('.json')) && it.getSize() > 0 }
+                       .sort { a, b -> b.getLastModified() <=> a.getLastModified() }
+                       .each { diffFiles.add([fileName: it.getFileName(), fileLastModified: it.getLastModified(), fileSize: it.getSize(), isJson: it.getFileName()?.toLowerCase()?.endsWith('.json')]) }
+            }
+        ]]></script>
+    </pre-actions>
+
+    <widgets>
+        <container style="container">
+            <container style="page-header">
+                <label text="File Reconciliation" type="h2"/>
+                <label text="Upload two files and select the system source for each. Configuration is pulled from the mapping."
+                        type="p" style="text-muted"/>
+            </container>
+
+            <form-single name="GenericReconciliationForm" transition="runGenericReconciliation">
+                <field name="file1">
+                    <default-field title="File 1"><file size="40" accept=".csv,.json,text/csv,application/json"/></default-field>
+                </field>
+                <field name="file1SystemEnumId">
+                    <default-field title="System 1">
+                        <drop-down>
+                            <option key="" text="Select system"/>
+                            <list-options list="systemEnumList" key="${enumId}" text="${description ?: enumId}"/>
+                        </drop-down>
+                    </default-field>
+                </field>
+
+                <field name="file2">
+                    <default-field title="File 2"><file size="40" accept=".csv,.json,text/csv,application/json"/></default-field>
+                </field>
+                <field name="file2SystemEnumId">
+                    <default-field title="System 2">
+                        <drop-down>
+                            <option key="" text="Select system"/>
+                            <list-options list="systemEnumList" key="${enumId}" text="${description ?: enumId}"/>
+                        </drop-down>
+                    </default-field>
+                </field>
+
+                <field name="reconciliationMappingId">
+                    <default-field title="Mapping">
+                        <drop-down>
+                            <option key="" text="Select mapping"/>
+                            <list-options list="mappingList" key="${reconciliationMappingId}"
+                                    text="${(mappingName ?: reconciliationMappingId) + (description ? ' - ' + description : '')}"/>
+                        </drop-down>
+                    </default-field>
+                </field>
+
+                <field name="submitButton"><default-field title="Reconcile"><submit/></default-field></field>
+
+                <field-layout>
+                    <field-row><field-ref name="file1"/><field-ref name="file1SystemEnumId"/></field-row>
+                    <field-row><field-ref name="file2"/><field-ref name="file2SystemEnumId"/></field-row>
+                    <field-row-big><field-ref name="reconciliationMappingId"/></field-row-big>
+                    <field-row-big><field-ref name="submitButton"/></field-row-big>
+                </field-layout>
+            </form-single>
+
+            <section name="NoMappingsNotice" condition="!mappingList">
+                <widgets>
+                    <label text="No mappings configured yet. Create a mapping in the Mapping Builder first." type="p" style="text-warning"/>
+                </widgets>
+            </section>
+
+            <container type="hr"/>
+
+            <label text="Generated Reconciliation Files" type="h4"/>
+            <link url="downloadDiff" text="Download Latest (${latestFile})" condition="latestFile"
+                    link-type="anchor-button" target-window="_blank" btn-type="success">
+                <parameter name="filename" from="latestFile"/>
+            </link>
+            <link url="viewDiff" text="View Latest"
+                    condition="latestFile &amp;&amp; latestFile.toLowerCase().endsWith('.json')"
+                    link-type="anchor-button" btn-type="info">
+                <parameter name="viewFile" from="latestFile"/>
+            </link>
+
+            <section name="DiffFilesSection" condition="diffFiles">
+                <widgets>
+                    <form-list name="DiffFiles" list="diffFiles" skip-form="true" paginate="false"
+                            style="table table-striped table-condensed">
+                        <field name="fileName">
+                            <header-field title="File"/>
+                            <default-field><display/></default-field>
+                        </field>
+                        <field name="fileLastModifiedDisplay"
+                                from="fileLastModified ? ec.l10n.format(new java.sql.Timestamp(fileLastModified), null) : ''">
+                            <header-field title="Last Modified"/>
+                            <default-field><display/></default-field>
+                        </field>
+                        <field name="fileSizeKb"
+                                from="(fileSize ?: 0) >= 1048576 ? (ec.l10n.format((fileSize ?: 0) / 1048576, '#,##0.##') + ' Mb') : (ec.l10n.format((fileSize ?: 0) / 1024, '#,##0.##') + ' Kb')">
+                            <header-field title="Size"/>
+                            <default-field><display/></default-field>
+                        </field>
+                        <field name="downloadLink">
+                            <header-field title=""/>
+                            <default-field>
+                                <link url="downloadDiff" text="Download" link-type="anchor-button" target-window="_blank"
+                                        btn-type="default" style="btn-xs" condition="fileName">
+                                    <parameter name="filename" from="fileName"/>
+                                </link>
+                                <link url="viewDiff" text="View" link-type="anchor-button"
+                                        btn-type="info" style="btn-xs"
+                                        condition="fileName &amp;&amp; fileName.toLowerCase().endsWith('.json')">
+                                    <parameter name="viewFile" from="fileName"/>
+                                </link>
+                            </default-field>
+                        </field>
+                    </form-list>
+                </widgets>
+            </section>
+
+            <section name="NoDiffFilesSection" condition="!diffFiles">
+                <widgets>
+                    <label text="No reconciliation outputs generated yet." type="p" style="text-muted"/>
+                </widgets>
+            </section>
+
+        </container>
+    </widgets>
+</screen>

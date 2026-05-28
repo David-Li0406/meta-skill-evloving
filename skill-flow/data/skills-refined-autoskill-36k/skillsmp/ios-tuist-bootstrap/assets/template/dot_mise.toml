@@ -1,0 +1,21 @@
+[tools]
+swiftlint = "0.62.2"
+tuist = { version = "4.118.1", os = ["macos"] }
+periphery = "3.3.0"
+pre-commit = "4.5.1"
+
+[tasks.pre-commit-install]
+description = "Install git hooks via pre-commit"
+run = "pre-commit install"
+
+[tasks.pre-commit-run]
+description = "Run pre-commit against all files"
+run = "pre-commit run --all-files"
+
+[tasks.bump-tools]
+description = "Bump all tool versions to the latest"
+run = "mise upgrade --bump && mise exec pre-commit -- pre-commit autoupdate"
+
+[tasks.find-unused-code]
+description = "Run periphery to find unused code"
+run = "Script/find-unused-code.sh \"$@\""

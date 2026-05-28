@@ -1,0 +1,82 @@
+import { id, timestamp, timestamps, ulid } from "@database/types";
+import {
+  boolean,
+  index,
+  jsonb,
+  pgEnum,
+  pgTable,
+  real,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-zod";
+import * as z from "zod";
+import { workspaceID } from "./workspaces.sql";
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+export const {{entityName}}StatusPgEnum = pgEnum("{{entity_name}}_status", [
+  "active",
+  "paused",
+  "archived",
+]);
+export const {{EntityName}}Status = z.enum({{entityName}}StatusPgEnum.enumValues);
+export type {{EntityName}}Status = z.infer<typeof {{EntityName}}Status>;
+
+// =============================================================================
+// JSONB Types (for complex nested data)
+// =============================================================================
+
+export const {{EntityName}}Metadata = z.object({
+  // TODO: Define metadata fields
+});
+export type {{EntityName}}Metadata = z.infer<typeof {{EntityName}}Metadata>;
+
+// =============================================================================
+// Tables
+// =============================================================================
+
+export const {{entities}}Table = pgTable(
+  "{{entities}}",
+  {
+    ...id,
+    ...workspaceID,
+    ...timestamps,
+
+    // Required fields
+    name: text().notNull(),
+    status: {{entityName}}StatusPgEnum().notNull().default("active"),
+
+    // Optional fields
+    description: text(),
+
+    // JSONB fields
+    metadata: jsonb().$type<{{EntityName}}Metadata>(),
+
+    // Timestamp fields
+    // lastProcessedAt: timestamp(),
+  },
+  (t) => [
+    // Unique constraints
+    uniqueIndex("{{entities}}_workspace_name").on(t.workspaceId, t.name),
+    // Query indexes
+    index("{{entities}}_workspace_status").on(t.workspaceId, t.status),
+  ]
+);
+
+// =============================================================================
+// Type Exports
+// =============================================================================
+
+export type {{EntityName}} = typeof {{entities}}Table.$inferSelect;
+export type {{EntityName}}Insert = typeof {{entities}}Table.$inferInsert;
+
+export const {{EntityName}}InsertSchema = createInsertSchema({{entities}}Table);
+export const {{EntityName}}SelectSchema = createSelectSchema({{entities}}Table);
+export const {{EntityName}}UpdateSchema = createUpdateSchema({{entities}}Table);

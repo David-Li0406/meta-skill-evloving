@@ -1,0 +1,281 @@
+// Package robot provides machine-readable output for AI agents.
+// schema.go provides JSON Schema generation for robot command outputs.
+package robot
+
+import (
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
+)
+
+// SchemaCommand is the supported schema command types.
+var SchemaCommand = map[string]interface{}{
+	"status":    StatusOutput{},
+	"send":      SendOutput{},
+	"spawn":     SpawnOutput{},
+	"interrupt": InterruptOutput{},
+	"tail":      TailOutput{},
+	"ack":       AckOutput{},
+	"snapshot":  SnapshotOutput{},
+}
+
+// JSONSchema represents a JSON Schema document.
+type JSONSchema struct {
+	Schema      string                 `json:"$schema,omitempty"`
+	Title       string                 `json:"title,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	Type        string                 `json:"type,omitempty"`
+	Required    []string               `json:"required,omitempty"`
+	Properties  map[string]*JSONSchema `json:"properties,omitempty"`
+	Items       *JSONSchema            `json:"items,omitempty"`
+	Definitions map[string]*JSONSchema `json:"definitions,omitempty"`
+	Ref         string                 `json:"$ref,omitempty"`
+	Format      string                 `json:"format,omitempty"`
+	Enum        []interface{}          `json:"enum,omitempty"`
+	Default     interface{}            `json:"default,omitempty"`
+	// For additional type info
+	AdditionalProperties *JSONSchema `json:"additionalProperties,omitempty"`
+}
+
+// SchemaOutput is the structured output for --robot-schema.
+type SchemaOutput struct {
+	RobotResponse
+	SchemaType string        `json:"schema_type"`
+	Schema     *JSONSchema   `json:"schema,omitempty"`
+	Schemas    []*JSONSchema `json:"schemas,omitempty"` // For --robot-schema=all
+}
+
+// PrintSchema generates and outputs JSON Schema for the specified type.
+func PrintSchema(schemaType string) error {
+	output := SchemaOutput{
+		RobotResponse: NewRobotResponse(true),
+		SchemaType:    schemaType,
+	}
+
+	if schemaType == "all" {
+		// Generate all schemas
+		schemas := make([]*JSONSchema, 0, len(SchemaCommand))
+		for name, typ := range SchemaCommand {
+			schema := generateSchema(typ, name)
+			schemas = append(schemas, schema)
+		}
+		output.Schemas = schemas
+	} else {
+		// Generate single schema
+		typ, ok := SchemaCommand[schemaType]
+		if !ok {
+			output.RobotResponse = NewErrorResponse(
+				fmt.Errorf("unknown schema type: %s", schemaType),
+				ErrCodeInvalidFlag,
+				fmt.Sprintf("Available types: %s, all", strings.Join(getSchemaTypes(), ", ")),
+			)
+			return encodeJSON(output)
+		}
+		output.Schema = generateSchema(typ, schemaType)
+	}
+
+	return encodeJSON(output)
+}
+
+// getSchemaTypes returns available schema type names.
+func getSchemaTypes() []string {
+	types := make([]string, 0, len(SchemaCommand))
+	for name := range SchemaCommand {
+		types = append(types, name)
+	}
+	return types
+}
+
+// generateSchema creates a JSON Schema from a Go type.
+func generateSchema(v interface{}, name string) *JSONSchema {
+	schema := &JSONSchema{
+		Schema:      "http://json-schema.org/draft-07/schema#",
+		Title:       fmt.Sprintf("NTM %s Output", capitalize(name)),
+		Type:        "object",
+		Properties:  make(map[string]*JSONSchema),
+		Definitions: make(map[string]*JSONSchema),
+	}
+
+	t := reflect.TypeOf(v)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+
+	var required []string
+	processStruct(t, schema.Properties, &required, schema.Definitions)
+	schema.Required = required
+
+	return schema
+}
+
+// processStruct extracts schema properties from a struct type.
+func processStruct(t reflect.Type, props map[string]*JSONSchema, required *[]string, defs map[string]*JSONSchema) {
+	if t.Kind() != reflect.Struct {
+		return
+	}
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+
+		// Skip unexported fields
+		if !field.IsExported() {
+			continue
+		}
+
+		// Handle embedded structs (like RobotResponse)
+		if field.Anonymous {
+			processStruct(field.Type, props, required, defs)
+			continue
+		}
+
+		jsonTag := field.Tag.Get("json")
+		if jsonTag == "-" {
+			continue
+		}
+
+		fieldName, omitempty := parseJSONTag(jsonTag)
+		if fieldName == "" {
+			fieldName = field.Name
+		}
+
+		prop := typeToSchema(field.Type, defs)
+
+		// Add description from field name if not set
+		if prop.Description == "" {
+			prop.Description = generateDescription(field.Name)
+		}
+
+		props[fieldName] = prop
+
+		// If not omitempty, it's required
+		if !omitempty {
+			*required = append(*required, fieldName)
+		}
+	}
+}
+
+// parseJSONTag parses a json struct tag.
+func parseJSONTag(tag string) (name string, omitempty bool) {
+	if tag == "" {
+		return "", false
+	}
+	parts := strings.Split(tag, ",")
+	name = parts[0]
+	for _, part := range parts[1:] {
+		if part == "omitempty" {
+			omitempty = true
+		}
+	}
+	return name, omitempty
+}
+
+// typeToSchema converts a Go type to a JSON Schema.
+func typeToSchema(t reflect.Type, defs map[string]*JSONSchema) *JSONSchema {
+	// Handle pointers
+	if t.Kind() == reflect.Ptr {
+		schema := typeToSchema(t.Elem(), defs)
+		// Pointer types can be null
+		return schema
+	}
+
+	switch t.Kind() {
+	case reflect.Bool:
+		return &JSONSchema{Type: "boolean"}
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return &JSONSchema{Type: "integer"}
+
+	case reflect.Float32, reflect.Float64:
+		return &JSONSchema{Type: "number"}
+
+	case reflect.String:
+		return &JSONSchema{Type: "string"}
+
+	case reflect.Slice:
+		return &JSONSchema{
+			Type:  "array",
+			Items: typeToSchema(t.Elem(), defs),
+		}
+
+	case reflect.Map:
+		return &JSONSchema{
+			Type:                 "object",
+			AdditionalProperties: typeToSchema(t.Elem(), defs),
+		}
+
+	case reflect.Struct:
+		// Special handling for time.Time
+		if t == reflect.TypeOf(time.Time{}) {
+			return &JSONSchema{
+				Type:        "string",
+				Format:      "date-time",
+				Description: "RFC3339 timestamp",
+			}
+		}
+
+		// For other structs, create a reference
+		typeName := t.Name()
+		if typeName == "" {
+			// Anonymous struct, inline it
+			schema := &JSONSchema{
+				Type:       "object",
+				Properties: make(map[string]*JSONSchema),
+			}
+			var required []string
+			processStruct(t, schema.Properties, &required, defs)
+			schema.Required = required
+			return schema
+		}
+
+		// Add to definitions if not already there
+		if _, exists := defs[typeName]; !exists {
+			schema := &JSONSchema{
+				Type:       "object",
+				Properties: make(map[string]*JSONSchema),
+			}
+			var required []string
+			processStruct(t, schema.Properties, &required, defs)
+			schema.Required = required
+			defs[typeName] = schema
+		}
+
+		return &JSONSchema{
+			Ref: fmt.Sprintf("#/definitions/%s", typeName),
+		}
+
+	case reflect.Interface:
+		// Interface{} means any type
+		return &JSONSchema{}
+
+	default:
+		return &JSONSchema{Type: "string"}
+	}
+}
+
+// generateDescription creates a human-readable description from a field name.
+func generateDescription(name string) string {
+	// Convert CamelCase to words
+	var words []string
+	var current strings.Builder
+
+	for i, r := range name {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			words = append(words, current.String())
+			current.Reset()
+		}
+		current.WriteRune(r)
+	}
+	if current.Len() > 0 {
+		words = append(words, current.String())
+	}
+
+	// Join and lowercase
+	desc := strings.Join(words, " ")
+	if len(desc) > 0 {
+		desc = strings.ToUpper(desc[:1]) + strings.ToLower(desc[1:])
+	}
+
+	return desc
+}

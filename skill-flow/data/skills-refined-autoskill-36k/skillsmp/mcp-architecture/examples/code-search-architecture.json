@@ -1,0 +1,200 @@
+{
+  "mcp_name": "code-search",
+  "version": "1.0.0",
+  "description": "Lightning-fast semantic code search and analysis",
+  "pattern": "Hub-and-Spoke + Discovery-Detail",
+
+  "metadata": {
+    "tool_count": 8,
+    "progressive_discovery": true,
+    "has_info_tool": true,
+    "token_systems": ["result_id", "symbol_id"],
+    "max_response_tokens": 2000
+  },
+
+  "tool_groups": [
+    {
+      "name": "discovery",
+      "performance": "fast",
+      "avg_tokens": 50,
+      "tools": [
+        {
+          "name": "info",
+          "description": "Enumerate available tools and capabilities",
+          "generates": [],
+          "consumes": [],
+          "example_output_format": "sparse_table"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "performance": "fast",
+      "avg_tokens": 100,
+      "tools": [
+        {
+          "name": "search",
+          "description": "Search code by pattern",
+          "generates": ["result_id"],
+          "consumes": [],
+          "input_schema": {
+            "pattern": "string",
+            "filter": "optional_string"
+          },
+          "output_schema": {
+            "results": [
+              {
+                "id": "result_id",
+                "name": "symbol_name",
+                "preview": "code_snippet",
+                "confidence": "0.0-1.0"
+              }
+            ],
+            "has_more": "boolean",
+            "total": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup",
+      "performance": "medium",
+      "avg_tokens": 200,
+      "tools": [
+        {
+          "name": "get_definition",
+          "description": "Get full symbol definition",
+          "generates": [],
+          "consumes": ["result_id", "symbol_id"],
+          "input_schema": {
+            "id": "result_id or symbol_id"
+          },
+          "output_schema": {
+            "symbol_id": "string",
+            "name": "string",
+            "type": "string",
+            "location": {"file": "string", "line": "integer"},
+            "signature": "string",
+            "documentation": "string",
+            "source_code": "string"
+          }
+        },
+        {
+          "name": "find_references",
+          "description": "Find all symbol usages",
+          "generates": ["reference_id"],
+          "consumes": ["symbol_id"],
+          "input_schema": {
+            "symbol_id": "string"
+          },
+          "output_schema": {
+            "references": [
+              {
+                "id": "reference_id",
+                "file": "string",
+                "line": "integer",
+                "context": "code_snippet"
+              }
+            ],
+            "total": "integer"
+          }
+        }
+      ]
+    },
+    {
+      "name": "enrichment",
+      "performance": "medium",
+      "avg_tokens": 300,
+      "tools": [
+        {
+          "name": "get_context",
+          "description": "Get comprehensive context for symbol",
+          "generates": [],
+          "consumes": ["symbol_id"],
+          "input_schema": {
+            "symbol_id": "string",
+            "include_callers": "boolean",
+            "include_callees": "boolean"
+          },
+          "output_schema": {
+            "symbol": "full_symbol_info",
+            "callers": "optional_array",
+            "callees": "optional_array",
+            "related_symbols": "array"
+          }
+        }
+      ]
+    },
+    {
+      "name": "analysis",
+      "performance": "slow",
+      "avg_tokens": 500,
+      "tools": [
+        {
+          "name": "trace_callers",
+          "description": "Trace full call hierarchy upward",
+          "generates": [],
+          "consumes": ["symbol_id"],
+          "note": "Expensive operation, use sparingly"
+        },
+        {
+          "name": "analyze_dependencies",
+          "description": "Analyze code dependencies",
+          "generates": [],
+          "consumes": ["symbol_id"]
+        }
+      ]
+    }
+  ],
+
+  "workflows": [
+    {
+      "name": "Find Implementation",
+      "steps": [
+        "search(pattern) → result_ids",
+        "get_definition(result_id) → full details"
+      ]
+    },
+    {
+      "name": "Understand Usage",
+      "steps": [
+        "search(class_name) → result_id",
+        "find_references(symbol_id) → references",
+        "get_context(reference_id) → full context"
+      ]
+    }
+  ],
+
+  "progressive_discovery_structure": {
+    "layer_1_discovery": {
+      "tool": "info",
+      "shows": "Tool categories and counts"
+    },
+    "layer_2_overview": {
+      "tools": ["search"],
+      "shows": "Initial results with IDs"
+    },
+    "layer_3_detail": {
+      "tools": ["get_definition", "find_references"],
+      "shows": "Full information for specific items"
+    },
+    "layer_4_analysis": {
+      "tools": ["trace_callers", "analyze_dependencies"],
+      "shows": "Deep analysis and relationships"
+    }
+  },
+
+  "token_efficiency_strategies": [
+    "Use IDs for cross-tool references instead of repeating data",
+    "Progressive detail: summary in search, full in get_definition",
+    "Sparse tables in info tool output",
+    "Confidence-based detail levels in search results"
+  ],
+
+  "architecture_notes": {
+    "why_hub_spoke": "Central search tool generates IDs consumed by detail tools",
+    "why_id_system": "Avoids repeating large code blocks, saves 80% tokens",
+    "why_layered": "Users start broad (search), then narrow (get details)",
+    "scaling": "Can add more spoke tools without changing hub"
+  }
+}

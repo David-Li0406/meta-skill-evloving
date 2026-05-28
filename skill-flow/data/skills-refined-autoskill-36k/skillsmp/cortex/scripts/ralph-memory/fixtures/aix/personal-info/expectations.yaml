@@ -1,0 +1,52 @@
+# Fixture: Wire fraud documentation with PII bundle
+description: "Legal document with extensive PII - DOB, address, phone, email, bank info"
+
+entities:
+  must_have:
+    - name_contains: "Prendergast"
+      entity_type: Person
+      
+    - name_contains: "Adams"
+      entity_type: Person
+
+  optional:
+    # Companies mentioned
+    - name_contains: "Capital One"
+      entity_type: Company
+    - name_contains: "JPMorgan"
+      entity_type: Company
+    # Locations
+    - name_contains: "Bayport"
+      entity_type: Location
+    # Other people
+    - name_contains: "Lauren Taylor"
+      entity_type: Person
+    - name_contains: "Casey"
+      entity_type: Person
+
+relationships:
+  optional:
+    # Prendergast born on date (format may vary: 1972-05-22, 05/22/1972, etc.)
+    - source_entity_name_contains: "Prendergast"
+      relation_type: BORN_ON
+    # Prendergast lives at address
+    - source_entity_name_contains: "Prendergast"
+      relation_type: LIVES_IN
+    # Has email
+    - relation_type: HAS_EMAIL
+
+aliases:
+  optional:
+    # Prendergast's email should be promoted
+    - entity_name_contains: "Prendergast"
+      alias_like: "%prendergastdev@gmail.com%"
+      alias_type: email
+    # Prendergast's phone
+    - entity_name_contains: "Prendergast"
+      alias_like: "%516-617-2280%"
+      alias_type: phone
+
+episode_entity_mentions:
+  must_have:
+    - entity_name_contains: "Prendergast"
+    - entity_name_contains: "Adams"

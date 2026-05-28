@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototype</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: monospace; padding: 20px; max-width: 600px; margin: 0 auto; }
+
+        .state { background: #f0f0f0; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
+        .state span { margin-right: 20px; font-weight: bold; }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .actions button {
+            padding: 12px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 2px solid #333;
+            background: white;
+            border-radius: 4px;
+        }
+        .actions button:hover { background: #e0e0e0; }
+        .actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .log {
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        .log p { margin: 2px 0; }
+
+        .reset { margin-top: 15px; }
+        .reset button { padding: 10px 30px; font-size: 14px; cursor: pointer; }
+
+        .game-over { color: #f00; font-weight: bold; font-size: 18px; margin: 10px 0; }
+        .victory { color: #0a0; font-weight: bold; font-size: 18px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="state" id="state">
+        <span>HP: <span id="hp">10</span></span>
+        <span>Actions: <span id="actions">3</span></span>
+        <!-- TODO: Add your state variables -->
+    </div>
+
+    <div id="message"></div>
+
+    <div class="actions" id="action-buttons">
+        <!-- TODO: Define your actions -->
+        <button onclick="doAction('safe')">Safe (+1 HP)</button>
+        <button onclick="doAction('risky')">Risky (50% +5/-3 HP)</button>
+        <button onclick="doAction('prepare')">Prepare (Next +2)</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <div class="reset">
+        <button onclick="reset()">Reset</button>
+    </div>
+
+    <script>
+        // === GAME STATE ===
+        let state = {
+            hp: 10,
+            actions: 3,
+            prepared: false
+            // TODO: Add your state variables
+        };
+
+        // === INITIAL STATE (for reset) ===
+        const INITIAL_STATE = {
+            hp: 10,
+            actions: 3,
+            prepared: false
+        };
+
+        // === ACTIONS ===
+        function doAction(type) {
+            if (state.actions <= 0) return;
+
+            let result = '';
+            const bonus = state.prepared ? 2 : 0;
+            state.prepared = false;
+
+            switch(type) {
+                case 'safe':
+                    state.hp += 1 + bonus;
+                    result = `Safe: HP +${1 + bonus}`;
+                    break;
+
+                case 'risky':
+                    if (Math.random() > 0.5) {
+                        state.hp += 5 + bonus;
+                        result = `Risky: SUCCESS! HP +${5 + bonus}`;
+                    } else {
+                        state.hp -= 3;
+                        result = `Risky: FAILED! HP -3`;
+                    }
+                    break;
+
+                case 'prepare':
+                    state.prepared = true;
+                    result = `Prepare: Next action +2 bonus`;
+                    break;
+
+                // TODO: Add your actions
+            }
+
+            state.actions--;
+            log(result);
+            updateUI();
+            checkEnd();
+        }
+
+        // === UI UPDATE ===
+        function updateUI() {
+            document.getElementById('hp').textContent = state.hp;
+            document.getElementById('actions').textContent = state.actions;
+
+            // Disable buttons if no actions left
+            const buttons = document.querySelectorAll('.actions button');
+            buttons.forEach(btn => btn.disabled = state.actions <= 0);
+        }
+
+        // === LOG ===
+        function log(msg) {
+            const logEl = document.getElementById('log');
+            const p = document.createElement('p');
+            p.textContent = `> ${msg}`;
+            logEl.appendChild(p);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // === END CHECK ===
+        function checkEnd() {
+            const msgEl = document.getElementById('message');
+
+            if (state.hp <= 0) {
+                msgEl.innerHTML = '<div class="game-over">GAME OVER</div>';
+                disableAllButtons();
+            } else if (state.actions <= 0) {
+                if (state.hp >= 15) {
+                    msgEl.innerHTML = '<div class="victory">VICTORY!</div>';
+                } else {
+                    msgEl.innerHTML = '<div class="game-over">END - HP: ' + state.hp + '</div>';
+                }
+            }
+            // TODO: Add your win/lose conditions
+        }
+
+        function disableAllButtons() {
+            const buttons = document.querySelectorAll('.actions button');
+            buttons.forEach(btn => btn.disabled = true);
+        }
+
+        // === RESET ===
+        function reset() {
+            state = { ...INITIAL_STATE };
+            document.getElementById('log').innerHTML = '';
+            document.getElementById('message').innerHTML = '';
+            updateUI();
+            log('=== GAME START ===');
+        }
+
+        // === INIT ===
+        reset();
+    </script>
+</body>
+</html>

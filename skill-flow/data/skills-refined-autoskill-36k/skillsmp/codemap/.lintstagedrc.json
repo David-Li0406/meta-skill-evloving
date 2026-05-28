@@ -1,0 +1,9 @@
+{
+  "*.{ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.rs": [
+    "cd client/src-tauri && rustfmt --",
+    "cd client/src-tauri && cargo clippy -- -D warnings -A clippy::uninlined_format_args"
+  ],
+  "package.json": ["prettier --write"],
+  "*.md": ["prettier --write"]
+}

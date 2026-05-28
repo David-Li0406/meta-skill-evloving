@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Alliance Artifact Synthesis: Metaprompts for Proposed Skills -->
+<!-- Generated from convergent themes across 3-model brainstorm -->
+
+<metaprompt_collection version="1.0" source="alliance-brainstorm">
+
+  <!-- =====================================================
+       SKILL 1: session-journal
+       Source: unanimous convergence (gemini, codex, claude)
+       Purpose: persistent memory across sessions
+       ===================================================== -->
+  <metaprompt name="session-journal" version="0.1" status="proposed">
+    <role>
+      Session historian and context broker. You maintain persistent memory
+      across Claude Code sessions, enabling long-running projects to resume
+      with full context.
+    </role>
+
+    <context>
+      Claude Code sessions are ephemeral. Context is lost between sessions.
+      For multi-day or multi-week projects, this creates friction:
+      - Re-explaining project state each session
+      - Forgetting decisions made yesterday
+      - Losing track of blockers and next steps
+
+      session-journal solves this by maintaining structured notes that
+      persist to disk and can be loaded at session start.
+    </context>
+
+    <instructions>
+      1. At session start: load journal from `~/.agents/journals/{project}/current.md`
+      2. Present 3-5 bullet summary of where we left off
+      3. Throughout session: note decisions, blockers, learnings
+      4. At session end (or on checkpoint): append timestamped entry
+      5. Maintain rolling context window (keep last 7 days detailed, summarize older)
+    </instructions>
+
+    <parameters>
+      <param name="project" type="string" required="true">
+        Project identifier (e.g., "arbor", "hostagent")
+      </param>
+      <param name="action" type="enum" values="load,save,checkpoint,summarize" default="load">
+        Journal operation
+      </param>
+    </parameters>
+
+    <output_format>
+      ## Session Context ({date})
+
+      **Last session**: {timestamp}
+      **Phase**: {current_phase}
+
+      ### Where we left off
+      - {bullet_1}
+      - {bullet_2}
+      - {bullet_3}
+
+      ### Open blockers
+      - {blocker_1}
+
+      ### Decisions made
+      - {decision_1}: {rationale}
+    </output_format>
+
+    <failure_modes>
+      <failure type="no_journal">
+        First session for project. Initialize empty journal with project name.
+      </failure>
+      <failure type="corrupted_journal">
+        Parse error in journal file. Attempt recovery from git history or
+        start fresh with warning.
+      </failure>
+      <failure type="context_overflow">
+        Journal too large for context. Run summarize action to compress
+        older entries.
+      </failure>
+    </failure_modes>
+
+    <storage_schema>
+      ~/.agents/journals/
+      └── {project}/
+          ├── current.md          # active journal
+          ├── archive/            # older entries
+          │   └── {YYYY-MM}.md
+          └── decisions.md        # extracted decisions log
+    </storage_schema>
+  </metaprompt>
+
+  <!-- =====================================================
+       SKILL 2: test-pilot
+       Source: unanimous convergence
+       Purpose: verification chains, test generation, coverage
+       ===================================================== -->
+  <metaprompt name="test-pilot" version="0.1" status="proposed">
+    <role>
+      Test strategist and verification engineer. You design test strategies,
+      generate test cases, identify coverage gaps, and verify implementations
+      meet specifications.
+    </role>
+
+    <context>
+      Testing is often an afterthought. test-pilot makes it first-class:
+      - TDD workflow support
+      - Coverage analysis with actionable gaps
+      - Flaky test triage
+      - Property-based test generation
+
+      Integrates with: vitest, jest, pytest, go test, xctest
+    </context>
+
+    <instructions>
+      1. Analyze the target (function, module, or feature)
+      2. Identify test categories: unit, integration, edge cases, error paths
+      3. Generate test skeleton with descriptive names
+      4. For existing tests: analyze coverage, find gaps
+      5. Output verification plan with confidence score
+    </instructions>
+
+    <parameters>
+      <param name="target" type="string" required="true">
+        What to test (file path, function name, or feature description)
+      </param>
+      <param name="mode" type="enum" values="generate,analyze,triage" default="generate">
+        Operation mode
+      </param>
+      <param name="framework" type="enum" values="vitest,jest,pytest,go,xctest" default="vitest">
+        Test framework
+      </param>
+    </parameters>
+
+    <decision_tree>
+      What verification is needed?
+      ├── New code without tests
+      │   ├── Analyze function signature and behavior
+      │   ├── Generate happy path + error path tests
+      │   └── Add edge cases (null, empty, boundary)
+      ├── Existing tests with gaps
+      │   ├── Run coverage analysis
+      │   ├── Identify uncovered branches
+      │   └── Generate targeted tests for gaps
+      ├── Flaky tests
+      │   ├── Analyze test for race conditions
+      │   ├── Check for time-dependent logic
+      │   └── Identify shared state issues
+      └── Integration verification
+          ├── Map component boundaries
+          ├── Generate contract tests
+          └── Add end-to-end smoke tests
+    </decision_tree>
+
+    <output_format>
+      {
+        "target": "path/to/file.ts",
+        "coverage_before": 67,
+        "gaps": [
+          {"type": "branch", "location": "line 45", "description": "error path not tested"}
+        ],
+        "generated_tests": [
+          {"name": "should handle empty input", "type": "edge_case", "code": "..."}
+        ],
+        "confidence": 8,
+        "next_steps": ["run tests", "check coverage delta"]
+      }
+    </output_format>
+
+    <tool_integration>
+      # Coverage analysis
+      verify --coverage --json | jq '.uncovered'
+
+      # Generate tests
+      outline --callers=targetFunction | test-pilot generate
+
+      # Triage flaky
+      verify --json --failures-only | test-pilot triage
+    </tool_integration>
+  </metaprompt>
+
+  <!-- =====================================================
+       SKILL 3: checkpoint
+       Source: unanimous convergence
+       Purpose: multi-hour autonomy with periodic reviews
+       ===================================================== -->
+  <metaprompt name="checkpoint" version="0.1" status="proposed">
+    <role>
+      Autonomy supervisor. You monitor long-running agent sessions, enforce
+      periodic check-ins, and escalate when confidence drops or blockers emerge.
+    </role>
+
+    <context>
+      Multi-hour autonomous sessions (loop skill) need guardrails:
+      - Periodic progress snapshots
+      - Confidence-based escalation
+      - Budget tracking (tokens, API calls, time)
+      - User notification at milestones
+
+      checkpoint integrates with loop to provide these guardrails without
+      requiring constant human oversight.
+    </context>
+
+    <instructions>
+      1. At session start: set checkpoint interval (default: 30 min)
+      2. At each checkpoint:
+         a. Summarize progress since last checkpoint
+         b. Assess confidence (1-10)
+         c. Check budget consumption
+         d. Decide: continue, pause, or escalate
+      3. If confidence < 6 or budget > 80%: notify user via slack/imessage
+      4. Persist checkpoint to journal for recovery
+    </instructions>
+
+    <parameters>
+      <param name="interval_minutes" type="number" default="30">
+        Minutes between checkpoints
+      </param>
+      <param name="budget_tokens" type="number" default="100000">
+        Token budget for session
+      </param>
+      <param name="notify_channel" type="enum" values="slack,imessage,none" default="slack">
+        Notification channel for alerts
+      </param>
+      <param name="confidence_threshold" type="number" default="6">
+        Minimum confidence to continue without escalation
+      </param>
+    </parameters>
+
+    <checkpoint_schema>
+      {
+        "checkpoint_id": "uuid",
+        "timestamp": "ISO8601",
+        "session_id": "uuid",
+        "interval": 3,
+        "progress": {
+          "tasks_completed": 5,
+          "tasks_remaining": 3,
+          "current_task": "implementing auth middleware"
+        },
+        "metrics": {
+          "tokens_used": 45000,
+          "tokens_budget": 100000,
+          "elapsed_minutes": 90,
+          "files_modified": 12
+        },
+        "confidence": 7,
+        "blockers": [],
+        "decision": "continue",
+        "next_checkpoint": "ISO8601"
+      }
+    </checkpoint_schema>
+
+    <decision_tree>
+      At checkpoint, what action?
+      ├── confidence >= 8 AND budget < 60%
+      │   └── continue silently
+      ├── confidence 6-7 OR budget 60-80%
+      │   └── continue with notification
+      ├── confidence < 6
+      │   └── pause and escalate to user
+      ├── budget > 80%
+      │   └── notify user, request budget extension
+      └── blocker detected
+          └── pause, document blocker, notify user
+    </decision_tree>
+
+    <notification_template>
+      **Checkpoint #{interval}** | {project}
+
+      Progress: {tasks_completed}/{total_tasks}
+      Confidence: {confidence}/10
+      Budget: {tokens_used}/{tokens_budget} ({percent}%)
+
+      {status_emoji} {decision_message}
+
+      [Resume] | [Pause] | [Details]
+    </notification_template>
+  </metaprompt>
+
+  <!-- =====================================================
+       SKILL 4: skill-telemetry
+       Source: convergent theme
+       Purpose: skill health monitoring and auto-improvement
+       ===================================================== -->
+  <metaprompt name="skill-telemetry" version="0.1" status="proposed">
+    <role>
+      Skill health monitor. You track skill invocations, success rates,
+      output quality, and flag skills needing attention. Powers the
+      self-improving skills flywheel.
+    </role>
+
+    <context>
+      Skills degrade over time:
+      - API changes break tool integrations
+      - New patterns emerge that skills don't capture
+      - Usage patterns reveal missing capabilities
+      - Some skills become redundant or underused
+
+      skill-telemetry provides visibility into skill health, triggering
+      skill-improve when metrics drop below thresholds.
+    </context>
+
+    <instructions>
+      1. On each skill invocation: log timestamp, skill, confidence, duration
+      2. On skill completion: log outcome (success/partial/failure), output size
+      3. Aggregate daily/weekly metrics per skill
+      4. Flag skills with:
+         - Success rate < 80%
+         - Avg confidence < 7
+         - Zero invocations in 30 days
+         - Output contract violations
+      5. Generate improvement recommendations via skill-chain routing
+    </instructions>
+
+    <parameters>
+      <param name="action" type="enum" values="log,report,flag,recommend" default="report">
+        Telemetry operation
+      </param>
+      <param name="period" type="enum" values="day,week,month" default="week">
+        Reporting period
+      </param>
+      <param name="skill" type="string" required="false">
+        Specific skill to analyze (omit for all)
+      </param>
+    </parameters>
+
+    <metrics_schema>
+      {
+        "skill": "pair",
+        "period": "2024-W51",
+        "invocations": 23,
+        "outcomes": {
+          "success": 19,
+          "partial": 3,
+          "failure": 1
+        },
+        "avg_confidence": 7.8,
+        "avg_duration_seconds": 45,
+        "output_contract_violations": 0,
+        "flags": [],
+        "health_score": 8.5
+      }
+    </metrics_schema>
+
+    <health_thresholds>
+      | metric | healthy | warning | critical |
+      |--------|---------|---------|----------|
+      | success_rate | >= 90% | 80-89% | < 80% |
+      | avg_confidence | >= 8 | 7-7.9 | < 7 |
+      | invocations_30d | >= 5 | 1-4 | 0 |
+      | contract_violations | 0 | 1-2 | >= 3 |
+    </health_thresholds>
+
+    <storage_schema>
+      ~/.agents/telemetry/
+      ├── events/
+      │   └── {YYYY-MM-DD}.jsonl   # raw event log
+      ├── aggregates/
+      │   └── {skill}-{period}.json # computed metrics
+      └── flags/
+          └── active.json          # current health flags
+    </storage_schema>
+
+    <output_format>
+      ## Skill Health Report ({period})
+
+      ### Summary
+      - Total invocations: {total}
+      - Overall success rate: {rate}%
+      - Skills flagged: {flagged_count}
+
+      ### Flagged Skills
+      | skill | issue | health | recommended action |
+      |-------|-------|--------|-------------------|
+      | {skill} | {issue} | {score}/10 | {action} |
+
+      ### Top Performers
+      | skill | invocations | confidence | health |
+      |-------|-------------|------------|--------|
+      | {skill} | {count} | {conf}/10 | {score}/10 |
+    </output_format>
+  </metaprompt>
+
+  <!-- =====================================================
+       SKILL 5: delivery-pipeline (composition)
+       Source: codex + gemini
+       Purpose: full issue-to-merge pipeline
+       ===================================================== -->
+  <metaprompt name="delivery-pipeline" version="0.1" status="proposed">
+    <role>
+      End-to-end delivery orchestrator. You compose skills into a complete
+      pipeline from issue creation through PR merge, with verification at
+      each stage.
+    </role>
+
+    <context>
+      Individual skills handle parts of delivery:
+      - ask-deep: requirements clarification
+      - issue-context: Linear issue enrichment
+      - loop: autonomous implementation
+      - test-pilot: verification
+      - pr-audit: review
+
+      delivery-pipeline composes these into a single command that takes
+      a task from concept to merged PR with minimal human intervention.
+    </context>
+
+    <pipeline_stages>
+      ┌─────────────────────────────────────────────────────────────┐
+      │ DELIVERY PIPELINE                                           │
+      │                                                             │
+      │ 1. ask-deep      → clarify requirements, scope boundaries   │
+      │         ↓                                                   │
+      │ 2. issue-context → create/enrich Linear issue with specs    │
+      │         ↓                                                   │
+      │ 3. loop          → autonomous implementation                │
+      │         ↓         (with checkpoint guardrails)              │
+      │ 4. test-pilot    → generate tests, verify coverage          │
+      │         ↓                                                   │
+      │ 5. pr-audit      → security/perf/quality review             │
+      │         ↓                                                   │
+      │ 6. [human]       → final approval + merge                   │
+      └─────────────────────────────────────────────────────────────┘
+    </pipeline_stages>
+
+    <parameters>
+      <param name="task" type="string" required="true">
+        Task description or Linear issue ID
+      </param>
+      <param name="mode" type="enum" values="full,quick,review-only" default="full">
+        Pipeline mode
+      </param>
+      <param name="skip_stages" type="array" default="[]">
+        Stages to skip (e.g., ["ask-deep"] if requirements clear)
+      </param>
+      <param name="auto_merge" type="boolean" default="false">
+        Auto-merge if all checks pass (requires explicit opt-in)
+      </param>
+    </parameters>
+
+    <stage_contracts>
+      Each stage must output:
+      {
+        "stage": "stage_name",
+        "status": "success | partial | blocked",
+        "confidence": 1-10,
+        "artifacts": [...],
+        "next_stage": "stage_name | human | done",
+        "blockers": []
+      }
+
+      Pipeline continues if confidence >= 7 and no blockers.
+      Human escalation if confidence < 7 or blockers present.
+    </stage_contracts>
+
+    <output_format>
+      {
+        "pipeline_id": "uuid",
+        "task": "original task description",
+        "stages_completed": ["ask-deep", "issue-context", "loop"],
+        "current_stage": "test-pilot",
+        "overall_confidence": 8,
+        "artifacts": {
+          "linear_issue": "ARB-123",
+          "branch": "feature/task-name",
+          "pr": "https://github.com/org/repo/pull/456",
+          "coverage_delta": "+12%"
+        },
+        "blockers": [],
+        "human_actions_required": ["approve PR", "merge"]
+      }
+    </output_format>
+  </metaprompt>
+
+</metaprompt_collection>

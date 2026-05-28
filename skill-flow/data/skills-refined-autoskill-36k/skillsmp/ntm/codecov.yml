@@ -1,0 +1,87 @@
+# Codecov configuration for NTM
+# https://docs.codecov.com/docs/codecovyml-reference
+
+coverage:
+  precision: 2
+  round: down
+  range: "40...90"
+
+  status:
+    project:
+      default:
+        target: 40%
+        threshold: 2%
+        informational: false
+        only_pulls: false
+
+    patch:
+      default:
+        target: 60%
+        threshold: 5%
+        informational: false
+        only_pulls: true
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+comment:
+  layout: "condensed_header, condensed_files, condensed_footer"
+  behavior: default
+  require_changes: true
+  require_base: false
+  require_head: true
+
+  # Don't comment on PRs with very small coverage changes
+  after_n_builds: 1
+
+ignore:
+  - "**/*_test.go"
+  - "**/testdata/**"
+  - "**/mock_*.go"
+  - "**/mocks/**"
+  - "cmd/**"  # Main entry point typically has minimal logic
+
+flags:
+  unittests:
+    paths:
+      - internal/
+    carryforward: true
+    after_n_builds: 1
+
+# Component coverage tracking
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+        threshold: 2%
+  individual_components:
+    - component_id: cli
+      name: CLI
+      paths:
+        - internal/cli/**
+    - component_id: tmux
+      name: Tmux Integration
+      paths:
+        - internal/tmux/**
+    - component_id: tui
+      name: TUI Components
+      paths:
+        - internal/tui/**
+    - component_id: palette
+      name: Command Palette
+      paths:
+        - internal/palette/**
+    - component_id: config
+      name: Configuration
+      paths:
+        - internal/config/**
+
+# GitHub Checks integration
+github_checks:
+  annotations: true

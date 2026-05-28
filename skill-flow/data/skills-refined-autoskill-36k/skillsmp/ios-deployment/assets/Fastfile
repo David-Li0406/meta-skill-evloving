@@ -1,0 +1,70 @@
+# MagentaLine iOS Fastfile
+# Copy to: ios/fastlane/Fastfile
+
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+    setup_ci if ENV['CI']
+  end
+
+  desc "Sync certificates (development + appstore)"
+  lane :sync_certs do
+    match(type: "development", readonly: is_ci)
+    match(type: "appstore", readonly: is_ci)
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    match(type: "appstore", readonly: true)
+
+    increment_build_number(
+      build_number: latest_testflight_build_number + 1
+    )
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "../build/ios/ipa"
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Deploy to App Store"
+  lane :release do
+    match(type: "appstore", readonly: true)
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store"
+    )
+
+    upload_to_app_store(
+      force: true,
+      submit_for_review: false,
+      automatic_release: false
+    )
+
+    add_git_tag(tag: "ios/v#{get_version_number}/#{get_build_number}")
+    push_git_tags
+  end
+
+  desc "Register new test device"
+  lane :add_device do |options|
+    register_device(
+      name: options[:name],
+      udid: options[:udid]
+    )
+    match(type: "development", force_for_new_devices: true)
+  end
+
+  error do |lane, exception|
+    puts "Error in lane #{lane}: #{exception.message}"
+  end
+end

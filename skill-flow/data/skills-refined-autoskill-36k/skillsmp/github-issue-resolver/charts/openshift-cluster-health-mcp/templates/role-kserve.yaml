@@ -1,0 +1,22 @@
+{{- if and .Values.rbac.create .Values.integrations.kserve.enabled -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "openshift-cluster-health-mcp.fullname" . }}-kserve
+  namespace: {{ .Values.integrations.kserve.namespace }}
+  labels:
+    {{- include "openshift-cluster-health-mcp.labels" . | nindent 4 }}
+rules:
+  # KServe InferenceServices (read-only)
+  - apiGroups: ["serving.kserve.io"]
+    resources:
+      - inferenceservices
+      - inferenceservices/status
+    verbs: ["get", "list", "watch"]
+
+  # ServingRuntimes (for model serving metadata)
+  - apiGroups: ["serving.kserve.io"]
+    resources:
+      - servingruntimes
+    verbs: ["get", "list"]
+{{- end }}

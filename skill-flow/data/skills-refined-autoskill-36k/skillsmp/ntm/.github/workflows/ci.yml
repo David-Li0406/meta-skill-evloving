@@ -1,0 +1,447 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Restrict permissions to minimum required for CI
+permissions:
+  contents: read
+  security-events: write  # For SARIF upload
+
+env:
+  GO_VERSION: "1.25"
+
+jobs:
+  # ============================================================================
+  # LINT - Static analysis and code quality
+  # ============================================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install golangci-lint from source
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+      - name: Run golangci-lint
+        run: golangci-lint run --timeout=5m
+
+      - name: Check go mod tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: Check formatting
+        run: |
+          gofmt -l .
+          test -z "$(gofmt -l .)"
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: OpenAPI drift check
+        run: |
+          bun run gen:openapi
+          # Strip generated_at timestamp before comparing (changes on every run)
+          jq 'del(.generated_at)' docs/parity_matrix.json > /tmp/parity_new.json
+          git show HEAD:docs/parity_matrix.json | jq 'del(.generated_at)' > /tmp/parity_old.json
+          diff /tmp/parity_old.json /tmp/parity_new.json
+          git diff --exit-code docs/openapi.json
+
+      - name: Validate OpenAPI
+        run: bun run lint:openapi
+
+  # ============================================================================
+  # TEST - Unit tests with coverage on multiple platforms
+  # ============================================================================
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        # Note: Windows excluded since ntm requires tmux which is Unix-only
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install tmux (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
+      - name: Install tmux (macOS)
+        if: runner.os == 'macOS'
+        run: brew install tmux
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test with Coverage
+        run: |
+          go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Upload Coverage to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.out
+          flags: unittests
+          name: codecov-ntm
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload Coverage Artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 7
+
+  # ============================================================================
+  # COVERAGE - Enforce coverage thresholds
+  # ============================================================================
+  coverage:
+    name: Coverage Thresholds
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install tmux
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
+      - name: Run tests with coverage
+        run: go test -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Enforce Project Coverage Threshold
+        run: |
+          total=$(go tool cover -func=coverage.out | tail -1 | awk '{print $3}' | tr -d '%')
+          echo "Total coverage: ${total}%"
+          threshold=35
+          echo "Threshold: ${threshold}%"
+          awk -v c="$total" -v t="$threshold" 'BEGIN {
+            if (c < t) {
+              printf("Coverage %.2f%% is below threshold %.2f%%\n", c, t);
+              exit 1
+            } else {
+              printf("Coverage %.2f%% meets threshold %.2f%%\n", c, t);
+            }
+          }'
+
+      - name: Generate HTML Coverage Report
+        run: go tool cover -html=coverage.out -o coverage.html
+
+      - name: Upload HTML Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage.html
+          retention-days: 14
+
+  # ============================================================================
+  # BUILD - Cross-platform build verification
+  # ============================================================================
+  build:
+    name: Build (${{ matrix.goos }}/${{ matrix.goarch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: linux
+            goarch: arm
+            goarm: "7"
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+          - goos: freebsd
+            goarch: amd64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+          CGO_ENABLED: "0"
+        run: |
+          output="ntm-${{ matrix.goos }}-${{ matrix.goarch }}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            output="${output}.exe"
+          fi
+          if [ -n "${{ matrix.goarm }}" ]; then
+            output="ntm-${{ matrix.goos }}-${{ matrix.goarch }}v${{ matrix.goarm }}"
+          fi
+          go build -trimpath -ldflags="-s -w" -o "${output}" ./cmd/ntm
+          ls -la "${output}"
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ntm-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm && format('v{0}', matrix.goarm) || '' }}
+          path: ntm-*
+          retention-days: 7
+
+  # ============================================================================
+  # SECURITY - Vulnerability scanning
+  # ============================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run Govulncheck
+        continue-on-error: true  # Don't fail CI on stdlib vulnerabilities
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: Run Gosec
+        uses: securego/gosec@master
+        with:
+          args: "-no-fail -fmt sarif -out results.sarif ./..."
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('results.sarif') != ''
+        continue-on-error: true  # Don't fail CI if SARIF upload fails (permissions/GHAS not enabled)
+        with:
+          sarif_file: results.sarif
+
+  # ============================================================================
+  # GORELEASER - Verify release configuration
+  # ============================================================================
+  goreleaser-check:
+    name: GoReleaser Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Check GoReleaser config
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: check
+
+      - name: GoReleaser Dry Run
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          # Skip SBOM and signing in dry run (they require external tools)
+          args: release --snapshot --skip=publish,sbom,sign --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================================
+  # DEPENDENCY - Check for dependency issues
+  # ============================================================================
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0
+
+  # ============================================================================
+  # INTEGRATION - Run integration tests (if tmux available)
+  # ============================================================================
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install tmux
+        run: sudo apt-get update && sudo apt-get install -y tmux
+
+      - name: Build ntm
+        run: go build -o ntm ./cmd/ntm
+
+      - name: Verify ntm binary
+        run: |
+          ./ntm version
+          ./ntm --help
+
+      - name: Test shell init output
+        run: |
+          ./ntm init bash | head -20
+          ./ntm init zsh | head -20
+
+  # ============================================================================
+  # UPGRADE-CHECK - Verify upgrade command works against current releases
+  # This catches asset naming drift between upgrade.go and GoReleaser BEFORE release
+  # ============================================================================
+  upgrade-check:
+    name: Upgrade Check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build ntm
+        run: go build -o ntm ./cmd/ntm
+
+      - name: Verify upgrade --check works
+        run: |
+          echo "Testing upgrade --check against latest release..."
+          # Run upgrade --check - it should either:
+          # 1. Find the latest release and show version info, OR
+          # 2. Report "no releases found" for dev/new forks (acceptable)
+          # It should NOT report "no suitable release asset found" (naming mismatch)
+
+          if ./ntm upgrade --check 2>&1 | tee upgrade_output.txt; then
+            echo "Upgrade check succeeded"
+          else
+            # Check if it's a "no releases" error (acceptable for forks/new repos)
+            if grep -qi "no releases found\|development version" upgrade_output.txt; then
+              echo "No releases found (expected for dev builds)"
+              exit 0
+            fi
+            echo "Upgrade check failed"
+            cat upgrade_output.txt
+            exit 1
+          fi
+
+          # Critical check: "no suitable release asset found" means naming mismatch
+          if grep -q "no suitable release asset" upgrade_output.txt; then
+            echo ""
+            echo "========================================================================"
+            echo "  ERROR: Asset naming mismatch detected!"
+            echo ""
+            echo "  upgrade.go cannot find assets from the latest release."
+            echo "  This likely means:"
+            echo "  1. upgrade.go naming logic was changed, OR"
+            echo "  2. .goreleaser.yaml naming template was changed"
+            echo ""
+            echo "  Review: TestUpgradeAssetNamingContract in cli_test.go"
+            echo "========================================================================"
+            echo ""
+            exit 1
+          fi
+
+          echo "Upgrade asset naming contract verified"
+
+  # ============================================================================
+  # SUMMARY - Final status check
+  # ============================================================================
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [lint, test, coverage, build, security, goreleaser-check, integration, upgrade-check]
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.coverage.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ] || \
+             [ "${{ needs.security.result }}" != "success" ] || \
+             [ "${{ needs.goreleaser-check.result }}" != "success" ] || \
+             [ "${{ needs.integration.result }}" != "success" ] || \
+             [ "${{ needs.upgrade-check.result }}" != "success" ]; then
+            echo "One or more jobs failed"
+            exit 1
+          fi
+          echo "All CI checks passed!"

@@ -1,0 +1,28 @@
+#!/usr/bin/env aigne
+
+# Doc-Smith Images - AIGNE 生图项目
+# 提供原子的图片生成能力
+
+agents:
+  - ./generate-image.yaml
+  - ./save-image.mjs
+  - ./generate-and-save.yaml
+  - ./prepare-edit-input.mjs
+  - ./edit-and-save.yaml
+
+cli:
+  agents:
+    # 仅生成图片（输出 JSON，包含临时路径）
+    - name: generate
+      alias: [gen]
+      url: ./generate-image.yaml
+
+    # 生成并保存图片到指定路径（推荐）
+    - name: save
+      alias: [s]
+      url: ./generate-and-save.yaml
+
+    # 编辑已有图片并保存（image-to-image 模式）
+    - name: edit
+      alias: [e]
+      url: ./edit-and-save.yaml

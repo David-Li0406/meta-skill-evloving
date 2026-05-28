@@ -1,0 +1,67 @@
+{
+    "description": "Patient admission - MV|M2|C",
+    "messageType": "MV|M2|C",
+    "hpk": {
+        "raw": "MV|M2|C|HEXAGONE|20260122140000|USER001|PAT12345|VIS20260122001|20260122140000|URGENCE|CHU_PARIS|CARDIO|UF_CARDIO_01|LIT_001|PR_MARTIN|||||||||||||||||||||||||||||||",
+        "parsed": {
+            "type": "MV",
+            "message": "M2",
+            "mode": "C",
+            "emetteur": "HEXAGONE",
+            "date": "20260122140000",
+            "user": "USER001",
+            "ipp": "PAT12345",
+            "visitId": "VIS20260122001",
+            "admissionDateTime": "20260122140000",
+            "entryMode": "URGENCE",
+            "facility": "CHU_PARIS",
+            "service": "CARDIO",
+            "functionalUnit": "UF_CARDIO_01",
+            "bed": "LIT_001",
+            "attendingPhysician": "PR_MARTIN"
+        }
+    },
+    "expectedHL7": {
+        "messageType": "ADT^A01",
+        "segments": {
+            "MSH": {
+                "sendingApplication": "HEXAFLUX",
+                "messageType": "ADT^A01^ADT_A01",
+                "versionId": "2.5"
+            },
+            "EVN": {
+                "eventTypeCode": "A01",
+                "recordedDateTime": "20260122140000"
+            },
+            "PID": {
+                "patientId": "PAT12345"
+            },
+            "PV1": {
+                "patientClass": "I",
+                "assignedPatientLocation": "CHU_PARIS^CARDIO^LIT_001",
+                "attendingDoctor": "PR_MARTIN",
+                "visitNumber": "VIS20260122001",
+                "admitDateTime": "20260122140000"
+            }
+        }
+    },
+    "businessRules": [
+        "HPK visitId (field 7) maps to PV1-19 visit number",
+        "HPK admissionDateTime (field 8) maps to PV1-44 admit date/time",
+        "HPK facility (field 10) + service (field 11) + bed (field 13) map to PV1-3 format: FACILITY^SERVICE^BED",
+        "HPK attendingPhysician (field 14) maps to PV1-7",
+        "Patient class should be 'I' for inpatient admission",
+        "Message mode 'C' on MV|M2 maps to ADT^A01 (Admit/Visit Notification)"
+    ],
+    "testScenario": "Emergency admission to cardiology service",
+    "validationChecks": [
+        "HL7 message type must be ADT^A01",
+        "PV1 segment must exist",
+        "PV1-2 patient class must be 'I' (Inpatient)",
+        "PV1-3 assigned patient location must include facility, service, and bed",
+        "PV1-7 attending doctor must be present",
+        "PV1-19 visit number must match HPK visitId",
+        "PV1-44 admit date/time must match HPK admissionDateTime",
+        "PID-3 patient ID must match HPK IPP"
+    ]
+}

@@ -1,0 +1,44 @@
+# {{MODULE_NAME}} Module Workflow
+#
+# Triggers on changes to modules/{{MODULE_NAME}}/** and config/{{MODULE_NAME}}/**
+
+name: 📦 {{MODULE_DISPLAY_NAME}} Module
+
+on:
+  pull_request:
+    paths:
+      - modules/{{MODULE_NAME}}/**
+      - config/{{MODULE_NAME}}/**
+      - .github/workflows/{{MODULE_NAME}}.yml
+  push:
+    paths:
+      - modules/{{MODULE_NAME}}/**
+      - config/{{MODULE_NAME}}/**
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      workspace:
+        description: "Target workspace"
+        type: choice
+        options:
+          - dev01
+          - stg01
+          - prod01
+      cmd:
+        description: "Terraform command"
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+        default: plan
+
+jobs:
+  module:
+    uses: ./.github/workflows/tf-module.yml
+    secrets: inherit
+    with:
+      cmd: ${{ github.event_name == 'pull_request' && 'plan' || inputs.cmd || 'apply' }}
+      module: {{MODULE_NAME}}
+      workspace: ${{ inputs.workspace || vars.DEFAULT_TENANT }}
+      portal: ${{ vars.DUPLO_PORTAL }}

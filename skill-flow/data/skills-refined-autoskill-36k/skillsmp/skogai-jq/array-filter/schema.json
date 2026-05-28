@@ -1,0 +1,51 @@
+{
+  "name": "array-filter",
+  "description": "Filter array items by matching a field value",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing an array field to filter"
+  },
+  "args": {
+    "array_field": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the field containing the array to filter (e.g., 'items')"
+    },
+    "field": {
+      "type": "string",
+      "required": true,
+      "description": "Name of the field within array items to check (e.g., 'status')"
+    },
+    "value": {
+      "type": "string",
+      "required": true,
+      "description": "Value to match against (will be parsed as JSON if possible, else treated as string)"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with the same structure, but with filtered array"
+  },
+  "examples": [
+    {
+      "description": "Filter items by boolean field",
+      "input": {"items": [{"name": "a", "active": true}, {"name": "b", "active": false}]},
+      "args": {"array_field": "items", "field": "active", "value": "true"},
+      "output": {"items": [{"name": "a", "active": true}]}
+    },
+    {
+      "description": "Filter items by string field",
+      "input": {"users": [{"id": 1, "status": "active"}, {"id": 2, "status": "inactive"}]},
+      "args": {"array_field": "users", "field": "status", "value": "active"},
+      "output": {"users": [{"id": 1, "status": "active"}]}
+    },
+    {
+      "description": "Filter items by numeric field",
+      "input": {"products": [{"id": 1, "price": 100}, {"id": 2, "price": 50}]},
+      "args": {"array_field": "products", "field": "price", "value": "100"},
+      "output": {"products": [{"id": 1, "price": 100}]}
+    }
+  ],
+  "tags": ["array", "filter", "select", "field-match"]
+}

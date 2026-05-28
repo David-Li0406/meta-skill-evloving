@@ -1,0 +1,185 @@
+# NTM Command Hooks Configuration
+# ================================
+# Copy this file to ~/.config/ntm/hooks.toml to enable hooks.
+# Hooks run custom scripts before and after NTM commands.
+#
+# Available events:
+#   pre-spawn, post-spawn   - Around session/agent creation
+#   pre-send, post-send     - Around prompt delivery
+#   pre-add, post-add       - Around adding agents
+#   pre-create, post-create - Around session creation
+#   pre-shutdown, post-shutdown - Around session termination
+#
+# Environment variables available to all hooks:
+#   NTM_SESSION      - Session name
+#   NTM_PROJECT_DIR  - Project directory
+#   NTM_HOOK_EVENT   - Event name
+#   NTM_HOOK_NAME    - Hook name (if specified)
+#
+# Additional variables for send hooks:
+#   NTM_MESSAGE      - Prompt being sent (truncated to 1000 chars)
+#   NTM_SEND_TARGETS - Target description (e.g., "cc", "all")
+#   NTM_TARGET_CC/COD/GMI/ALL - "true"/"false" for each target type
+#   NTM_DELIVERED_COUNT - Number of successful deliveries (post-send only)
+#   NTM_FAILED_COUNT    - Number of failed deliveries (post-send only)
+#
+# Additional variables for spawn hooks:
+#   NTM_AGENT_COUNT_CC/COD/GMI/TOTAL - Agent counts
+
+
+# =============================================================================
+# LOGGING HOOKS
+# =============================================================================
+
+# Log all spawn operations
+[[command_hooks]]
+event = "post-spawn"
+name = "log-spawn"
+description = "Log spawn operations to file"
+command = '''
+mkdir -p ~/.ntm/logs
+echo "$(date -Iseconds) | SPAWN | Session: $NTM_SESSION | Agents: CC=$NTM_AGENT_COUNT_CC COD=$NTM_AGENT_COUNT_COD GMI=$NTM_AGENT_COUNT_GMI" >> ~/.ntm/logs/operations.log
+'''
+
+# Log all send operations
+[[command_hooks]]
+event = "pre-send"
+name = "log-send"
+description = "Log send operations with message preview"
+command = '''
+mkdir -p ~/.ntm/logs
+echo "$(date -Iseconds) | SEND | Session: $NTM_SESSION | Targets: $NTM_SEND_TARGETS" >> ~/.ntm/logs/operations.log
+echo "  Message: ${NTM_MESSAGE:0:100}..." >> ~/.ntm/logs/operations.log
+'''
+
+
+# =============================================================================
+# NOTIFICATION HOOKS
+# =============================================================================
+
+# Desktop notification on spawn (Linux with notify-send)
+[[command_hooks]]
+event = "post-spawn"
+name = "notify-spawn-linux"
+description = "Desktop notification when agents spawn (Linux)"
+enabled = false  # Enable if on Linux with notify-send
+command = '''
+notify-send "NTM" "Session $NTM_SESSION ready with $NTM_AGENT_COUNT_TOTAL agents" -i terminal
+'''
+
+# Desktop notification on spawn (macOS)
+[[command_hooks]]
+event = "post-spawn"
+name = "notify-spawn-macos"
+description = "Desktop notification when agents spawn (macOS)"
+enabled = false  # Enable if on macOS
+command = '''
+osascript -e "display notification \"Session $NTM_SESSION ready with $NTM_AGENT_COUNT_TOTAL agents\" with title \"NTM\""
+'''
+
+
+# =============================================================================
+# VALIDATION HOOKS
+# =============================================================================
+
+# Prevent sending empty prompts
+[[command_hooks]]
+event = "pre-send"
+name = "validate-not-empty"
+description = "Block empty prompts"
+enabled = false  # Enable to enforce non-empty prompts
+command = '''
+if [ -z "$NTM_MESSAGE" ]; then
+  echo "Error: Empty prompt not allowed" >&2
+  exit 1
+fi
+'''
+
+# Warn about potentially sensitive content
+[[command_hooks]]
+event = "pre-send"
+name = "sensitive-content-warning"
+description = "Warn if prompt may contain sensitive data"
+enabled = false  # Enable for security-conscious environments
+continue_on_error = true  # Just warn, don't block
+command = '''
+if echo "$NTM_MESSAGE" | grep -qiE "(password|secret|api.?key|token|credential)"; then
+  echo "Warning: Prompt may contain sensitive data" >&2
+fi
+'''
+
+
+# =============================================================================
+# BACKUP HOOKS
+# =============================================================================
+
+# Auto-backup pane outputs before shutdown
+[[command_hooks]]
+event = "pre-shutdown"
+name = "auto-backup"
+description = "Save pane outputs before killing session"
+enabled = false  # Enable to auto-save before shutdown
+continue_on_error = true  # Don't block shutdown if backup fails
+command = '''
+BACKUP_DIR=~/.ntm/backups/$(date +%Y%m%d)
+mkdir -p "$BACKUP_DIR"
+ntm save "$NTM_SESSION" -o "$BACKUP_DIR" 2>/dev/null
+echo "Saved to $BACKUP_DIR"
+'''
+
+
+# =============================================================================
+# WEBHOOK INTEGRATIONS
+# =============================================================================
+
+# Slack notification on send
+[[command_hooks]]
+event = "post-send"
+name = "slack-notify"
+description = "Post to Slack when prompts are sent"
+enabled = false  # Enable and set SLACK_WEBHOOK_URL
+timeout = "5s"
+continue_on_error = true  # Don't fail sends if webhook fails
+command = '''
+if [ -n "$SLACK_WEBHOOK_URL" ]; then
+  curl -s -X POST "$SLACK_WEBHOOK_URL" \
+    -H 'Content-type: application/json' \
+    -d "{\"text\": \"NTM: Sent prompt to $NTM_SEND_TARGETS in $NTM_SESSION ($NTM_DELIVERED_COUNT delivered)\"}"
+fi
+'''
+
+[command_hooks.env]
+SLACK_WEBHOOK_URL = ""  # Set your Slack webhook URL here
+
+
+# =============================================================================
+# CUSTOM AUTOMATION
+# =============================================================================
+
+# Auto-commit after spawn (for projects with auto-save)
+[[command_hooks]]
+event = "post-spawn"
+name = "auto-git-init"
+description = "Ensure git repo is initialized in project dir"
+enabled = false
+workdir = "${PROJECT}"
+continue_on_error = true
+command = '''
+if [ ! -d ".git" ]; then
+  git init
+  git add -A
+  git commit -m "Initial commit from NTM spawn" --allow-empty
+fi
+'''
+
+# Send initial context prompt after spawn
+[[command_hooks]]
+event = "post-spawn"
+name = "auto-context"
+description = "Send initial context prompt to all agents"
+enabled = false
+timeout = "10s"
+command = '''
+sleep 2  # Wait for agents to initialize
+ntm send "$NTM_SESSION" --all "Welcome! You are working on the $NTM_SESSION project. Please read the codebase and await further instructions."
+'''

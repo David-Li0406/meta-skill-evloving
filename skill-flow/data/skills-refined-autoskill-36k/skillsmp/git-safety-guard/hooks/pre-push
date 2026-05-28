@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Default: warn-only to avoid blocking pushes due to missing local tooling.
+# Opt into strict enforcement per machine via: DX_CI_LITE_STRICT=1
+if [[ "${DX_CI_LITE_STRICT:-}" != "1" ]]; then
+  if [[ -f Makefile ]] && grep -q "ci-lite:" Makefile; then
+    echo "[git-safety-guard] ci-lite target detected; not enforcing (set DX_CI_LITE_STRICT=1 to enforce)."
+  fi
+  exit 0
+fi
+
+if [[ -f Makefile ]] && grep -q "ci-lite:" Makefile; then
+  echo "[git-safety-guard] running: make ci-lite"
+  make ci-lite
+fi

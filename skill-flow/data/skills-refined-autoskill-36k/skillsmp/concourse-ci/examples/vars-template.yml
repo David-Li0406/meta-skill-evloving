@@ -1,0 +1,51 @@
+# Example vars.yml Template
+# Use with: fly set-pipeline -l vars.yml
+#
+# This file demonstrates organizing external variables.
+# Store actual secrets in a credential manager (Vault, SSM, etc.)
+
+################################################
+# Git Configuration
+################################################
+git:
+  uri: https://github.com/your-org/your-repo.git
+  username: ((vault:git/credentials.username))
+  token: ((vault:git/credentials.token))
+
+################################################
+# Container Registry
+################################################
+registry:
+  repository: registry.example.com/org/app
+  username: ((vault:registry/credentials.username))
+  password: ((vault:registry/credentials.password))
+
+################################################
+# Notification Webhooks
+################################################
+slack:
+  webhook_url: ((vault:slack/ci-notifications.webhook_url))
+
+################################################
+# Kubernetes Configurations (per environment)
+################################################
+k8s:
+  dev_kubeconfig: ((vault:k8s/dev.kubeconfig))
+  staging_kubeconfig: ((vault:k8s/staging.kubeconfig))
+  prod_kubeconfig: ((vault:k8s/prod.kubeconfig))
+
+################################################
+# Build Configuration
+################################################
+build:
+  node_version: "20"
+  image_platform: linux/amd64
+
+################################################
+# Notification Message Templates
+################################################
+# Use these with http-resource for custom webhooks
+notification:
+  icon_success: "✅"
+  icon_failure: "❌"
+  icon_warning: "⚠️"

@@ -1,0 +1,348 @@
+{
+  "branchName": "memory-system",
+  "projectName": "cortex-memory",
+  "description": "Implement the Cortex Memory System: entity/relationship extraction, resolution, identity promotion, and querying",
+  "specFiles": [
+    "docs/MEMORY_SYSTEM_SPEC.md",
+    "prompts/graphiti/README.md"
+  ],
+  "userStories": [
+    {
+      "id": "MS-001",
+      "title": "Rename segments to episodes in schema",
+      "acceptanceCriteria": [
+        "segments table renamed to episodes",
+        "segment_definitions renamed to episode_definitions",
+        "segment_events renamed to episode_events",
+        "All foreign key columns updated (segment_id → episode_id)",
+        "Schema version incremented",
+        "go build succeeds",
+        "cortex init applies schema without error"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md Part 1. This is foundational - do first. Completed: Schema was already renamed; updated all Go code references from segment to episode."
+    },
+    {
+      "id": "MS-002",
+      "title": "Add entities table to schema",
+      "acceptanceCriteria": [
+        "entities table created with: id, canonical_name, entity_type_id, summary, summary_updated_at, origin, confidence, merged_into, created_at, updated_at",
+        "Indexes on entity_type_id, canonical_name",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §3.4. entity_type_id is integer from configured types. Completed: Added entities table to schema.sql with all columns and indexes per spec."
+    },
+    {
+      "id": "MS-003",
+      "title": "Add entity_aliases table to schema",
+      "acceptanceCriteria": [
+        "entity_aliases table created with: id, entity_id (FK), alias, alias_type, normalized, is_shared, created_at",
+        "No UNIQUE constraint on alias (same alias can map to multiple entities)",
+        "Indexes on (alias, alias_type), (normalized, alias_type), entity_id",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §3.4. Aliases can be shared (family phone). Completed: Added entity_aliases table with all columns per spec §3.4."
+    },
+    {
+      "id": "MS-004",
+      "title": "Add relationships table to schema",
+      "acceptanceCriteria": [
+        "relationships table created with: id, source_entity_id (FK), target_entity_id (FK nullable), target_literal, relation_type, fact, valid_at, invalid_at, created_at, confidence",
+        "CHECK constraint: exactly one of target_entity_id or target_literal is NOT NULL",
+        "UNIQUE constraint on (source_entity_id, target_entity_id, relation_type, valid_at) for entity targets",
+        "UNIQUE constraint on (source_entity_id, target_literal, relation_type, valid_at) for literal targets",
+        "Indexes on source, target, type, temporal bounds",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §3.4. target_literal for identity/temporal relationships. Completed: Added relationships table with all columns, CHECK constraint, conditional UNIQUE indexes, and regular indexes per spec."
+    },
+    {
+      "id": "MS-005",
+      "title": "Add episode_entity_mentions table to schema",
+      "acceptanceCriteria": [
+        "episode_entity_mentions table created with: episode_id (FK), entity_id (FK), mention_count, created_at",
+        "PRIMARY KEY on (episode_id, entity_id)",
+        "Index on entity_id",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §3.4. Junction table for episode↔entity. Completed: Added episode_entity_mentions table with composite PK, ON DELETE CASCADE for both FKs, and entity_id index per spec."
+    },
+    {
+      "id": "MS-006",
+      "title": "Add episode_relationship_mentions table to schema",
+      "acceptanceCriteria": [
+        "episode_relationship_mentions table created with: id, episode_id (FK), relationship_id (FK nullable), extracted_fact, asserted_by_entity_id (FK nullable), source_type, target_literal, alias_id (FK nullable), confidence, created_at",
+        "Indexes on episode_id, relationship_id",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §3.4. Provenance for relationships. relationship_id NULL for identity-only facts. Completed: Added table with all columns per spec, ON DELETE CASCADE for episode/relationship FKs, ON DELETE SET NULL for alias FK."
+    },
+    {
+      "id": "MS-007",
+      "title": "Add merge_candidates and merge_events tables to schema",
+      "acceptanceCriteria": [
+        "merge_candidates table: id, entity_a_id, entity_b_id, confidence, reason, context, status, created_at, resolved_at",
+        "Index on status",
+        "merge_events table: id, source_entity_id, target_entity_id, merge_type, triggering_facts, similarity_score, created_at, resolved_by",
+        "Index on target_entity_id",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §3.4 and Part 8. Audit trail for merges. Completed: Added entity_merge_candidates and entity_merge_events tables with entity_ prefix to distinguish from existing person-based tables."
+    },
+    {
+      "id": "MS-008",
+      "title": "Extend embeddings table for unified storage",
+      "acceptanceCriteria": [
+        "embeddings table has target_type and target_id columns",
+        "target_type can be 'event', 'episode', 'entity', 'relationship'",
+        "UNIQUE constraint on (target_type, target_id, model)",
+        "Index on (target_type, target_id)",
+        "Schema version incremented",
+        "go build succeeds"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §3.4. Unified embedding storage. Completed: Renamed entity_type/entity_id to target_type/target_id, updated all Go code references, schema version 20."
+    },
+    {
+      "id": "MS-009",
+      "title": "Define entity types in code",
+      "acceptanceCriteria": [
+        "EntityType struct defined with ID, Name, Description",
+        "DefaultEntityTypes slice with 8 types: Entity(0), Person(1), Company(2), Project(3), Location(4), Event(5), Document(6), Pet(7)",
+        "GetEntityTypeByID and GetEntityTypeByName helper functions",
+        "go build succeeds",
+        "Unit tests pass"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §3.2. Entity types are code-defined, not in DB. Completed: Created internal/memory package with entity_types.go and entity_types_test.go."
+    },
+    {
+      "id": "MS-010",
+      "title": "Implement entity extraction prompt runner",
+      "acceptanceCriteria": [
+        "EntityExtractor struct that runs extract-entities.prompt.md",
+        "Input: episode content, reference_time, optional previous_episodes",
+        "Output: []ExtractedEntity with id, name, entity_type_id",
+        "Uses configured LLM (Claude/GPT)",
+        "go build succeeds",
+        "Unit test with mock LLM response"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §4.1 step 1. Graph-independent extraction. Completed: EntityExtractor with Gemini client integration, prompt builder, JSON response parsing, entity type validation, and comprehensive tests."
+    },
+    {
+      "id": "MS-011",
+      "title": "Implement entity embedding generation",
+      "acceptanceCriteria": [
+        "EntityEmbedder generates embeddings for entity canonical_name",
+        "Uses configured embedding model",
+        "Stores in embeddings table with target_type='entity'",
+        "Skips if embedding already exists and name unchanged",
+        "go build succeeds",
+        "Unit test with mock embedder"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §4.1 step 7. Embeddings for similarity search. Completed: EntityEmbedder with Gemini integration, source_text_hash for change detection, GetEntitiesNeedingEmbeddings helper, and comprehensive tests."
+    },
+    {
+      "id": "MS-012",
+      "title": "Implement entity resolution with alias matching",
+      "acceptanceCriteria": [
+        "EntityResolver takes extracted entities and resolves against existing graph",
+        "Step 1: Exact alias match (normalized) - high confidence",
+        "Step 2: Embedding similarity search for candidates",
+        "Step 3: Context scoring (channel, co-mentions)",
+        "If confident match (>0.9): return existing entity UUID",
+        "If ambiguous: create new entity + merge_candidate",
+        "If no match: create new entity",
+        "Returns uuid_map{} mapping temp IDs to resolved UUIDs",
+        "go build succeeds",
+        "Unit tests for each resolution path"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §4.2. Conservative - prefer duplicates over false merges. Completed: EntityResolver with 3-step resolution (alias match, embedding similarity, context scoring), decision logic with uuid_map output, and comprehensive tests for all paths."
+    },
+    {
+      "id": "MS-013",
+      "title": "Implement relationship extraction prompt runner",
+      "acceptanceCriteria": [
+        "RelationshipExtractor runs extract-relationships.prompt.md",
+        "Input: episode content, resolved entities with UUIDs, reference_time",
+        "Output: []ExtractedRelationship with source_entity_id, relation_type, target_entity_id OR target_literal, fact, source_type, valid_at, invalid_at",
+        "Uses configured LLM",
+        "go build succeeds",
+        "Unit test with mock LLM response"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §4.1 step 3. Receives resolved entity UUIDs. Completed: RelationshipExtractor with Gemini integration, prompt builder for resolved entities, JSON parsing, validation, and UUID mapping helpers."
+    },
+    {
+      "id": "MS-014",
+      "title": "Implement identity promotion (target_literal → aliases)",
+      "acceptanceCriteria": [
+        "IdentityPromoter processes HAS_EMAIL, HAS_PHONE, HAS_HANDLE, HAS_USERNAME, ALSO_KNOWN_AS relationships",
+        "Only promotes when source_type = 'self_disclosed'",
+        "Creates entity_aliases record with normalized value",
+        "Detects shared aliases (multiple entities) and sets is_shared=TRUE",
+        "Creates episode_relationship_mentions with target_literal and alias_id",
+        "Does NOT create relationships table row for identity-only facts",
+        "go build succeeds",
+        "Unit tests for promotion, shared detection"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §4.4. Identity relationships go to aliases, not relationships table. Completed: IdentityPromoter with Promote method, shared alias detection, type-specific normalization, provenance tracking, and comprehensive tests."
+    },
+    {
+      "id": "MS-015",
+      "title": "Implement edge resolution (relationship dedup)",
+      "acceptanceCriteria": [
+        "EdgeResolver checks if relationship already exists before inserting",
+        "Match on: source_entity_id, target (entity_id or literal), relation_type, valid_at",
+        "If exists: create episode_relationship_mentions only (no new relationship row)",
+        "If new: create relationship row + episode_relationship_mentions",
+        "Different valid_at = different relationship (job changes)",
+        "go build succeeds",
+        "Unit tests for dedup scenarios"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §4.1 step 4 and §10.8. Completed: EdgeResolver with Resolve and ResolveWithAssertedBy methods, supports entity and literal targets, 11 unit tests."
+    },
+    {
+      "id": "MS-016",
+      "title": "Implement contradiction detection",
+      "acceptanceCriteria": [
+        "ContradictionDetector finds existing facts contradicted by new facts",
+        "For same (source, target, relation_type): if new fact implies old is no longer true, set invalid_at on old",
+        "Uses episode timestamp as invalid_at when explicit date not provided",
+        "Old relationships retained (audit trail)",
+        "go build succeeds",
+        "Unit tests for contradiction scenarios"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §4.1 step 6 and §10.9. Completed: ContradictionDetector with exclusive relationship types (WORKS_AT, LIVES_IN, SPOUSE_OF, etc.), invalid_at handling, 13 unit tests."
+    },
+    {
+      "id": "MS-017",
+      "title": "Implement collision detection for merge candidates",
+      "acceptanceCriteria": [
+        "CollisionDetector runs O(F) algorithm - iterate through facts, not entity pairs",
+        "Phase 1: Hard identifier collisions (email, phone) → high confidence merge_candidate",
+        "Phase 2: Compound matching (name + birthdate, name + employer)",
+        "Shared aliases do NOT trigger merge_candidates",
+        "Creates merge_candidates with reason, confidence, context",
+        "go build succeeds",
+        "Unit tests for collision scenarios"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §8.4. Completed: CollisionDetector with O(F) algorithm, hard identifier collisions (email, phone, handle), compound matching (name+birthdate, name+employer), shared alias exclusion, 15 unit tests."
+    },
+    {
+      "id": "MS-018",
+      "title": "Implement auto-merge rules and execution",
+      "acceptanceCriteria": [
+        "AutoMerger evaluates merge_candidates against rules",
+        "Auto-merge when: hard identifier match (≥0.95 confidence) + no conflicts",
+        "Conflict detection: different phones, different birthdates",
+        "Merge execution: move aliases, update relationships, merge episode mentions",
+        "Mark source entity as merged_into target",
+        "Create merge_events audit record",
+        "Update merge_candidate status",
+        "go build succeeds",
+        "Unit tests for auto-merge, conflict detection"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §8.5-8.7. Completed: AutoMerger with DetectConflicts (phones, emails, birthdates), ShouldAutoMerge rules, ExecuteMerge (aliases, relationships, mentions), ProcessMergeCandidates, 24 unit tests."
+    },
+    {
+      "id": "MS-019",
+      "title": "Implement full extraction pipeline",
+      "acceptanceCriteria": [
+        "MemoryPipeline orchestrates full flow: extract entities → resolve → extract relationships → promote identity → resolve edges → detect contradictions → generate embeddings → save",
+        "Takes episode as input, updates all relevant tables",
+        "Idempotent: reprocessing same episode yields no new entities/relationships",
+        "Creates episode_entity_mentions and episode_relationship_mentions",
+        "go build succeeds",
+        "Integration test with sample episode"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §4.1. Full pipeline orchestration. Completed: MemoryPipeline with Process method, idempotency via episode_entity_mentions check, PipelineConfig, GetStats, ProcessBatch, 12 unit tests."
+    },
+    {
+      "id": "MS-020",
+      "title": "Implement graph traversal queries",
+      "acceptanceCriteria": [
+        "QueryEngine with methods: GetRelatedEntities(entityID, relationTypes), GetEntityRelationships(entityID)",
+        "Respects temporal bounds: only returns valid relationships (invalid_at IS NULL OR invalid_at > now)",
+        "Handles both directions (source and target)",
+        "go build succeeds",
+        "Unit tests for traversal queries"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md §10.12. Completed: QueryEngine with GetRelatedEntities, GetEntityRelationships, GetEntity, FindEntitiesByName, FindEntitiesByRelationType, GetEntityAliases. Supports temporal filtering (AsOfTime for valid_at/invalid_at), bidirectional traversal, relation type filtering, limit. 15 unit tests."
+    },
+    {
+      "id": "MS-021",
+      "title": "Create verification fixtures from real data",
+      "acceptanceCriteria": [
+        "scripts/ralph-memory/fixtures/ directory created",
+        "At least 3 iMessage fixtures covering: identity disclosure, job change, social relationship",
+        "At least 2 Gmail fixtures covering: newsletter sender, work email thread",
+        "At least 2 AIX fixtures covering: personal info mention, project discussion",
+        "Each fixture has episode.json input and expectations.yaml assertions",
+        "Fixtures use real (anonymized) data from Tyler's sources",
+        "README.md in fixtures/ explains format"
+      ],
+      "priority": 21,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md Part 11. Completed: 7 fixtures total (3 iMessage, 2 Gmail, 2 AIX) covering identity promotion, temporal bounds, contradiction detection, multi-entity extraction, and project relationships."
+    },
+    {
+      "id": "MS-022",
+      "title": "Implement verification harness runner",
+      "acceptanceCriteria": [
+        "cmd/verify-memory or internal/verify package",
+        "Loads fixture episode.json, runs pipeline, compares against expectations.yaml",
+        "Reports: PASS/FAIL per assertion, human-readable diffs",
+        "Supports running single fixture or full suite",
+        "Exit code 0 if all pass, non-zero otherwise",
+        "go build succeeds",
+        "All fixtures pass"
+      ],
+      "priority": 22,
+      "passes": true,
+      "notes": "See MEMORY_SYSTEM_SPEC.md Part 11. Golden comparison testing. Completed: cmd/verify-memory CLI tool, internal/memory/verify.go with VerificationHarness, fixture loading, expectation matching (must_have/must_not_have/optional), SQL LIKE-style patterns (*_like), FormatResult/FormatSummary output, 26 unit tests."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+ID,Work Item Type,Title,Test Step,Step Action,Step Expected,Area Path,Assigned To,State
+,"Test Case","Verify Connection Spinner Display During Launch and Reconnection",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Click the eNcounter/Clearsteth desktop icon to launch application","Application begins loading",,,
+,,,"2","Observe the UI during loading","Spinner is visible while system is attempting to connect",,,
+,,,"3","Simulate initial connection failure","Initial connection attempt fails",,,
+,,,"4","Observe spinner behavior","Spinner continues displaying while system attempts to reconnect",,,
+,,,"5","Verify spinner remains visible","Spinner stays visible throughout all reconnection attempts",,,
+
+,"Test Case","Verify Connection Retry Timing and Duration",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Launch application by clicking desktop icon","Application starts loading",,,
+,,,"2","Simulate initial connection failure","Initial connection attempt does not connect",,,
+,,,"3","Monitor connection retry timing","System retries connection every 1 second",,,
+,,,"4","Measure time interval between retries","Each retry occurs precisely 1 second after the previous attempt",,,
+,,,"5","Monitor total retry duration","System continues retry attempts for exactly 20 seconds",,,
+,,,"6","Verify system stops retrying after 20 seconds","System stops attempting to connect after 20-second period",,,
+
+,"Test Case","Verify Connection Failure Error Message",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Launch application by clicking desktop icon","Application starts loading",,,
+,,,"2","Simulate sustained connection failure","Connection fails for 20 seconds",,,
+,,,"3","Verify system stops retrying after 20 seconds","System stops attempting to connect after exactly 20 seconds",,,
+,,,"4","Observe error message display","Error message is displayed after 20 seconds of failed attempts",,,
+,,,"5","Verify error message text","Error message reads ""Connection Failed, please contact your system administrator""",,,
+
+,"Test Case","Verify Connection Success During Retry Period",,,,"GlobalMed","Cody Huls <CHuls@globalmed.com>","Design"
+,,,"1","Launch application by clicking desktop icon","Application starts loading",,,
+,,,"2","Simulate initial connection failure","Initial connection attempt does not connect",,,
+,,,"3","Observe spinner and retry behavior","System displays spinner and retries every 1 second",,,
+,,,"4","Simulate successful connection before 20 seconds","Connection succeeds during retry period (e.g. at 10 seconds)",,,
+,,,"5","Verify application loads successfully","Application completes loading and user can access functionality",,,
+,,,"6","Verify spinner disappears","Spinner is no longer visible after successful connection",,,

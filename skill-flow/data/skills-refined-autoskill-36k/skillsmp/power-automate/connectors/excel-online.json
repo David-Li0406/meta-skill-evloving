@@ -1,0 +1,186 @@
+{
+  "connector": "Excel Online (Business)",
+  "id": "shared_excelonlinebusiness",
+  "docsUrl": "https://learn.microsoft.com/en-us/connectors/excelonlinebusiness/",
+  "throttling": {
+    "calls": 300,
+    "seconds": 60,
+    "runScript": { "calls": 3, "seconds": 10, "dailyLimit": 1600 }
+  },
+  "triggers": {
+    "OnRowSelected": {
+      "name": "For a selected row",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "path": "/codeless/v1.0/onrowselected"
+      },
+      "description": "Power Automate only - triggers when user selects a row in Excel table"
+    }
+  },
+  "actions": {
+    "AddRowV2": {
+      "name": "Add a row into a table",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/tables/@{encodeURIComponent(table)}/rows",
+        "body": "dynamic|Table columns as properties"
+      },
+      "parameters": {
+        "source": { "type": "string", "required": true, "description": "Location: me, SharePoint site URL, or group ID" },
+        "drive": { "type": "string", "required": true, "description": "Document library" },
+        "file": { "type": "string", "required": true, "description": "Excel file" },
+        "table": { "type": "string", "required": true, "description": "Table name" }
+      }
+    },
+    "GetItem": {
+      "name": "Get a row",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/tables/@{encodeURIComponent(table)}/items/@{encodeURIComponent(idColumn)}/@{encodeURIComponent(id)}"
+      },
+      "parameters": {
+        "idColumn": { "type": "string", "required": true, "description": "Key column name" },
+        "id": { "type": "string", "required": true, "description": "Key column value" }
+      }
+    },
+    "GetItems": {
+      "name": "List rows present in a table",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/tables/@{encodeURIComponent(table)}/items",
+        "queries": {
+          "$filter": "string|OData filter (e.g., Column eq 'value')",
+          "$orderby": "string|Column to sort by",
+          "$top": "integer|Number of rows to return",
+          "$skip": "integer|Rows to skip",
+          "$select": "string|Columns to include"
+        }
+      }
+    },
+    "PatchItem": {
+      "name": "Update a row",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "patch",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/tables/@{encodeURIComponent(table)}/items/@{encodeURIComponent(idColumn)}/@{encodeURIComponent(id)}",
+        "body": "dynamic|Columns to update"
+      }
+    },
+    "DeleteItem": {
+      "name": "Delete a row",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "delete",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/tables/@{encodeURIComponent(table)}/items/@{encodeURIComponent(idColumn)}/@{encodeURIComponent(id)}"
+      }
+    },
+    "GetTables": {
+      "name": "Get tables",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/tables"
+      }
+    },
+    "GetAllWorksheets": {
+      "name": "Get worksheets",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/worksheets"
+      }
+    },
+    "CreateTable": {
+      "name": "Create table",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/tables/add",
+        "body": {
+          "TableName": "required|string",
+          "Range": "required|string|A1:C10 or Sheet1!A1:C10",
+          "ColumnsNames": "required|string|Comma-separated column names"
+        }
+      }
+    },
+    "CreateWorksheet": {
+      "name": "Create worksheet",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/worksheets/add",
+        "body": { "name": "required|string|Worksheet name" }
+      }
+    },
+    "CreateIdColumn": {
+      "name": "Add a key column to a table",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/tables/@{encodeURIComponent(table)}/createIdColumn",
+        "body": { "idColumn": "required|string|Name for the new ID column" }
+      },
+      "description": "Adds an auto-incrementing identity column for row lookups"
+    },
+    "RunScriptProd": {
+      "name": "Run script",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/datasets/@{encodeURIComponent(source)}/drives/@{encodeURIComponent(drive)}/items/@{encodeURIComponent(file)}/workbook/scripts/@{encodeURIComponent(scriptId)}/run",
+        "body": { "ScriptParameters": "optional|object|Script input parameters" }
+      },
+      "parameters": {
+        "scriptId": { "type": "string", "required": true, "description": "Office Script ID" }
+      },
+      "limitations": {
+        "throttling": "3 calls per 10 seconds, 1600 per day",
+        "sovereignty": "Not available in GCC, GCC High, DoD"
+      }
+    }
+  },
+  "connectionReference": {
+    "shared_excelonlinebusiness": {
+      "connectionName": "",
+      "source": "Invoker",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+      "tier": "NotSpecified"
+    }
+  },
+  "locationOptions": {
+    "me": "User's OneDrive for Business",
+    "SharePointSiteUrl": "https://contoso.sharepoint.com/sites/sitename",
+    "groupId": "Microsoft 365 Group ID",
+    "sites/sitename": "SharePoint site reference"
+  },
+  "outputSchemas": {
+    "row": {
+      "_PowerAppsId_": "string|Internal row ID",
+      "dynamicColumns": "Columns match table structure"
+    },
+    "table": {
+      "id": "string",
+      "name": "string",
+      "showHeaders": "boolean"
+    }
+  },
+  "notes": {
+    "keyColumn": "Most actions require a key column. Use 'Add a key column' action first if table doesn't have one.",
+    "formatting": "OData filters use column names exactly as they appear in Excel headers"
+  }
+}

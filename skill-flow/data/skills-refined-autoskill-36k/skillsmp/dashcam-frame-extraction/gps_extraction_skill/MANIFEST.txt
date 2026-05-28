@@ -1,0 +1,80 @@
+GPS EXTRACTION SKILL PACKAGE
+=============================
+
+Version: 1.0.0
+Created: 2025-11-16
+Battle-tested on: 27,856 dashcam frame crops
+Success rate achieved: 88.0%
+
+PACKAGE CONTENTS:
+-----------------
+
+Root Files:
+  README.md           - Quick start guide and overview
+  INSTALL.md          - Installation instructions
+  MANIFEST.txt        - This file
+  run.sh              - Main entry point (executable)
+
+scripts/:
+  extract_gps_optimized.sh  - Phase 1: GPU extraction (executable)
+  decimal_recovery.py       - Phase 2: Fix missing decimals
+  analyze_results.py        - Results analysis tool
+  monitor_progress.sh       - Real-time progress monitor (executable)
+
+config/:
+  extraction.conf     - Configuration parameters
+
+docs/:
+  AGENT_SPEC.md       - Complete agent specification
+  CRITICAL_LEARNINGS.md - Battle-tested insights
+  TROUBLESHOOTING.md  - Common issues and solutions
+
+examples/:
+  (To be populated with sample outputs)
+
+output/:
+  (Created at runtime for results)
+
+logs/:
+  (Created at runtime for logs)
+
+QUICK START:
+------------
+
+1. Install prerequisites (see INSTALL.md)
+2. Run: ./run.sh /path/to/crop/directory
+3. View results in: output/gps_extraction_*.xlsx
+
+EXPECTED RESULTS:
+-----------------
+
+Processing time: 40-60 minutes for ~28,000 images
+Success rate: 85-90%
+GPS extracted: ~24,500 coordinates
+Output: Excel file with lat/lon coordinates
+
+CRITICAL PARAMETERS:
+--------------------
+
+Crop width: 0.70 (70%) minimum - DO NOT REDUCE
+Crop height: 0.22 (22%) recommended
+Workers: 4 (GPU parallel workers)
+OCR: PaddleOCR with GPU acceleration
+
+DEPENDENCIES:
+-------------
+
+- Python 3.11
+- PaddleOCR >= 2.7.0
+- pandas >= 2.0.0
+- NVIDIA GPU with CUDA support
+- 20GB+ free disk space
+
+SUPPORT:
+--------
+
+Documentation: docs/AGENT_SPEC.md
+Troubleshooting: docs/TROUBLESHOOTING.md
+Learnings: docs/CRITICAL_LEARNINGS.md
+
+STATUS: Production Ready ✅

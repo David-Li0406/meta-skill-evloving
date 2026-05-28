@@ -1,0 +1,448 @@
+openapi: 3.1.0
+info:
+  title: PyPI Publishing Methods Specification
+  description: Active PyPI package publishing via Doppler credential management
+  version: 2.4.0
+  x-changelog:
+    - version: 2.4.0
+      date: 2025-10-07
+      changes:
+        - CORRECTION: --command flag is the official Doppler-recommended method (not bash -c)
+        - Added comparison of all three approaches (--command, bash -c, direct)
+        - Confirmed --command auto-detects shell and is cleaner/more portable
+        - bash -c still works but --command is the idiomatic Doppler pattern
+        - Updated all examples to use --command flag
+    - version: 2.3.0
+      date: 2025-10-07
+      changes:
+        - Added second project-scoped token for gapless-crypto-clickhouse (gcd token)
+        - Documented multi-package token management strategy
+        - Confirmed Doppler + bash -c pattern works for all project-scoped tokens
+        - Updated examples to show per-package token variable naming
+    - version: 2.2.0
+      date: 2025-10-06
+      changes:
+        - DECISION: Use project-scoped tokens exclusively (account-wide tokens fail with 403)
+        - Removed accountwideall token (failed testing despite being newly created)
+        - Confirmed bash -c wrapper required for Doppler environment variable expansion
+        - Added PyPI endpoint documentation (legacy endpoint is current standard)
+    - version: 2.1.0
+      date: 2025-10-06
+      changes:
+        - Updated token from "terrylica-entire-account" to "aal" (project-scoped)
+        - Added troubleshooting section for credential verification
+        - Documented Doppler display vs actual value behavior
+        - Added best practices for token management
+
+components:
+  schemas:
+    DopplerTokenMethod:
+      type: object
+      description: Doppler-managed PyPI tokens (ACTIVE METHOD - use this exclusively)
+      properties:
+        status:
+          type: string
+          enum: ["primary_method"]
+        storage:
+          type: object
+          properties:
+            service:
+              type: string
+              example: "Doppler"
+            project:
+              type: string
+              example: "claude-config"
+            config:
+              type: string
+              example: "dev"
+            secret_naming_convention:
+              type: string
+              example: "PYPI_TOKEN_{PACKAGE_ABBREV}"
+              description: "Use package abbreviation suffix for multiple tokens"
+
+        active_tokens:
+          type: object
+          description: "Currently active project-scoped tokens"
+          properties:
+            atr_adaptive_laguerre:
+              type: object
+              properties:
+                doppler_secret_name:
+                  type: string
+                  example: "PYPI_TOKEN"
+                token_identifier:
+                  type: string
+                  example: "c1d5867e-0d0e-4d8c-b409-04a8cc58cb40"
+                token_name:
+                  type: string
+                  example: "aal"
+                scope:
+                  type: string
+                  example: "Project 'atr-adaptive-laguerre'"
+                permissions:
+                  type: string
+                  example: "Upload packages"
+                created:
+                  type: string
+                  example: "2025-10-06"
+                last_tested:
+                  type: string
+                  example: "2025-10-06"
+                status:
+                  type: string
+                  example: "✅ WORKING"
+
+            gapless_crypto_clickhouse:
+              type: object
+              properties:
+                doppler_secret_name:
+                  type: string
+                  example: "PYPI_TOKEN_GCD"
+                token_identifier:
+                  type: string
+                  example: "7f807b10-5057-44da-b0b8-cd6f3e974fb9"
+                token_name:
+                  type: string
+                  example: "gcd"
+                scope:
+                  type: string
+                  example: "Project 'gapless-crypto-clickhouse'"
+                permissions:
+                  type: string
+                  example: "Upload packages"
+                created:
+                  type: string
+                  example: "2025-10-07"
+                last_tested:
+                  type: string
+                  example: "2025-10-07"
+                status:
+                  type: string
+                  example: "✅ WORKING"
+
+        token_management_url:
+          type: string
+          example: "https://pypi.org/manage/account/token/"
+        usage:
+          type: object
+          properties:
+            publish_examples:
+              type: object
+              description: "Per-package publish commands using official --command flag"
+              properties:
+                atr_adaptive_laguerre:
+                  type: string
+                  example: "doppler run --project claude-config --config dev --command='uv publish --token \"$PYPI_TOKEN\"'"
+                  description: "Publish atr-adaptive-laguerre using PYPI_TOKEN (--command is idiomatic)"
+                gapless_crypto_clickhouse:
+                  type: string
+                  example: "doppler run --project claude-config --config dev --command='uv publish --token \"$PYPI_TOKEN_GCD\"'"
+                  description: "Publish gapless-crypto-clickhouse using PYPI_TOKEN_GCD (--command is idiomatic)"
+
+            method_comparison:
+              type: object
+              description: "Three ways to use doppler run - tested and verified"
+              properties:
+                recommended_command_flag:
+                  type: object
+                  properties:
+                    example:
+                      type: string
+                      example: "doppler run --command='uv publish --token \"$VAR\"'"
+                    status:
+                      type: string
+                      example: "✅ RECOMMENDED - Official Doppler method"
+                    benefits:
+                      type: array
+                      items:
+                        type: string
+                      example:
+                        - "Auto-detects shell from $SHELL environment variable"
+                        - "Supports sh, bash, zsh, dash, fish, ksh, tcsh, csh"
+                        - "Cleaner syntax than bash -c"
+                        - "Official Doppler documentation pattern"
+                        - "Portable across different user shells"
+
+                alternative_bash_c:
+                  type: object
+                  properties:
+                    example:
+                      type: string
+                      example: "doppler run -- bash -c 'uv publish --token \"$VAR\"'"
+                    status:
+                      type: string
+                      example: "✅ WORKS - But less idiomatic"
+                    when_to_use:
+                      type: array
+                      items:
+                        type: string
+                      example:
+                        - "When you specifically need bash syntax"
+                        - "When you want fresh shell without user's .bashrc"
+                        - "Legacy scripts already using this pattern"
+
+                incorrect_direct:
+                  type: object
+                  properties:
+                    example:
+                      type: string
+                      example: "doppler run -- uv publish --token \"$VAR\""
+                    status:
+                      type: string
+                      example: "❌ FAILS - Variable expanded too early"
+                    reason:
+                      type: string
+                      example: "Shell expands $VAR BEFORE Doppler injects it, resulting in empty string"
+
+            setup_commands:
+              type: object
+              properties:
+                add_token:
+                  type: string
+                  example: "echo -n 'pypi-...' | doppler secrets set PYPI_TOKEN_XXX --project claude-config --config dev"
+                  description: "Use stdin to avoid shell escaping issues"
+                verify_storage:
+                  type: string
+                  example: "doppler secrets get PYPI_TOKEN_XXX --project claude-config --config dev --plain | head -c 50"
+                  description: "Check token stored correctly (starts with pypi-AgEI...)"
+                test_injection:
+                  type: string
+                  example: "doppler run --project claude-config --config dev --command='echo ${#PYPI_TOKEN_XXX}'"
+                  description: "Verify injection works (should show 221-224) using --command flag"
+
+        troubleshooting:
+          type: object
+          properties:
+            display_vs_actual:
+              type: object
+              properties:
+                issue:
+                  type: string
+                  example: "doppler secrets get adds newline to display"
+                explanation:
+                  type: string
+                  example: "When you run 'doppler secrets get PYPI_TOKEN --plain', it shows a trailing newline (0x0a). This is ONLY for display formatting. The actual value stored in Doppler and passed via 'doppler run' does NOT have the newline."
+                test_command:
+                  type: string
+                  example: "doppler run --project claude-config --config dev -- bash -c 'printf \"%s\" \"$PYPI_TOKEN\" | wc -c'"
+                expected_result:
+                  type: string
+                  example: "224 (no trailing newline)"
+
+            token_expiry:
+              type: object
+              properties:
+                symptom:
+                  type: string
+                  example: "403 Forbidden: Invalid or non-existent authentication information"
+                cause:
+                  type: string
+                  example: "PyPI tokens can be revoked or expire. Check PyPI web interface for token status."
+                solution:
+                  type: string
+                  example: "Create new project-scoped token on PyPI, copy exact value, update Doppler with: echo -n 'pypi-...' | doppler secrets set PYPI_TOKEN --project claude-config --config dev"
+
+            verification_workflow:
+              type: array
+              items:
+                type: object
+              example:
+                - step: 1
+                  action: "Check token in PyPI web interface"
+                  command: "Open https://pypi.org/manage/account/token/"
+                  verify: "Token shows 'Last used: recently' or create new token"
+                - step: 2
+                  action: "Verify token in Doppler"
+                  command: "doppler secrets get PYPI_TOKEN --project claude-config --config dev --plain | head -c 50"
+                  verify: "Starts with 'pypi-AgEIcHlwaS5vcmcC...'"
+                - step: 3
+                  action: "Test credential injection"
+                  command: "doppler run --project claude-config --config dev --command='echo Token length: ${#PYPI_TOKEN}'"
+                  verify: "Shows 224 (or similar length for valid token)"
+                - step: 4
+                  action: "Test publish with Doppler"
+                  command: "doppler run --project claude-config --config dev --command='uv publish --token \"$PYPI_TOKEN\" dist/*.whl'"
+                  verify: "Gets 200 OK (or 400 if file already exists, which is fine)"
+
+        best_practices:
+          type: object
+          properties:
+            doppler_command_flag:
+              type: string
+              example: "Use --command flag when environment variables are used as command arguments: doppler run --command='command --flag \"$VAR\"'"
+              reason: "The --command flag is the official Doppler pattern. It auto-detects your shell and ensures variables expand AFTER Doppler injects them. Without --command (or bash -c), the shell expands $VAR before Doppler runs, resulting in empty variable."
+
+            token_scope:
+              type: string
+              example: "Use project-scoped tokens (e.g., 'aal' for atr-adaptive-laguerre, 'gcd' for gapless-crypto-clickhouse) instead of account-wide tokens"
+              reason: "Limits blast radius if token is compromised, easier to audit per-package access"
+
+            multi_package_strategy:
+              type: object
+              description: "Managing tokens for multiple PyPI packages"
+              properties:
+                doppler_naming:
+                  type: string
+                  example: "PYPI_TOKEN (first package), PYPI_TOKEN_{ABBREV} (additional packages)"
+                  description: "Use package abbreviation suffix for clarity"
+                pypi_token_naming:
+                  type: string
+                  example: "aal (atr-adaptive-laguerre), gcd (gapless-crypto-clickhouse)"
+                  description: "Create memorable abbreviations on PyPI side"
+                usage_pattern:
+                  type: string
+                  example: "Each project uses its own token variable: $PYPI_TOKEN for aal, $PYPI_TOKEN_GCD for gcd"
+                  description: "Makes it clear which token is being used in publish commands"
+
+            token_naming:
+              type: string
+              example: "Use descriptive abbreviations so you can identify which token is for which package"
+              reason: "Easier token management when you have multiple packages"
+
+            token_storage:
+              type: string
+              example: "ALWAYS use Doppler for credential storage. Never commit tokens to git, never store in .pypirc"
+              reason: "Centralized, version-controlled credential management"
+
+            token_updates:
+              type: string
+              example: "When updating tokens in Doppler, use stdin to avoid shell escaping: echo -n 'token' | doppler secrets set"
+              reason: "Prevents shell from interpreting special characters in token"
+
+            testing:
+              type: string
+              example: "After updating tokens, test with 'doppler run --command' to verify injection works BEFORE attempting actual publish"
+              reason: "Catch configuration issues early, before attempting to publish. Use --command flag for idiomatic Doppler usage."
+
+        pypi_endpoints:
+          type: object
+          description: "PyPI upload endpoint information"
+          properties:
+            legacy_endpoint:
+              type: object
+              properties:
+                url:
+                  type: string
+                  example: "https://upload.pypi.org/legacy/"
+                status:
+                  type: string
+                  example: "ACTIVE - This is the current production endpoint"
+                name_confusion:
+                  type: string
+                  example: "Despite being named 'legacy', this is the ONLY production upload endpoint for PyPI as of 2025"
+                explanation:
+                  type: string
+                  example: "The name 'legacy' refers to the API being copied from pypi-legacy (old PyPI codebase). The current PyPI (Warehouse) implements this same API at the /legacy/ path. This is the standard upload method used by twine, uv, and all other tools."
+                will_it_change:
+                  type: string
+                  example: "PyPI has no specific plans to drop this API, though PEP 694 proposes an Upload 2.0 API for future use"
+            upload_2_api:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: "PROPOSED (PEP 694) - Not yet implemented"
+                benefits:
+                  type: string
+                  example: "Supports parallel/resumable uploads for large files (>1GB), async processing"
+                availability:
+                  type: string
+                  example: "Not yet available on production PyPI as of 2025"
+                reference:
+                  type: string
+                  example: "https://peps.python.org/pep-0694/"
+
+    HistoricalTokens:
+      type: object
+      description: Historical token information for reference
+      properties:
+        terrylica_entire_account:
+          type: object
+          properties:
+            token_id:
+              type: string
+              example: "2b59ad01-34b4-4425-b7a0-9ab49046ea4e"
+            status:
+              type: string
+              example: "NOT WORKING - Returns 403 Forbidden when tested 2025-10-06"
+            scope:
+              type: string
+              example: "Entire account (all projects)"
+            test_results:
+              type: string
+              example: "Tested with proper Doppler injection (doppler run -- bash -c) - still returns 403. Token appears in PyPI UI but is not functional."
+            possible_causes:
+              type: array
+              items:
+                type: string
+              example:
+                - "Token may have been revoked on PyPI side"
+                - "Token may have expired (PyPI doesn't show expiry in UI)"
+                - "Token permissions may have been changed"
+                - "Token may be in invalid state despite showing in UI"
+            reason_for_replacement:
+              type: string
+              example: "Token non-functional despite appearing in PyPI UI. Replaced with working project-scoped 'aal' token."
+            last_tested:
+              type: string
+              example: "2025-10-06 - 403 Forbidden with both direct use and Doppler injection"
+
+        publishing:
+          type: object
+          properties:
+            token_id:
+              type: string
+              example: "Unknown"
+            status:
+              type: string
+              example: "DEPRECATED - expired/revoked"
+            created:
+              type: string
+              example: "2025-09-09"
+            last_used:
+              type: string
+              example: "2025-10-06"
+            reason_for_replacement:
+              type: string
+              example: "Token expired or revoked by PyPI"
+
+    DeprecatedMethods:
+      type: object
+      description: Deprecated publishing methods - DO NOT USE
+      properties:
+        pypirc:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: ["deprecated"]
+            reason:
+              type: string
+              example: "Tokens expire frequently, not version controlled, stored in plaintext"
+            location:
+              type: string
+              example: "$HOME/.pypirc (DO NOT USE)"
+            migration:
+              type: string
+              example: "Token already migrated to Doppler (claude-config/dev/PYPI_TOKEN)"
+
+        trusted_publishing:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: ["future_consideration"]
+            reason:
+              type: string
+              example: "OIDC-based GitHub Actions workflow - not yet implemented"
+            documentation:
+              type: string
+              example: "https://docs.pypi.org/trusted-publishers/"
+            benefits:
+              type: string
+              example: "No long-lived tokens, automatic credential rotation, better security"
+            consideration:
+              type: string
+              example: "Requires GitHub Actions setup and per-package PyPI configuration"
+
+paths: {}

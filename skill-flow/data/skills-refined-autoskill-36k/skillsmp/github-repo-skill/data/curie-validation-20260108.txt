@@ -1,0 +1,195 @@
+# CURIE Syntax Validation Report for kg-microbe (2026-01-08)
+
+## Summary
+
+- **Total rows analyzed**: 6,215,955
+  - Nodes: 1,437,117
+  - Edges: 4,778,838
+- **Total CURIE issues found**: 5,210
+
+## Nodes File Analysis
+
+**File**: merged-kg_nodes.tsv
+**Rows**: 1,437,117
+**Columns checked**: id, xref, object, subject, same_as
+
+### Issues Found by Type
+
+- **url_not_curie**: 1,092 occurrences
+- **multiple_colons**: 143 occurrences
+- **contains_space**: 62 occurrences
+
+### Issues by Column
+
+#### id
+
+- url_not_curie: 391
+- contains_space: 61
+- multiple_colons: 37
+
+#### xref
+
+- url_not_curie: 701
+- multiple_colons: 106
+- contains_space: 1
+
+### Sample Errors (Nodes)
+
+#### id - contains_space
+
+```
+Row 274,994: assay:API_rID32STR_beta GLU
+Row 274,995: assay:API_rID32A_alpha FUC
+Row 274,996: assay:API_zym_Esterase Lipase (C 8)
+Row 274,997: assay:API_coryne_beta NAG
+Row 274,998: assay:API_zym_N-acetyl-beta- glucosaminidase
+```
+
+#### id - multiple_colons
+
+```
+Row 4,249: kgmicrobe.strain:NRRL-:-NRS-341
+Row 4,281: kgmicrobe.strain:NRRL-:-B-14393
+Row 5,347: kgmicrobe.strain:NRRL:-NRS-236
+Row 8,428: kgmicrobe.strain:NRRL:-NRS-1321
+Row 16,830: kgmicrobe.strain:NRRL:-B-2065
+```
+
+#### id - url_not_curie
+
+```
+Row 1,360,399: https://w3id.org/chemrof/charge
+Row 1,360,400: https://w3id.org/chemrof/generalized_empirical_formula
+Row 1,360,401: https://w3id.org/chemrof/inchi_key_string
+Row 1,360,402: https://w3id.org/chemrof/inchi_string
+Row 1,360,403: https://w3id.org/chemrof/mass
+```
+
+#### xref - contains_space
+
+```
+Row 1,363,332: Carbonate which is formed as the result of some biological process.
+```
+
+#### xref - multiple_colons
+
+```
+Row 1,172,127: wikipedia.en:Magnesium_citrate_(3:2)
+Row 1,179,787: wikipedia.en:https://en.wikipedia.org/wiki/Gas
+Row 1,198,203: wikipedia.en:https://en.wikipedia.org/wiki/Cobalt
+Row 1,198,204: wikipedia.en:https://en.wikipedia.org/wiki/Chromium
+Row 1,198,205: wikipedia.en:https://en.wikipedia.org/wiki/Lithium
+```
+
+#### xref - url_not_curie
+
+```
+Row 279,722: https://www.ebi.ac.uk/merops/about/glossary.shtml#AMINOPEPTIDASE
+Row 1,360,433: https://en.wikipedia.org/wiki/Geographic_feature
+Row 1,360,437: https://en.wikipedia.org/wiki/Administrative_region
+Row 1,360,442: https://en.wikipedia.org/wiki/Nation
+Row 1,360,444: https://en.wikipedia.org/wiki/Garden
+```
+
+## Edges File Analysis
+
+**File**: merged-kg_edges.tsv
+**Rows**: 4,778,838
+**Columns checked**: subject, predicate, object, relation
+
+### Issues Found by Type
+
+- **multiple_colons**: 2,700 occurrences
+- **url_not_curie**: 740 occurrences
+- **missing_colon**: 364 occurrences
+- **contains_space**: 109 occurrences
+
+### Issues by Column
+
+#### subject
+
+- url_not_curie: 370
+- multiple_colons: 37
+
+#### object
+
+- url_not_curie: 370
+- contains_space: 109
+
+#### relation
+
+- multiple_colons: 2,663
+- missing_colon: 364
+
+### Sample Errors (Edges)
+
+#### object - contains_space
+
+```
+Row 12: assay:API_20E_TDA (Trp)
+Row 92: assay:API_20NE_GLU_ Ferm
+Row 96: assay:API_20NE_GLU_ Assim
+Row 242: assay:API_zym_beta- Glucosidase
+Row 249: assay:API_rID32STR_beta GLU
+```
+
+#### object - url_not_curie
+
+```
+Row 4,685,087: https://w3id.org/metpo/1000188
+Row 4,685,088: https://w3id.org/metpo/1000630
+Row 4,685,089: https://w3id.org/metpo/1000188
+Row 4,685,090: https://w3id.org/metpo/1000531
+Row 4,685,091: https://w3id.org/metpo/1000534
+```
+
+#### relation - missing_colon
+
+```
+Row 4,569,528: subPropertyOf
+Row 4,569,529: subPropertyOf
+Row 4,569,530: inverseOf
+Row 4,596,235: subPropertyOf
+Row 4,596,236: inverseOf
+```
+
+#### relation - multiple_colons
+
+```
+Row 23: RO:0000087|RO:0000087
+Row 38,403: RO:0002200|RO:0002215
+Row 117,843: RO:0002200|RO:0002215
+Row 118,401: RO:0002200|RO:0002215
+Row 165,919: RO:0002200|RO:0002215
+```
+
+#### subject - multiple_colons
+
+```
+Row 275,748: kgmicrobe.strain:NRRL-:-NRS-341
+Row 276,211: kgmicrobe.strain:NRRL-:-B-14393
+Row 285,510: kgmicrobe.strain:NRRL:-NRS-236
+Row 323,201: kgmicrobe.strain:NRRL:-NRS-1321
+Row 412,583: kgmicrobe.strain:NRRL:-B-2065
+```
+
+#### subject - url_not_curie
+
+```
+Row 4,685,087: https://w3id.org/metpo/1000059
+Row 4,685,088: https://w3id.org/metpo/1000060
+Row 4,685,089: https://w3id.org/metpo/1000127
+Row 4,685,090: https://w3id.org/metpo/1000232
+Row 4,685,091: https://w3id.org/metpo/1000232
+```
+
+## Error Type Descriptions
+
+- **contains_space**: CURIE contains whitespace (invalid)
+- **missing_colon**: No colon separator found
+- **invalid_format**: Does not match CURIE pattern prefix:local_id
+- **empty_prefix**: Prefix before colon is empty
+- **empty_local_id**: Local ID after colon is empty
+- **multiple_colons**: Contains more than one colon (may be valid but flagged)
+- **url_not_curie**: Full URL instead of compact CURIE (technically valid but not compact)
+

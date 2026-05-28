@@ -1,0 +1,78 @@
+#cloud-config
+# =============================================================================
+# Java / Spring Boot Application Server
+# =============================================================================
+#
+# Purpose: Java application server for Spring Boot JAR files with systemd management
+#
+# Features:
+# - OpenJDK 17 LTS (headless runtime)
+# - Dedicated service user (no login access)
+# - Secure environment file for configuration
+# - systemd automatic restart on failure
+#
+# How it works:
+# 1. Installs OpenJDK 17 headless runtime
+# 2. Creates systemd service unit file
+# 3. Creates service user and directories
+# 4. Configures permissions for deployment and runtime
+# 5. Registers service (but does not start - no app code yet)
+#
+# Configuration:
+# - Replace 'adminuser' with your cloud provider's default SSH user
+# - Environment variables go in /etc/spring-app/environment
+# - Deploy your JAR file to /opt/spring-app/app.jar
+#
+# Default SSH users by cloud provider:
+# - AWS (Amazon Linux): ec2-user
+# - AWS (Ubuntu AMI): ubuntu
+# - Azure: azureuser
+# - GCP: Your Google account username
+# - DigitalOcean: root
+#
+# =============================================================================
+package_update: true
+package_upgrade: true
+
+packages:
+  - openjdk-17-jre-headless
+
+write_files:
+  - path: /etc/systemd/system/spring-app.service
+    content: |
+      [Unit]
+      Description=Spring Boot Application
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=spring-app
+      Group=spring-app
+      WorkingDirectory=/opt/spring-app
+      EnvironmentFile=/etc/spring-app/environment
+      ExecStart=/usr/bin/java -jar /opt/spring-app/app.jar
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # Create service user
+  - useradd --system --shell /usr/sbin/nologin --no-create-home spring-app
+
+  # Create directories
+  - mkdir -p /opt/spring-app
+  - mkdir -p /etc/spring-app
+
+  # Set permissions (replace 'adminuser' with your cloud provider's default SSH user)
+  - chown -R adminuser:spring-app /opt/spring-app
+  - chmod 775 /opt/spring-app
+  - chown root:spring-app /etc/spring-app
+  - chmod 750 /etc/spring-app
+  - touch /etc/spring-app/environment
+  - chown root:spring-app /etc/spring-app/environment
+  - chmod 640 /etc/spring-app/environment
+
+  # Register service
+  - systemctl daemon-reload

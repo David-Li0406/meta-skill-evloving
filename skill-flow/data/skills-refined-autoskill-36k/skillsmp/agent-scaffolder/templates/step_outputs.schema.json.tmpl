@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./step_outputs.schema.json",
+  "definitions": {
+    "initial.default": {
+      "type": "object",
+      "required": ["analysis", "next_action"],
+      "properties": {
+        "analysis": {
+          "type": "object",
+          "required": ["summary"],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "description": "Summary of the analysis"
+            }
+          },
+          "description": "Analysis of the current task"
+        },
+        "plan": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Planned steps"
+        },
+        "next_action": {
+          "type": "object",
+          "required": ["action", "reason"],
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": ["next", "repeat"]
+            },
+            "reason": {
+              "type": "string",
+              "description": "Reason for the chosen action"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "continuation.default": {
+      "type": "object",
+      "required": ["progress", "next_action"],
+      "properties": {
+        "progress": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Current status description"
+            },
+            "completed_items": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "List of completed items"
+            }
+          },
+          "description": "Current progress status"
+        },
+        "next_action": {
+          "type": "object",
+          "required": ["action", "reason"],
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": ["next", "repeat", "handoff"]
+            },
+            "reason": {
+              "type": "string",
+              "description": "Reason for the chosen action"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "verification.default": {
+      "type": "object",
+      "required": ["verification_result", "next_action"],
+      "properties": {
+        "verification_result": {
+          "type": "object",
+          "required": ["status", "findings"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["pass", "fail", "partial"],
+              "description": "Overall verification status"
+            },
+            "findings": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "List of verification findings"
+            }
+          },
+          "description": "Verification result details"
+        },
+        "next_action": {
+          "type": "object",
+          "required": ["action", "reason"],
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": ["next", "repeat", "escalate"]
+            },
+            "reason": {
+              "type": "string",
+              "description": "Reason for the chosen action"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "closure.default": {
+      "type": "object",
+      "required": ["final_summary", "next_action"],
+      "properties": {
+        "final_summary": {
+          "type": "object",
+          "required": ["summary"],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "description": "Final summary text"
+            },
+            "deliverables": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "List of deliverables"
+            }
+          },
+          "description": "Final summary of completed work"
+        },
+        "next_action": {
+          "type": "object",
+          "required": ["action", "reason"],
+          "properties": {
+            "action": {
+              "type": "string",
+              "enum": ["closing", "repeat"]
+            },
+            "reason": {
+              "type": "string",
+              "description": "Completion reason"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

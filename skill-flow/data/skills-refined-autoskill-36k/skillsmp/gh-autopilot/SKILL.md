@@ -1,0 +1,332 @@
+---
+name: gh-autopilot
+description: 端到端自动化：PRD→Issue→Project→实现→PR→合并，全程无需人工干预。
+---
+
+## CRITICAL CONSTRAINTS (MANDATORY)
+
+**阶段 4 执行约束**：
+- **MUST** 使用 Bash tool 调用 `codeagent-wrapper --backend codex`
+- **NEVER** 使用 Task tool 的 code/bugfix/dev 等 subagent
+- **NEVER** 使用 Edit/Write/MultiEdit 工具直接修改代码
+
+违反上述约束将导致工作流无效。
+
+# gh-autopilot
+
+从 PRD 到代码合并的全自动化流水线。用户只需确定需求，剩下的交给 Claude。
+
+## 斜杠命令
+
+```
+/gh-autopilot [PRD文件路径或需求描述]
+```
+
+**示例：**
+```bash
+# 基于 PRD 文件启动
+/gh-autopilot docs/feature-x-prd.md
+
+# 基于需求描述启动（会先生成 PRD）
+/gh-autopilot 添加用户登录功能，支持邮箱和手机号
+```
+
+## 工作流程
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     gh-autopilot                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  输入: PRD 文件 或 需求描述                                   │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌──────────────────┐                                       │
+│  │ 阶段 1: 需求确认  │  无 PRD 时调用 /product-requirements   │
+│  └────────┬─────────┘                                       │
+│           │                                                 │
+│           ▼                                                 │
+│  ┌──────────────────┐                                       │
+│  │ 阶段 2: 创建 Issue│  调用 /gh-create-issue               │
+│  └────────┬─────────┘                                       │
+│           │                                                 │
+│           ▼                                                 │
+│  ┌──────────────────┐                                       │
+│  │ 阶段 3: 同步看板  │  调用 /gh-project-sync                │
+│  └────────┬─────────┘                                       │
+│           │                                                 │
+│           ▼                                                 │
+│  ┌──────────────────┐                                       │
+│  │ 阶段 4: 并发实现  │  调用 /gh-project-implement           │
+│  └────────┬─────────┘                                       │
+│           │                                                 │
+│           ▼                                                 │
+│  ┌──────────────────┐                                       │
+│  │ 阶段 5: 批量审查  │  调用 /gh-project-pr --auto-merge     │
+│  │                  │       --review-backend codex          │
+│  └────────┬─────────┘                                       │
+│           │                                                 │
+│           ▼                                                 │
+│  ┌──────────────────┐                                       │
+│  │ 阶段 6: 完成报告  │  汇总结果，输出统计                    │
+│  └──────────────────┘                                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## 执行流程
+
+### 阶段 1: 需求确认
+
+**检查输入类型：**
+- 如果输入是 `.md` 文件路径且文件存在 → 读取 PRD 内容
+- 如果输入是需求描述文本 → 询问用户是否需要先生成 PRD
+  - 是 → 调用 `/product-requirements` 生成 PRD
+  - 否 → 直接使用描述创建 Issue
+
+**输出：** PRD 内容或需求描述
+
+### 阶段 2: 创建 Issue
+
+**执行：**
+```
+调用 /gh-create-issue 基于 PRD/需求描述
+```
+
+**期望结果：**
+- 简单任务 → 单个 Issue
+- 复杂任务 → Epic + 带依赖关系的子任务
+- 所有 Issue 带 `priority:p0-p3` 标签
+
+**错误处理：**
+- 失败重试 3 次
+- 仍失败 → 终止流程，输出错误报告
+
+### 阶段 3: 同步到 Project
+
+**执行：**
+
+1. **检查已有仓库级 Project**：
+```bash
+# 使用 gh-project-sync 的脚本列出仓库级 Projects
+python3 ~/.claude/skills/gh-project-sync/scripts/list_projects.py --json
+```
+
+2. **创建或选择 Project**：
+   - 如果没有已有 Project → 使用脚本创建仓库级 Project
+   - 如果已有 Project → 选择合适的 Project
+
+```bash
+# 创建仓库级 Project（自动关联到当前仓库）
+python3 ~/.claude/skills/gh-project-sync/scripts/create_project.py --title "Project Name" --json
+```
+
+> **重要**：必须使用 `create_project.py` 脚本创建 Project，**不要直接使用 `gh project create --owner`**！
+> 脚本会自动将 Project 关联到当前仓库，使其显示在仓库的 Projects 页面。
+
+3. **同步 Issues**：
+```bash
+# 将 Issues 添加到 Project
+gh project item-add PROJECT_NUMBER --owner OWNER --url ISSUE_URL
+```
+
+**期望结果：**
+- Issue 同步到仓库级 GitHub Project（显示在仓库 `/projects` 页面）
+- 按优先级自动分配状态列
+
+**错误处理：**
+- 失败重试 3 次
+- 仍失败 → 跳过此阶段，继续执行（Project 同步非关键路径）
+
+### 阶段 4: 并发实现
+
+**执行方式 [MANDATORY]**：
+
+必须使用 Bash tool 调用 batch_executor.py 脚本：
+```bash
+python3 ~/.claude/skills/gh-project-implement/scripts/get_project_issues.py --project <project_number> --json | \
+python3 ~/.claude/skills/gh-project-implement/scripts/priority_batcher.py --json | \
+python3 ~/.claude/skills/gh-project-implement/scripts/batch_executor.py --max-retries 3
+```
+
+**禁止**：
+- ❌ 使用 Task tool 调用 code/bugfix agent
+- ❌ 使用 Edit/Write 工具直接修改代码
+- ❌ 手动逐个实现 issue
+
+batch_executor.py 内部会自动调用 `codeagent-wrapper --backend codex` 执行每个 issue。
+
+### 阶段 5: 批量 PR 审查与合并
+
+**执行：**
+```
+调用 /gh-project-pr <project_number> --auto-merge --review-backend codex
+```
+
+**期望结果：**
+- 查找所有关联 PR
+- Codex 审查（review gate）+ CI gate（仅在两者均通过时才允许合并）
+- Squash 合并（避免交互提示）并清理分支
+- 更新 Project 状态为 "Done"
+
+**错误处理：**
+- 单个 PR 失败 → 跳过，继续处理其他 PR
+- 记录失败的 PR 到最终报告
+
+### 阶段 6: 完成报告
+
+**输出格式：**
+```
+╔══════════════════════════════════════════════════════════════╗
+║                    🚀 gh-autopilot 完成报告                   ║
+╠══════════════════════════════════════════════════════════════╣
+║ 📋 需求: [PRD 标题或需求摘要]                                  ║
+║ ⏱️  耗时: [总耗时]                                            ║
+╠══════════════════════════════════════════════════════════════╣
+║ 📊 执行统计                                                   ║
+║ ├─ Issue 创建: [X] 个                                        ║
+║ ├─ 成功实现:   [Y] 个                                        ║
+║ ├─ PR 合并:    [Z] 个                                        ║
+║ └─ 失败项:     [N] 个                                        ║
+╠══════════════════════════════════════════════════════════════╣
+║ ✅ 成功合并的 PR:                                             ║
+║    - #123: [PR 标题]                                         ║
+║    - #124: [PR 标题]                                         ║
+╠══════════════════════════════════════════════════════════════╣
+║ ❌ 失败项（需人工处理）:                                       ║
+║    - Issue #456: [失败原因]                                   ║
+║    - PR #789: [失败原因]                                      ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+## 配置选项
+
+### CLI 参数
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `--skip-prd` | 跳过 PRD 生成，直接创建 Issue | false |
+| `--skip-sync` | 跳过 Project 同步 | false |
+| `--dry-run` | 预览模式，不执行实际操作 | false |
+| `--project` | 指定已有 Project 编号 | 自动创建/选择 |
+| `--priority` | 只处理指定优先级 | 全部 |
+
+**示例：**
+```bash
+# 跳过 PRD 生成
+/gh-autopilot docs/prd.md --skip-prd
+
+# 预览模式
+/gh-autopilot "添加搜索功能" --dry-run
+
+# 只处理 P0 和 P1
+/gh-autopilot docs/prd.md --priority p0,p1
+```
+
+## 前置条件
+
+1. **GitHub CLI** 已安装并认证 (`gh auth status`)
+2. **Claude Code** 已安装
+3. **依赖技能** 已安装:
+   - `/gh-create-issue`
+   - `/gh-project-sync`
+   - `/gh-project-implement`
+   - `/gh-project-pr`
+4. **仓库权限**: `repo`, `project`, `read:org`
+
+## 最佳实践
+
+### 适用场景
+- ✅ 新功能开发（有完整 PRD）
+- ✅ 技术债务清理（多个独立任务）
+- ✅ Bug 批量修复
+- ✅ 重构任务
+
+### 不适用场景
+- ❌ 紧急 hotfix（使用单独的 `/gh-issue-implement`）
+- ❌ 需要频繁人工介入的探索性开发
+- ❌ 跨仓库协作任务
+
+## 错误处理策略
+
+| 阶段 | 失败行为 | 原因 |
+|------|----------|------|
+| 需求确认 | 终止流程 | PRD 是后续所有步骤的基础 |
+| 创建 Issue | 终止流程 | 无 Issue 无法继续 |
+| 同步看板 | 跳过继续 | 非关键路径 |
+| 并发实现 | 跳过失败项 | 不影响其他 Issue |
+| PR 审查 | 跳过失败项 | 不影响其他 PR |
+
+## 实现伪代码
+
+```python
+def gh_autopilot(input_arg, options):
+    report = AutopilotReport()
+    start_time = now()
+
+    # 阶段 1: 需求确认
+    print("🔍 阶段 1/6: 需求确认...")
+    if is_file(input_arg):
+        prd_content = read_file(input_arg)
+    elif not options.skip_prd:
+        prd_content = invoke_skill("/product-requirements", input_arg)
+    else:
+        prd_content = input_arg
+
+    # 阶段 2: 创建 Issue
+    print("📝 阶段 2/6: 创建 Issue...")
+    issues = retry(3, lambda: invoke_skill("/gh-create-issue", prd_content))
+    if not issues:
+        return report.fail("Issue 创建失败")
+    report.issues_created = len(issues)
+
+    # 阶段 3: 同步看板（使用仓库级 Project）
+    print("📋 阶段 3/6: 同步到 Project...")
+    if not options.skip_sync:
+        # 重要：使用 create_project.py 脚本创建仓库级 Project
+        # 不要使用 gh project create --owner，那会创建用户级 Project
+        existing = run("python3 ~/.claude/skills/gh-project-sync/scripts/list_projects.py --json")
+        if not existing.projects:
+            project = run("python3 ~/.claude/skills/gh-project-sync/scripts/create_project.py --title 'Project Name' --json")
+        else:
+            project = existing.projects[0]  # 或让用户选择
+
+        # 同步 Issues 到 Project
+        for issue in issues:
+            run(f"gh project item-add {project.number} --owner {owner} --url {issue.url}")
+
+    # 阶段 4: 并发实现 [MUST use batch_executor.py]
+    print("🔨 阶段 4/6: 并发实现...")
+    # 必须使用 Bash 调用脚本，禁止使用 Task tool
+    impl_result = run(f"""
+        python3 ~/.claude/skills/gh-project-implement/scripts/get_project_issues.py --project {project.number} --json | \
+        python3 ~/.claude/skills/gh-project-implement/scripts/priority_batcher.py --json | \
+        python3 ~/.claude/skills/gh-project-implement/scripts/batch_executor.py --max-retries 3
+    """)
+    report.issues_implemented = impl_result.success_count
+    report.impl_failures = impl_result.failures
+
+    # 阶段 5: 批量审查
+    print("🔍 阶段 5/6: 批量 PR 审查...")
+    review_result = invoke_skill("/gh-project-pr", project.number, "--auto-merge", "--review-backend", "codex")
+    report.prs_merged = review_result.merged_count
+    report.review_failures = review_result.failures
+
+    # 阶段 6: 完成报告
+    print("📊 阶段 6/6: 生成报告...")
+    report.duration = now() - start_time
+    print(report.format())
+
+    return report
+```
+
+## 注意事项
+
+1. **耗时提醒**: 完整流程可能需要较长时间（取决于 Issue 数量和复杂度）
+2. **资源消耗**: 并发实现会创建多个 worktree 和 Claude 会话
+3. **幂等性**: 重复执行会跳过已完成的 Issue（基于状态判断）
+4. **回滚**: 不支持自动回滚，失败项需人工处理
+
+---
+
+**总结**: `gh-autopilot` 是从需求到代码合并的一站式解决方案，让用户专注于需求定义，自动化处理开发、审查、合并的完整生命周期。

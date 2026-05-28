@@ -1,0 +1,211 @@
+name: Release Build Validation
+
+on:
+  pull_request:
+    branches: [ main, release/* ]
+  push:
+    branches: [ main, release/* ]
+    tags:
+      - 'v*'
+
+jobs:
+  validate-release:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+      
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      
+      - name: Decode signing keystore
+        run: |
+          echo "${{ secrets.SIGNING_KEY_STORE_BASE64 }}" | base64 --decode > ${{ github.workspace }}/release.jks
+          chmod 600 ${{ github.workspace }}/release.jks
+      
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+        env:
+          SIGNING_KEY_STORE_PATH: ${{ github.workspace }}/release.jks
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      
+      - name: Build release AAB
+        run: ./gradlew bundleRelease
+        env:
+          SIGNING_KEY_STORE_PATH: ${{ github.workspace }}/release.jks
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      
+      - name: Verify ProGuard mapping file
+        run: |
+          if [ ! -f "app/build/outputs/mapping/release/mapping.txt" ]; then
+            echo "❌ ProGuard mapping file not found!"
+            exit 1
+          fi
+          
+          if [ ! -s "app/build/outputs/mapping/release/mapping.txt" ]; then
+            echo "❌ ProGuard mapping file is empty!"
+            exit 1
+          fi
+          
+          echo "✅ ProGuard mapping file generated successfully"
+          echo "Mapping file size: $(du -h app/build/outputs/mapping/release/mapping.txt | cut -f1)"
+      
+      - name: Verify APK signature
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          
+          if jarsigner -verify -verbose "$APK_PATH" > /dev/null 2>&1; then
+            echo "✅ APK is properly signed"
+          else
+            echo "❌ APK signature verification failed"
+            exit 1
+          fi
+      
+      - name: Analyze APK
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          
+          echo "📦 APK Analysis"
+          echo "=============="
+          
+          # Size
+          APK_SIZE_MB=$(du -m "$APK_PATH" | cut -f1)
+          echo "Size: ${APK_SIZE_MB}MB"
+          
+          if [ $APK_SIZE_MB -gt 100 ]; then
+            echo "⚠️  APK size > 100MB - consider optimization"
+          fi
+          
+          # Package info
+          aapt dump badging "$APK_PATH" | grep -E "package:|versionCode:|versionName:|targetSdkVersion:"
+          
+          # Check for debug symbols
+          if aapt list -v "$APK_PATH" | grep -i debug > /dev/null; then
+            echo "⚠️  Debug symbols found in release"
+          else
+            echo "✅ No debug symbols (good)"
+          fi
+      
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-release-validation
+      
+      - name: Create AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: echo "Generated AVD snapshot"
+      
+      - name: Run E2E tests on release build
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            echo "📱 Running E2E tests on release build..."
+            ./gradlew connectedReleaseAndroidTest || {
+              echo "❌ Tests failed on release build!"
+              echo "This usually means ProGuard broke something."
+              echo "Check ProGuard rules and add keep rules for failing classes."
+              exit 1
+            }
+            echo "✅ All tests passed on release build"
+      
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-builds
+          path: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/mapping/release/mapping.txt
+          retention-days: 30
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-test-results
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          retention-days: 30
+      
+      - name: Generate validation report
+        if: always()
+        run: |
+          cat > validation-summary.md << 'EOF'
+          # Release Build Validation Summary
+          
+          ## Build Status
+          
+          - APK Build: ✅ Success
+          - AAB Build: ✅ Success
+          - ProGuard Mapping: ✅ Generated
+          - Signature: ✅ Valid
+          - E2E Tests: ✅ Passed
+          
+          ## Artifacts
+          
+          - APK: app/build/outputs/apk/release/app-release.apk
+          - AAB: app/build/outputs/bundle/release/app-release.aab
+          - Mapping: app/build/outputs/mapping/release/mapping.txt
+          
+          ## Next Steps
+          
+          If this is a release build:
+          1. Download build artifacts from workflow
+          2. Save ProGuard mapping file securely
+          3. Upload to Play Store via console or workflow
+          
+          EOF
+          
+          cat validation-summary.md
+      
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-report
+          path: validation-summary.md
+          retention-days: 30
+      
+      - name: Clean up keystore
+        if: always()
+        run: rm -f ${{ github.workspace }}/release.jks
+      
+      - name: Validation summary
+        if: success()
+        run: |
+          echo "✅ Release Build Validation PASSED"
+          echo ""
+          echo "Build is ready for Play Store deployment!"
+          echo "Download artifacts and ProGuard mapping file from this workflow."

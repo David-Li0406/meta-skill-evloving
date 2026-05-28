@@ -1,0 +1,71 @@
+<!-- macOS MapKit Info.plist 設定テンプレート -->
+<!-- このファイルの内容をInfo.plistに追加してください -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+    <!-- =================================================== -->
+    <!-- 位置情報使用説明（必須） -->
+    <!-- =================================================== -->
+
+    <!--
+    NSLocationUsageDescription
+    macOSで位置情報にアクセスする際にユーザーに表示される説明文。
+    具体的な使用目的とユーザーにとってのメリットを記載してください。
+    -->
+    <key>NSLocationUsageDescription</key>
+    <string>現在地を地図上に表示し、周辺のスポットを検索するために位置情報を使用します。</string>
+
+    <!--
+    NSLocationWhenInUseUsageDescription（オプション - macOS 14+）
+    macOS 14以降では、iOS互換のキーも使用可能です。
+    両方設定した場合、NSLocationUsageDescriptionが優先されます。
+    -->
+    <!-- <key>NSLocationWhenInUseUsageDescription</key>
+    <string>地図上に現在地を表示するために位置情報を使用します。</string> -->
+
+
+    <!-- =================================================== -->
+    <!-- 精度関連（オプション） -->
+    <!-- =================================================== -->
+
+    <!--
+    NSLocationTemporaryUsageDescriptionDictionary
+    精度の一時的な向上をリクエストする際の説明文。
+    キーは任意の識別子、値は説明文です。
+    -->
+    <!-- <key>NSLocationTemporaryUsageDescriptionDictionary</key>
+    <dict>
+        <key>NavigationPurpose</key>
+        <string>正確なナビゲーションのために、一時的に正確な位置情報が必要です。</string>
+        <key>SearchPurpose</key>
+        <string>より正確な検索結果を表示するために、正確な位置情報が必要です。</string>
+    </dict> -->
+
+
+    <!-- =================================================== -->
+    <!-- 説明文のベストプラクティス -->
+    <!-- =================================================== -->
+
+    <!--
+    良い例:
+    - 「現在地周辺のレストランを検索するために位置情報を使用します」
+    - 「地図上であなたの位置を表示し、目的地への経路を案内するために位置情報を使用します」
+    - 「最寄りの店舗を表示するために位置情報を使用します」
+
+    悪い例:
+    - 「位置情報が必要です」（具体的な理由がない）
+    - 「Location access required」（日本語アプリで英語）
+    - 「アプリの機能向上のため」（曖昧すぎる）
+
+    ポイント:
+    1. ユーザーにとってのメリットを明確に
+    2. 具体的な使用目的を記載
+    3. 「〜するために位置情報を使用します」の形式推奨
+    4. アプリの対応言語で記載
+    -->
+
+</dict>
+</plist>

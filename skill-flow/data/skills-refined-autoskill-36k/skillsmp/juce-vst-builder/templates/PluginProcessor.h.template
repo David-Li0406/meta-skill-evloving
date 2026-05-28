@@ -1,0 +1,116 @@
+#pragma once
+
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
+
+#include "Parameters/ParameterIDs.h"
+#include "DSP/{{ENGINE_NAME}}.h"
+
+//==============================================================================
+/**
+ * {{PLUGIN_NAME}}AudioProcessor
+ *
+ * Main audio processor class for the {{PRODUCT_NAME}} plugin.
+ * Handles audio/MIDI processing and parameter management.
+ */
+class {{PLUGIN_NAME}}AudioProcessor : public juce::AudioProcessor
+{
+public:
+    //==========================================================================
+    {{PLUGIN_NAME}}AudioProcessor();
+    ~{{PLUGIN_NAME}}AudioProcessor() override;
+
+    //==========================================================================
+    // AudioProcessor overrides
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
+    void releaseResources() override;
+
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+
+    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    using AudioProcessor::processBlock;
+
+    //==========================================================================
+    // Editor
+    juce::AudioProcessorEditor* createEditor() override;
+    bool hasEditor() const override { return true; }
+
+    //==========================================================================
+    // Plugin info
+    const juce::String getName() const override { return JucePlugin_Name; }
+
+    bool acceptsMidi() const override
+    {
+#if JucePlugin_WantsMidiInput
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    bool producesMidi() const override
+    {
+#if JucePlugin_ProducesMidiOutput
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    bool isMidiEffect() const override
+    {
+#if JucePlugin_IsMidiEffect
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    double getTailLengthSeconds() const override { return 0.0; }
+
+    //==========================================================================
+    // Programs (presets via host)
+    int getNumPrograms() override { return 1; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram(int) override {}
+    const juce::String getProgramName(int) override { return {}; }
+    void changeProgramName(int, const juce::String&) override {}
+
+    //==========================================================================
+    // State persistence
+    void getStateInformation(juce::MemoryBlock& destData) override;
+    void setStateInformation(const void* data, int sizeInBytes) override;
+
+    //==========================================================================
+    // Parameter access
+    juce::AudioProcessorValueTreeState apvts;
+
+    // Public access for visualization (optional)
+    {{ENGINE_NAME}}& getEngine() { return engine; }
+
+private:
+    //==========================================================================
+    // DSP Engine
+    {{ENGINE_NAME}} engine;
+
+    //==========================================================================
+    // Cached parameter pointers for real-time access
+    // These provide lock-free access to parameter values in processBlock
+    struct ParameterCache
+    {
+        std::atomic<float>* masterVolume = nullptr;
+        // Add more parameter pointers as needed:
+        // std::atomic<float>* filterCutoff = nullptr;
+        // std::atomic<float>* filterResonance = nullptr;
+        // etc.
+    };
+    ParameterCache params;
+
+    //==========================================================================
+    // Helper methods
+    void updateEngineFromParameters();
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+    //==========================================================================
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR({{PLUGIN_NAME}}AudioProcessor)
+};

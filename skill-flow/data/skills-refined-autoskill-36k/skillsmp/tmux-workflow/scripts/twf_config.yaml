@@ -1,0 +1,102 @@
+# tmux-workflow (twf) config
+#
+# This file is read by:
+# - scripts/codex_up_tmux.sh (build default `codex ...` command)
+# - scripts/twf             (pick twf state dir + model defaults)
+#
+# Override config path:
+#   TWF_CODEX_CMD_CONFIG=/path/to/twf_config.yaml
+#
+# Override state dir completely (highest priority, ignores twf_state_dir_mode):
+#   TWF_STATE_DIR=/some/path
+
+# This config supports both a nested structure (preferred) and legacy flat keys.
+# Scripts will read nested keys first and fall back to legacy keys.
+
+codex:
+  # Codex model selection
+  model: gpt-5.2
+  model_reasoning_effort: high
+
+  # Optional profile (equivalent to `codex -p <profile>`).
+  profile: "codez"
+
+twf:
+  # Worker state directory (where twf writes its worker state JSON files)
+  state_dir:
+    # - auto:   <skill_root>/.twf/  (default; for project installs: ./.codex/skills/tmux-workflow/.twf/)
+    # - global: ~/.twf/             (shared across projects/worktrees)
+    # - manual: use state_dir.dir   (must be set)
+    mode: auto
+
+    # Only used when state_dir.mode: manual
+    # Tip: use an absolute path to avoid ambiguity.
+    # Relative paths are resolved from the current working directory.
+    dir: ""
+
+  # If false, twf will ignore TWF_AUTH_SRC/TWF_CODEX_HOME_SRC/TWF_CODEX_PROFILE
+  # so tmux server/global env can't silently override project config.
+  env:
+    allow_overrides: false
+
+  # Optional dependency: multi-account account pool
+  account_pool:
+    # When enabled, twf will ask a separate "account pool" skill to:
+    # - choose which CODEX_HOME source to copy from for each worker, and
+    # - choose an auth credential file and copy it into worker home as `auth.json`,
+    # so many workers don't all share the same login credentials.
+    enabled: false
+
+    # Optional override path to the account pool command.
+    # If empty, twf auto-detects:
+    # - sibling project skill: ./.codex/skills/codex-account-pool/scripts/cap
+    # - global install:        ~/.codex/skills/codex-account-pool/scripts/cap
+    cmd: ""
+
+    # Auth load balancing (AUTH_TEAM)
+    auth_team:
+      # Recommended: set to a directory containing *only* auth files to avoid
+      # accidentally selecting non-auth files.
+      dir: "/root/.codex/team"
+
+      # Which files to consider inside auth_team.dir.
+      # Example: "auth.json.*" (matches auth.json.88code, auth.json.outlook-1, ...)
+      glob: "auth.json*"
+
+      # How to choose auth files:
+      # - balanced:   least-used (per-worker pick, default historical behavior)
+      # - team_cycle: one auth for the whole team; rotate only when you advance the pointer
+      #               (works best with `cap watch-team` + stop/resume flows)
+      strategy: team_cycle
+
+    # Team-wide auto-rotation (only meaningful when auth_team.strategy=team_cycle).
+    # This is consumed by ai-team-workflow, which will start a background `cap watch-team`
+    # tmux session when account_pool is enabled.
+    watch_team:
+      enabled: false
+      interval: 180
+      grace: 300
+      max_retries: 10
+      needle: "You've hit your usage limit."
+      message: "Task continues. If you are waiting for a reply, please ignore this message."
+
+  # Default auth when account pool is disabled.
+  #
+  # When account_pool.enabled=false, you can optionally inject an auth credential
+  # file (any filename) by copying its contents into each worker's
+  # `CODEX_HOME/auth.json` (Codex only reads auth from `auth.json`).
+  auth:
+    src: "/root/.codex/auth.json.codez"
+
+# Legacy (flat) keys (optional):
+# model: gpt-5.2
+# model_reasoning_effort: high
+# twf_state_dir_mode: auto
+# twf_state_dir: ""
+# twf_use_account_pool: true
+# twf_account_pool_cmd: ""
+# twf_profile: ""
+# twf_auth_src: ""
+# twf_auth_team_dir: "/root/.codex/team"
+# twf_auth_team_glob: "auth.json*"
+# twf_auth_team_strategy: "team_cycle"

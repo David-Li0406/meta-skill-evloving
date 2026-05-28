@@ -1,0 +1,71 @@
+{
+  "skill": "compute_precious_miner_margin_proxy",
+  "generated_at": "2025-01-15T10:30:00Z",
+  "version": "0.1.0",
+  "parameters": {
+    "metal": "gold",
+    "miners": ["NEM", "GOLD", "AEM"],
+    "start_date": "2015-01-01",
+    "end_date": "2025-01-15",
+    "frequency": "quarterly",
+    "cost_metric": "AISC",
+    "aggregation": "production_weighted",
+    "history_window_years": 20
+  },
+  "basket": {
+    "miners": ["NEM", "GOLD", "AEM"],
+    "aggregation": "production_weighted",
+    "weights": {
+      "NEM": 0.45,
+      "GOLD": 0.35,
+      "AEM": 0.20
+    }
+  },
+  "latest": {
+    "date": "2024-Q4",
+    "metal_price_usd_oz": 2650.0,
+    "unit_cost_proxy_usd_oz": 1320.0,
+    "gross_margin_proxy": 0.502,
+    "history_percentile": 0.78,
+    "regime_label": "high_margin"
+  },
+  "miner_details": [
+    {
+      "ticker": "NEM",
+      "aisc_usd_oz": 1350.0,
+      "production_oz": 1600000,
+      "margin_proxy": 0.491,
+      "margin_vs_basket": -0.011
+    },
+    {
+      "ticker": "GOLD",
+      "aisc_usd_oz": 1290.0,
+      "production_oz": 1200000,
+      "margin_proxy": 0.513,
+      "margin_vs_basket": 0.011
+    },
+    {
+      "ticker": "AEM",
+      "aisc_usd_oz": 1310.0,
+      "production_oz": 900000,
+      "margin_proxy": 0.506,
+      "margin_vs_basket": 0.004
+    }
+  ],
+  "decomposition": {
+    "lookback_quarters": 3,
+    "price_change_pct": 0.12,
+    "cost_change_pct": -0.03,
+    "driver": "mostly_price_up"
+  },
+  "notes": [
+    "gross_margin_proxy 使用 (price - AISC)/price 作為近似；不等同會計報表的毛利率口徑。",
+    "成本為quarterly資料，已對齊至價格索引。",
+    "歷史分位數基於 20 年滾動視窗計算。"
+  ],
+  "recommended_next_checks": [
+    "用同一套 margin proxy 對照 GDX/GDXJ 或個股的 3/6/12 個月前瞻報酬（事件研究）",
+    "檢查是否出現資本開支/併購升溫",
+    "監控成本通膨壓力（柴油/工資/試劑）"
+  ]
+}

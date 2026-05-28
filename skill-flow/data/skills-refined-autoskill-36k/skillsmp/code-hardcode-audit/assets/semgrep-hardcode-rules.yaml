@@ -1,0 +1,144 @@
+rules:
+  # Rule 1: Hardcoded URLs
+  - id: hardcoded-url
+    pattern-either:
+      - pattern: '"http://$..."'
+      - pattern: '"https://$..."'
+      - pattern: "'http://$...'"
+      - pattern: "'https://$...'"
+    message: "Hardcoded URL detected. Consider extracting to a constant or configuration."
+    severity: WARNING
+    languages: [python, javascript, typescript, go, java]
+    metadata:
+      category: hardcode
+      subcategory: url
+      suggested_fix: "Move to constants module or environment variable"
+
+  # Rule 2: Hardcoded Ports (simplified)
+  - id: hardcoded-port
+    pattern-either:
+      - pattern: "port=8123"
+      - pattern: "port=8443"
+      - pattern: "port=9000"
+      - pattern: "port=9440"
+      - pattern: "port=3000"
+      - pattern: "port=5000"
+      - pattern: "port=5432"
+      - pattern: "port=3306"
+      - pattern: "port=6379"
+      - pattern: "port=27017"
+    message: "Hardcoded port number. Consider extracting to a named constant."
+    severity: WARNING
+    languages: [python, javascript, typescript, go, java]
+    metadata:
+      category: hardcode
+      subcategory: port
+      suggested_fix: "Create PORT_* constant in constants module"
+
+  # Rule 3: Hardcoded Timeframe Strings
+  - id: hardcoded-timeframe
+    pattern-either:
+      - pattern: '"1h"'
+      - pattern: '"4h"'
+      - pattern: '"1d"'
+      - pattern: '"1m"'
+      - pattern: '"15m"'
+      - pattern: '"30m"'
+      - pattern: '"1w"'
+      - pattern: "'1h'"
+      - pattern: "'4h'"
+      - pattern: "'1d'"
+      - pattern: "'1m'"
+      - pattern: "'15m'"
+      - pattern: "'30m'"
+      - pattern: "'1w'"
+    message: "Hardcoded timeframe string. Consider using a Timeframe type or constant."
+    severity: INFO
+    languages: [python, javascript, typescript]
+    metadata:
+      category: hardcode
+      subcategory: timeframe
+      suggested_fix: "Use TIMEFRAME_* constant or Timeframe enum"
+
+  # Rule 4: Hardcoded File Paths
+  - id: hardcoded-path
+    pattern-either:
+      - pattern: '"/tmp/$..."'
+      - pattern: '"/var/$..."'
+      - pattern: '"/etc/$..."'
+      - pattern: '"/home/$..."'
+      - pattern: '"/Users/$..."'
+      - pattern: "'/tmp/$...'"
+      - pattern: "'/var/$...'"
+      - pattern: "'/etc/$...'"
+      - pattern: "'/home/$...'"
+      - pattern: "'/Users/$...'"
+    message: "Hardcoded file path detected. Consider using pathlib or configuration."
+    severity: WARNING
+    languages: [python, javascript, typescript, go]
+    metadata:
+      category: hardcode
+      subcategory: path
+      suggested_fix: "Use Path objects or environment-based configuration"
+
+  # Rule 5: Potential Hardcoded Credentials
+  - id: hardcoded-credential
+    patterns:
+      - pattern-either:
+          - pattern: 'password="$VALUE"'
+          - pattern: "password='$VALUE'"
+          - pattern: 'api_key="$VALUE"'
+          - pattern: "api_key='$VALUE'"
+          - pattern: 'secret="$VALUE"'
+          - pattern: "secret='$VALUE'"
+          - pattern: 'token="$VALUE"'
+          - pattern: "token='$VALUE'"
+      - pattern-not: '$VAR=""'
+      - pattern-not: "$VAR=''"
+    message: "Potential hardcoded credential. Use environment variables or secrets manager."
+    severity: ERROR
+    languages: [python, javascript, typescript]
+    metadata:
+      category: security
+      subcategory: credential
+      suggested_fix: "Use os.environ, Doppler, or secrets manager"
+
+  # Rule 6: Hardcoded Retry Configuration (simplified)
+  - id: hardcoded-retry-config
+    pattern-either:
+      - pattern: "max_retries=3"
+      - pattern: "max_retries=5"
+      - pattern: "retry_count=3"
+      - pattern: "max_attempts=3"
+      - pattern: "max_attempts=5"
+      - pattern: "timeout=30"
+      - pattern: "timeout=60"
+      - pattern: "timeout=120"
+      - pattern: "delay=1"
+      - pattern: "delay=5"
+    message: "Hardcoded retry/timeout configuration. Consider extracting to constants."
+    severity: INFO
+    languages: [python, javascript, typescript]
+    metadata:
+      category: hardcode
+      subcategory: retry
+      suggested_fix: "Create RETRY_* or TIMEOUT_* constants"
+
+  # Rule 7: Hardcoded API Limits (simplified)
+  - id: hardcoded-api-limit
+    pattern-either:
+      - pattern: "limit=100"
+      - pattern: "limit=1000"
+      - pattern: "page_size=100"
+      - pattern: "batch_size=100"
+      - pattern: "batch_size=1000"
+      - pattern: "chunk_size=1000"
+      - pattern: "max_results=100"
+      - pattern: "max_results=1000"
+    message: "Hardcoded API limit. Consider extracting to a named constant."
+    severity: INFO
+    languages: [python, javascript, typescript]
+    metadata:
+      category: hardcode
+      subcategory: api_limit
+      suggested_fix: "Create API_CHUNK_SIZE or similar constant"

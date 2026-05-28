@@ -1,0 +1,174 @@
+{
+  "strategy": "module-based",
+  "created_at": "2026-01-22T16:00:00Z",
+  "project_root": "/home/ubuntu/qenex",
+  "chunks": [
+    {
+      "id": "chunk_module_api_service",
+      "name": "API Service",
+      "description": "FastAPI-based REST API for trading operations",
+      "files": [
+        "services/api/main.py",
+        "services/api/routes/",
+        "services/api/models/",
+        "services/api/schemas/",
+        "services/api/tests/"
+      ],
+      "entry_points": [
+        "services/api/main.py"
+      ],
+      "dependencies": [
+        "chunk_module_shared"
+      ],
+      "status": "in_progress",
+      "completion": 85,
+      "language": "Python",
+      "port": 9000
+    },
+    {
+      "id": "chunk_module_trading_engine",
+      "name": "Trading Engine",
+      "description": "High-frequency trading core logic in Rust",
+      "files": [
+        "services/trading-engine/src/",
+        "services/trading-engine/tests/",
+        "services/trading-engine/Cargo.toml"
+      ],
+      "entry_points": [
+        "services/trading-engine/src/main.rs",
+        "services/trading-engine/src/lib.rs"
+      ],
+      "dependencies": [
+        "chunk_module_shared"
+      ],
+      "status": "completed",
+      "completion": 100,
+      "language": "Rust",
+      "port": 8080
+    },
+    {
+      "id": "chunk_module_gateway",
+      "name": "API Gateway",
+      "description": "Go-based API gateway with routing and auth",
+      "files": [
+        "services/gateway/cmd/server/main.go",
+        "services/gateway/internal/",
+        "services/gateway/pkg/",
+        "services/gateway/go.mod"
+      ],
+      "entry_points": [
+        "services/gateway/cmd/server/main.go"
+      ],
+      "dependencies": [],
+      "status": "completed",
+      "completion": 100,
+      "language": "Go",
+      "port": 8000
+    },
+    {
+      "id": "chunk_module_auth_service",
+      "name": "Auth Service",
+      "description": "Authentication and authorization microservice",
+      "files": [
+        "services/auth/cmd/server/main.go",
+        "services/auth/internal/",
+        "services/auth/pkg/",
+        "services/auth/go.mod"
+      ],
+      "entry_points": [
+        "services/auth/cmd/server/main.go"
+      ],
+      "dependencies": [
+        "chunk_module_shared"
+      ],
+      "status": "completed",
+      "completion": 100,
+      "language": "Go",
+      "port": 8081
+    },
+    {
+      "id": "chunk_module_quant",
+      "name": "Quant Analysis",
+      "description": "Quantitative analysis and modeling in Julia",
+      "files": [
+        "services/quant/src/",
+        "services/quant/test/",
+        "services/quant/Project.toml"
+      ],
+      "entry_points": [
+        "services/quant/src/QuantAnalysis.jl"
+      ],
+      "dependencies": [],
+      "status": "in_progress",
+      "completion": 60,
+      "language": "Julia",
+      "port": 8199
+    },
+    {
+      "id": "chunk_module_dashboard",
+      "name": "Dashboard",
+      "description": "React-based trading dashboard UI",
+      "files": [
+        "services/dashboard/src/",
+        "services/dashboard/public/",
+        "services/dashboard/package.json"
+      ],
+      "entry_points": [
+        "services/dashboard/src/index.js",
+        "services/dashboard/src/App.js"
+      ],
+      "dependencies": [
+        "chunk_module_api_service"
+      ],
+      "status": "pending",
+      "completion": 0,
+      "language": "JavaScript",
+      "port": 3000
+    },
+    {
+      "id": "chunk_module_shared",
+      "name": "Shared Libraries",
+      "description": "Common utilities and types shared across services",
+      "files": [
+        "libs/shared/src/",
+        "libs/shared/Cargo.toml",
+        "libs/python-common/",
+        "libs/go-common/"
+      ],
+      "entry_points": [
+        "libs/shared/src/lib.rs"
+      ],
+      "dependencies": [],
+      "status": "completed",
+      "completion": 100,
+      "language": "Multiple"
+    },
+    {
+      "id": "chunk_module_cli_tools",
+      "name": "CLI Tools",
+      "description": "Command-line utilities for operations",
+      "files": [
+        "tools/cli/main.go",
+        "tools/cli/cmd/",
+        "tools/cli/go.mod"
+      ],
+      "entry_points": [
+        "tools/cli/main.go"
+      ],
+      "dependencies": [
+        "chunk_module_shared"
+      ],
+      "status": "in_progress",
+      "completion": 40,
+      "language": "Go"
+    }
+  ],
+  "current_chunk": "chunk_module_api_service",
+  "metadata": {
+    "total_chunks": 8,
+    "completed_chunks": 4,
+    "overall_progress": 73,
+    "architecture": "microservices",
+    "languages": ["Python", "Rust", "Go", "Julia", "JavaScript"]
+  }
+}

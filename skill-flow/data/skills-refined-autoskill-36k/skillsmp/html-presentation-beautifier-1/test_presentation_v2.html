@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能图表选择测试演示</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+/* McKinsey/BCG Style Presentation CSS */
+
+/* Color Variables */
+:root {
+    --primary-bg: #FFFFFF;
+    --header-bg: #000000;
+    --primary-accent: #F85d42;
+    --secondary-accent: #74788d;
+    --deep-blue: #556EE6;
+    --green: #34c38f;
+    --blue: #50a5f1;
+    --yellow: #f1b44c;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    --text-light: #FFFFFF;
+}
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Navigation Bar */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--header-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    z-index: 1000;
+}
+
+.nav-btn {
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    border: none;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #e04a31;
+}
+
+.nav-btn:disabled {
+    background-color: var(--secondary-accent);
+    cursor: not-allowed;
+}
+
+.slide-counter {
+    color: var(--text-light);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Presentation Container */
+.presentation-container {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    max-height: calc(100vh - 60px);
+}
+
+/* Slide Styles */
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 60px 80px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+    z-index: 1;
+}
+
+/* Title Slide */
+.title-slide {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.title {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 30px;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--primary-accent);
+    margin-bottom: 20px;
+}
+
+.date {
+    font-size: 20px;
+    color: var(--secondary-accent);
+    font-weight: 400;
+}
+
+/* Header Bar */
+.header-bar {
+    background-color: var(--header-bg);
+    padding: 20px 40px;
+    margin: -60px -80px 40px -80px;
+}
+
+.slide-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: -0.5px;
+}
+
+/* Slide Content */
+.slide-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Key Points */
+.key-points {
+    list-style: none;
+    padding: 0;
+}
+
+.key-point {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 20px 0;
+    border-bottom: 2px solid var(--secondary-accent);
+    margin-bottom: 10px;
+}
+
+.key-point::before {
+    content: "✓ ";
+    color: var(--primary-accent);
+    margin-right: 15px;
+    font-weight: 700;
+}
+
+/* Two-Column Layout */
+.two-column {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+}
+
+.column {
+    flex: 1;
+}
+
+.chart-container {
+    min-height: 400px;
+    max-height: 450px;
+    position: relative;
+}
+
+.chart-caption {
+    text-align: center;
+    font-size: 14px;
+    color: var(--secondary-accent);
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Section Header */
+.section-header {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.accent-text {
+    color: var(--primary-accent);
+}
+
+/* Body Text */
+.body-text {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+/* Bullet Points */
+.bullet-points {
+    list-style: none;
+    padding: 0;
+}
+
+.bullet-points li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 12px 0 12px 30px;
+    position: relative;
+}
+
+.bullet-points li::before {
+    content: "•";
+    color: var(--primary-accent);
+    font-size: 24px;
+    position: absolute;
+    left: 0;
+    top: 8px;
+}
+
+/* Conclusions Grid */
+.conclusions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.conclusion-card {
+    background-color: #f8f9fa;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-accent);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.card-text {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+/* Recommendations Box */
+.recommendations-box {
+    background-color: #fff3e0;
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--yellow);
+    margin: 30px 0;
+}
+
+/* Numbered List */
+.numbered-list {
+    list-style: none;
+    counter-reset: recommendation-counter;
+    padding: 0;
+}
+
+.numbered-list li {
+    font-size: 18px;
+    color: var(--text-secondary);
+    padding: 15px 0 15px 40px;
+    position: relative;
+    counter-increment: recommendation-counter;
+}
+
+.numbered-list li::before {
+    content: counter(recommendation-counter);
+    background-color: var(--primary-accent);
+    color: var(--text-light);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Full-screen Button */
+.fullscreen-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: var(--header-bg);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: background-color 0.3s ease;
+}
+
+.fullscreen-btn:hover {
+    background-color: var(--secondary-accent);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .slide {
+        padding: 60px 40px;
+    }
+
+    .two-column {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .conclusions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .title {
+        font-size: 48px;
+    }
+
+    .slide-title {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 20px;
+    }
+
+    .slide {
+        padding: 40px 20px;
+    }
+
+    .title {
+        font-size: 36px;
+    }
+
+    .slide-title {
+        font-size: 28px;
+    }
+
+    .subtitle {
+        font-size: 24px;
+    }
+
+    .key-point {
+        font-size: 18px;
+    }
+}
+
+/* Scrollbar Styles */
+.slide::-webkit-scrollbar {
+    width: 8px;
+}
+
+.slide::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.slide::-webkit-scrollbar-thumb {
+    background: var(--secondary-accent);
+    border-radius: 4px;
+}
+
+.slide::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-accent);
+}
+
+/* Special Chart Type Styles */
+/* Radar Chart Container */
+.chart-container.radar-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Bubble Chart Container */
+.chart-container.bubble-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Polar Area Chart Container */
+.chart-container.polar-chart {
+    min-height: 450px;
+    max-height: 500px;
+}
+
+/* Doughnut Chart Container - Center Text */
+.doughnut-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.doughnut-center-value {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.doughnut-center-label {
+    font-size: 16px;
+    color: var(--secondary-accent);
+    margin-top: 5px;
+}
+
+/* Multi-Chart Layout */
+.multi-chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin: 20px 0;
+}
+
+.multi-chart-grid.three-col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* Chart Type Badge */
+.chart-type-badge {
+    display: inline-block;
+    background-color: var(--secondary-accent);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Comparison Chart Styles */
+.comparison-bar-positive {
+    background-color: var(--green);
+}
+
+.comparison-bar-negative {
+    background-color: var(--primary);
+}
+
+/* Matrix Chart Container */
+.matrix-chart-container {
+    min-height: 500px;
+    max-height: 550px;
+    position: relative;
+}
+
+/* Heatmap Styles */
+.heatmap-cell {
+    border-radius: 2px;
+    transition: opacity 0.2s;
+}
+
+.heatmap-cell:hover {
+    opacity: 0.8;
+}
+
+/* Funnel Chart Styles */
+.funnel-bar {
+    margin: 10px auto;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.funnel-bar:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Progress Ring Styles */
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.35s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+/* Gauge Chart Styles */
+.gauge-needle {
+    transition: transform 1s ease-out;
+    transform-origin: 50% 50%;
+}
+
+/* Waterfall Chart Styles */
+.waterfall-bar-positive {
+    background-color: var(--green);
+}
+
+.waterfall-bar-negative {
+    background-color: var(--primary);
+}
+
+.waterfall-bar-total {
+    background-color: var(--header-bg);
+}
+
+/* Bullet Chart Styles */
+.bullet-background {
+    fill: #e0e0e0;
+}
+
+.bullet-measure {
+    fill: var(--deep-blue);
+}
+
+.bullet-marker {
+    fill: var(--primary);
+}
+
+/* Scatter Plot with Size */
+.bubble-chart-tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Strategic Matrix Quadrants */
+.matrix-quadrant {
+    position: absolute;
+    border: 1px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--secondary-accent);
+}
+
+/* Responsive Adjustments for Special Charts */
+@media (max-width: 1200px) {
+    .multi-chart-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .multi-chart-grid.three-col {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container.radar-chart,
+    .chart-container.bubble-chart,
+    .chart-container.polar-chart {
+        min-height: 350px;
+        max-height: 400px;
+    }
+
+    .matrix-chart-container {
+        min-height: 400px;
+        max-height: 450px;
+    }
+}
+
+/* Animation for Chart Entry */
+@keyframes chartFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chart-container {
+    animation: chartFadeIn 0.5s ease-out;
+}
+
+/* Chart Legend Customization */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.chart-legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--secondary-accent);
+}
+
+.chart-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 5px;
+}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← Previous</button>
+        <span class="slide-counter">Slide <span id="currentSlide">1</span> of <span id="totalSlides">1</span></span>
+        <button class="nav-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+    </nav>
+
+    <!-- Slides Container -->
+    <div class="presentation-container">
+        <div class="slide active" data-slide="1">
+            <div class="title-slide">
+                <h1 class="title">智能图表选择测试演示</h1>
+                <h2 class="subtitle">Data Analysis & Insights</h2>
+                <p class="date">Date: January 2026</p>
+            </div>
+        </div>
+        <div class="slide" data-slide="2">
+            <div class="header-bar">
+                <h1 class="slide-title">Executive Summary</h1>
+            </div>
+            <div class="slide-content">
+                <ul class="key-points">
+                <li class="key-point">市场份额排名前三产品占据80%的市场份额，呈现明显的集中趋势</li>
+                <li class="key-point">用户转化漏斗中最关键的流失点在注册到活跃阶段，转化率仅50%</li>
+                <li class="key-point">收入呈现持续增长趋势，年均增长率超过25%，2024年达到130亿元</li>
+                <li class="key-point">销售目标和利润目标均已超额完成，客户目标接近达成</li>
+                <li class="key-point">团队在技术和领导能力方面表现突出，创新能力有提升空间</li>
+                </ul>
+            </div>
+        </div>
+        <div class="slide" data-slide="3">
+            <div class="header-bar">
+                <h1 class="slide-title">市场份额排名</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">环形图 (Doughnut Chart)</span>
+                    <canvas id="chart1" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">市场份额排名 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>市场份额排名数据 - 产品A到E的市场份额百分比数据</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="4">
+            <div class="header-bar">
+                <h1 class="slide-title">用户转化漏斗分析</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">柱状图 (Bar Chart)</span>
+                    <canvas id="chart2" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">用户转化漏斗分析 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="5">
+            <div class="header-bar">
+                <h1 class="slide-title">收入增长趋势</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">折线图 (Line Chart)</span>
+                    <canvas id="chart3" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">收入增长趋势 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="6">
+            <div class="header-bar">
+                <h1 class="slide-title">KPI目标达成情况</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">柱状图 (Bar Chart)</span>
+                    <canvas id="chart4" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">KPI目标达成情况 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="7">
+            <div class="header-bar">
+                <h1 class="slide-title">团队多维能力评估</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container radar-chart">
+                    <span class="chart-type-badge">雷达图 (Radar Chart)</span>
+                    <canvas id="chart5" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">团队多维能力评估 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="8">
+            <div class="header-bar">
+                <h1 class="slide-title">预算分配占比</h1>
+            </div>
+            <div class="slide-content two-column">
+                <div class="column chart-container">
+                    <span class="chart-type-badge">环形图 (Doughnut Chart)</span>
+                    <canvas id="chart6" style="height: 400px !important; max-height: 400px;"></canvas>
+                    <p class="chart-caption">预算分配占比 - Smart Chart Selection</p>
+                </div>
+                <div class="column">
+                    <h3 class="section-header">Key Insights</h3>
+                    <ul class="bullet-points">
+                        <li><li>Key insights from the data analysis</li></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="slide" data-slide="9">
+            <div class="header-bar">
+                <h1 class="slide-title">KPI目标达成情况</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="10">
+            <div class="header-bar">
+                <h1 class="slide-title">团队多维能力评估</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="11">
+            <div class="header-bar">
+                <h1 class="slide-title">预算分配占比</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="12">
+            <div class="header-bar">
+                <h1 class="slide-title">关键洞察</h1>
+            </div>
+            <div class="slide-content">
+            
+            </div>
+        </div>
+        <div class="slide" data-slide="13">
+            <div class="header-bar">
+                <h1 class="slide-title">Conclusions & Recommendations</h1>
+            </div>
+            <div class="slide-content">
+                <div class="conclusions-grid">
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 1</h3>
+                    <p class="card-text">市场份额排名前三产品占据80%的市场份额，呈现明显的集中趋势</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 2</h3>
+                    <p class="card-text">用户转化漏斗中最关键的流失点在注册到活跃阶段，转化率仅50%</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 3</h3>
+                    <p class="card-text">收入呈现持续增长趋势，年均增长率超过25%，2024年达到130亿元</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 4</h3>
+                    <p class="card-text">销售目标和利润目标均已超额完成，客户目标接近达成</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 5</h3>
+                    <p class="card-text">团队在技术和领导能力方面表现突出，创新能力有提升空间</p>
+                </div>
+                <div class="conclusion-card">
+                    <h3 class="card-title">Conclusion 6</h3>
+                    <p class="card-text">研发投入占比最高达40%，体现技术导向战略定位</p>
+                </div>
+                </div>
+
+                <div class="recommendations-box">
+                    <h3 class="section-header accent-text">Key Recommendations</h3>
+                    <ol class="numbered-list">
+                        <li><li>市场份额排名前三产品占据80%的市场份额，呈现明显的集中趋势</li>
+                    <li>用户转化漏斗中最关键的流失点在注册到活跃阶段，转化率仅50%</li>
+                    <li>收入呈现持续增长趋势，年均增长率超过25%，2024年达到130亿元</li>
+                    <li>销售目标和利润目标均已超额完成，客户目标接近达成</li>
+                    <li>团队在技术和领导能力方面表现突出，创新能力有提升空间</li></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+
+    <script>
+        let currentSlide = 1;
+        let totalSlides = 0;
+
+        function init() {
+            const slides = document.querySelectorAll('.slide');
+            totalSlides = slides.length;
+            document.getElementById('totalSlides').textContent = totalSlides;
+
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function navigate(direction) {
+            const newSlide = currentSlide + direction;
+
+            if (newSlide >= 1 && newSlide <= totalSlides) {
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.remove('active');
+                currentSlide = newSlide;
+                document.querySelector(`.slide[data-slide="${currentSlide}"]`).classList.add('active');
+                document.getElementById('currentSlide').textContent = currentSlide;
+                updateNavButtons();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                navigate(1);
+            } else if (e.key === 'ArrowLeft') {
+                navigate(-1);
+            } else if (e.key === 'Escape') {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentSlide === 1;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Chart.js configurations
+new Chart(document.getElementById('chart1'), {
+        type: 'doughnut',
+        data: {
+        "labels": [
+                "\u4ea7\u54c1A\u5e02\u573a\u4efd\u989d",
+                "\u4ea7\u54c1B\u5e02\u573a\u4efd\u989d",
+                "\u4ea7\u54c1C\u5e02\u573a\u4efd\u989d",
+                "\u4ea7\u54c1D\u5e02\u573a\u4efd\u989d",
+                "\u4ea7\u54c1E\u5e02\u573a\u4efd\u989d"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                35,
+                                25,
+                                20,
+                                12,
+                                8
+                        ],
+                        "backgroundColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": true,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart2'), {
+        type: 'bar',
+        data: {
+        "labels": [
+                "\u8bbf\u95ee\u91cf",
+                "\u6ce8\u518c\u7528\u6237",
+                "\u6d3b\u8dc3\u7528\u6237",
+                "\u4ed8\u8d39\u7528\u6237",
+                "\u590d\u8d2d\u7528\u6237"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                10000,
+                                5000,
+                                2500,
+                                500,
+                                250
+                        ],
+                        "backgroundColor": [
+                                "rgba(85, 110, 230, 0.7)",
+                                "rgba(52, 195, 143, 0.7)",
+                                "rgba(80, 165, 241, 0.7)",
+                                "rgba(241, 180, 76, 0.7)",
+                                "rgba(248, 93, 66, 0.7)"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart3'), {
+        type: 'line',
+        data: {
+        "labels": [
+                "2020\u5e74\u6536\u5165",
+                "2021\u5e74\u6536\u5165",
+                "2022\u5e74\u6536\u5165",
+                "2023\u5e74\u6536\u5165",
+                "2024\u5e74\u6536\u5165"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                50,
+                                65,
+                                82,
+                                105,
+                                130
+                        ],
+                        "backgroundColor": [
+                                "rgba(85, 110, 230, 0.7)",
+                                "rgba(52, 195, 143, 0.7)",
+                                "rgba(80, 165, 241, 0.7)",
+                                "rgba(241, 180, 76, 0.7)",
+                                "rgba(248, 93, 66, 0.7)"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderWidth": 2,
+                        "borderRadius": 4,
+                        "fill": true,
+                        "tension": 0.3,
+                        "pointRadius": 5,
+                        "pointHoverRadius": 7
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart4'), {
+        type: 'bar',
+        data: {
+        "labels": [
+                "\u9500\u552e\u76ee\u6807\u8fbe\u6210\u7387",
+                "\u5ba2\u6237\u76ee\u6807\u8fbe\u6210\u7387",
+                "\u5229\u6da6\u76ee\u6807\u8fbe\u6210\u7387"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                115,
+                                96,
+                                110
+                        ],
+                        "backgroundColor": [
+                                "rgba(85, 110, 230, 0.7)",
+                                "rgba(52, 195, 143, 0.7)",
+                                "rgba(80, 165, 241, 0.7)"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": false,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "y": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                },
+                "x": {
+                        "grid": {
+                                "display": false
+                        },
+                        "ticks": {
+                                "font": {
+                                        "size": 11
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart5'), {
+        type: 'radar',
+        data: {
+        "labels": [
+                "\u6280\u672f\u80fd\u529b",
+                "\u6c9f\u901a\u80fd\u529b",
+                "\u9886\u5bfc\u80fd\u529b",
+                "\u521b\u65b0\u80fd\u529b",
+                "\u6267\u884c\u80fd\u529b"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                85,
+                                75,
+                                90,
+                                80,
+                                88
+                        ],
+                        "backgroundColor": "rgba(85, 110, 230, 0.2)",
+                        "borderColor": "#556EE6",
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false,
+                        "pointBackgroundColor": "#556EE6"
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": true,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        },
+        "scales": {
+                "r": {
+                        "beginAtZero": true,
+                        "grid": {
+                                "color": "#e0e0e0"
+                        },
+                        "angleLines": {
+                                "color": "#e0e0e0"
+                        },
+                        "pointLabels": {
+                                "font": {
+                                        "size": 12
+                                }
+                        }
+                }
+        }
+}
+    });
+
+new Chart(document.getElementById('chart6'), {
+        type: 'doughnut',
+        data: {
+        "labels": [
+                "\u7814\u53d1\u8d39\u7528\u5360\u6bd4",
+                "\u5e02\u573a\u63a8\u5e7f\u5360\u6bd4",
+                "\u8fd0\u8425\u6210\u672c\u5360\u6bd4",
+                "\u4eba\u529b\u8d44\u6e90\u5360\u6bd4",
+                "\u5176\u4ed6\u652f\u51fa\u5360\u6bd4"
+        ],
+        "datasets": [
+                {
+                        "label": "Value",
+                        "data": [
+                                40,
+                                25,
+                                20,
+                                10,
+                                5
+                        ],
+                        "backgroundColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderColor": [
+                                "#556EE6",
+                                "#34c38f",
+                                "#50a5f1",
+                                "#f1b44c",
+                                "#F85d42"
+                        ],
+                        "borderWidth": 0,
+                        "borderRadius": 4,
+                        "fill": false
+                }
+        ]
+},
+        options: {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+                "legend": {
+                        "display": true,
+                        "position": "bottom"
+                },
+                "tooltip": {
+                        "backgroundColor": "rgba(0, 0, 0, 0.8)",
+                        "padding": 12,
+                        "titleFont": {
+                                "size": 14,
+                                "weight": "bold"
+                        },
+                        "bodyFont": {
+                                "size": 13
+                        }
+                }
+        }
+}
+    });
+    </script>
+</body>
+</html>

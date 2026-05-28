@@ -1,0 +1,168 @@
+{
+  "name": "Low VRAM GGUF Workflow",
+  "description": "8-12GB VRAMで動作するGGUF量子化モデル用ワークフロー",
+  "version": "1.0.0",
+  "requirements": {
+    "minimum_vram": "8GB",
+    "recommended_vram": "10-12GB",
+    "custom_node": "ComfyUI-GGUF"
+  },
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "title": "Load Input Image",
+      "properties": {
+        "image": "input_image.png"
+      },
+      "notes": "低解像度の入力を推奨: 480×840"
+    },
+    {
+      "id": 2,
+      "type": "LoadGGUF",
+      "title": "Load GGUF Model",
+      "properties": {
+        "gguf_name": "Wan2.2-I2V-A14B-Q4_K_S.gguf"
+      },
+      "notes": "Q4_K_S: 約3.1GB。品質とサイズのバランスが良い"
+    },
+    {
+      "id": 3,
+      "type": "LoadCLIP",
+      "title": "Load Text Encoder",
+      "properties": {
+        "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "type": "wan"
+      },
+      "notes": "fp8版で約4.5GB。メモリ節約"
+    },
+    {
+      "id": 4,
+      "type": "LoadCLIPVision",
+      "title": "Load CLIP Vision",
+      "properties": {
+        "clip_name": "clip_vision_h.safetensors"
+      }
+    },
+    {
+      "id": 5,
+      "type": "LoadVAE",
+      "title": "Load VAE",
+      "properties": {
+        "vae_name": "wan2.1_vae.safetensors"
+      },
+      "notes": "VAEは小さい（約330MB）ため通常版でOK"
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "title": "Positive Prompt",
+      "properties": {
+        "text": "Gentle movement, natural motion, high quality video, smooth animation"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      },
+      "notes": "シンプルなプロンプトが効果的"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "title": "Negative Prompt",
+      "properties": {
+        "text": "blurry, low quality, noise, artifacts, flickering"
+      },
+      "inputs": {
+        "clip": { "node": 3, "output": "CLIP" }
+      }
+    },
+    {
+      "id": 8,
+      "type": "CLIPVisionEncode",
+      "title": "Encode Image",
+      "inputs": {
+        "clip_vision": { "node": 4, "output": "CLIP_VISION" },
+        "image": { "node": 1, "output": "IMAGE" }
+      }
+    },
+    {
+      "id": 9,
+      "type": "WanVideoI2VSampler",
+      "title": "Generate (Low Settings)",
+      "properties": {
+        "width": 480,
+        "height": 840,
+        "length": 41,
+        "cfg": 4.5,
+        "steps": 25,
+        "seed": -1
+      },
+      "inputs": {
+        "model": { "node": 2, "output": "MODEL" },
+        "positive": { "node": 6, "output": "CONDITIONING" },
+        "negative": { "node": 7, "output": "CONDITIONING" },
+        "clip_vision_output": { "node": 8, "output": "CLIP_VISION_OUTPUT" }
+      },
+      "notes": "低解像度(480×840)、短フレーム(41)、低CFG(4.5)でVRAM節約"
+    },
+    {
+      "id": 10,
+      "type": "VAEDecodeVideo",
+      "title": "Decode Video",
+      "inputs": {
+        "vae": { "node": 5, "output": "VAE" },
+        "samples": { "node": 9, "output": "LATENT" }
+      }
+    },
+    {
+      "id": 11,
+      "type": "SaveVideo",
+      "title": "Save Output",
+      "properties": {
+        "filename_prefix": "wan_gguf_lowvram",
+        "fps": 24,
+        "format": "mp4"
+      },
+      "inputs": {
+        "images": { "node": 10, "output": "IMAGE" }
+      }
+    }
+  ],
+  "connections": [
+    { "from": [1, "IMAGE"], "to": [8, "image"] },
+    { "from": [2, "MODEL"], "to": [9, "model"] },
+    { "from": [3, "CLIP"], "to": [6, "clip"] },
+    { "from": [3, "CLIP"], "to": [7, "clip"] },
+    { "from": [4, "CLIP_VISION"], "to": [8, "clip_vision"] },
+    { "from": [5, "VAE"], "to": [10, "vae"] },
+    { "from": [6, "CONDITIONING"], "to": [9, "positive"] },
+    { "from": [7, "CONDITIONING"], "to": [9, "negative"] },
+    { "from": [8, "CLIP_VISION_OUTPUT"], "to": [9, "clip_vision_output"] },
+    { "from": [9, "LATENT"], "to": [10, "samples"] },
+    { "from": [10, "IMAGE"], "to": [11, "images"] }
+  ],
+  "launch_options": {
+    "command": "python main.py --lowvram --cpu-vae",
+    "description": "--lowvram: 積極的なメモリ解放, --cpu-vae: VAEをCPUで処理"
+  },
+  "optimization_tips": [
+    "他のアプリケーションを終了してVRAMを確保",
+    "ブラウザ（特にChrome）は大量のGPUメモリを使用するため注意",
+    "解像度を上げたい場合はフレーム数を減らす（トレードオフ）",
+    "Q3_K_Sでさらに低VRAMでの実行が可能（品質は低下）"
+  ],
+  "alternative_settings": {
+    "8gb_extreme": {
+      "quantization": "Q3_K_S",
+      "resolution": "480×840",
+      "frames": 41,
+      "notes": "最低限の設定。品質は低下するが8GBで動作"
+    },
+    "12gb_balanced": {
+      "quantization": "Q4_K_S",
+      "resolution": "576×1024",
+      "frames": 61,
+      "notes": "バランスの取れた設定"
+    }
+  }
+}

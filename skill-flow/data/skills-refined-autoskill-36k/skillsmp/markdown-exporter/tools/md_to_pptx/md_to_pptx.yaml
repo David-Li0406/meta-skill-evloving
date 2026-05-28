@@ -1,0 +1,46 @@
+identity:
+  name: md_to_pptx
+  author: bowenliang123
+  label:
+    en_US: Markdown ⮕ PPTX
+    zh_Hans: Markdown ⮕ PPTX
+description:
+  human:
+    en_US: Generate PPTX file from Markdown text
+    zh_Hans: 将 Markdown 转换为 PPTX 文件的工具
+  llm: Generate PPTX file from Markdown text
+parameters:
+  - name: md_text
+    type: string
+    required: true
+    label:
+      en_US: Markdown text
+      zh_Hans: Markdown格式文本
+    human_description:
+      en_US: Following md2pptx dialect for slides，style docs：https://github.com/MartinPacker/md2pptx/blob/master/docs/user-guide.md#creating-slides
+      zh_Hans: 符合md2pptx方言的Markdown文本，样式文档： https://github.com/MartinPacker/md2pptx/blob/master/docs/user-guide.md#creating-slides
+    form: llm
+  - name: pptx_template_file
+    type: file
+    required: false
+    label:
+      en_US: PPTX Template File
+      zh_Hans: PPTX 模板文件
+    human_description:
+      en_US: An optional .pptx file that serves as a template for the generated presentation
+      zh_Hans: 可选，一个.pptx文件，作为生成的演示文稿的模板
+    llm_description: An optional .pptx file that serves as a template for the generated presentation
+    form: llm
+  - name: output_filename
+    type: string
+    required: false
+    label:
+      en_US: Output Filename
+      zh_Hans: 输出文件名
+    human_description:
+      en_US: Optional custom output file name, and the filename suffix is not required.
+      zh_Hans: 可选的自定义输出文件名，后缀名无需指定
+    form: llm
+extra:
+  python:
+    source: tools/md_to_pptx/md_to_pptx.py

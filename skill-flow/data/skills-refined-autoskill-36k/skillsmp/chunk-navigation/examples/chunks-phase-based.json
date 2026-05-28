@@ -1,0 +1,144 @@
+{
+  "strategy": "phase-based",
+  "created_at": "2026-01-22T16:00:00Z",
+  "project_root": "/home/ubuntu/my-project",
+  "chunks": [
+    {
+      "id": "chunk_phase_1_setup",
+      "name": "Phase 1: Project Setup",
+      "description": "Initial project configuration, dependencies, and directory structure",
+      "files": [
+        "README.md",
+        "pyproject.toml",
+        "Cargo.toml",
+        "go.mod",
+        "docker-compose.yml",
+        ".env.example",
+        "Makefile"
+      ],
+      "entry_points": [
+        "README.md"
+      ],
+      "dependencies": [],
+      "status": "completed",
+      "completion": 100,
+      "created_at": "2026-01-20T10:00:00Z",
+      "completed_at": "2026-01-20T15:30:00Z"
+    },
+    {
+      "id": "chunk_phase_2_database",
+      "name": "Phase 2: Database Setup",
+      "description": "Database schema, migrations, and ORM configuration",
+      "files": [
+        "src/database/__init__.py",
+        "src/database/models.py",
+        "src/database/connection.py",
+        "src/database/migrations/001_initial.sql",
+        "src/database/migrations/002_add_users.sql",
+        "tests/test_database.py",
+        "alembic.ini"
+      ],
+      "entry_points": [
+        "src/database/models.py",
+        "src/database/connection.py"
+      ],
+      "dependencies": [
+        "chunk_phase_1_setup"
+      ],
+      "status": "completed",
+      "completion": 100,
+      "created_at": "2026-01-21T09:00:00Z",
+      "completed_at": "2026-01-21T16:45:00Z"
+    },
+    {
+      "id": "chunk_phase_3_auth",
+      "name": "Phase 3: Authentication",
+      "description": "User authentication, JWT tokens, and session management",
+      "files": [
+        "src/api/auth.py",
+        "src/api/middleware/auth_middleware.py",
+        "src/api/routes/auth_routes.py",
+        "src/models/user.py",
+        "src/utils/jwt_handler.py",
+        "tests/test_auth.py",
+        "tests/test_jwt.py"
+      ],
+      "entry_points": [
+        "src/api/auth.py",
+        "src/utils/jwt_handler.py"
+      ],
+      "dependencies": [
+        "chunk_phase_2_database"
+      ],
+      "status": "in_progress",
+      "completion": 65,
+      "created_at": "2026-01-22T10:15:00Z"
+    },
+    {
+      "id": "chunk_phase_4_api",
+      "name": "Phase 4: API Endpoints",
+      "description": "REST API endpoints for core functionality",
+      "files": [
+        "src/api/main.py",
+        "src/api/routes/user_routes.py",
+        "src/api/routes/product_routes.py",
+        "src/api/schemas/",
+        "tests/test_api_endpoints.py"
+      ],
+      "entry_points": [
+        "src/api/main.py"
+      ],
+      "dependencies": [
+        "chunk_phase_3_auth"
+      ],
+      "status": "pending",
+      "completion": 0
+    },
+    {
+      "id": "chunk_phase_5_frontend",
+      "name": "Phase 5: Frontend Integration",
+      "description": "Connect frontend with API, implement UI components",
+      "files": [
+        "frontend/src/App.js",
+        "frontend/src/components/",
+        "frontend/src/services/api.js",
+        "frontend/src/hooks/",
+        "frontend/tests/"
+      ],
+      "entry_points": [
+        "frontend/src/App.js",
+        "frontend/src/services/api.js"
+      ],
+      "dependencies": [
+        "chunk_phase_4_api"
+      ],
+      "status": "pending",
+      "completion": 0
+    },
+    {
+      "id": "chunk_phase_6_testing",
+      "name": "Phase 6: Testing & QA",
+      "description": "Comprehensive testing, integration tests, E2E tests",
+      "files": [
+        "tests/integration/",
+        "tests/e2e/",
+        "tests/performance/",
+        ".github/workflows/test.yml"
+      ],
+      "entry_points": [
+        "tests/integration/test_full_flow.py"
+      ],
+      "dependencies": [
+        "chunk_phase_5_frontend"
+      ],
+      "status": "pending",
+      "completion": 0
+    }
+  ],
+  "current_chunk": "chunk_phase_3_auth",
+  "metadata": {
+    "total_chunks": 6,
+    "completed_chunks": 2,
+    "overall_progress": 44
+  }
+}

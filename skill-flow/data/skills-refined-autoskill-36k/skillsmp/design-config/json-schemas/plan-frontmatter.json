@@ -1,0 +1,215 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Plan Document Schema",
+	"description": "Schema for plan documents in the design-doc-system",
+	"type": "object",
+	"required": ["name", "title", "created", "status", "progress"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"description": "Unique plan identifier (kebab-case)",
+			"pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+		},
+		"title": {
+			"type": "string",
+			"description": "Human-readable plan title",
+			"minLength": 3,
+			"maxLength": 100
+		},
+		"created": {
+			"type": "string",
+			"description": "Creation date (YYYY-MM-DD)",
+			"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+		},
+		"updated": {
+			"type": "string",
+			"description": "Last update date (YYYY-MM-DD)",
+			"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+		},
+		"status": {
+			"type": "string",
+			"description": "Current plan status",
+			"enum": ["ready", "in-progress", "blocked", "completed", "abandoned"]
+		},
+		"progress": {
+			"type": "integer",
+			"description": "Completion percentage (0-100)",
+			"minimum": 0,
+			"maximum": 100
+		},
+		"implements": {
+			"type": "array",
+			"description": "Design docs this plan implements (relative paths)",
+			"items": {
+				"type": "string",
+				"pattern": "^.+\\.md$"
+			},
+			"default": []
+		},
+		"modules": {
+			"type": "array",
+			"description": "Affected modules",
+			"items": {
+				"type": "string"
+			},
+			"default": []
+		},
+		"categories": {
+			"type": "array",
+			"description": "Plan categories",
+			"items": {
+				"type": "string",
+				"enum": [
+					"architecture",
+					"performance",
+					"observability",
+					"documentation",
+					"testing",
+					"refactoring",
+					"feature",
+					"bugfix",
+					"meta"
+				]
+			},
+			"default": []
+		},
+		"estimated-effort": {
+			"type": "string",
+			"description": "Estimated effort (e.g., '2-3 weeks', '5 days')"
+		},
+		"actual-effort": {
+			"type": ["string", "null"],
+			"description": "Actual effort (set when completed)"
+		},
+		"started": {
+			"type": ["string", "null"],
+			"description": "Start date (YYYY-MM-DD)",
+			"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+		},
+		"completed": {
+			"type": ["string", "null"],
+			"description": "Completion date (YYYY-MM-DD)",
+			"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+		},
+		"owner": {
+			"type": ["string", "null"],
+			"description": "Plan owner (GitHub username)"
+		},
+		"reviewers": {
+			"type": "array",
+			"description": "Plan reviewers",
+			"items": {
+				"type": "string"
+			},
+			"default": []
+		},
+		"blocked-by": {
+			"type": "array",
+			"description": "Blocking issues or plans",
+			"items": {
+				"type": "string"
+			},
+			"default": []
+		},
+		"related-plans": {
+			"type": "array",
+			"description": "Related plan IDs",
+			"items": {
+				"type": "string"
+			},
+			"default": []
+		},
+		"phases": {
+			"type": "array",
+			"description": "Implementation phases",
+			"items": {
+				"type": "object",
+				"required": ["name", "status", "progress"],
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Phase name"
+					},
+					"status": {
+						"type": "string",
+						"enum": ["pending", "in-progress", "completed", "skipped"]
+					},
+					"progress": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 100
+					},
+					"started": {
+						"type": ["string", "null"],
+						"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+					},
+					"completed": {
+						"type": ["string", "null"],
+						"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+					}
+				}
+			},
+			"default": []
+		},
+		"archived": {
+			"type": ["string", "null"],
+			"description": "Archive date (YYYY-MM-DD)",
+			"pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+		},
+		"archival-reason": {
+			"type": ["string", "null"],
+			"enum": [null, "completed", "superseded", "abandoned"]
+		},
+		"outcome": {
+			"type": ["string", "null"],
+			"enum": [null, "success", "partial", "failed"]
+		}
+	},
+	"allOf": [
+		{
+			"if": {
+				"properties": {
+					"status": {
+						"const": "ready"
+					}
+				}
+			},
+			"then": {
+				"properties": {
+					"progress": {
+						"const": 0
+					}
+				}
+			}
+		},
+		{
+			"if": {
+				"properties": {
+					"status": {
+						"const": "completed"
+					}
+				}
+			},
+			"then": {
+				"properties": {
+					"progress": {
+						"const": 100
+					}
+				},
+				"required": ["completed", "outcome"]
+			}
+		},
+		{
+			"if": {
+				"properties": {
+					"status": {
+						"const": "abandoned"
+					}
+				}
+			},
+			"then": {
+				"required": ["completed", "archival-reason"]
+			}
+		}
+	]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "{{PROJECT_NAME}}-devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "mounts": [
+    "source=claude-config-{{PROJECT_NAME}},target=/home/vscode/.claude,type=volume",
+    "source=claude-data-{{PROJECT_NAME}},target=/home/vscode/.local/share/claude,type=volume"{{CODEX_VOLUME_MOUNT}}
+  ],
+  "remoteUser": "vscode",
+  "postCreateCommand": "bash .devcontainer/post-create.sh"{{POST_START_COMMAND}}
+}

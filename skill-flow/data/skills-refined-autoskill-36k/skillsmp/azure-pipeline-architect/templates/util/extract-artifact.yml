@@ -1,0 +1,57 @@
+# ==============================================================================
+# Template Name: Extract Artifact (extract-artifact.yml)
+# Description: 
+#   Check if the specified Artifact is a ZIP archive.
+#   If so, extract it to the 'extracted' subdirectory.
+#   Finally, set the variable 'WebDeployPackagePath' for subsequent deployment steps.
+# ==============================================================================
+
+parameters:
+  - name: artifactName
+    type: string
+  - name: sourcePipeline
+    type: string
+    default: 'current'
+  
+  # Execution Condition
+  - name: runCondition
+    type: string
+    default: 'succeeded()'
+
+steps:
+  - powershell: |
+      $artifactName = "${{ parameters.artifactName }}"
+      $sourcePipeline = "${{ parameters.sourcePipeline }}"
+      
+      # Determine base path
+      $basePath = "$(Pipeline.Workspace)/$artifactName"
+      if ($sourcePipeline -ne 'current') {
+          $basePath = "$(Pipeline.Workspace)/$sourcePipeline/$artifactName"
+      }
+      
+      Write-Host "Checking artifact at: $basePath"
+      $packagePath = $basePath
+
+      # Check for ZIP file
+      if (Test-Path $basePath) {
+          $zipFile = Get-ChildItem -Path $basePath -Filter "*.zip" | Select-Object -First 1
+          
+          if ($zipFile) {
+              Write-Host "Found compressed artifact: $($zipFile.FullName)"
+              $extractPath = "$basePath/extracted"
+              
+              Write-Host "Extracting to: $extractPath"
+              # Clean old extraction directory (if exists)
+              if (Test-Path $extractPath) { Remove-Item $extractPath -Recurse -Force }
+              
+              Expand-Archive -Path $zipFile.FullName -DestinationPath $extractPath -Force
+              $packagePath = $extractPath
+          } else {
+              Write-Host "No zip file found. Assuming loose files."
+          }
+      }
+      
+      Write-Host "Setting WebDeployPackagePath to: $packagePath"
+      Write-Host "##vso[task.setvariable variable=WebDeployPackagePath]$packagePath"
+    displayName: 'Check and Extract Artifact'
+    condition: ${{ parameters.runCondition }}

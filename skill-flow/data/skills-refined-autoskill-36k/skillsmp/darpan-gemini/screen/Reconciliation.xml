@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" include-child-content="true" menu-image="fa fa-exchange" menu-image-type="icon" default-menu-title="Reconciliation" require-authentication="false">
+        <subscreens default-item="GenericReconciliation">
+                <conditional-default item="GenericReconciliation" condition="true"/>
+                <subscreens-item name="GenericReconciliation" menu-title="File Reconciliation" location="component://darpan/screen/Reconciliation/GenericReconciliation.xml"/>
+                <subscreens-item name="CsvReconciliation" menu-title="CSV Only (Legacy)" location="component://darpan/screen/Reconciliation/CsvReconciliation.xml"/>
+                <subscreens-item name="SftpAutomation" menu-title="SFTP Automation" location="component://darpan/screen/Reconciliation/Automation/SftpAutomation.xml"/>
+
+                <subscreens-item name="Settings" menu-title="Settings" location="component://darpan/screen/Reconciliation/Settings.xml"/>
+                <subscreens-item name="BomCycleCheck" menu-title="BOM Cycle Check" location="component://darpan/screen/Reconciliation/BomCycleCheck.xml"/>
+                <subscreens-item name="JsonSchemaManager" menu-title="JSON Schemas" location="component://darpan/screen/Reconciliation/JsonSchema/JsonSchemaManager.xml"/>
+                <subscreens-item name="MappingSetup" menu-title="Mappings" location="component://darpan/screen/Reconciliation/Mapping/MappingSetup.xml"/>
+                <subscreens-item name="RuleEngine" menu-title="Rule Engine" location="component://darpan/screen/Reconciliation/RuleEngine/RuleSets.xml"/>
+        </subscreens>
+        <widgets>
+                <subscreens-panel id="reconciliation-app" type="popup"/>
+        </widgets>
+</screen>

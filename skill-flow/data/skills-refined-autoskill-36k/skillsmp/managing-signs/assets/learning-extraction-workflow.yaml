@@ -1,0 +1,58 @@
+# Learning Extraction Workflow Template
+# Use as post-sprint phase for extracting learnings from session transcripts
+#
+# Usage: Add as final phase in any sprint workflow
+#   phases:
+#     - id: development
+#       for-each: step
+#       workflow: feature-workflow
+#     - id: learning-extraction
+#       workflow: learning-extraction-workflow
+
+name: Learning Extraction
+description: Extracts learnings from sprint session transcripts and adds them to the backlog for review.
+
+phases:
+  - id: extract
+    prompt: |
+      ## Learning Extraction Phase
+
+      Extract learnings from the sprint's session transcripts.
+
+      ### Instructions
+      1. Find all transcript files in the sprint transcripts directory:
+         `.claude/sprints/{{sprint.id}}/transcripts/*.jsonl`
+
+      2. For each transcript file, run the extraction command:
+         ```
+         /m42-signs:extract <transcript-path> --confidence-min medium
+         ```
+
+      3. The extraction will:
+         - Parse error patterns from tool results
+         - Identify retry sequences (error followed by success)
+         - Infer target CLAUDE.md files from file paths
+         - Add proposed learnings to the backlog
+
+      ### Output
+      Report a summary of:
+      - Number of transcripts processed
+      - Total learnings extracted
+      - Breakdown by confidence level (low/medium/high)
+      - Next step: Run `/m42-signs:review` to approve learnings
+
+  - id: summarize
+    prompt: |
+      ## Backlog Summary
+
+      Provide a summary of the learning backlog status.
+
+      ### Instructions
+      1. Run `/m42-signs:status` to get current backlog statistics
+      2. List the high-confidence learnings that should be reviewed first
+      3. Suggest which learnings are ready for immediate approval
+
+      ### Output
+      - Total pending learnings
+      - Recommended review priority
+      - Any learnings that could be auto-approved (high confidence, clear patterns)

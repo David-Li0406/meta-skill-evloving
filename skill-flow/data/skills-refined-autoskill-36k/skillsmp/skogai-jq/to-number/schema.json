@@ -1,0 +1,59 @@
+{
+  "name": "to-number",
+  "description": "Convert value at path to number (parse strings, convert booleans, handle other types)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object containing value to convert"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to value to convert (e.g., 'user.age')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with value at path converted to number (or null if conversion fails)"
+  },
+  "examples": [
+    {
+      "description": "Convert string number to number",
+      "input": {"user": {"age": "30"}},
+      "args": {"path": "user.age"},
+      "output": {"user": {"age": 30}}
+    },
+    {
+      "description": "Convert boolean true to 1",
+      "input": {"active": true},
+      "args": {"path": "active"},
+      "output": {"active": 1}
+    },
+    {
+      "description": "Parse float from string",
+      "input": {"price": "19.99"},
+      "args": {"path": "price"},
+      "output": {"price": 19.99}
+    },
+    {
+      "description": "Invalid string becomes null",
+      "input": {"count": "not-a-number"},
+      "args": {"path": "count"},
+      "output": {"count": null}
+    },
+    {
+      "description": "Null value becomes 0",
+      "input": {"value": null},
+      "args": {"path": "value"},
+      "output": {"value": 0}
+    },
+    {
+      "description": "Array becomes null",
+      "input": {"data": [1, 2, 3]},
+      "args": {"path": "data"},
+      "output": {"data": null}
+    }
+  ],
+  "tags": ["conversion", "number", "parse", "type-conversion"]
+}

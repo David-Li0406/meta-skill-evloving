@@ -1,0 +1,152 @@
+---
+name: flow-work
+description: Use this skill to execute a Flow epic or task systematically with git setup, task tracking, quality checks, and commit workflow when implementing a plan or working through a spec.
+---
+
+# Flow Work
+
+Execute a plan systematically. Focus on finishing.
+
+Follow this skill and linked workflows exactly. Deviations cause drift, bad gates, retries, and user frustration.
+
+**IMPORTANT**: This skill uses `.flow/` for ALL task tracking. Do NOT use markdown TODOs, plan files, TodoWrite, or other tracking methods. All task state must be read and written via `flowctl`.
+
+**CRITICAL: flowctl is BUNDLED — NOT installed globally.** Always use:
+```bash
+REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || true)}"
+if [ -z "$REPO_ROOT" ]; then
+  echo "Error: Set REPO_ROOT=/absolute/path/to/repo (git rev-parse failed; cwd may be outside repo)."
+  exit 1
+fi
+FLOWCTL="$REPO_ROOT/.flow/bin/flowctl"
+```
+
+**Hard requirements (non-negotiable):**
+- You MUST run `flowctl done` for each completed task and verify the task status is `done`.
+- You MUST stage with `git add -A` (never list files). This ensures `.flow/` is included.
+- Do NOT claim completion until `flowctl show <task>` reports `status: done`.
+- Do NOT invoke review until tests/Quick commands are green.
+
+**Role**: execution lead, plan fidelity first.  
+**Goal**: complete every task in order with tests.
+
+## Input
+
+Accepts:
+- Flow epic ID `fn-N-xxx` (e.g., `fn-1-abc`) or legacy `fn-N` to work through all tasks
+- Flow task ID `fn-N-xxx.M` (e.g., `fn-1-abc.3`) or legacy `fn-N.M` to work on single task
+- Markdown spec file path (creates epic from file, then executes)
+- Idea text (creates minimal epic + single task, then executes)
+
+Examples:
+- `/flow-next:work fn-1-abc`
+- `/flow-next:work fn-1-abc.3`
+- `/flow-next:work docs/my-feature-spec.md`
+- `/flow-next:work Add rate limiting`
+
+If no input provided, ask for it.
+
+## FIRST: Parse Options or Ask Questions
+
+Check available backends and configured preference:
+```bash
+HAVE_RP=0;
+if command -v rp-cli >/dev/null 2>&1; then
+  HAVE_RP=1;
+elif [[ -x /opt/homebrew/bin/rp-cli || -x /usr/local/bin/rp-cli ]]; then
+  HAVE_RP=1;
+fi;
+
+# Check configured backend (priority: env > config)
+CONFIGURED_BACKEND="${FLOW_REVIEW_BACKEND:-}";
+if [[ -z "$CONFIGURED_BACKEND" ]]; then
+  CONFIGURED_BACKEND="$($FLOWCTL config get review.backend --json 2>/dev/null | jq -r '.value // empty')";
+fi
+```
+
+### Option Parsing (skip questions if found in arguments)
+
+Parse the arguments for these patterns. If found, use them and skip corresponding questions:
+
+**Branch mode**:
+- `--branch=current` or `--current` or "current branch" or "stay on this branch" → current branch
+- `--branch=new` or `--new-branch` or "new branch" or "create branch" → new branch
+- `--branch=worktree` or `--worktree` or "isolated worktree" or "worktree" → isolated worktree
+
+**Review mode**:
+- `--review=opencode` or "opencode review" or "use opencode" → OpenCode review (GPT-5.2, reasoning high)
+- `--review=rp` or "review with rp" or "rp chat" or "repoprompt review" → RepoPrompt chat (via `flowctl rp chat-send`)
+- `--review=export` or "export review" or "external llm" → export for external LLM
+- `--review=none` or `--no-review` or "no review" or "skip review" → no review
+
+### If options NOT found in arguments
+
+**IMPORTANT**: Ask setup questions in **plain text only**. **Do NOT use the question tool.** This is required for voice dictation (e.g., "1a 2b").
+
+**Skip review question if**: Ralph mode (`FLOW_RALPH=1`) OR backend already configured (`CONFIGURED_BACKEND` not empty). In these cases, only ask branch question:
+
+```
+Quick setup: Where to work?
+a) Current branch  b) New branch  c) Isolated worktree
+
+(Reply: "a", "current", or just tell me)
+```
+
+**Otherwise**, output questions based on available backends:
+
+**If rp-cli available:**
+```
+Quick setup before starting:
+
+1. **Branch** — Where to work?
+   a) Current branch
+   b) New branch
+   c) Isolated worktree
+
+2. **Review** — Run review after implementation?
+   a) Yes, OpenCode review (GPT-5.2, reasoning high)
+   b) Yes, RepoPrompt chat (macOS, visual builder)
+   c) Yes, export for external LLM (ChatGPT, Claude web)
+   d) No
+
+(Reply: "1a 2a", "current branch, opencode review", or just tell me naturally)
+```
+
+**If rp-cli not available:**
+```
+Quick setup before starting:
+
+1. **Branch** — Where to work?
+   a) Current branch
+   b) New branch
+   c) Isolated worktree
+
+2. **Review** — Run review after implementation?
+   a) Yes, OpenCode review (GPT-5.2, reasoning high)
+   b) Yes, export for external LLM
+   c) No
+
+(Reply: "1a 2a", "current branch, opencode", or just tell me naturally)
+```
+
+Wait for response. Parse naturally — user may reply terse or ramble via voice.
+
+**Defaults when empty/ambiguous:**
+- Branch = `new`
+- Review = configured backend if set, else `none`
+
+**Do NOT read files or write code until user responds.**
+
+## Workflow
+
+After setup questions answered, read [phases.md](phases.md) and execute each phase in order.
+
+**Worker model**: Each task is implemented with focused context. This prevents context bleed between tasks and keeps re-anchor info with the implementation.
+
+## Guardrails
+
+- Don't start without asking branch question
+- Don't start without plan/epic
+- Don't skip tests
+- Don't leave tasks half-done
+- Never create plan files outside `.flow/`

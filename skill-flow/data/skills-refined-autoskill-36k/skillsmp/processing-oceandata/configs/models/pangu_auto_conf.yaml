@@ -1,0 +1,30 @@
+# Pangu Model Configuration - Autoregressive Version
+# For long-term ocean velocity prediction
+
+# Temporal configuration
+input_len: 7
+output_len: 1  # Always 1 for autoregressive mode
+in_channels: 2
+
+# Spatial configuration
+img_size: [240, 240]
+patch_size: [2, 4, 4]
+
+# Model architecture - Same as Balanced
+embed_dim: 128
+num_heads: [4, 8, 8, 4]
+window_size: [2, 6, 12]
+
+# Regularization
+drop_path_rate: 0.15
+
+# Autoregressive specific settings
+rollout_steps: 10  # Number of autoregressive steps
+                   # Can be overridden at inference time
+
+# Training recommendations
+# - Use teacher forcing initially
+# - Fine-tune with scheduled sampling
+# - Monitor long-term stability
+# - Consider curriculum learning approach
+

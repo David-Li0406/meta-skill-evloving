@@ -1,0 +1,78 @@
+# Skill Manifest - Progressive Disclosure Index
+# Token estimation: 1 token ≈ 0.75 words (or ~4 characters)
+# Content multipliers: prose 1.0x, code 1.2x, tables 1.3x, templates 1.2x
+
+skill: pr-creation
+version: "1.0"
+specification: agentskills.io/v1
+
+progressive_disclosure:
+  # ---------------------------------------------------------------------------
+  # LEVEL 1: METADATA (~120 tokens)
+  # Range: 80-150 | We use: 120
+  # Rationale: name (~10) + description (~100) + YAML overhead (~10)
+  # ---------------------------------------------------------------------------
+  metadata:
+    estimated_tokens: 120
+    fields: [name, description]
+
+  # ---------------------------------------------------------------------------
+  # LEVEL 2: INSTRUCTIONS (~1600 tokens)
+  # Range: 1000-2500 | We use: 1600
+  # Rationale: Basic PR workflow, one quick template in body
+  # ---------------------------------------------------------------------------
+  instructions:
+    estimated_tokens: 1600
+    file: SKILL.md
+
+  resources:
+    # -------------------------------------------------------------------------
+    # PR-TEMPLATES.md (~2000 tokens)
+    # Range: 1600-2400 | We use: 2000
+    # Rationale:
+    #   - 7 different PR templates (feature, bug, hotfix, etc.)
+    #   - Markdown within markdown (templates are verbatim)
+    #   - ~180 lines of template content
+    #   - Templates have many checkboxes and formatting
+    # -------------------------------------------------------------------------
+    - path: references/PR-TEMPLATES.md
+      purpose: Ready-to-use templates for different PR types
+      estimated_tokens: 2000
+      load_when:
+        - Creating a new pull request
+        - User asks for PR template
+        - Need format for specific PR type
+      keywords: [template, feature, bugfix, hotfix, refactor, documentation]
+
+    # -------------------------------------------------------------------------
+    # REVIEW-CHECKLIST.md (~1500 tokens)
+    # Range: 1200-1800 | We use: 1500
+    # Rationale:
+    #   - Heavy on tables and checklists
+    #   - Tables tokenize at ~1.3x
+    #   - ~140 lines, mostly structured content
+    #   - Less prose than templates
+    # -------------------------------------------------------------------------
+    - path: references/REVIEW-CHECKLIST.md
+      purpose: Checklists for PR authors and reviewers
+      estimated_tokens: 1500
+      load_when:
+        - Preparing PR for review
+        - Reviewing someone's PR
+        - User asks about review process
+      keywords: [review, checklist, approve, feedback, quality]
+
+loading_strategy:
+  recommendation: |
+    1. Start with SKILL.md for basic PR operations
+    2. Load PR-TEMPLATES.md when creating a PR
+    3. Load REVIEW-CHECKLIST.md during review phase
+
+  fallback: |
+    SKILL.md contains essential PR creation instructions.
+    Reference files provide comprehensive templates and checklists.
+
+token_summary:
+  metadata_only: 120
+  with_instructions: 1720
+  with_all_resources: 5220

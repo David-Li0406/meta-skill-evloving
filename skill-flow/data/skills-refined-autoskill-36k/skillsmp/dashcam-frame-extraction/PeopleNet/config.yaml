@@ -1,0 +1,142 @@
+# PeopleNet Pipeline Configuration
+# Edit this file to customize behavior
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Detection Parameters (CRITICAL - Test before changing)
+# ═══════════════════════════════════════════════════════════════════════════
+
+detection:
+  # Confidence threshold for people detection
+  # 0.6 = Too many false positives (objects detected as people)
+  # 0.8 = High quality (only confident detections) ← RECOMMENDED
+  # 0.9 = Very strict (may miss some people)
+  confidence_threshold: 0.8
+
+  # Buffer around detection (creates clips of 2×buffer_seconds)
+  # 4s = 8-second clips (detection + 4s before + 4s after)
+  # 1s = 2-second clips (detection + 1s before + 1s after) ← RECOMMENDED
+  # Lower = tighter clips, less context
+  buffer_seconds: 1
+
+  # How many frames per second to sample for detection
+  # 1 = Every second (fast, may miss quick appearances)
+  # 2 = Twice per second (balanced) ← RECOMMENDED
+  # 4 = 4 times per second (slower, more thorough)
+  sample_rate_fps: 2
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Resource Management
+# ═══════════════════════════════════════════════════════════════════════════
+
+resources:
+  # Number of parallel GPU workers
+  # RTX 4080 SUPER: 3-4 workers optimal
+  # Lower GPU: 1-2 workers
+  gpu_workers: 3
+
+  # Staging directory limits (prevents disk overflow)
+  staging_max_videos: 20  # Stop copying when this many in staging
+  staging_min_videos: 10  # Start copying when below this
+
+  # Minimum free disk space (GB)
+  # Processing stops if free space drops below this
+  min_free_space_gb: 10
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Docker Configuration
+# ═══════════════════════════════════════════════════════════════════════════
+
+docker:
+  # Container image
+  image: nvcr.io/nvidia/tensorrt:24.08-py3
+
+  # Log rotation (CRITICAL - prevents log bloat)
+  log_max_size: 50m   # Each log file max 50MB
+  log_max_files: 3    # Keep 3 files (150MB total)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Source Paths
+# ═══════════════════════════════════════════════════════════════════════════
+
+sources:
+  # External drive mount point
+  cardv_base: /media/yousuf/C67813AB7813996F1/Users/yousu/Desktop/CARDV
+
+  # Individual camera folders
+  park_f: /media/yousuf/C67813AB7813996F1/Users/yousu/Desktop/CARDV/Park_F
+  park_r: /media/yousuf/C67813AB7813996F1/Users/yousu/Desktop/CARDV/Park_R
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Output Paths
+# ═══════════════════════════════════════════════════════════════════════════
+
+outputs:
+  # Local output directory
+  local: /home/yousuf/PROJECTS/PeopleNet/Outputs
+
+  # Google Drive backup location
+  google_drive: /home/yousuf/GoogleDrive/PROJECTS/PeopleNet
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Date Filtering
+# ═══════════════════════════════════════════════════════════════════════════
+
+date_filter:
+  # Enable date filtering (only process videos from specific dates)
+  enabled: true
+
+  # Default start date (can be overridden with --start-date flag)
+  # Format: YYYY-MM-DD
+  default_start_date: 2025-10-13
+
+  # Optional end date (leave empty for "onwards")
+  default_end_date: ""
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Backup Configuration
+# ═══════════════════════════════════════════════════════════════════════════
+
+backup:
+  # Automatically backup to Google Drive when processing completes
+  auto_backup: false  # Set to true for autonomous operation
+
+  # Delete local clips after successful backup
+  # WARNING: Only enable if you trust the backup worked!
+  delete_local: false
+
+  # Verify backup before deleting local files
+  verify_backup: true
+
+  # Backup naming convention
+  # Date will be appended: Park_F_Batch1_20251114
+  include_date: true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Notifications (Optional - not yet implemented)
+# ═══════════════════════════════════════════════════════════════════════════
+
+notification:
+  enabled: false
+  email: your@email.com
+  send_on_complete: true
+  send_on_error: true
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Advanced Settings (Don't change unless you know what you're doing)
+# ═══════════════════════════════════════════════════════════════════════════
+
+advanced:
+  # Model path
+  model: /workspace/model/resnet34_peoplenet_int8.onnx
+
+  # Progress check interval (seconds)
+  progress_interval: 60
+
+  # Stall detection (minutes with no progress before warning)
+  stall_threshold_minutes: 5
+
+  # Cleanup staging after batch completes
+  cleanup_staging: true
+
+  # Keep worker logs
+  keep_logs: true

@@ -1,0 +1,933 @@
+---
+name: vercel-env-sync
+description: Synchronize and verify environment variables between local files (.env.example, .env.local) and Vercel deployment configuration across production, preview, and development environments. Use when deploying to Vercel, managing environment variables, or ensuring deployment readiness.
+---
+
+# Vercel Environment Variables Sync
+
+Esta skill proporciona patrones completos para verificar, comparar y sincronizar variables de entorno entre archivos locales (.env, .env.local, .env.example) y la configuración de Vercel. Incluye scripts automatizados, validaciones de seguridad, y workflows de CI/CD.
+
+## 🎯 When to Use This Skill
+
+- **Pre-deployment validation**: Ensure all required env vars are configured before deploying
+- **Environment synchronization**: Sync local .env files with Vercel across all environments  
+- **Security audits**: Verify sensitive variables are properly marked and encrypted
+- **Team onboarding**: Help new developers pull correct environment configuration
+- **CI/CD integration**: Automate env var validation in deployment pipelines
+
+## 📦 Skill Components
+
+This skill includes production-ready scripts and shared libraries:
+
+### Scripts (in `./scripts/`)
+
+- **[env-push.sh](./scripts/env-push.sh)** - Push local env vars to Vercel (replaces old sync-vercel-env.sh)
+- **[env-pull.sh](./scripts/env-pull.sh)** - Pull Vercel env vars to local file
+- **[env-audit.sh](./scripts/env-audit.sh)** - Generate comprehensive sync status report
+
+### Libraries (in `./lib/`)
+
+- **[env-functions.sh](./lib/env-functions.sh)** - Shared bash functions for all scripts
+
+### Quick Start
+
+```bash
+# Navigate to skill directory
+cd .github/skills/vercel-env-sync
+
+# Make scripts executable
+chmod +x scripts/*.sh lib/*.sh
+
+# Run health check
+source lib/env-functions.sh && vercel::env::health_check
+
+# Audit current state
+./scripts/env-audit.sh
+
+# Push missing variables (dry-run first)
+./scripts/env-push.sh --all-envs --dry-run
+./scripts/env-push.sh --all-envs
+
+# Pull variables from Vercel
+./scripts/env-pull.sh --env production
+```
+
+## Use Cases
+
+Use esta skill cuando necesites:
+
+- **Verificar sincronización**: Comprobar qué variables locales faltan en Vercel
+- **Detectar diferencias**: Identificar variables que existen en Vercel pero no localmente
+- **Sincronizar automáticamente**: Crear/actualizar variables en Vercel desde archivos locales
+- **Auditoría pre-deployment**: Validar configuración antes de hacer deploy
+- **Onboarding**: Configurar variables en nuevos entornos (preview, production, development)
+
+## Prerequisites
+
+### 1. Vercel CLI Instalado y Autenticado
+
+```bash
+# Verificar instalación
+vercel --version
+
+# Autenticarse
+vercel login
+
+# Verificar autenticación
+vercel whoami
+```
+
+### 2. Proyecto Vinculado
+
+```bash
+# Vincular proyecto si no está vinculado
+vercel link
+```
+
+### 3. Variables Locales Definidas
+
+Tener al menos uno de estos archivos:
+
+- `.env`
+- `.env.local`
+- `.env.example`
+
+## Core Patterns
+
+### Pattern 1: Comparar Variables Locales vs Vercel
+
+#### Objetivo
+
+Identificar qué variables locales NO están configuradas en Vercel.
+
+#### Implementación
+
+```bash
+#!/bin/bash
+
+# Archivo: scripts/check-vercel-env.sh
+
+# Colores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo "🔍 Verificando variables de entorno..."
+
+# 1. Extraer variables de .env.example (sin comentarios ni líneas vacías)
+LOCAL_VARS=$(grep -v '^#' .env.example | grep -v '^$' | cut -d '=' -f 1 | sort | uniq)
+
+# 2. Obtener variables de Vercel (todos los entornos)
+VERCEL_VARS=$(vercel env ls 2>/dev/null | tail -n +4 | awk '{print $1}' | sort | uniq)
+
+echo ""
+echo "📋 Variables locales encontradas:"
+echo "$LOCAL_VARS" | sed 's/^/  - /'
+
+echo ""
+echo "☁️  Variables en Vercel:"
+echo "$VERCEL_VARS" | sed 's/^/  - /'
+
+echo ""
+echo "❌ Variables FALTANTES en Vercel:"
+MISSING=0
+for var in $LOCAL_VARS; do
+  if ! echo "$VERCEL_VARS" | grep -q "^$var$"; then
+    echo -e "  ${RED}✗${NC} $var"
+    MISSING=$((MISSING + 1))
+  fi
+done
+
+if [ $MISSING -eq 0 ]; then
+  echo -e "  ${GREEN}✓ Todas las variables están configuradas${NC}"
+fi
+
+echo ""
+echo "⚠️  Variables EXTRA en Vercel (no en local):"
+EXTRA=0
+for var in $VERCEL_VARS; do
+  if ! echo "$LOCAL_VARS" | grep -q "^$var$"; then
+    echo -e "  ${YELLOW}!${NC} $var"
+    EXTRA=$((EXTRA + 1))
+  fi
+done
+
+if [ $EXTRA -eq 0 ]; then
+  echo -e "  ${GREEN}✓ No hay variables extra${NC}"
+fi
+
+echo ""
+echo "📊 Resumen:"
+echo "  Local: $(echo "$LOCAL_VARS" | wc -l) variables"
+echo "  Vercel: $(echo "$VERCEL_VARS" | wc -l) variables"
+echo "  Faltantes: $MISSING"
+echo "  Extra: $EXTRA"
+
+exit $MISSING
+```
+
+#### Usage
+
+```bash
+# Hacer ejecutable
+chmod +x scripts/check-vercel-env.sh
+
+# Ejecutar
+./scripts/check-vercel-env.sh
+
+# Output ejemplo:
+# 🔍 Verificando variables de entorno...
+#
+# 📋 Variables locales encontradas:
+#   - DATABASE_URL
+#   - NEXT_PUBLIC_APP_URL
+#   - BETTER_AUTH_SECRET
+#   - BETTER_AUTH_URL
+#
+# ☁️  Variables en Vercel:
+#   - DATABASE_URL
+#
+# ❌ Variables FALTANTES en Vercel:
+#   ✗ NEXT_PUBLIC_APP_URL
+#   ✗ BETTER_AUTH_SECRET
+#   ✗ BETTER_AUTH_URL
+```
+
+### Pattern 2: Sincronizar Variables Automáticamente
+
+#### Objetivo
+
+Crear/actualizar variables en Vercel desde archivo local.
+
+#### Implementación
+
+```bash
+#!/bin/bash
+
+# Archivo: scripts/sync-vercel-env.sh
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Función para leer valor de .env.local (con fallback a .env)
+get_env_value() {
+  local var_name=$1
+  local value=""
+
+  # Intentar leer de .env.local primero
+  if [ -f .env.local ]; then
+    value=$(grep "^${var_name}=" .env.local | cut -d '=' -f 2- | sed 's/^["'\'']//' | sed 's/["'\'']$//')
+  fi
+
+  # Fallback a .env
+  if [ -z "$value" ] && [ -f .env ]; then
+    value=$(grep "^${var_name}=" .env | cut -d '=' -f 2- | sed 's/^["'\'']//' | sed 's/["'\'']$//')
+  fi
+
+  echo "$value"
+}
+
+# Función para verificar si variable existe en Vercel
+vercel_var_exists() {
+  local var_name=$1
+  local env=$2
+  vercel env ls "$env" 2>/dev/null | tail -n +4 | awk '{print $1}' | grep -q "^${var_name}$"
+}
+
+# Función para crear variable en Vercel
+create_vercel_var() {
+  local var_name=$1
+  local var_value=$2
+  local env=$3
+
+  echo -e "${BLUE}📝 Creando $var_name en $env...${NC}"
+  echo "$var_value" | vercel env add "$var_name" "$env" --force 2>&1 | grep -v "Vercel CLI"
+}
+
+# Función para actualizar variable en Vercel
+update_vercel_var() {
+  local var_name=$1
+  local var_value=$2
+  local env=$3
+
+  echo -e "${YELLOW}🔄 Actualizando $var_name en $env...${NC}"
+  # Vercel no tiene comando directo para update, hay que remover y crear
+  vercel env rm "$var_name" "$env" --yes 2>&1 | grep -v "Vercel CLI" || true
+  echo "$var_value" | vercel env add "$var_name" "$env" --force 2>&1 | grep -v "Vercel CLI"
+}
+
+# Función para sincronizar una variable
+sync_var() {
+  local var_name=$1
+  local env=$2
+  local force_update=${3:-false}
+
+  # Obtener valor local
+  local value=$(get_env_value "$var_name")
+
+  if [ -z "$value" ]; then
+    echo -e "${RED}⚠️  $var_name no tiene valor en archivos locales${NC}"
+    return 1
+  fi
+
+  # Verificar si existe en Vercel
+  if vercel_var_exists "$var_name" "$env"; then
+    if [ "$force_update" = true ]; then
+      update_vercel_var "$var_name" "$value" "$env"
+      echo -e "${GREEN}✓ $var_name actualizado en $env${NC}"
+    else
+      echo -e "${YELLOW}⚠️  $var_name ya existe en $env (usa --force para actualizar)${NC}"
+    fi
+  else
+    create_vercel_var "$var_name" "$value" "$env"
+    echo -e "${GREEN}✓ $var_name creado en $env${NC}"
+  fi
+}
+
+# Main script
+echo -e "${BLUE}🚀 Sincronizando variables de entorno con Vercel...${NC}"
+echo ""
+
+# Verificar autenticación
+if ! vercel whoami &>/dev/null; then
+  echo -e "${RED}❌ No estás autenticado en Vercel${NC}"
+  echo "Ejecuta: vercel login"
+  exit 1
+fi
+
+# Leer variables de .env.example
+if [ ! -f .env.example ]; then
+  echo -e "${RED}❌ No se encontró .env.example${NC}"
+  exit 1
+fi
+
+VARS=$(grep -v '^#' .env.example | grep -v '^$' | cut -d '=' -f 1)
+
+# Parsear argumentos
+ENVIRONMENTS=("production" "preview" "development")
+FORCE=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --env)
+      ENVIRONMENTS=("$2")
+      shift 2
+      ;;
+    --force)
+      FORCE=true
+      shift
+      ;;
+    --all-envs)
+      ENVIRONMENTS=("production" "preview" "development")
+      shift
+      ;;
+    *)
+      echo -e "${RED}Argumento desconocido: $1${NC}"
+      exit 1
+      ;;
+  esac
+done
+
+echo "🎯 Entornos objetivo: ${ENVIRONMENTS[@]}"
+echo "🔄 Forzar actualización: $FORCE"
+echo ""
+
+# Sincronizar cada variable en cada entorno
+TOTAL=0
+SUCCESS=0
+FAILED=0
+
+for env in "${ENVIRONMENTS[@]}"; do
+  echo -e "\n${BLUE}📦 Procesando entorno: $env${NC}"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+  for var in $VARS; do
+    TOTAL=$((TOTAL + 1))
+    if sync_var "$var" "$env" "$FORCE"; then
+      SUCCESS=$((SUCCESS + 1))
+    else
+      FAILED=$((FAILED + 1))
+    fi
+  done
+done
+
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}✓ Completado${NC}"
+echo "  Total: $TOTAL operaciones"
+echo "  Exitosas: $SUCCESS"
+echo "  Fallidas: $FAILED"
+
+if [ $FAILED -gt 0 ]; then
+  exit 1
+fi
+```
+
+#### Usage
+
+```bash
+# Hacer ejecutable
+chmod +x scripts/sync-vercel-env.sh
+
+# Sincronizar solo production (sin sobrescribir existentes)
+./scripts/sync-vercel-env.sh --env production
+
+# Sincronizar todos los entornos
+./scripts/sync-vercel-env.sh --all-envs
+
+# Forzar actualización (sobrescribir existentes)
+./scripts/sync-vercel-env.sh --all-envs --force
+
+# Sincronizar solo preview
+./scripts/sync-vercel-env.sh --env preview
+```
+
+### Pattern 3: Auditoría Completa con Reporte
+
+#### Objetivo
+
+Generar reporte detallado del estado de sincronización.
+
+#### Implementación
+
+```bash
+#!/bin/bash
+
+# Archivo: scripts/audit-vercel-env.sh
+
+set -e
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}🔍 Auditoría de Variables de Entorno${NC}"
+echo -e "${BLUE}═══════════════════════════════════${NC}"
+echo ""
+
+# 1. Verificar autenticación
+echo "1️⃣  Verificando autenticación..."
+USER=$(vercel whoami 2>&1)
+if [ $? -eq 0 ]; then
+  echo -e "   ${GREEN}✓${NC} Autenticado como: $USER"
+else
+  echo -e "   ${RED}✗${NC} No autenticado"
+  exit 1
+fi
+echo ""
+
+# 2. Verificar proyecto vinculado
+echo "2️⃣  Verificando proyecto..."
+if [ -f .vercel/project.json ]; then
+  PROJECT=$(cat .vercel/project.json | grep -o '"projectId":"[^"]*' | cut -d '"' -f 4)
+  echo -e "   ${GREEN}✓${NC} Proyecto vinculado: $PROJECT"
+else
+  echo -e "   ${RED}✗${NC} Proyecto no vinculado (ejecuta: vercel link)"
+  exit 1
+fi
+echo ""
+
+# 3. Obtener variables locales
+echo "3️⃣  Analizando archivos locales..."
+LOCAL_VARS=()
+if [ -f .env.example ]; then
+  while IFS= read -r line; do
+    if [[ ! "$line" =~ ^# ]] && [[ -n "$line" ]]; then
+      var_name=$(echo "$line" | cut -d '=' -f 1)
+      LOCAL_VARS+=("$var_name")
+    fi
+  done < .env.example
+  echo -e "   ${GREEN}✓${NC} Encontradas ${#LOCAL_VARS[@]} variables en .env.example"
+else
+  echo -e "   ${RED}✗${NC} No se encontró .env.example"
+  exit 1
+fi
+echo ""
+
+# 4. Obtener variables de Vercel
+echo "4️⃣  Consultando variables en Vercel..."
+
+declare -A VERCEL_PROD
+declare -A VERCEL_PREVIEW
+declare -A VERCEL_DEV
+
+# Production
+while IFS= read -r line; do
+  var_name=$(echo "$line" | awk '{print $1}')
+  if [ -n "$var_name" ] && [ "$var_name" != "Name" ]; then
+    VERCEL_PROD[$var_name]=1
+  fi
+done < <(vercel env ls production 2>/dev/null | tail -n +4)
+
+# Preview
+while IFS= read -r line; do
+  var_name=$(echo "$line" | awk '{print $1}')
+  if [ -n "$var_name" ] && [ "$var_name" != "Name" ]; then
+    VERCEL_PREVIEW[$var_name]=1
+  fi
+done < <(vercel env ls preview 2>/dev/null | tail -n +4)
+
+# Development
+while IFS= read -r line; do
+  var_name=$(echo "$line" | awk '{print $1}')
+  if [ -n "$var_name" ] && [ "$var_name" != "Name" ]; then
+    VERCEL_DEV[$var_name]=1
+  fi
+done < <(vercel env ls development 2>/dev/null | tail -n +4)
+
+echo -e "   ${GREEN}✓${NC} Production: ${#VERCEL_PROD[@]} variables"
+echo -e "   ${GREEN}✓${NC} Preview: ${#VERCEL_PREVIEW[@]} variables"
+echo -e "   ${GREEN}✓${NC} Development: ${#VERCEL_DEV[@]} variables"
+echo ""
+
+# 5. Generar reporte
+echo "5️⃣  Generando reporte..."
+echo ""
+echo -e "${BLUE}┌─────────────────────────────────────────────────────────┐${NC}"
+echo -e "${BLUE}│                   REPORTE DE ESTADO                     │${NC}"
+echo -e "${BLUE}└─────────────────────────────────────────────────────────┘${NC}"
+echo ""
+
+printf "%-30s %-12s %-12s %-12s\n" "Variable" "Production" "Preview" "Development"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+MISSING_PROD=0
+MISSING_PREVIEW=0
+MISSING_DEV=0
+
+for var in "${LOCAL_VARS[@]}"; do
+  # Check production
+  if [ ${VERCEL_PROD[$var]+x} ]; then
+    prod="${GREEN}✓ Existe${NC}"
+  else
+    prod="${RED}✗ Falta${NC}"
+    MISSING_PROD=$((MISSING_PROD + 1))
+  fi
+
+  # Check preview
+  if [ ${VERCEL_PREVIEW[$var]+x} ]; then
+    preview="${GREEN}✓ Existe${NC}"
+  else
+    preview="${RED}✗ Falta${NC}"
+    MISSING_PREVIEW=$((MISSING_PREVIEW + 1))
+  fi
+
+  # Check development
+  if [ ${VERCEL_DEV[$var]+x} ]; then
+    dev="${GREEN}✓ Existe${NC}"
+  else
+    dev="${RED}✗ Falta${NC}"
+    MISSING_DEV=$((MISSING_DEV + 1))
+  fi
+
+  printf "%-30s " "$var"
+  echo -ne "$prod    $preview    $dev\n"
+done
+
+echo ""
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+# Resumen
+echo -e "${BLUE}📊 RESUMEN${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Variables locales: ${#LOCAL_VARS[@]}"
+echo ""
+echo "  Faltantes en Production: $MISSING_PROD"
+echo "  Faltantes en Preview: $MISSING_PREVIEW"
+echo "  Faltantes en Development: $MISSING_DEV"
+echo ""
+
+if [ $MISSING_PROD -eq 0 ] && [ $MISSING_PREVIEW -eq 0 ] && [ $MISSING_DEV -eq 0 ]; then
+  echo -e "${GREEN}✅ Todos los entornos están correctamente configurados${NC}"
+  exit 0
+else
+  echo -e "${YELLOW}⚠️  Hay variables faltantes. Ejecuta el script de sincronización:${NC}"
+  echo ""
+  echo "  ./scripts/sync-vercel-env.sh --all-envs"
+  echo ""
+  exit 1
+fi
+```
+
+#### Usage
+
+```bash
+# Hacer ejecutable
+chmod +x scripts/audit-vercel-env.sh
+
+# Ejecutar auditoría
+./scripts/audit-vercel-env.sh
+
+# Output ejemplo:
+# 🔍 Auditoría de Variables de Entorno
+# ═══════════════════════════════════
+#
+# 1️⃣  Verificando autenticación...
+#    ✓ Autenticado como: melosdev
+#
+# 2️⃣  Verificando proyecto...
+#    ✓ Proyecto vinculado: wispy-poetry-52762475
+#
+# 3️⃣  Analizando archivos locales...
+#    ✓ Encontradas 4 variables en .env.example
+#
+# 4️⃣  Consultando variables en Vercel...
+#    ✓ Production: 1 variables
+#    ✓ Preview: 1 variables
+#    ✓ Development: 1 variables
+#
+# 5️⃣  Generando reporte...
+#
+# ┌─────────────────────────────────────────────────────────┐
+# │                   REPORTE DE ESTADO                     │
+# └─────────────────────────────────────────────────────────┘
+#
+# Variable                       Production   Preview      Development
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DATABASE_URL                   ✓ Existe    ✓ Existe    ✓ Existe
+# NEXT_PUBLIC_APP_URL            ✗ Falta     ✗ Falta     ✗ Falta
+# BETTER_AUTH_SECRET             ✗ Falta     ✗ Falta     ✗ Falta
+# BETTER_AUTH_URL                ✗ Falta     ✗ Falta     ✗ Falta
+```
+
+### Pattern 4: Workflow de CI/CD
+
+#### Objetivo
+
+Integrar verificación de variables en pipeline de CI/CD.
+
+#### GitHub Actions
+
+```yaml
+# .github/workflows/check-env-sync.yml
+name: Check Vercel Environment Variables
+
+on:
+  pull_request:
+    paths:
+      - ".env.example"
+      - "scripts/check-vercel-env.sh"
+  workflow_dispatch:
+
+jobs:
+  check-env:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Check Environment Variables
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          # Autenticar con token
+          vercel login --token $VERCEL_TOKEN
+
+          # Vincular proyecto
+          vercel link --yes --token $VERCEL_TOKEN
+
+          # Ejecutar verificación
+          chmod +x scripts/check-vercel-env.sh
+          ./scripts/check-vercel-env.sh
+
+      - name: Comment PR
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ Hay variables de entorno faltantes en Vercel. Revisa los logs del workflow.'
+            })
+```
+
+## Advanced Patterns
+
+### Pattern 5: Gestión de Secretos
+
+Para variables sensibles, usa valores placeholder en .env.example:
+
+```bash
+# .env.example
+DATABASE_URL=postgresql://user:password@host/db  # Real value in .env.local
+BETTER_AUTH_SECRET=generate-with-openssl-rand-base64-32
+API_KEY=get-from-service-provider
+```
+
+Luego, sincroniza solo desde .env.local (no commiteado):
+
+```bash
+# Sincronizar solo variables con valores reales
+./scripts/sync-vercel-env.sh --env production --force
+```
+
+### Pattern 6: Validación de Valores
+
+Añade validación antes de sincronizar:
+
+```bash
+# En sync-vercel-env.sh, antes de sync_var()
+
+validate_value() {
+  local var_name=$1
+  local value=$2
+
+  case $var_name in
+    BETTER_AUTH_SECRET)
+      if [ ${#value} -lt 32 ]; then
+        echo -e "${RED}❌ $var_name debe tener al menos 32 caracteres${NC}"
+        return 1
+      fi
+      ;;
+    *_URL)
+      if [[ ! "$value" =~ ^https?:// ]]; then
+        echo -e "${RED}❌ $var_name debe ser una URL válida${NC}"
+        return 1
+      fi
+      ;;
+    DATABASE_URL)
+      if [[ ! "$value" =~ ^postgresql:// ]]; then
+        echo -e "${RED}❌ DATABASE_URL debe ser una conexión PostgreSQL válida${NC}"
+        return 1
+      fi
+      ;;
+  esac
+
+  return 0
+}
+```
+
+### Pattern 7: Backup Antes de Actualizar
+
+```bash
+# Backup de variables existentes antes de actualizar
+backup_vercel_env() {
+  local env=$1
+  local backup_file="backups/vercel-env-${env}-$(date +%Y%m%d-%H%M%S).txt"
+
+  mkdir -p backups
+  vercel env ls "$env" > "$backup_file"
+  echo -e "${GREEN}✓ Backup guardado en $backup_file${NC}"
+}
+
+# Llamar antes de sincronizar
+for env in "${ENVIRONMENTS[@]}"; do
+  backup_vercel_env "$env"
+done
+```
+
+## Troubleshooting
+
+### Problema: "Error: Not authenticated"
+
+**Causa**: No estás autenticado en Vercel CLI.
+
+**Solución**:
+
+```bash
+vercel login
+```
+
+### Problema: "Error: No project linked"
+
+**Causa**: El proyecto local no está vinculado a Vercel.
+
+**Solución**:
+
+```bash
+vercel link
+```
+
+### Problema: Variable no se actualiza en Vercel
+
+**Causa**: Vercel requiere remover y recrear para actualizar valores.
+
+**Solución**:
+
+```bash
+# Remover variable existente
+vercel env rm VARIABLE_NAME production --yes
+
+# Crear nuevamente con nuevo valor
+echo "nuevo-valor" | vercel env add VARIABLE_NAME production
+```
+
+### Problema: Script falla con variables que contienen espacios
+
+**Causa**: Bash no maneja correctamente valores con espacios.
+
+**Solución**: Escapar comillas en valores:
+
+```bash
+value=$(grep "^${var_name}=" .env.local | cut -d '=' -f 2- | sed 's/^["'\'']//' | sed 's/["'\'']$//')
+```
+
+### Problema: "Permission denied" al ejecutar scripts
+
+**Causa**: Scripts no tienen permisos de ejecución.
+
+**Solución**:
+
+```bash
+chmod +x scripts/*.sh
+```
+
+## Best Practices
+
+### 1. Nunca Commitear .env.local
+
+```gitignore
+# .gitignore
+.env
+.env.local
+.env.*.local
+```
+
+### 2. Mantener .env.example Actualizado
+
+Cada vez que agregues una nueva variable:
+
+```bash
+echo "NEW_VARIABLE=placeholder-value" >> .env.example
+```
+
+### 3. Usar Valores Seguros en Production
+
+```bash
+# Generar secret seguro
+openssl rand -base64 32
+
+# Usar en Vercel
+echo "$(openssl rand -base64 32)" | vercel env add BETTER_AUTH_SECRET production
+```
+
+### 4. Documentar Variables Requeridas
+
+```bash
+# En .env.example, añadir comentarios
+# Database (Required)
+DATABASE_URL=postgresql://...
+
+# Auth (Required in production)
+BETTER_AUTH_SECRET=generate-with-openssl
+
+# Optional
+ANALYTICS_ID=optional-analytics-id
+```
+
+### 5. Verificar Antes de Cada Deploy
+
+```bash
+# Pre-deploy checklist
+./scripts/audit-vercel-env.sh && vercel --prod
+```
+
+## Integration with Existing Tools
+
+### Usar con setup-vercel-env.sh
+
+El script existente `scripts/setup-vercel-env.sh` puede integrarse:
+
+```bash
+# 1. Ejecutar auditoría
+./scripts/audit-vercel-env.sh
+
+# 2. Si faltan variables, sincronizar
+if [ $? -ne 0 ]; then
+  ./scripts/sync-vercel-env.sh --all-envs --force
+fi
+
+# 3. Verificar nuevamente
+./scripts/audit-vercel-env.sh
+```
+
+### Usar con Vercel CLI Management Skill
+
+Complementa la skill de Vercel CLI con verificación:
+
+```bash
+# Después de configurar variables manualmente
+vercel env add MY_VAR production
+
+# Verificar sincronización
+./scripts/check-vercel-env.sh
+```
+
+## Quick Reference
+
+### Comandos Esenciales
+
+```bash
+# Verificar sincronización
+./scripts/check-vercel-env.sh
+
+# Auditoría completa
+./scripts/audit-vercel-env.sh
+
+# Sincronizar production
+./scripts/sync-vercel-env.sh --env production
+
+# Sincronizar todos los entornos
+./scripts/sync-vercel-env.sh --all-envs
+
+# Forzar actualización
+./scripts/sync-vercel-env.sh --all-envs --force
+
+# Ver variables en Vercel
+vercel env ls
+vercel env ls production
+vercel env ls preview
+vercel env ls development
+
+# Crear variable manualmente
+echo "valor" | vercel env add VAR_NAME production
+
+# Remover variable
+vercel env rm VAR_NAME production --yes
+
+# Pull variables to .env.local
+vercel env pull .env.local
+```
+
+### Workflow Completo
+
+```bash
+# 1. Verificar autenticación
+vercel whoami
+
+# 2. Auditar estado actual
+./scripts/audit-vercel-env.sh
+
+# 3. Sincronizar faltantes
+./scripts/sync-vercel-env.sh --all-envs
+
+# 4. Verificar sincronización
+./scripts/audit-vercel-env.sh
+
+# 5. Deploy con confianza
+vercel --prod
+```
+
+## Related Skills
+
+- **vercel-cli-management**: Gestión general de Vercel CLI
+- **nextjs16-proxy-middleware**: Configuración de middleware que usa variables de entorno
+
+## References
+
+- [Vercel CLI Environment Variables](https://vercel.com/docs/cli/env)
+- [Vercel Environment Variables Docs](https://vercel.com/docs/projects/environment-variables)
+- [Better Auth Environment Variables](https://www.better-auth.com/docs/installation)

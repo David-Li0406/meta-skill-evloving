@@ -1,0 +1,43 @@
+# Commit Command Configuration
+# Copy this file to .claude/commit.yaml in your project root to customize behavior
+
+# Gitmoji settings
+gitmoji:
+  # Use gitmoji in commit messages (true/false)
+  enabled: true
+
+  # Custom gitmoji to add to the built-in list (optional)
+  # These extend (not replace) the default emojis
+  # custom:
+  #   - emoji: "🎯"
+  #     code: ":dart:"
+  #     description: "Focus on goal"
+  #   - emoji: "🧪"
+  #     code: ":test_tube:"
+  #     description: "Experiments"
+
+# Pre-commit hook behavior
+hooks:
+  # Run pre-commit hooks by default (can be overridden with --no-verify flag)
+  runByDefault: true
+
+# Commit message formatting
+format:
+  # Add co-authored-by attribution to commits
+  # Example: "Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+  coAuthor: false
+
+  # Message template with placeholders (optional)
+  # Placeholders: {emoji}, {type}, {scope}, {description}
+  # Default (if not set): "{emoji} {description}" or "{description}" without gitmoji
+  # messageTemplate: "{emoji} {type}({scope}): {description}"
+
+  # Body template for structured commit body (optional)
+  # Placeholders: {body}, {breaking}, {issues}
+  # Use | for multiline YAML
+  # bodyTemplate: |
+  #   {body}
+  #
+  #   BREAKING CHANGE: {breaking}
+  #
+  #   Closes: {issues}

@@ -1,0 +1,223 @@
+name: CI
+
+'on':
+  push:
+    branches:
+      - main
+      - release-4.18
+      - release-4.19
+      - release-4.20
+  pull_request:
+    branches:
+      - main
+      - release-4.18
+      - release-4.19
+      - release-4.20
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Determine Kubernetes version for branch
+        id: k8s-version
+        run: |
+          # For PRs, use base_ref (target branch). For pushes, use ref_name (source branch)
+          BRANCH_NAME="${{ github.base_ref || github.ref_name }}"
+          case $BRANCH_NAME in
+            main|release-4.18)
+              K8S_VERSION="v1.31.0"
+              ;;
+            release-4.19)
+              K8S_VERSION="v1.32.0"
+              ;;
+            release-4.20)
+              K8S_VERSION="v1.33.0"
+              ;;
+            *)
+              # Default to 1.31 for feature branches
+              K8S_VERSION="v1.31.0"
+              ;;
+          esac
+          echo "k8s_version=$K8S_VERSION" >> $GITHUB_OUTPUT
+          echo "Using Kubernetes version: $K8S_VERSION for branch: $BRANCH_NAME"
+
+      - name: Set up Kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: test-cluster
+          version: v0.26.0
+          node_image: kindest/node:${{ steps.k8s-version.outputs.k8s_version }}
+          wait: 60s
+          kubectl_version: ${{ steps.k8s-version.outputs.k8s_version }}
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Build healthcheck binary for integration test
+        run: |
+          CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/healthcheck ./cmd/healthcheck
+          echo "✓ healthcheck binary built"
+
+      - name: Test healthcheck with OpenShift authentication
+        if: env.OPENSHIFT_SERVER != '' && env.OPENSHIFT_TOKEN != ''
+        run: |
+          echo "Testing healthcheck with bearer token authentication..."
+
+          # Get the API server URL from kubeconfig
+          API_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+          echo "API Server: $API_SERVER"
+
+          # Test healthcheck against Kubernetes API health endpoint with bearer token
+          # The K8s API /healthz endpoint should work with valid token
+          ./bin/healthcheck "${API_SERVER}/healthz" \
+            --bearer-token="${{ env.OPENSHIFT_TOKEN }}" \
+            --insecure-skip-verify \
+            --max-retries=3 \
+            --timeout=10s \
+            --interval=2s && {
+            echo "✓ healthcheck with bearer token works against K8s API"
+          } || {
+            echo "⚠️  healthcheck against K8s API failed (may be expected for some endpoints)"
+          }
+
+          # Test against a basic livez endpoint
+          ./bin/healthcheck "${API_SERVER}/livez" \
+            --bearer-token="${{ env.OPENSHIFT_TOKEN }}" \
+            --insecure-skip-verify \
+            --max-retries=3 \
+            --timeout=10s \
+            --interval=2s && {
+            echo "✓ healthcheck with bearer token works against K8s livez"
+          } || {
+            echo "⚠️  healthcheck against K8s livez failed"
+          }
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.out
+          flags: unittests
+          fail_ci_if_error: false
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          args: --timeout=5m
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Build binary
+        run: |
+          CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/mcp-server ./cmd/mcp-server
+          CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o bin/healthcheck ./cmd/healthcheck
+          ls -lh bin/mcp-server bin/healthcheck
+
+      - name: Test healthcheck binary
+        run: |
+          # Verify healthcheck binary runs and shows help
+          ./bin/healthcheck 2>&1 | grep -q "bearer-token-file" || {
+            echo "❌ healthcheck binary missing bearer-token-file flag"
+            exit 1
+          }
+          echo "✓ healthcheck binary has bearer token support"
+
+          # Test healthcheck with a simple HTTP server
+          # Start a simple HTTP health endpoint in background
+          python3 -m http.server 18080 &
+          SERVER_PID=$!
+          sleep 1
+
+          # Run healthcheck against it (should succeed quickly)
+          timeout 10 ./bin/healthcheck http://localhost:18080/ --max-retries=3 --interval=1s || {
+            echo "❌ healthcheck failed against local server"
+            kill $SERVER_PID 2>/dev/null || true
+            exit 1
+          }
+          echo "✓ healthcheck works against local HTTP server"
+
+          kill $SERVER_PID 2>/dev/null || true
+
+      - name: Verify binary size
+        run: |
+          SIZE=$(stat -f%z bin/mcp-server 2>/dev/null || stat -c%s bin/mcp-server)
+          echo "Binary size: $SIZE bytes"
+          if [ $SIZE -gt 52428800 ]; then
+            echo "Binary size exceeds 50MB limit"
+            exit 1
+          fi
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  helm:
+    name: Helm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+
+      - name: Lint Helm chart
+        run: helm lint charts/openshift-cluster-health-mcp

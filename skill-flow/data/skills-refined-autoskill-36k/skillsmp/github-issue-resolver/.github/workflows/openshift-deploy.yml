@@ -1,0 +1,155 @@
+name: OpenShift Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      openshift_server:
+        description: 'OpenShift server URL (e.g., https://api.cluster.example.com:6443)'
+        required: true
+        type: string
+      openshift_token:
+        description: 'OpenShift authentication token'
+        required: true
+        type: string
+      namespace:
+        description: 'Target namespace for deployment'
+        required: false
+        default: 'self-healing-platform'
+        type: string
+      deploy:
+        description: 'Deploy to cluster after testing'
+        required: false
+        default: false
+        type: boolean
+      openshift_version:
+        description: 'OpenShift version (for validation)'
+        required: false
+        type: choice
+        options:
+          - '4.18'
+          - '4.19'
+          - '4.20'
+        default: '4.18'
+
+jobs:
+  test-and-deploy:
+    name: Test and Deploy to OpenShift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Configure OpenShift kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          cat > ~/.kube/config <<EOF
+          apiVersion: v1
+          kind: Config
+          clusters:
+          - cluster:
+              insecure-skip-tls-verify: true
+              server: ${{ inputs.openshift_server }}
+            name: openshift-cluster
+          contexts:
+          - context:
+              cluster: openshift-cluster
+              namespace: ${{ inputs.namespace }}
+              user: openshift-user
+            name: openshift-context
+          current-context: openshift-context
+          users:
+          - name: openshift-user
+            user:
+              token: ${{ inputs.openshift_token }}
+          EOF
+          chmod 600 ~/.kube/config
+
+      - name: Install kubectl
+        run: |
+          KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+          curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Verify OpenShift connectivity
+        run: |
+          echo "Testing connection to OpenShift cluster..."
+          kubectl cluster-info
+          kubectl get nodes
+
+          # Get OpenShift version
+          OCP_VERSION=$(kubectl get clusterversion version -o jsonpath='{.status.desired.version}' 2>/dev/null || echo "unknown")
+          echo "OpenShift version: $OCP_VERSION"
+
+          EXPECTED_VERSION="${{ inputs.openshift_version }}"
+          if [[ "$OCP_VERSION" == "$EXPECTED_VERSION"* ]]; then
+            echo "✓ OpenShift version matches: $EXPECTED_VERSION"
+          else
+            echo "⚠ Version mismatch: Expected $EXPECTED_VERSION, got $OCP_VERSION"
+          fi
+
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests against OpenShift cluster..."
+          go test -v -race -coverprofile=coverage.out ./...
+        env:
+          KUBECONFIG: ${{ runner.home }}/.kube/config
+
+      - name: Install Helm
+        if: inputs.deploy == true
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+
+      - name: Deploy to OpenShift
+        if: inputs.deploy == true
+        run: |
+          echo "Deploying to OpenShift namespace: ${{ inputs.namespace }}"
+
+          # Check if release exists
+          if helm list -n ${{ inputs.namespace }} | grep -q mcp-server; then
+            echo "Upgrading existing release..."
+            helm upgrade mcp-server ./charts/openshift-cluster-health-mcp \
+              --namespace ${{ inputs.namespace }} \
+              --set image.tag=${{ inputs.openshift_version }}-latest \
+              --wait
+          else
+            echo "Installing new release..."
+            helm install mcp-server ./charts/openshift-cluster-health-mcp \
+              --namespace ${{ inputs.namespace }} \
+              --create-namespace \
+              --set image.tag=${{ inputs.openshift_version }}-latest \
+              --wait
+          fi
+
+      - name: Verify deployment
+        if: inputs.deploy == true
+        run: |
+          echo "Verifying deployment..."
+          kubectl get pods -n ${{ inputs.namespace }}
+          kubectl get svc -n ${{ inputs.namespace }}
+
+          # Wait for pod to be ready
+          kubectl wait --for=condition=ready pod \
+            -l app=mcp-server \
+            -n ${{ inputs.namespace }} \
+            --timeout=120s
+
+          # Check pod logs
+          kubectl logs -l app=mcp-server -n ${{ inputs.namespace }} --tail=50
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.out
+          flags: openshift-integration
+          fail_ci_if_error: false

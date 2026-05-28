@@ -1,0 +1,679 @@
+# Cortex Memory System — Progress Log
+
+## Codebase Patterns
+
+*(Add reusable patterns here as you discover them)*
+
+### Project Structure
+- `cmd/cortex/` — CLI entry point
+- `internal/db/` — Database layer, schema.sql
+- `internal/` — Core packages
+- `prompts/graphiti/` — LLM prompts for extraction
+
+### Schema Conventions
+- Tables use snake_case
+- Primary keys are TEXT (UUIDs)
+- Timestamps are INTEGER (Unix epoch) or TEXT (ISO 8601)
+- JSON fields end with `_json` suffix
+- Foreign keys have ON DELETE CASCADE where appropriate
+
+### Go Conventions
+- Packages are lowercase, single word when possible
+- Structs match table names in PascalCase
+- Use context.Context for cancellation
+- Errors are returned, not panicked
+
+### Naming: Segments → Episodes
+- **Schema**: `episodes`, `episode_definitions`, `episode_events` tables
+- **Go code**: Use `Episode*` types and `episode*` variables
+- **SQL queries**: Reference `ee.episode_id` not `se.segment_id`
+- **JSON**: Can keep `segment_id` in JSON for backward compatibility with queued jobs
+- **CLI output**: Use "episodes" in user-facing messages
+
+### LLM Integration (Gemini)
+- Use `internal/gemini` package for Gemini API calls
+- `GenerateContentRequest` with `ResponseMimeType: "application/json"` for structured output
+- Response text is in `resp.Candidates[0].Content.Parts[0].Text`
+- Prompts are built programmatically in Go (no separate template engine)
+- For memory extraction: prompts live in `prompts/graphiti/*.prompt.md` for documentation, but code builds them
+
+---
+
+## Progress Log
+
+*(Append entries below as stories are completed)*
+
+---
+## 2026-01-21 - [MS-001] Rename segments to episodes in Go code
+- Renamed all Go code references from `segment` to `episode`
+- Updated SQL queries in engine.go, nexus_cli.go, aix_facets.go, main.go, aix.go
+- Updated struct fields: `SegmentID` → `EpisodeID`, `SegmentsCreated` → `EpisodesCreated`
+- Updated function names: `buildSegmentText` → `buildEpisodeText`, `getSegmentPreview` → `getEpisodePreview`
+- Schema was already correct (episodes, episode_events, episode_definitions)
+- JSON keys kept as `segment_id` in AnalysisJobPayload for backward compatibility with queued jobs
+
+**Files changed:**
+- `internal/compute/engine.go` - SQL queries, struct fields, function names
+- `internal/compute/nexus_cli.go` - SQL queries, function signatures
+- `internal/adapters/aix_facets.go` - SQL queries, struct fields, function names
+- `internal/live/aix.go` - Log message output field
+- `cmd/cortex/main.go` - CLI result structs, SQL queries, function names
+- `AGENTS.md` - Schema quick reference
+- `scripts/ralph-memory/progress.txt` - This entry
+
+**Learnings:**
+- The schema.sql was already migrated to use `episodes` terminology
+- Go code had many lingering references to `segment_events` table and `segment_id` columns
+- SQL column names must match schema exactly - was getting silent failures before
+- Keep JSON keys stable for backward compatibility with queued jobs
+- search/types.go already had backward compatibility aliases (SegmentSearchRequest = EpisodeSearchRequest)
+
+---
+## 2026-01-21 - [MS-002] Add entities table to schema
+- Added `entities` table to schema.sql following spec §3.4
+- Columns: id, canonical_name, entity_type_id, summary, summary_updated_at, origin, confidence, merged_into, created_at, updated_at
+- Added indexes: idx_entities_type (entity_type_id), idx_entities_name (canonical_name)
+- Schema version incremented from 13 to 14
+- Uses TEXT for timestamps (ISO 8601 format) per spec convention
+- entity_type_id maps to code-defined types (0=Entity, 1=Person, 2=Company, 3=Project, 4=Location, 5=Event, 6=Document, 7=Pet)
+
+**Files changed:**
+- `internal/db/schema.sql` - Added entities table and indexes
+
+**Learnings:**
+- Schema uses TEXT for timestamp columns with ISO 8601 format (not INTEGER Unix epoch like some older tables)
+- merged_into uses self-referential FK for tracking entity merges
+- Table has IF NOT EXISTS clause for safe re-application
+- Indexes also use IF NOT EXISTS for idempotent schema application
+
+---
+## 2026-01-21 - [MS-003] Add entity_aliases table to schema
+- Added `entity_aliases` table to schema.sql following spec §3.4
+- Columns: id, entity_id (FK to entities), alias, alias_type, normalized, is_shared, created_at
+- NO UNIQUE constraint on alias - same alias can map to multiple entities (family phone, team email)
+- Added indexes: idx_entity_aliases_lookup (alias, alias_type), idx_entity_aliases_normalized (normalized, alias_type), idx_entity_aliases_entity (entity_id)
+- Schema version incremented from 14 to 15
+- alias_type values: 'name', 'email', 'phone', 'handle', 'username', 'nickname'
+
+**Files changed:**
+- `internal/db/schema.sql` - Added entity_aliases table and indexes
+
+**Learnings:**
+- Entity aliases are intentionally NOT unique to support shared identifiers (family phone, team email)
+- is_shared BOOLEAN field tracks when multiple entities share an alias for disambiguation during resolution
+- Identity relationships (HAS_EMAIL, HAS_PHONE, HAS_HANDLE) get promoted to aliases table, not stored in relationships table
+- normalized column enables case-insensitive matching without runtime LOWER() calls
+
+---
+## 2026-01-21 - [MS-004] Add relationships table to schema
+- Added `relationships` table to schema.sql following spec §3.4
+- Columns: id, source_entity_id (FK to entities), target_entity_id (FK nullable), target_literal, relation_type, fact, valid_at, invalid_at, created_at, confidence
+- CHECK constraint ensures exactly one of target_entity_id or target_literal is NOT NULL
+- Conditional UNIQUE indexes:
+  - `idx_relationships_unique_entity` on (source_entity_id, target_entity_id, relation_type, valid_at) WHERE target_entity_id IS NOT NULL
+  - `idx_relationships_unique_literal` on (source_entity_id, target_literal, relation_type, valid_at) WHERE target_literal IS NOT NULL
+- Regular indexes: source, target, type, temporal bounds
+- Schema version incremented from 15 to 16
+
+**Files changed:**
+- `internal/db/schema.sql` - Added relationships table and indexes
+
+**Learnings:**
+- SQLite supports conditional UNIQUE indexes via `WHERE` clause - useful for enforcing different uniqueness constraints based on which column is populated
+- CHECK constraint syntax in SQLite is straightforward for XOR-style validation
+- Bi-temporal model uses TEXT for timestamps (ISO 8601) to match entity/alias tables
+- valid_at allows NULL (unknown when relationship started) but enables different relationships with same (source, target, type) if they have different valid_at values (e.g., multiple job stints at same company)
+
+---
+## 2026-01-21 - [MS-005] Add episode_entity_mentions table to schema
+- Added `episode_entity_mentions` junction table to schema.sql following spec §3.4
+- Columns: episode_id (FK to episodes), entity_id (FK to entities), mention_count (default 1), created_at
+- Composite PRIMARY KEY on (episode_id, entity_id) - ensures one record per episode-entity pair
+- Added ON DELETE CASCADE for both foreign keys to maintain referential integrity
+- Index: idx_episode_entity_mentions_entity (entity_id) for efficient entity-based lookups
+- Schema version incremented from 16 to 17
+
+**Files changed:**
+- `internal/db/schema.sql` - Added episode_entity_mentions table and index
+
+**Learnings:**
+- Junction tables with composite PKs don't need separate id columns - the composite PK serves as the unique identifier
+- ON DELETE CASCADE is important for junction tables referencing entities that may be merged/deleted
+- The mention_count column enables tracking how many times an entity is referenced within an episode (useful for relevance scoring)
+- Table positioned after relationships and before upcoming episode_relationship_mentions to maintain logical grouping
+
+---
+## 2026-01-21 - [MS-006] Add episode_relationship_mentions table to schema
+- Added `episode_relationship_mentions` table to schema.sql following spec §3.4
+- Columns: id, episode_id (FK), relationship_id (FK nullable), extracted_fact, asserted_by_entity_id (FK nullable), source_type, target_literal, alias_id (FK nullable), confidence, created_at
+- relationship_id is nullable because identity relationships (HAS_EMAIL, HAS_PHONE, HAS_HANDLE) go to entity_aliases instead of relationships table
+- Added ON DELETE CASCADE for episode_id and relationship_id FKs
+- Added ON DELETE SET NULL for alias_id FK (preserve provenance even if alias is later deleted)
+- Added indexes: idx_episode_rel_mentions_episode (episode_id), idx_episode_rel_mentions_relationship (relationship_id)
+- Schema version incremented from 17 to 18
+
+**Files changed:**
+- `internal/db/schema.sql` - Added episode_relationship_mentions table and indexes
+
+**Learnings:**
+- episode_relationship_mentions is a "provenance table" - it tracks WHERE facts came from, even if the same fact is extracted multiple times
+- Identity relationships (HAS_EMAIL, HAS_PHONE) populate this table with relationship_id=NULL and alias_id pointing to the created alias
+- The extracted_fact column preserves the original text (pre-dedup), useful for debugging and taxonomy evolution
+- asserted_by_entity_id enables tracking WHO said something (speaker attribution) vs the episode itself
+- source_type ('self_disclosed', 'mentioned', 'inferred') is critical for confidence scoring - self_disclosed facts are higher confidence
+
+---
+## 2026-01-21 - [MS-007] Add merge_candidates and merge_events tables to schema
+- Added `entity_merge_candidates` table for tracking suspected entity duplicates awaiting human review
+- Added `entity_merge_events` table for audit trail of executed entity merges
+- Used `entity_` prefix to distinguish from existing person-based `merge_suggestions` and `merge_events` tables
+- Columns per spec §3.4: id, entity_a_id/entity_b_id (candidates) or source_entity_id/target_entity_id (events), confidence, reason/merge_type, context/triggering_facts, status, timestamps, resolved_by
+- Added indexes: idx_entity_merge_candidates_status, idx_entity_merge_events_target
+- Schema version incremented from 18 to 19
+
+**Files changed:**
+- `internal/db/schema.sql` - Added entity_merge_candidates and entity_merge_events tables with indexes
+
+**Learnings:**
+- The codebase already has person-based merge tables (merge_suggestions, merge_events) from the older identity system
+- New entity-based merge tables need distinct names (entity_ prefix) to coexist during transition
+- merge_candidates is for suspected duplicates needing human review; merge_events is for executed merges (audit log)
+- Both tables reference entities(id) rather than persons(id) for the new entity-based memory system
+- The reason field (candidates) vs merge_type field (events) distinguish how the merge was detected vs what kind it was
+
+---
+## 2026-01-21 - [MS-008] Extend embeddings table for unified storage
+- Renamed embeddings table columns: `entity_type` → `target_type`, `entity_id` → `target_id`
+- Updated target_type comment to document new values: 'event', 'episode', 'entity', 'relationship'
+- Renamed UNIQUE constraint to use (target_type, target_id, model)
+- Renamed index from idx_embeddings_entity to idx_embeddings_target on (target_type, target_id)
+- Updated all Go code references in engine.go, search.go, search_test.go
+- Schema version incremented from 19 to 20
+- The EmbeddingJobPayload struct keeps EntityType/EntityID as JSON keys for backward compatibility with queued jobs
+
+**Files changed:**
+- `internal/db/schema.sql` - Renamed columns, UNIQUE constraint, and index
+- `internal/compute/engine.go` - Updated SQL queries (EnqueueEmbeddings, EnqueueFacetEmbeddings, EnqueuePersonEmbeddings, EnqueueDocumentEmbeddings, handleEmbeddingJob)
+- `internal/search/search.go` - Updated SQL queries (SearchEpisodes, loadDocumentEmbeddings, searchEventsVector)
+- `internal/search/search_test.go` - Updated INSERT statement column names
+
+**Learnings:**
+- The spec uses `target_type` and `target_id` terminology for consistency with "target_entity_id" and "target_literal" in other tables
+- Existing Go struct field names (EntityType, EntityID) and JSON keys can be kept for backward compatibility with job payloads - only the SQL column names need to change
+- The embeddings table supports multiple embeddable types: events, episodes, facets, persons, documents, and now will also support entities and relationships
+- ON CONFLICT clause in INSERT statements must reference the new column names (target_type, target_id) to match the UNIQUE constraint
+
+### Entity Types
+- Entity types are code-defined in `internal/memory/entity_types.go`, not stored in database
+- 8 default types: Entity(0), Person(1), Company(2), Project(3), Location(4), Event(5), Document(6), Pet(7)
+- Use constants (EntityTypePerson, etc.) for type safety in code
+- GetEntityTypeByName is case-insensitive for flexibility
+
+---
+## 2026-01-21 - [MS-009] Define entity types in code
+- Created new `internal/memory` package for memory system components
+- Defined EntityType struct with ID, Name, Description fields
+- Created DefaultEntityTypes slice with 8 types matching spec §3.2
+- Added convenience constants: EntityTypeEntity, EntityTypePerson, etc.
+- Implemented GetEntityTypeByID and GetEntityTypeByName helper functions
+- Added IsValidEntityTypeID and EntityTypeNames utility functions
+- GetEntityTypeByName uses case-insensitive matching for flexibility
+
+**Files changed:**
+- `internal/memory/entity_types.go` - Entity type definitions and helpers
+- `internal/memory/entity_types_test.go` - Comprehensive unit tests
+
+**Learnings:**
+- Created new `internal/memory` package as the home for memory system code
+- Entity types are code-defined (not in DB) to enable type-specific resolution strategies
+- Helper functions return pointers to enable nil checks for invalid IDs/names
+- Constants provide type safety and make code more readable than magic numbers
+- Returning pointer to slice element (not copy) keeps memory efficient for lookups
+
+---
+## 2026-01-21 - [MS-010] Implement entity extraction prompt runner
+- Created EntityExtractor struct that runs extract-entities.prompt.md via Gemini client
+- Defined ExtractedEntity with temporary ID (0, 1, 2...), name, and entity_type_id
+- EntityExtractionInput includes: EpisodeContent, ReferenceTime, PreviousEpisodes, CustomInstructions
+- Implemented prompt builder following the exact template from extract-entities.prompt.md
+- Uses Gemini's ResponseMimeType: "application/json" for structured output
+- Added EntityTypesJSON helper to inject entity types into prompt
+- Invalid entity_type_id values are defaulted to Entity(0) during parsing
+- Empty episode content returns empty result without LLM call
+
+**Files changed:**
+- `internal/memory/entity_extractor.go` - EntityExtractor implementation
+- `internal/memory/entity_extractor_test.go` - Unit tests for parsing and prompt building
+
+**Learnings:**
+- Gemini's ResponseMimeType: "application/json" forces JSON-only output, eliminating markdown/explanation
+- extractTextFromResponse helper centralizes response text extraction from Gemini's nested structure
+- Graph-independent extraction means no database queries during extraction - resolution comes later
+- Temporary IDs (0, 1, 2...) are local to each extraction; resolution assigns real UUIDs
+- Testing LLM integrations requires either HTTP mocking or testing parsing logic separately
+- The prompt template in extract-entities.prompt.md uses Handlebars-style placeholders ({{...}})
+
+---
+## 2026-01-21 - [MS-011] Implement entity embedding generation
+- Created EntityEmbedder struct that generates and stores embeddings for entity canonical names
+- Uses Gemini's EmbedContent API via gemini.Client
+- Stores embeddings in unified embeddings table with target_type='entity'
+- Implements source_text_hash for change detection - skips if embedding already exists with same hash
+- GetEntitiesNeedingEmbeddings helper finds entities without up-to-date embeddings
+- EmbedEntities batch method for processing multiple entities
+- Excludes merged entities (merged_into IS NOT NULL) from embedding generation
+
+**Files changed:**
+- `internal/memory/entity_embedder.go` - EntityEmbedder implementation with Gemini integration
+- `internal/memory/entity_embedder_test.go` - Comprehensive unit tests for all functionality
+
+**Learnings:**
+- The embeddings table uses `source_text_hash` for change detection - if the canonical_name changes, the hash changes, triggering re-embedding
+- ON CONFLICT clause with DO UPDATE handles both insert and update in a single statement
+- gemini.EmbedContentRequest takes a Model field that specifies the embedding model
+- Entity embeddings use same blob format as other embeddings (little-endian float64 array)
+- Helper functions hashText and float64SliceToBlob already existed in compute/engine.go but were duplicated in memory package for independence
+- Tests don't need actual Gemini client - can test database operations with nil client by testing helper methods directly
+
+---
+## 2026-01-21 - [MS-012] Implement entity resolution with alias matching
+- Created EntityResolver struct that resolves extracted entities against the existing graph
+- Implements 3-step resolution: alias match → embedding similarity → context scoring
+- Step 1: Exact alias match searches entity_aliases by normalized value
+  - Email/phone matches get AliasEmailMatchWeight (0.95)
+  - Name matches get AliasNameMatchWeight (0.85)
+  - Shared aliases get reduced confidence (* 0.7)
+- Step 2: Embedding similarity search via cosine similarity (min 0.85 threshold)
+- Step 3: Context scoring based on:
+  - Relationship overlap with co-mentioned entities (+0.3 weight)
+  - Channel recency - recent mentions in same channel (+0.2 weight)
+- Decision logic:
+  - High confidence (>0.9) → use existing entity
+  - Exact alias match (score=1.0) → use existing entity
+  - Clear winner (single candidate or gap >=0.15) → use existing entity
+  - Ambiguous → create new entity + entity_merge_candidates for human review
+- Returns uuid_map{} mapping temporary IDs (0, 1, 2...) to resolved UUIDs
+- Creates entity_aliases for new entities automatically
+- CRITICAL: Conservative strategy - prefer duplicates over false merges
+
+**Files changed:**
+- `internal/memory/entity_resolver.go` - EntityResolver with full resolution logic
+- `internal/memory/entity_resolver_test.go` - 16 unit tests covering all resolution paths
+
+**Learnings:**
+- Resolution requires weighted scoring across multiple signals (alias, embedding, context)
+- cosineSimilarity and blobToFloat64Slice duplicated from search package to avoid circular imports
+- Merged entities (merged_into IS NOT NULL) must be excluded from candidate search
+- Context scoring uses relationships table and episode_entity_mentions for signals
+- Creating merge_candidates enables human review of ambiguous cases without blocking resolution
+- Entity types aren't used for filtering during resolution - allows "Tyler" person to match "Tyler" company
+- The normalizeAlias function uses lowercase + trim for consistent matching
+- Single-candidate matches with reasonable score should resolve (not create duplicates)
+
+---
+## 2026-01-21 - [MS-013] Implement relationship extraction prompt runner
+- Created RelationshipExtractor struct that runs extract-relationships.prompt.md via Gemini client
+- Defined ExtractedRelationship with source_entity_id, relation_type, target_entity_id/target_literal, fact, source_type, valid_at, invalid_at
+- RelationshipExtractionInput includes resolved entities with UUIDs; LLM receives temp IDs (0, 1, 2...) for reference
+- Implemented prompt builder following exact template from extract-relationships.prompt.md
+- Added ResolvedEntityForPrompt struct to format entities for LLM consumption (id, uuid, name, entity_type)
+- Created validateRelationships to filter invalid relationships: out-of-range IDs, empty fields, invalid source_type
+- Added type classification helpers: isIdentityRelationType, isTemporalRelationType, IsLiteralTargetRelationType
+- Added UUID mapping helpers: GetSourceEntityUUID, GetTargetEntityUUID for converting temp IDs to real UUIDs
+- Validation handles both-targets-set case by preferring literal for identity/temporal types, entity for others
+
+**Files changed:**
+- `internal/memory/relationship_extractor.go` - RelationshipExtractor implementation
+- `internal/memory/relationship_extractor_test.go` - Comprehensive unit tests (16+ test cases)
+- `AGENTS.md` - Added relationship extraction patterns
+
+**Learnings:**
+- Relationship extraction is graph-independent like entity extraction; dedup happens at edge resolution
+- The prompt template passes resolved entities with UUIDs but LLM uses temp IDs (0, 1, 2...) for compactness
+- target_literal is used for identity relationships (promoted to aliases) and temporal relationships (dates)
+- source_type distinguishes self_disclosed (highest confidence), mentioned (someone else said it), inferred (implied)
+- Validation must handle LLMs returning both target_entity_id and target_literal simultaneously
+- Test helper functions (contains) should not be redeclared across test files in same package
+
+---
+## 2026-01-21 - [MS-014] Implement identity promotion (target_literal → aliases)
+- Created IdentityPromoter that processes identity relationships and promotes them to aliases
+- Identity relationship types: HAS_EMAIL, HAS_PHONE, HAS_HANDLE, HAS_USERNAME, ALSO_KNOWN_AS
+- Each type maps to an alias type: email, phone, handle, username, nickname
+- Only promotes to alias when source_type = 'self_disclosed' (highest confidence)
+- Non-self_disclosed still creates episode_relationship_mentions for provenance, but no alias
+- Detects shared aliases (same normalized value, multiple entities) and marks is_shared=TRUE
+- Deduplicates aliases for same entity (multiple episodes mentioning same identity)
+- Creates episode_relationship_mentions with target_literal and alias_id for provenance
+- Does NOT create relationships table rows for identity-only facts (that's the whole point)
+- Returns NonIdentityRels for the EdgeResolver to handle (separation of concerns)
+- Normalizes values by type: lowercase for email/handle/username/nickname, strip formatting for phone
+
+**Files changed:**
+- `internal/memory/identity_promoter.go` - IdentityPromoter implementation
+- `internal/memory/identity_promoter_test.go` - Comprehensive unit tests (10 test cases)
+
+**Learnings:**
+- Identity relationships are fundamentally different from entity relationships - they create aliases, not graph edges
+- Only self_disclosed facts should create aliases (high confidence); mentioned/inferred just track provenance
+- Shared alias detection must update ALL existing aliases with same value, not just the new one
+- Test helper functions in the same package can collide - need unique names per test file (setupIdentityPromoterTestDB)
+- The normalizeIdentityValue function handles type-specific normalization (phones need different treatment than emails)
+- episode_relationship_mentions.relationship_id is NULL for identity promotions; alias_id is set instead
+
+### Identity Promotion Pattern
+- Identity types map to alias types: HAS_EMAIL→email, HAS_PHONE→phone, HAS_HANDLE→handle, HAS_USERNAME→username, ALSO_KNOWN_AS→nickname
+- Promotion gate: source_type must be 'self_disclosed' to create/update alias
+- Shared detection: after inserting, check for same normalized+alias_type across entities
+- Provenance: always create episode_relationship_mentions, even if no alias created
+- Non-identity relationships pass through to EdgeResolver
+
+---
+## 2026-01-21 - [MS-015] Implement edge resolution (relationship dedup)
+- Created EdgeResolver that deduplicates relationships before inserting
+- Matches on: source_entity_id, target (entity_id or literal), relation_type, valid_at
+- If relationship exists: create episode_relationship_mentions only (no duplicate row)
+- If new: create relationship row + episode_relationship_mentions
+- Different valid_at values create distinct relationships (supports job changes, multiple stints)
+- Skips identity relationships (handled by IdentityPromoter)
+- Supports speaker attribution via asserted_by_entity_id
+
+**Files changed:**
+- `internal/memory/edge_resolver.go` - EdgeResolver implementation with Resolve and ResolveWithAssertedBy methods
+- `internal/memory/edge_resolver_test.go` - 11 unit tests covering all dedup scenarios
+
+**Learnings:**
+- NULL valid_at matching requires special SQL handling: `(valid_at IS NULL AND ? IS NULL OR valid_at = ?)`
+- Relationship uniqueness is defined by (source, target, type, valid_at) - not just (source, target, type)
+- Different valid_at values are intentional for representing temporal changes (e.g., multiple job stints)
+- episode_relationship_mentions preserves the original extracted_fact phrasing even when deduplicated
+- Test helper function naming must be unique across test files in the same package
+
+### Edge Resolution Pattern
+- Dedup key: (source_entity_id, target_entity_id/target_literal, relation_type, valid_at)
+- NULL valid_at matches other NULL valid_at (not arbitrary dates)
+- Always create episode_relationship_mentions for provenance tracking
+- Identity relationships (HAS_EMAIL, etc.) should be filtered out before EdgeResolver (handled by IdentityPromoter)
+- Different phrasings of the same fact are preserved in mentions for debugging/review
+
+### SQLite Concurrent Query Limitation
+- SQLite doesn't support multiple active result sets on the same connection
+- When iterating with `rows.Next()`, you CANNOT execute another query until `rows.Close()`
+- Solution: collect all row data into a slice first, close rows, then process
+- Error symptom: "no such table" or other confusing errors when table definitely exists
+
+---
+## 2026-01-21 - [MS-016] Implement contradiction detection
+- Created ContradictionDetector that finds and invalidates contradicted facts
+- Exclusive relationship types defined: WORKS_AT, LIVES_IN, SPOUSE_OF, MARRIED_TO, DATING
+- For exclusive types: new relationship to different target invalidates old relationship
+- invalid_at is set to new relationship's valid_at (if available) or episode timestamp
+- Old relationships are retained with invalid_at set (audit trail preserved)
+- Added IsExclusiveRelationType helper for checking relationship types
+- Added GetContradictingRelationships for preview/dry-run scenarios
+
+**Files changed:**
+- `internal/memory/contradiction_detector.go` - ContradictionDetector implementation
+- `internal/memory/contradiction_detector_test.go` - 13 unit tests for all scenarios
+
+**Learnings:**
+- SQLite concurrent query limitation was the root cause of mysterious "no such table" errors
+- Must close `rows` before executing another query on the same connection
+- Contradiction detection only applies to "exclusive" relationship types (one-at-a-time)
+- Non-exclusive types like KNOWS, FRIEND_OF can have multiple concurrent instances
+- Using new relationship's valid_at as old relationship's invalid_at creates a clean timeline
+- Fallback to episode timestamp when valid_at is not explicit
+
+### Contradiction Detection Pattern
+- Only exclusive relationship types trigger contradiction detection (WORKS_AT, LIVES_IN, etc.)
+- Same target = no contradiction (reaffirming existing fact)
+- Different target = contradiction (old fact invalidated)
+- Already-invalidated relationships (invalid_at IS NOT NULL) are skipped
+- Must collect row IDs before closing result set, then process updates
+
+### Collision Detection Pattern
+- O(F) algorithm: iterate facts (aliases, relationships), not entity pairs
+- Hard identifier types: email, phone, handle - 0.95 confidence, auto_eligible=true
+- Multiple hard identifiers matching same pair → upgrade to 0.99 confidence
+- Compound matching: name + birthdate (0.90), name + employer (0.85)
+- CRITICAL: Shared aliases (is_shared=TRUE) do NOT trigger collisions - they're intentional
+- Merged entities (merged_into IS NOT NULL) excluded from all collision queries
+- Invalidated relationships (invalid_at IS NOT NULL) excluded from compound matching
+- merge_candidates stores: reason, confidence, matching_facts JSON, context JSON
+- DetectCollisionsForEntity() enables incremental detection after entity resolution
+
+---
+## 2026-01-21 - [MS-017] Implement collision detection for merge candidates
+- Created CollisionDetector that implements O(F) collision detection algorithm
+- Phase 1: Hard identifier collisions (email, phone, handle) with is_shared=FALSE filter
+- Phase 2: Compound matching (name + birthdate, name + employer) via SQL JOINs
+- Upgrade logic: pairs with multiple hard identifier matches → 0.99 confidence
+- Deduplication: same entity pair from multiple sources → keep highest confidence
+- Creates/updates merge_candidates with matching_facts and context JSON
+- Added helper methods: GetPendingMergeCandidates, GetAutoEligibleCandidates
+- Added incremental detection: DetectCollisionsForEntity for single-entity queries
+
+**Files changed:**
+- `internal/memory/collision_detector.go` - CollisionDetector implementation with O(F) algorithm
+- `internal/memory/collision_detector_test.go` - 15 unit tests covering all scenarios
+- `AGENTS.md` - Added collision detection patterns
+
+**Learnings:**
+- GROUP_CONCAT in SQLite aggregates entity IDs for shared alias detection
+- SQLite's GROUP BY ... HAVING COUNT > 1 enables efficient collision detection
+- Conditional JOINs (ea1.entity_id < ea2.entity_id) prevent duplicate pairs
+- UNIQUE(entity_a_id, entity_b_id) in merge_candidates requires consistent ordering
+- pairKey() helper ensures consistent (a, b) ordering regardless of input order
+- Shared alias exclusion (is_shared=FALSE) is critical for avoiding false positives on family phones
+- Compound match queries must JOIN relationships table for BORN_ON/WORKS_AT
+- Entity-specific detection uses same patterns but with WHERE ea1.entity_id = ?
+
+### Auto-Merge Pattern
+- Conflict detection before merge: check different phones/emails/birthdates
+- Conflicts detected by checking if both entities have values of same type with no overlap
+- Auto-merge rules: hard_identifier ≥0.95 + no conflicts, or 2+ hard identifiers, or name+birthdate ≥0.90
+- Merge execution: move aliases → move relationships → move mentions → update canonical name → mark merged_into → create audit event
+- Use transactions for merge execution to ensure atomicity
+- INSERT OR REPLACE for mentions when both entities mentioned in same episode (merge counts)
+- isBetterName heuristics: title case > ALL CAPS, longer names > shorter (but not excessively long)
+
+---
+## 2026-01-21 - [MS-018] Implement auto-merge rules and execution
+- Created AutoMerger struct with DetectConflicts, ShouldAutoMerge, ExecuteMerge methods
+- Conflict detection: different phones, different emails, different birthdates
+- Both entities must have values of the same type for a conflict (one missing = no conflict)
+- Overlapping values = no conflict (same phone on both = good)
+- Auto-merge rules:
+  - Hard identifier with ≥0.95 confidence + no conflicts → auto-merge
+  - Multiple hard identifiers (2+) → auto-merge (already 0.99 confidence)
+  - Name + birthdate compound match ≥0.90 → auto-merge
+  - Anything else with conflicts → leave for human review
+- Merge execution in transaction:
+  1. Move aliases from source to target
+  2. Update relationships (both source_entity_id and target_entity_id)
+  3. Merge episode mentions (INSERT OR REPLACE to sum counts)
+  4. Maybe update canonical name if source has better name
+  5. Mark source entity as merged_into target
+  6. Create entity_merge_events audit record
+  7. Update merge_candidates status to 'merged'
+- ProcessMergeCandidates batch method for processing all pending candidates
+- Additional helpers: RejectCandidate, DeferCandidate, GetCandidateByID, GetMergeHistory
+
+**Files changed:**
+- `internal/memory/auto_merger.go` - AutoMerger implementation with full conflict/merge logic
+- `internal/memory/auto_merger_test.go` - 24 unit tests covering all scenarios
+
+**Learnings:**
+- Conflict detection is crucial - false merges are worse than duplicates
+- Both entities must have values of same type for a conflict (asymmetric = no conflict)
+- Merge execution needs transaction for atomicity
+- INSERT OR REPLACE handles the case where both entities are mentioned in the same episode
+- isBetterName needs heuristics: ALL CAPS is usually worse, moderate length is better
+- MergeCandidate struct needs to include conflicts field for storing detected conflicts
+- Use pointers for optional string fields in structs (ResolvedAt, ResolvedBy, etc.)
+
+---
+## 2026-01-21 - [MS-019] Implement full extraction pipeline
+- Created MemoryPipeline struct that orchestrates the complete memory extraction flow
+- Pipeline steps in order:
+  1. Entity extraction (graph-independent via LLM)
+  2. Entity resolution (with graph context: aliases, embeddings, co-mentions)
+  3. Relationship extraction (graph-independent via LLM)
+  4. Identity promotion (HAS_EMAIL, HAS_PHONE → entity_aliases)
+  5. Edge resolution (relationship deduplication)
+  6. Contradiction detection (invalidate stale exclusive relationships)
+  7. Embedding generation (for new entities)
+  8. Episode mentions (episode_entity_mentions creation)
+- Idempotency: episode considered "processed" if it has any entity mentions
+- Configurable via PipelineConfig: extraction model, embedding model, skip embeddings, lookback episodes
+- Helper methods: ProcessBatch, GetStats
+- PipelineResult tracks: extracted/resolved entities, new/existing counts, mentions created, duration
+
+**Files changed:**
+- `internal/memory/pipeline.go` - MemoryPipeline implementation (420 lines)
+- `internal/memory/pipeline_test.go` - 12 unit tests (745 lines)
+
+**Learnings:**
+- Pipeline orchestration is about composing existing components, not adding new logic
+- Idempotency check via episode_entity_mentions is simple and effective
+- Non-fatal errors (embedding generation, contradiction detection) should not fail the pipeline
+- EpisodeInput struct abstracts episode data - doesn't need to know about DB schema
+- GetStats method provides quick health check of the memory graph
+- Time-bounded episode lookback requires careful SQL: ORDER BY start_time DESC LIMIT N
+- Episode content retrieval joins episode_events → events to get content
+
+### Pipeline Orchestration Pattern
+- Component initialization in constructor (all components created upfront)
+- Process method follows spec order exactly (steps 1-8 from §4.1)
+- Each step can fail independently; use early returns
+- Non-critical steps (embeddings, contradictions) wrapped in error-swallowing blocks
+- Result struct aggregates counts from all component results
+- Batch processing is just a loop over Process()
+
+### QueryEngine Pattern
+- QueryOptions struct holds all filtering options (Direction, RelationTypes, IncludeInvalidated, AsOfTime, Limit)
+- DefaultQueryOptions() provides sensible defaults (DirectionBoth, no type filter, exclude invalidated, no limit)
+- Bidirectional traversal queries both outgoing (entity is source) and incoming (entity is target)
+- Temporal filtering requires both valid_at and invalid_at checks when AsOfTime is set
+- Use sql.NullString for optional fields (valid_at, invalid_at, target_literal, etc.)
+- LEFT JOIN for literal-target relationships (no target entity to join)
+
+---
+## 2026-01-22 - [MS-020] Implement graph traversal queries
+- Created QueryEngine struct in internal/memory/query_engine.go
+- Implemented GetRelatedEntities: returns entities related via specified relationship types
+- Implemented GetEntityRelationships: returns all relationships for an entity (including literals)
+- Both methods support:
+  - Temporal filtering: valid_at <= asOf AND (invalid_at IS NULL OR invalid_at > asOf)
+  - Bidirectional traversal: outgoing (entity is source) or incoming (entity is target) or both
+  - Relation type filtering: restrict to specific relationship types
+  - IncludeInvalidated option: include relationships with invalid_at set
+  - AsOfTime option: query relationships valid at a specific point in time
+  - Limit option: cap number of results
+- Helper methods: GetEntity, FindEntitiesByName, FindEntitiesByRelationType, GetEntityAliases
+- Extended Entity struct (in entity_embedder.go) to include all fields for query results
+- Added EntityAlias struct for alias query results
+
+**Files changed:**
+- `internal/memory/query_engine.go` - QueryEngine implementation (680 lines)
+- `internal/memory/query_engine_test.go` - 15 unit tests (640 lines)
+- `internal/memory/entity_embedder.go` - Extended Entity struct
+
+**Learnings:**
+- Entity struct was minimal (ID, CanonicalName only) - needed to extend for full query results
+- Temporal filtering requires BOTH bounds: valid_at <= asOf AND invalid_at > asOf
+- Use sql.NullString for all optional TEXT fields in SQLite
+- Bidirectional queries are best split into separate outgoing/incoming functions for clarity
+- QueryDirection enum (string type) is more readable than bool flags
+- LEFT JOIN needed when target can be either entity_id or literal
+
+---
+## 2026-01-22 - [MS-021] Create verification fixtures from real data
+- Created 7 verification fixtures across 3 sources (iMessage, Gmail, AIX)
+- iMessage fixtures:
+  - identity-disclosure: Casey shares email (identity promotion, HAS_EMAIL → alias)
+  - job-change: Tyler announces job change (valid_at/invalid_at, contradiction detection)
+  - social-relationship: Group chat with DATING relationship (multi-entity, temporal)
+- Gmail fixtures:
+  - newsletter-sender: Cloudflare invoice (Company entity, CUSTOMER_OF relationship)
+  - work-thread: Email with signature (identity extraction, phone/email from signature)
+- AIX fixtures:
+  - personal-info: User shares birthdate, location, employer (BORN_ON literal, LIVES_IN, WORKS_AT)
+  - project-discussion: Project entities Nexus/Cortex (BUILDING relationship, STARTED_ON)
+- Each fixture has episode.json (input) and expectations.yaml (assertions)
+- Updated README.md coverage matrix to reflect actual fixtures
+
+**Files created:**
+- `scripts/ralph-memory/fixtures/imessage/social-relationship/episode.json`
+- `scripts/ralph-memory/fixtures/imessage/social-relationship/expectations.yaml`
+- `scripts/ralph-memory/fixtures/gmail/newsletter-sender/episode.json`
+- `scripts/ralph-memory/fixtures/gmail/newsletter-sender/expectations.yaml`
+- `scripts/ralph-memory/fixtures/gmail/work-thread/episode.json`
+- `scripts/ralph-memory/fixtures/gmail/work-thread/expectations.yaml`
+- `scripts/ralph-memory/fixtures/aix/personal-info/episode.json`
+- `scripts/ralph-memory/fixtures/aix/personal-info/expectations.yaml`
+- `scripts/ralph-memory/fixtures/aix/project-discussion/episode.json`
+- `scripts/ralph-memory/fixtures/aix/project-discussion/expectations.yaml`
+
+**Files updated:**
+- `scripts/ralph-memory/fixtures/README.md` - Updated directory structure and coverage matrix
+
+**Learnings:**
+- Fixture format follows spec §11.1: episode.json for input, expectations.yaml for assertions
+- expectations.yaml supports must_have, must_not_have, and optional sections for flexible matching
+- Coverage matrix helps track which features each fixture tests
+- AI assistants (Claude) should NOT become entities per spec - no durable identity
+- Dates, technologies, and other non-entity concepts use target_literal or are simply not extracted
+- Email signatures are valuable for identity extraction (phone, email, role)
+- Automated/newsletter emails should extract Company entities but NOT Person entities for the sender
+
+### Fixture Design Pattern
+- episode.json contains: id, source, channel, thread_id, reference_time, events array, metadata
+- events have: id, timestamp, sender, sender_identifier, content, direction
+- metadata includes: description, coverage_tags (for filtering), notes (test focus)
+- expectations.yaml sections: entities, relationships, aliases, episode_entity_mentions, episode_relationship_mentions
+- Use name_contains/entity_name_contains for flexible matching (not exact names)
+- Use *_like patterns for temporal matching (e.g., "2025-12%")
+- optional section for things that might or might not be extracted (LLM variance)
+
+---
+## 2026-01-22 - [MS-022] Implement verification harness runner
+- Created VerificationHarness struct that orchestrates fixture loading and execution
+- Created cmd/verify-memory CLI tool with flags: -fixtures, -fixture, -verbose, -model, -skip-embeddings
+- Implemented fixture loading from directory structure (source/fixture-name/episode.json + expectations.yaml)
+- Implemented expectation matching with flexible matchers:
+  - name, name_contains for entity name matching
+  - entity_type (supports "any" wildcard)
+  - relation_type, source_entity_name_contains, target_entity_name_contains
+  - target_literal, target_literal_like (SQL LIKE patterns with %)
+  - valid_at, valid_at_like, invalid_at, invalid_at_like
+  - alias, alias_type, is_shared
+  - extracted_fact_contains, source_type
+  - relationship_id (supports null check)
+- Implemented human-readable output with FormatResult, FormatSummary, FormatDetailedOutput
+- Created VerifyEntity, VerifyRelationship, VerifyAlias, VerifyEntityMention, VerifyRelMention structs
+- Exit codes: 0 = all pass, 1 = failures, 2 = configuration error
+- Database isolation: each fixture runs against fresh in-memory SQLite
+
+**Files created:**
+- `cmd/verify-memory/main.go` - CLI entry point with flag parsing, schema initialization
+- `internal/memory/verify.go` - VerificationHarness, types, matching logic, formatting
+- `internal/memory/verify_test.go` - 26 unit tests covering all matching logic
+
+**Learnings:**
+- matchLikePattern converts SQL LIKE patterns (%) to Go string operations (prefix/suffix/contains)
+- Fixture isolation requires dropping and recreating all tables between runs
+- Helper function naming collisions across test files in same package require unique names
+- yaml.Unmarshal handles nested structures well with map[string]interface{} for flexible expectations
+- ExpectationGroup with MustHave/MustNotHave/Optional provides clean assertion organization
+
+### Verification Harness Pattern
+- VerificationHarness holds db, fixturesPath, pipeline references
+- LoadFixture parses episode.json (JSON) and expectations.yaml (YAML) from directory
+- RunFixture: build content → create EpisodeInput → pipeline.Process → collectOutputs → verifyExpectations
+- collectOutputs queries all tables: entities, relationships, aliases, mentions
+- verifyExpectations loops through groups calling match* functions
+- Each match* function iterates items looking for ANY match (must_have) or forbidding ANY match (must_not_have)
+- FormatResult shows [PASS]/[FAIL] with failure details
+- FormatSummary aggregates counts and lists all results
+

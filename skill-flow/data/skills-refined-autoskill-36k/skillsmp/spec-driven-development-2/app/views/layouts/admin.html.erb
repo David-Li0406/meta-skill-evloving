@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Admin - PromiseKits</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="admin-body">
+    <% if current_admin %>
+      <header class="admin-header">
+        <div class="container">
+          <div class="header-content">
+            <h1 class="admin-logo">PromiseKits Admin</h1>
+            <nav class="admin-nav">
+              <%= link_to "Dashboard", admin_dashboard_path, class: "nav-link" %>
+              <%= link_to "Coupon Codes", admin_coupon_codes_path, class: "nav-link" if defined?(admin_coupon_codes_path) %>
+              <%= link_to "Orders", admin_orders_path, class: "nav-link" if defined?(admin_orders_path) %>
+              <span class="admin-user">
+                <%= current_admin.username %>
+              </span>
+              <%= link_to "Change Password", edit_admin_password_path, class: "nav-link" if defined?(edit_admin_password_path) %>
+              <%= button_to "Logout", admin_logout_path, method: :delete, class: "btn-logout" %>
+            </nav>
+          </div>
+        </div>
+      </header>
+    <% end %>
+
+    <main class="admin-main">
+      <div class="container">
+        <% if flash[:notice] %>
+          <div class="alert alert-success">
+            <%= flash[:notice] %>
+          </div>
+        <% end %>
+
+        <% if flash[:alert] %>
+          <div class="alert alert-error">
+            <%= flash[:alert] %>
+          </div>
+        <% end %>
+
+        <%= yield %>
+      </div>
+    </main>
+  </body>
+</html>

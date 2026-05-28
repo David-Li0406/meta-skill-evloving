@@ -1,0 +1,33 @@
+name: cli-version-audit
+
+on:
+  schedule:
+    # Weekly audit (Sunday 02:30 UTC)
+    - cron: "30 2 * * 0"
+  workflow_dispatch:
+
+jobs:
+  version_audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run CLI version checker (stub)
+        run: |
+          ./scripts/check_cli_versions.sh
+
+  cli_matrix_smoke:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vault_version: ["1.15.0", "1.16.0"]
+        rclone_version: ["1.65.0", "1.66.0"]
+        gh_version: ["2.44.0", "2.45.0"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder for multi-version CLI testing
+        run: |
+          echo "TODO: install CLI versions and run pack tests."
+          echo "vault=${{ matrix.vault_version }}, rclone=${{ matrix.rclone_version }}, gh=${{ matrix.gh_version }}"

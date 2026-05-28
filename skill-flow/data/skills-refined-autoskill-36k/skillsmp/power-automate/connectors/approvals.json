@@ -1,0 +1,150 @@
+{
+  "connector": "Approvals",
+  "id": "shared_approvals",
+  "docsUrl": "https://learn.microsoft.com/en-us/connectors/approvals/",
+  "throttling": { "calls": 300, "seconds": 60 },
+  "triggers": {
+    "WaitForApproval": {
+      "name": "When an approval is assigned to me",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "path": "/v2/subscriptions/assignments"
+      }
+    },
+    "WaitForApprovalResponse": {
+      "name": "When a response is submitted",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "path": "/v2/subscriptions/responses"
+      }
+    }
+  },
+  "actions": {
+    "StartAndWaitForAnApproval": {
+      "name": "Start and wait for an approval",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "path": "/v2/approvals",
+        "body": {
+          "approvalType": "required|string|Basic,Custom,CustomAllMustApprove",
+          "title": "required|string|Approval title",
+          "assignedTo": "required|string|Semicolon-separated emails",
+          "details": "optional|string|Description/instructions",
+          "itemLink": "optional|string|Link to item being approved",
+          "itemLinkDescription": "optional|string|Link text",
+          "requestor": "optional|string|Email of requestor",
+          "enableNotifications": "optional|boolean|default:true",
+          "enableReassignment": "optional|boolean|default:false"
+        }
+      },
+      "approvalTypes": {
+        "Basic": "Approve/Reject responses",
+        "Custom": "First response wins (custom options)",
+        "CustomAllMustApprove": "All must respond (custom options)"
+      }
+    },
+    "CreateAnApproval": {
+      "name": "Create an approval",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/approvals/create",
+        "body": {
+          "approvalType": "required|string",
+          "title": "required|string",
+          "assignedTo": "required|string",
+          "details": "optional|string",
+          "responseOptions": "optional|array|For Custom types: ['Option 1', 'Option 2']"
+        }
+      },
+      "description": "Creates approval without waiting. Use with WaitForAnApproval."
+    },
+    "WaitForAnApproval": {
+      "name": "Wait for an approval",
+      "type": "ApiConnectionWebhook",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "path": "/v2/approvals/@{encodeURIComponent(approvalId)}/wait"
+      },
+      "parameters": {
+        "approvalId": { "type": "string", "required": true, "description": "From CreateAnApproval output" }
+      }
+    },
+    "GetApprovalDetails": {
+      "name": "Get approval details",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/approvals/@{encodeURIComponent(approvalId)}"
+      }
+    },
+    "UpdateApproval": {
+      "name": "Update an approval",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "method": "patch",
+        "path": "/v2/approvals/@{encodeURIComponent(approvalId)}",
+        "body": {
+          "assignedTo": "optional|string|New assignees",
+          "title": "optional|string",
+          "details": "optional|string"
+        }
+      }
+    },
+    "CancelApproval": {
+      "name": "Cancel an approval",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/approvals/@{encodeURIComponent(approvalId)}/cancel"
+      }
+    },
+    "RespondToApproval": {
+      "name": "Respond to an approval",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_approvals']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/approvals/@{encodeURIComponent(approvalId)}/respond",
+        "body": {
+          "response": "required|string|Approve,Reject,or custom option",
+          "comments": "optional|string"
+        }
+      }
+    }
+  },
+  "connectionReference": {
+    "shared_approvals": {
+      "connectionName": "",
+      "source": "Invoker",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+      "tier": "NotSpecified"
+    }
+  },
+  "outputSchemas": {
+    "approval": {
+      "approvalId": "string",
+      "title": "string",
+      "result": "string|Approve,Reject,or custom option",
+      "outcome": "string",
+      "completionDate": "datetime",
+      "responses": [{
+        "responder": { "email": "string", "displayName": "string" },
+        "response": "string",
+        "comments": "string",
+        "responseDate": "datetime"
+      }]
+    }
+  },
+  "notes": {
+    "teamsIntegration": "Approvals automatically appear in Teams Approvals app",
+    "attachments": "Use itemLink parameter to link to documents/items"
+  }
+}

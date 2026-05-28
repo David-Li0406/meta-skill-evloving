@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "session-chronicle/provenance.schema.json",
+  "title": "Session Chronicle Provenance Record",
+  "description": "Schema for NDJSON provenance records in provenance.jsonl",
+  "type": "object",
+  "required": ["id", "type", "target", "origin", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this provenance record"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["finding", "decision", "contribution", "configuration"],
+      "description": "Type of provenance being tracked"
+    },
+    "target": {
+      "type": "object",
+      "required": ["identifier"],
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Path to the file containing the target"
+        },
+        "identifier": {
+          "type": "string",
+          "description": "Name or identifier of what's being traced"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the target"
+        },
+        "line_range": {
+          "type": "object",
+          "properties": {
+            "start": { "type": "integer" },
+            "end": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "origin": {
+      "type": "object",
+      "required": ["session_id", "edit_uuid", "timestamp", "model", "contributor"],
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Claude Code session UUID"
+        },
+        "edit_uuid": {
+          "type": "string",
+          "format": "uuid",
+          "description": "UUID of the entry that made the edit"
+        },
+        "parent_uuid": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Parent UUID in the chain"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of the edit"
+        },
+        "model": {
+          "type": "string",
+          "description": "Claude model identifier (e.g., claude-opus-4-5-20251101)"
+        },
+        "contributor": {
+          "type": "string",
+          "enum": ["claude", "human", "hybrid"],
+          "description": "Who contributed this change"
+        },
+        "line_number": {
+          "type": "integer",
+          "description": "Line number in session file where edit occurred"
+        }
+      }
+    },
+    "chain": {
+      "type": "object",
+      "description": "Metadata about the UUID trace chain",
+      "properties": {
+        "sessions_traced": {
+          "type": "integer",
+          "description": "Number of session files traversed"
+        },
+        "total_entries": {
+          "type": "integer",
+          "description": "Total entries in originating session"
+        },
+        "chain_depth": {
+          "type": "integer",
+          "description": "Number of UUID hops traced"
+        },
+        "session_list": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ordered list of session IDs in the chain"
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Paths to generated artifacts",
+      "properties": {
+        "session_context": {
+          "type": "string",
+          "description": "Path to compressed session context (.jsonl.br)"
+        },
+        "edit_context": {
+          "type": "string",
+          "description": "Path to edit context JSON"
+        },
+        "finding_doc": {
+          "type": "string",
+          "description": "Path to markdown finding document"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Searchable tags for this provenance record"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this provenance record was created"
+    },
+    "git_commit": {
+      "type": "string",
+      "description": "Git commit SHA if committed"
+    },
+    "s3_artifacts": {
+      "type": "object",
+      "description": "S3 storage details for large artifacts (ADR: 2026-01-02-session-chronicle-s3-sharing)",
+      "properties": {
+        "bucket": {
+          "type": "string",
+          "description": "S3 bucket name"
+        },
+        "prefix": {
+          "type": "string",
+          "description": "S3 key prefix for this artifact set"
+        },
+        "manifest_key": {
+          "type": "string",
+          "description": "S3 key for the manifest.json file"
+        },
+        "uploaded_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When artifacts were uploaded to S3"
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of S3 keys for uploaded files"
+        }
+      }
+    },
+    "related_adr": {
+      "type": "string",
+      "description": "ADR slug if this finding relates to a decision (YYYY-MM-DD-slug format)"
+    },
+    "related_design_spec": {
+      "type": "string",
+      "description": "Path to related design spec (/docs/design/.../spec.md)"
+    }
+  }
+}

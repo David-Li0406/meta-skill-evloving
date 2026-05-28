@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <!-- ========================================================= -->
+    <!-- darpan.reconciliation -->
+    <!-- ========================================================= -->
+
+    <entity entity-name="Reconciliation" package="darpan.reconciliation" use="configuration">
+        <description>Schedulable grouping of reconciliation runs scoped to a party.</description>
+        <field name="reconciliationId" type="id" is-pk="true"/>
+        <field name="reconciliationName" type="text-medium"/>
+        <field name="description" type="text-medium"/>
+        <field name="scheduleExpr" type="text-medium"/>
+        <field name="partyId" type="id"/>
+        <field name="isActive" type="text-indicator"/>
+
+        <relationship type="one" related="darpan.party.Party">
+            <key-map field-name="partyId"/>
+        </relationship>
+        <relationship type="many" related="darpan.reconciliation.ReconciliationRun" short-alias="runs">
+            <key-map field-name="reconciliationId"/>
+        </relationship>
+    </entity>
+
+    <entity entity-name="ReconciliationRun" package="darpan.reconciliation" use="configuration">
+        <description>Atomic reconciliation check within a reconciliation.</description>
+        <field name="reconciliationRunId" type="id" is-pk="true"/>
+        <field name="reconciliationId" type="id"/>
+        <field name="runName" type="text-medium"/>
+        <field name="dataDomain" type="text-short"/>
+        <field name="purpose" type="text-short"/>
+        <field name="defaultTimeWindow" type="text-short"/>
+        <field name="ruleSetId" type="id"/>
+        <field name="runSequence" type="number-integer"/>
+
+        <relationship type="one" related="darpan.reconciliation.Reconciliation">
+            <key-map field-name="reconciliationId"/>
+        </relationship>
+        <relationship type="one" related="darpan.rule.RuleSet">
+            <key-map field-name="ruleSetId"/>
+        </relationship>
+        <relationship type="many" related="darpan.reconciliation.RunDataDocument" short-alias="dataDocuments">
+            <key-map field-name="reconciliationRunId"/>
+        </relationship>
+        <relationship type="many" related="darpan.reconciliation.RunSystemInstance" short-alias="systemInstances">
+            <key-map field-name="reconciliationRunId"/>
+        </relationship>
+    </entity>
+
+    <entity entity-name="RunDataDocument" package="darpan.reconciliation" use="configuration">
+        <description>Associates DataDocuments with a reconciliation run.</description>
+        <field name="reconciliationRunId" type="id" is-pk="true"/>
+        <field name="dataDocumentId" type="id" is-pk="true"/>
+        <field name="filterExpression" type="text-long"/>
+        <field name="aggregation" type="text-medium"/>
+        <field name="isRequired" type="text-indicator"/>
+
+        <relationship type="one" related="darpan.reconciliation.ReconciliationRun">
+            <key-map field-name="reconciliationRunId"/>
+        </relationship>
+        <relationship type="one" related="moqui.entity.document.DataDocument">
+            <key-map field-name="dataDocumentId"/>
+        </relationship>
+    </entity>
+
+    <entity entity-name="RunSystemInstance" package="darpan.reconciliation" use="configuration">
+        <description>Associates systems with a reconciliation run.</description>
+        <field name="reconciliationRunId" type="id" is-pk="true"/>
+        <field name="systemMessageRemoteId" type="id" is-pk="true"/>
+        <field name="role" type="text-short"/>
+
+        <relationship type="one" related="darpan.reconciliation.ReconciliationRun">
+            <key-map field-name="reconciliationRunId"/>
+        </relationship>
+        <relationship type="one" related="moqui.service.message.SystemMessageRemote">
+            <key-map field-name="systemMessageRemoteId"/>
+        </relationship>
+    </entity>
+
+    <entity entity-name="SftpServer" package="darpan.reconciliation" use="configuration">
+        <description>Simple SFTP server configuration for Reconciliation automation.</description>
+        <field name="sftpServerId" type="id" is-pk="true"/>
+        <field name="description" type="text-medium"/>
+        <field name="host" type="text-medium" cannot-be-null="true"/>
+        <field name="port" type="number-integer" default="22"/>
+        <field name="username" type="text-medium" cannot-be-null="true"/>
+        <field name="password" type="text-medium" encrypt="true"/>
+        <field name="privateKey" type="text-long" encrypt="true"/>
+        <field name="remoteAttributes" type="text-indicator" default="Y"/>
+    </entity>
+
+</entities>

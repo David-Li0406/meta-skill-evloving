@@ -1,0 +1,161 @@
+# NASR Data Update Workflow
+# Triggered on AIRAC cycle effective dates
+# Downloads and parses FAA NASR 28-day subscription data
+
+name: NASR Data Update
+
+on:
+  # Schedule for 2025 AIRAC cycles (9:01 AM UTC on effective dates)
+  schedule:
+    - cron: '1 9 23 1 *'   # 2501: Jan 23
+    - cron: '1 9 20 2 *'   # 2502: Feb 20
+    - cron: '1 9 20 3 *'   # 2503: Mar 20
+    - cron: '1 9 17 4 *'   # 2504: Apr 17
+    - cron: '1 9 15 5 *'   # 2505: May 15
+    - cron: '1 9 12 6 *'   # 2506: Jun 12
+    - cron: '1 9 10 7 *'   # 2507: Jul 10
+    - cron: '1 9 7 8 *'    # 2508: Aug 7
+    - cron: '1 9 4 9 *'    # 2509: Sep 4
+    - cron: '1 9 2 10 *'   # 2510: Oct 2
+    - cron: '1 9 30 10 *'  # 2511: Oct 30
+    - cron: '1 9 27 11 *'  # 2512: Nov 27
+    - cron: '1 9 25 12 *'  # 2513: Dec 25
+
+  workflow_dispatch:
+    inputs:
+      cycle:
+        description: 'AIRAC cycle ID (e.g., 2505)'
+        required: false
+        type: string
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  download:
+    name: Download NASR Data
+    runs-on: ubuntu-latest
+
+    outputs:
+      cycle_id: ${{ steps.cycle.outputs.id }}
+      effective_date: ${{ steps.cycle.outputs.date }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Determine cycle
+        id: cycle
+        run: |
+          if [ -n "${{ github.event.inputs.cycle }}" ]; then
+            echo "id=${{ github.event.inputs.cycle }}" >> $GITHUB_OUTPUT
+          else
+            # Calculate current cycle from date
+            CYCLE=$(python scripts/calculate_airac.py --current | grep "Current cycle" | awk '{print $3}')
+            echo "id=$CYCLE" >> $GITHUB_OUTPUT
+          fi
+          python scripts/calculate_airac.py --cycle $CYCLE | grep "Effective" | awk '{print "date=" $2}' >> $GITHUB_OUTPUT
+
+      - name: Download NASR subscription
+        run: |
+          python scripts/download_faa_data.py \
+            --cycle ${{ steps.cycle.outputs.id }} \
+            --output ./faa_raw/
+
+      - name: Upload raw data
+        uses: actions/upload-artifact@v4
+        with:
+          name: nasr-raw-${{ steps.cycle.outputs.id }}
+          path: faa_raw/
+          retention-days: 7
+
+  parse:
+    name: Parse NASR Data
+    needs: download
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Download raw data
+        uses: actions/download-artifact@v4
+        with:
+          name: nasr-raw-${{ needs.download.outputs.cycle_id }}
+          path: faa_raw/
+
+      - name: Initialize database
+        run: |
+          sqlite3 aviation.db < assets/aviation_schema.sql
+
+      - name: Parse airports
+        run: |
+          python scripts/parse_nasr_apt.py \
+            --input faa_raw/APT.txt \
+            --output aviation.db
+
+      - name: Parse runways
+        run: |
+          python scripts/parse_nasr_rwy.py \
+            --input faa_raw/RWY.txt \
+            --output aviation.db
+
+      - name: Parse NAVAIDs
+        run: |
+          python scripts/parse_nasr_nav.py \
+            --input faa_raw/NAV.txt \
+            --output aviation.db
+
+      - name: Parse fixes
+        run: |
+          python scripts/parse_nasr_fix.py \
+            --input faa_raw/FIX.txt \
+            --output aviation.db
+
+      - name: Parse airways
+        run: |
+          python scripts/parse_nasr_awy.py \
+            --input faa_raw/ \
+            --output aviation.db
+
+      - name: Parse frequencies
+        run: |
+          python scripts/parse_nasr_twr.py \
+            --input faa_raw/TWR.txt \
+            --output aviation.db
+
+      - name: Validate data
+        run: |
+          python scripts/validate_data.py \
+            --database aviation.db \
+            --expected-airports 19000
+
+      - name: Upload database
+        uses: actions/upload-artifact@v4
+        with:
+          name: aviation-db-${{ needs.download.outputs.cycle_id }}
+          path: aviation.db
+          retention-days: 90
+
+  notify:
+    name: Notify Completion
+    needs: [download, parse]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Create summary
+        run: |
+          echo "## NASR Update Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cycle:** ${{ needs.download.outputs.cycle_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Effective Date:** ${{ needs.download.outputs.effective_date }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ${{ needs.parse.result }}" >> $GITHUB_STEP_SUMMARY

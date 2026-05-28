@@ -1,0 +1,71 @@
+---
+title: Deploying a Dart Frog Application
+description: Deploy Dart Frog backend applications to Globe with file-based routing and zero-configuration deployment for Dart APIs.
+---
+
+Dart Frog is a fast, minimalistic backend framework for Dart built on top of Shelf. It provides file-based routing, middleware support, and dependency injection for building efficient backend services. Globe automatically detects Dart Frog projects and applies the appropriate build and deployment settings. This page outlines requirements and deployment behaviour.
+
+## Project Setup
+
+To create a new project using the Globe template:
+
+```bash
+globe create -t crud_rest_api_dartfrog
+```
+
+To create a Dart Frog project manually:
+
+1. Install the Dart Frog CLI:
+
+   ```bash
+   dart pub global activate dart_frog_cli
+   ```
+
+2. Create a new Dart Frog project:
+
+   ```bash
+   dart_frog create my_dart_frog_app
+   cd my_dart_frog_app
+   ```
+
+3. Test your application locally:
+   ```bash
+   dart_frog dev
+   ```
+
+## Deploying to Globe
+
+Run the deployment command from your project root:
+
+```bash
+globe deploy
+```
+
+<Info>
+  Globe automatically detects Dart Frog applications and applies the correct
+  framework preset during deployment. No additional configuration is required.
+</Info>
+
+## How it works
+
+Dart Frog uses a file-system-based routing approach:
+
+- **Routing**: Dart Frog uses file-system-based routing. Files in the `routes/` directory define endpoints
+- **Middleware**: Add interceptors for requests/responses via middleware files
+- **Dependency Injection**: Inject dependencies into handlers using the request context
+- **Preset detection**: Globe recognizes Dart Frog projects and handles all configs automatically
+
+## Best Practices
+
+- Organize routes logically following REST API conventions for better maintainability
+- Use middleware for cross-cutting concerns like authentication and logging
+- Leverage dependency injection for configurable and testable services
+- Always listen to the PORT environment variable for Globe compatibility
+- Implement proper error handling with appropriate HTTP status codes
+
+## Related Topics
+
+- [Dart Frog documentation](https://dart-frog.dev/getting-started)
+- [Deploy Your Dart Frog Backend on Globe](/guides/dart-frog-deployment) - Step-by-step deployment guide
+- [Managing deployments](/core-concepts/deployments) - Understand deployment lifecycle
+- [Globe CLI reference](/core-concepts/cli) - Command-line deployment tools

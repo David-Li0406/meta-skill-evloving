@@ -1,0 +1,47 @@
+{
+  "name": "remove-field",
+  "description": "Remove a field from an object at a specified path",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Any JSON object"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to field to remove (e.g., 'user.profile.age')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with field removed at the specified path"
+  },
+  "examples": [
+    {
+      "description": "Remove existing field from nested object",
+      "input": {"user": {"name": "skogix", "email": "test@example.com"}},
+      "args": {"path": "user.email"},
+      "output": {"user": {"name": "skogix"}}
+    },
+    {
+      "description": "Remove deeply nested field",
+      "input": {"data": {"user": {"profile": {"age": 30, "location": "sweden"}}}},
+      "args": {"path": "data.user.profile.age"},
+      "output": {"data": {"user": {"profile": {"location": "sweden"}}}}
+    },
+    {
+      "description": "Remove non-existent field (no change)",
+      "input": {"user": {"name": "skogix"}},
+      "args": {"path": "user.phone"},
+      "output": {"user": {"name": "skogix"}}
+    },
+    {
+      "description": "Remove field with null value",
+      "input": {"user": {"name": null, "age": 30}},
+      "args": {"path": "user.name"},
+      "output": {"user": {"age": 30}}
+    }
+  ],
+  "tags": ["object", "delete", "remove", "mutation", "field"]
+}

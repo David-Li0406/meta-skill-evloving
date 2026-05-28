@@ -1,0 +1,1 @@
+../../../rules/api/observability.md

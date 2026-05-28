@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd"
+        default-menu-title="Diff View"
+        default-menu-include="false"
+        require-authentication="false"
+        allow-extra-path="true">
+
+    <parameter name="viewFile"/>
+    <parameter name="viewLimit"/>
+    <parameter name="recordId"/>
+    <parameter name="missingKey" default="json1"/>
+
+    <transition name="list" read-only="true" begin-transaction="false">
+        <default-response url=".."/>
+    </transition>
+
+    <transition name="switchKey" read-only="true" begin-transaction="false">
+        <parameter name="missingKey"/>
+        <default-response url="."/>
+    </transition>
+
+    <transition name="downloadDiff" read-only="true" begin-transaction="false">
+        <parameter name="filename"/>
+        <actions>
+            <set field="filename" from="filename?.trim()"/>
+            <if condition="!filename"><return/></if>
+            <if condition="filename.contains('..') || filename.contains('/') || filename.contains('\\')">
+                <return error="true" message="Invalid filename"/>
+            </if>
+            <set field="outputDirRef" from="ec.resource.getLocationReference('runtime://tmp/reconciliation/generic/output')"/>
+            <set field="fileRef" from="outputDirRef != null ? outputDirRef.getChild(filename) : null"/>
+            <if condition="fileRef == null || !fileRef.getExists()">
+                <return error="true" message="Diff file not found"/>
+            </if>
+            <set field="sendResponse" from="ec.web.sendResourceResponse(fileRef.getLocation())"/>
+            <return/>
+        </actions>
+        <default-response type="none"/>
+    </transition>
+
+    <pre-actions>
+        <script location="component://darpan/screen/Reconciliation/GenericReconciliation/GenericReconciliationView/GenericReconciliationViewActions.groovy"/>
+        <script location="component://darpan/screen/Reconciliation/GenericReconciliation/GenericReconciliationView/MissingJsonListActions.groovy"/>
+    </pre-actions>
+
+    <widgets>
+        <container style="container">
+            <container style="page-header">
+                <label text="Diff Details" type="h2"/>
+                <container>
+                    <link url="list" text="Back to File Reconciliation"
+                            link-type="anchor-button" btn-type="default" style="btn-sm"/>
+                    <link url="downloadDiff" text="Download" link-type="anchor-button" target-window="_blank"
+                            btn-type="success" style="btn-sm" condition="viewFile">
+                        <parameter name="filename" from="viewFile"/>
+                    </link>
+                </container>
+            </container>
+
+            <section name="DiffDetailsErrorSection" condition="viewError">
+                <widgets>
+                    <label text="${viewError}" type="p" style="text-danger"/>
+                </widgets>
+            </section>
+
+            <section name="DiffDetailsBodySection" condition="!viewError">
+                <widgets>
+                    <label text="Summary" type="h5"/>
+                    <container style="row">
+                        <container style="col-sm-4">
+                            <label text="Total Differences" type="p" style="text-muted"/>
+                            <label text="${viewTotalDifferences ?: 0}" type="h3"/>
+                        </container>
+                        <container style="col-sm-4">
+                            <label text="Missing from ${viewMetaJson2Label ?: 'JSON 2'}" type="p" style="text-muted"/>
+                            <label text="${viewOnlyInJson1Count ?: 0}" type="h3"/>
+                        </container>
+                        <container style="col-sm-4">
+                            <label text="Missing from ${viewMetaJson1Label ?: 'JSON 1'}" type="p" style="text-muted"/>
+                            <label text="${viewOnlyInJson2Count ?: 0}" type="h3"/>
+                        </container>
+                    </container>
+
+                    <section name="DiffOrdersLimitedNotice" condition="viewOrdersLimited">
+                        <widgets>
+                            <label text="Showing first ${viewOrderCount} of ${viewOrderTotalCount} differences. Download the file for the full list."
+                                    type="p" style="text-warning"/>
+                        </widgets>
+                    </section>
+
+                    <container style="btn-group" style-margin-bottom="15px">
+                        <link url="switchKey" text="Show Missing in ${viewMetaJson2Label ?: 'JSON 2'}"
+                                btn-type="default" link-type="anchor-button"
+                                style="${missingKey == 'json2' ? 'btn-primary' : ''}">
+                            <parameter name="missingKey" value="json2"/>
+                            <parameter name="viewFile" from="viewFile"/>
+                            <parameter name="viewLimit" from="viewLimit"/>
+                            <parameter name="recordId" from="recordIdSearch"/>
+                        </link>
+                        <link url="switchKey" text="Show Missing in ${viewMetaJson1Label ?: 'JSON 1'}"
+                                btn-type="default" link-type="anchor-button"
+                                style="${missingKey == 'json1' ? 'btn-primary' : ''}">
+                            <parameter name="missingKey" value="json1"/>
+                            <parameter name="viewFile" from="viewFile"/>
+                            <parameter name="viewLimit" from="viewLimit"/>
+                            <parameter name="recordId" from="recordIdSearch"/>
+                        </link>
+                    </container>
+
+                    <container style-margin-bottom="10px">
+                        <form-single name="RecordIdSearchForm" transition="." method="get" style="form-inline"
+                                field-layout="inline">
+                            <field name="viewFile">
+                                <default-field><hidden from="viewFile"/></default-field>
+                            </field>
+                            <field name="missingKey">
+                                <default-field><hidden from="missingKey"/></default-field>
+                            </field>
+                            <field name="viewLimit">
+                                <default-field><hidden from="viewLimit"/></default-field>
+                            </field>
+                            <field name="pageIndex">
+                                <default-field><hidden value="0"/></default-field>
+                            </field>
+                            <field name="recordId">
+                                <default-field title="Record ID">
+                                    <text-line size="12" default-value="${recordIdSearch}" placeholder="Search record_id"/>
+                                </default-field>
+                            </field>
+                            <field name="searchSubmit">
+                                <default-field>
+                                    <submit text="Search" btn-type="default" style="btn-sm"/>
+                                </default-field>
+                            </field>
+                        </form-single>
+                    </container>
+
+                    <section name="MissingListTableSection" condition="missingRecordsCount > 0">
+                        <widgets>
+                            <label text="Records Missing in ${viewMissingLabel ?: (missingKeyNormalized == 'json1' ? 'JSON 1' : 'JSON 2')}" type="h4"/>
+                            <form-list name="MissingRecordsList" list="missingRecords" skip-form="true"
+                                    paginate="true" paginate-always-show="true" paginate-target="."
+                                paginate-parameters="viewFile,missingKey,viewLimit,recordId"
+                                    style="table table-striped table-condensed">
+                                <field name="id">
+                                    <header-field title="Record ID" style="width:25%"/>
+                                    <default-field><display style="width:25%"/></default-field>
+                                </field>
+                                <field name="json">
+                                    <header-field title="Record JSON"/>
+                                    <default-field>
+                                        <label text="${json}" type="pre" encode="true" style="pre-plain"/>
+                                    </default-field>
+                                </field>
+                            </form-list>
+                        </widgets>
+                    </section>
+
+                    <section name="MissingListEmptySection" condition="missingRecordsCount == 0">
+                        <widgets>
+                            <label text="No records missing in ${viewMissingLabel ?: (missingKeyNormalized == 'json1' ? 'JSON 1' : 'JSON 2')}."
+                                    type="p" style="text-muted"/>
+                        </widgets>
+                    </section>
+                </widgets>
+            </section>
+        </container>
+    </widgets>
+</screen>

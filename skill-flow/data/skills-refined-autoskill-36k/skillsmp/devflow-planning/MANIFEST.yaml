@@ -1,0 +1,116 @@
+# Skill Manifest - Progressive Disclosure Index
+# Token estimation: 1 token ≈ 0.75 words (or ~4 characters)
+# Content multipliers: prose 1.0x, code 1.2x, tables 1.3x, cheatsheets 1.4x
+
+skill: devflow-planning
+version: "1.0"
+specification: agentskills.io/v1
+
+progressive_disclosure:
+  # ---------------------------------------------------------------------------
+  # LEVEL 1: METADATA (~120 tokens)
+  # Range: 80-150 | We use: 120
+  # Rationale: name (~10) + description (~100) + YAML overhead (~10)
+  # ---------------------------------------------------------------------------
+  metadata:
+    estimated_tokens: 120
+    fields: [name, description]
+
+  # ---------------------------------------------------------------------------
+  # LEVEL 2: INSTRUCTIONS (~1800 tokens)
+  # Range: 1000-2500 | We use: 1800
+  # Rationale: Planning skill with tables, quick references, workflow examples
+  # ---------------------------------------------------------------------------
+  instructions:
+    estimated_tokens: 1800
+    file: SKILL.md
+
+  resources:
+    # -------------------------------------------------------------------------
+    # SPRINT-PLANNING-GUIDE.md (~2200 tokens)
+    # Range: 1800-2600 | We use: 2200
+    # Rationale:
+    #   - Comprehensive planning guide with formulas
+    #   - Capacity calculation examples
+    #   - Risk assessment tables
+    #   - ~180 lines, example-heavy
+    # -------------------------------------------------------------------------
+    - path: references/SPRINT-PLANNING-GUIDE.md
+      purpose: Comprehensive sprint planning with capacity and load calculations
+      estimated_tokens: 2200
+      load_when:
+        - Planning a new sprint
+        - User asks about capacity
+        - Calculating recommended sprint load
+      keywords: [sprint, planning, capacity, load, commitment]
+
+    # -------------------------------------------------------------------------
+    # VELOCITY-PATTERNS.md (~1600 tokens)
+    # Range: 1200-2000 | We use: 1600
+    # Rationale:
+    #   - Velocity analysis patterns
+    #   - Trend detection formulas
+    #   - Interpretation guidelines
+    #   - ~130 lines, formula-heavy
+    # -------------------------------------------------------------------------
+    - path: references/VELOCITY-PATTERNS.md
+      purpose: Velocity trend analysis, prediction formulas, and interpretation
+      estimated_tokens: 1600
+      load_when:
+        - Analyzing velocity trends
+        - Making sprint predictions
+        - User asks about velocity patterns
+      keywords: [velocity, trend, prediction, average, variance]
+
+    # -------------------------------------------------------------------------
+    # GITFLOW-RECOMMENDATIONS.md (~1800 tokens)
+    # Range: 1400-2200 | We use: 1800
+    # Rationale:
+    #   - GitFlow branching strategies
+    #   - Integration with sprint work
+    #   - Release workflow patterns
+    #   - ~150 lines, diagram and examples
+    # -------------------------------------------------------------------------
+    - path: references/GITFLOW-RECOMMENDATIONS.md
+      purpose: GitFlow branching strategy aligned with sprint planning
+      estimated_tokens: 1800
+      load_when:
+        - Planning release work
+        - Discussing branch strategy
+        - Linking code work to sprint items
+      keywords: [gitflow, branch, release, develop, feature]
+
+    # -------------------------------------------------------------------------
+    # SCRUM-BEST-PRACTICES.md (~1400 tokens)
+    # Range: 1000-1800 | We use: 1400
+    # Rationale:
+    #   - Scrum ceremony guidelines
+    #   - Anti-patterns to avoid
+    #   - Quick reference tables
+    #   - ~110 lines, table-heavy
+    # -------------------------------------------------------------------------
+    - path: references/SCRUM-BEST-PRACTICES.md
+      purpose: Scrum ceremonies, anti-patterns, and team health indicators
+      estimated_tokens: 1400
+      load_when:
+        - Evaluating team practices
+        - Sprint retrospective analysis
+        - User asks about Scrum patterns
+      keywords: [scrum, ceremony, standup, retrospective, refinement]
+
+loading_strategy:
+  recommendation: |
+    1. Start with SKILL.md for planning operations
+    2. Load SPRINT-PLANNING-GUIDE.md when planning sprints
+    3. Load VELOCITY-PATTERNS.md for trend analysis
+    4. Load GITFLOW-RECOMMENDATIONS.md for release planning
+    5. Load SCRUM-BEST-PRACTICES.md for process guidance
+
+  fallback: |
+    SKILL.md contains quick references for velocity and capacity.
+    Reference files provide complete formulas and patterns.
+
+token_summary:
+  metadata_only: 120
+  with_instructions: 1920
+  with_all_resources: 8920

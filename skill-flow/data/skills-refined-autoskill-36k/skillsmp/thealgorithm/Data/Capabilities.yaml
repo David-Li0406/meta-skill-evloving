@@ -1,0 +1,165 @@
+# THE ALGORITHM Capabilities Registry
+# Source of truth for all orchestratable capabilities
+# Effort levels: TRIVIAL < QUICK < STANDARD < THOROUGH < DETERMINED
+
+version: "1.0"
+
+# === COMPUTE RESOURCES ===
+models:
+  haiku:
+    effort_min: QUICK
+    description: "Fast, cheap execution"
+    use_for: "Parallel grunt work, simple execution, spotchecks"
+  sonnet:
+    effort_min: STANDARD
+    description: "Balanced reasoning"
+    use_for: "Analysis, planning, research, standard work"
+  opus:
+    effort_min: DETERMINED
+    description: "Maximum intelligence"
+    use_for: "Architecture, critical decisions, complex reasoning"
+
+# === THINKING MODES ===
+thinking:
+  deep thinking:
+    skill: BeCreative
+    workflow: StandardCreativity
+    effort_min: STANDARD
+    use_when: "Need creative solutions, novel approaches, quality thinking"
+
+  tree_of_thought:
+    skill: BeCreative
+    workflow: TreeOfThoughts
+    effort_min: THOROUGH
+    use_when: "Complex multi-factor decisions, branching exploration"
+
+  plan_mode:
+    tool: EnterPlanMode
+    effort_min: THOROUGH
+    use_when: "Complex multi-step implementation needing user approval"
+
+# === ANALYSIS MODES ===
+analysis:
+  science:
+    skill: Science
+    effort_min: STANDARD
+    use_when: "Hypothesis-driven exploration, systematic experimentation"
+
+# === RESEARCH ===
+research:
+  web_search:
+    tool: WebSearch
+    effort_min: STANDARD
+    use_when: "Web research, current events, citations needed"
+
+  explore:
+    subagent_type: Explore
+    model: sonnet
+    effort_min: STANDARD
+    use_when: "Codebase exploration, finding patterns"
+
+# === EXECUTION ===
+execution:
+  general:
+    subagent_type: general-purpose
+    model: sonnet
+    effort_min: QUICK
+    use_when: "General parallel work, simple tasks, data gathering"
+
+  explore:
+    subagent_type: Explore
+    model: sonnet
+    effort_min: STANDARD
+    use_when: "Codebase exploration, finding files"
+
+  plan:
+    subagent_type: Plan
+    model: sonnet
+    effort_min: THOROUGH
+    use_when: "Implementation planning, architecture design"
+
+  ralph_loop:
+    type: iterative_loop
+    model: sonnet
+    effort_min: QUICK
+    icon: "🔄"
+    keywords:
+      - "iterate until"
+      - "keep trying"
+      - "until tests pass"
+      - "until it works"
+      - "persistent"
+      - "retry until"
+      - "loop until"
+      - "ralph"
+      - "keep iterating"
+      - "don't stop until"
+    max_iterations_default: 10
+    completion_detection: promise_tags
+    plugin_source: ralph-wiggum
+    use_when: "Need persistent iteration until success criteria met - tests passing, goal achieved, or completion promise detected"
+
+# === PARALLEL EXECUTION ===
+parallel:
+  max_concurrent:
+    QUICK: 1
+    STANDARD: 3
+    THOROUGH: 5
+    DETERMINED: 10
+  background_enabled: true
+  spotcheck_required: true
+  spotcheck_model: haiku
+
+# === VERIFICATION ===
+verification:
+  browser:
+    skill: Browser
+    effort_min: STANDARD
+    use_when: "Web application validation, visual verification"
+
+  skeptical_verifier:
+    traits: [skeptical, meticulous, adversarial]
+    model: sonnet
+    rule: "Must be different agent than executor"
+    use_when: "Validate work against ISC criteria"
+
+# === EFFORT SUMMARY ===
+effort_unlocks:
+  TRIVIAL:
+    description: "Skip algorithm, direct response"
+    capabilities: []
+
+  QUICK:
+    description: "Single-step, fast execution"
+    capabilities:
+      - models.haiku
+      - execution.general
+      - execution.ralph_loop
+
+  STANDARD:
+    description: "Multi-step bounded work"
+    capabilities:
+      - models.haiku
+      - models.sonnet
+      - thinking.deep thinking
+      - analysis.science
+      - research.web_search
+      - research.explore
+      - execution.general
+      - execution.explore
+      - verification.browser
+      - verification.skeptical_verifier
+
+  THOROUGH:
+    description: "Complex, multi-file work"
+    capabilities:
+      - all_standard
+      - thinking.tree_of_thought
+      - thinking.plan_mode
+      - execution.plan
+
+  DETERMINED:
+    description: "Mission-critical, unlimited iteration"
+    capabilities:
+      - all_capabilities
+      - models.opus

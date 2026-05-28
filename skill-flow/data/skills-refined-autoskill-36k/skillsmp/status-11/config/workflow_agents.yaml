@@ -1,0 +1,141 @@
+# Workflow Agents Configuration
+# 
+# This file defines the tmux panes created by start-workflow-tmux.sh.
+# Each agent entry specifies how to set up and run an agent pane.
+#
+# Schema:
+#   agents:           # Required: list of agent definitions
+#     - name: string  # Required: unique agent identifier (used for BD_ACTOR)
+#       label: string # Optional: display label for tmux pane title (defaults to name)
+#       role: string  # Optional: agent role passed to waif startWork (defaults to name)
+#       window: string # Optional: tmux window name (default: "core"); agents with same window are grouped
+#       (no worktree key)
+#       env:          # Optional: environment variables to set before starting
+#         KEY: value
+#       idle:         # Optional: idle scheduler configuration
+#         task: string      # Shell command to run when idle
+#         frequency: int    # Target seconds between runs (default: 30)
+#         variance: int     # +/- variance in seconds (default: 10)
+#       is_user: bool # Optional: if true, this is the user pane (no waif startWork)
+#
+# Environment variable override:
+#   Set WORKFLOW_AGENTS_CONFIG to use an alternate config file path.
+#
+# Required:
+#   This config file is required. If missing, the script will error with instructions.
+#   Use 'node scripts/parse-workflow-config.js --defaults' to see an example config.
+#
+# Agent definitions match .opencode/agent/*.md files.
+# Agents are grouped into windows: "core" for daily workflow, "specialist" for on-demand.
+
+agents:
+  # === CORE WINDOW ===
+  # Primary agents for typical feature development workflow
+
+  # User pane - interactive shell for the Producer
+  - name: user
+    label: User
+    window: core
+    is_user: true
+    env:
+      BD_ACTOR: $USER
+    idle:
+      task: "tmux select-pane -T \"User\""
+      frequency: 10
+      variance: 10
+
+  # Map (PM AI) - primary interface point for Producer
+  - name: map
+    label: Map (PM)
+    role: pm
+    window: core
+    env:
+      BD_ACTOR: map
+    idle:
+      task: "tmux select-pane -T \"Map (PM)\""
+      frequency: 10
+      variance: 10
+
+  # === SPECIALIST WINDOW ===
+  # On-demand agents for specific tasks (DevOps, meta-work, user shell)
+  # === SPECIALIST WINDOW ===
+  # On-demand agents for specific tasks (DevOps, meta-work, user shell)
+
+  # The following specialist agents are currently disabled.
+  # To re-enable, remove the leading '#' from each line in this block.
+
+  # Muse (Designer AI) - design variants and UX flows
+  # - name: muse
+  #   label: Muse (Design)
+  #   role: design
+  #   window: specialist
+  #   env:
+  #     BD_ACTOR: muse
+  #   idle:
+  #     task: "tmux select-pane -T \"Muse (Design)\""
+  #     frequency: 10
+  #     variance: 10
+
+  # Patch (Implementation AI) - implement small, correct changes
+  # - name: patch
+  #   label: Patch (Impl)
+  #   role: build
+  #   window: specialist
+  #   env:
+  #     BD_ACTOR: patch
+  #   idle:
+  #     task: "tmux select-pane -T \"Patch (Impl)\""
+  #     frequency: 10
+  #     variance: 10
+
+  # Scribbler (Docs AI) - maintain PRDs and repo docs
+  # - name: scribbler
+  #   label: Scribbler (Docs)
+  #   role: docs
+  #   window: specialist
+  #   env:
+  #     BD_ACTOR: scribbler
+  #   idle:
+  #     task: "tmux select-pane -T \"Scribbler (Docs)\""
+  #     frequency: 10
+  #     variance: 10
+
+  # Pixel (Art AI) - asset generation and review support
+  # - name: pixel
+  #   label: Pixel (Art)
+  #   role: art
+  #   window: specialist
+  #   # (no worktree configuration)
+  #   env:
+  #     BD_ACTOR: pixel
+  #   idle:
+  #     task: "tmux select-pane -T \"Pixel (Art)\""
+  #     frequency: 10
+  #     variance: 10
+
+  # Probe (QA AI) - quality gates, test strategy, and risk checks
+  # - name: probe
+  #   label: Probe (QA)
+  #   role: review
+  #   window: specialist
+  #   # (no worktree configuration)
+  #   env:
+  #     BD_ACTOR: probe
+  #   idle:
+  #     task: "tmux select-pane -T \"Probe (QA)\""
+  #     frequency: 10
+  #     variance: 10
+
+  # Ship (DevOps AI) - CI, build, release readiness
+  # - name: ship
+  #   label: Ship (DevOps)
+  #   role: devops
+  #   window: specialist
+  #   # (no worktree configuration)
+  #   env:
+  #     BD_ACTOR: ship
+  #   idle:
+  #     task: "tmux select-pane -T \"Ship (DevOps)\""
+  #     frequency: 10
+  #     variance: 10
+

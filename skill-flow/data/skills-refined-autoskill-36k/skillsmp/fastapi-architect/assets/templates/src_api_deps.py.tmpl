@@ -1,0 +1,13 @@
+from functools import lru_cache
+
+from core.config import Settings, settings
+from services.clients.httpx_client import get_httpx_client
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return settings
+
+
+def http_client():
+    return get_httpx_client()

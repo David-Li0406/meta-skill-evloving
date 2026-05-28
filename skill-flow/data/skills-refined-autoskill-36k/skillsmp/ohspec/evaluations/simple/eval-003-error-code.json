@@ -1,0 +1,41 @@
+{
+  "id": "eval-003",
+  "name": "错误码新增",
+  "complexity": "simple",
+  "description": "添加新的错误码定义",
+  "requirement": "为音频服务添加新的错误码 AUDIO_DEVICE_BUSY (错误码 503)，用于表示音频设备被其他应用占用",
+  "context": {
+    "project_type": "音频服务",
+    "files_involved": 2,
+    "estimated_lines": 40,
+    "dependencies": ["错误处理模块"]
+  },
+  "expected_output": {
+    "rfc_sections": ["§1", "§2", "§3", "§4", "§5"],
+    "scenarios": {
+      "normal": 1,
+      "exception": 1,
+      "boundary": 1
+    },
+    "dfx_dimensions": 8
+  },
+  "acceptance_criteria": {
+    "execution_time_max": 480,
+    "token_budget_max": 10000,
+    "user_interactions_max": 2,
+    "first_pass_rate": 0.85,
+    "quality_score_min": 85
+  },
+  "validation": {
+    "must_have": [
+      "错误码数值和名称",
+      "错误描述和触发条件",
+      "用户可见的错误信息",
+      "错误处理建议"
+    ],
+    "should_have": [
+      "与现有错误码的关系",
+      "日志记录规范"
+    ]
+  }
+}

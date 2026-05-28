@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{REPO_NAME}} - {{YEAR}} Recap</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    * { font-family: 'Inter', sans-serif; }
+
+    body {
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%);
+      min-height: 100vh;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .glow {
+      box-shadow: 0 0 20px rgba(102, 126, 234, 0.3), 0 0 40px rgba(118, 75, 162, 0.2);
+    }
+
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .float { animation: float 3s ease-in-out infinite; }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
+      50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.6); }
+    }
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-up { animation: slide-up 0.6s ease-out forwards; }
+
+    @keyframes count-up {
+      from { opacity: 0; transform: scale(0.5); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .count-up { animation: count-up 0.5s ease-out forwards; }
+
+    .heatmap-cell {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+    .heatmap-cell:hover {
+      transform: scale(1.5);
+      z-index: 10;
+    }
+
+    .level-0 { background: rgba(255,255,255,0.05); }
+    .level-1 { background: #0e4429; }
+    .level-2 { background: #006d32; }
+    .level-3 { background: #26a641; }
+    .level-4 { background: #39d353; }
+
+    .achievement {
+      transition: all 0.3s ease;
+    }
+    .achievement:hover {
+      transform: scale(1.05);
+    }
+    .achievement.locked {
+      filter: grayscale(100%) opacity(0.3);
+    }
+
+    .achievement-avatars {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .achievement-avatars img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid rgba(102, 126, 234, 0.5);
+    }
+
+    .avatar-ring {
+      background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+      padding: 3px;
+      border-radius: 50%;
+    }
+
+    .rank-gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+    .rank-silver { color: #c0c0c0; text-shadow: 0 0 10px rgba(192, 192, 192, 0.5); }
+    .rank-bronze { color: #cd7f32; text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); }
+
+    .word-cloud span {
+      display: inline-block;
+      padding: 4px 8px;
+      margin: 4px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+      transition: all 0.2s ease;
+    }
+    .word-cloud span:hover {
+      background: rgba(102, 126, 234, 0.3);
+      transform: scale(1.1);
+    }
+
+    .tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .radial-chart {
+      position: relative;
+      width: 200px;
+      height: 200px;
+    }
+  </style>
+</head>
+<body class="text-white p-4 md:p-8">
+  <div id="tooltip" class="tooltip"></div>
+
+  <!-- Hero Section -->
+  <header class="max-w-6xl mx-auto text-center py-12 slide-up">
+    <div class="inline-block px-4 py-1 rounded-full glass text-sm mb-4">
+      <span class="text-purple-400">{{YEAR}}</span> Year in Review
+    </div>
+    <h1 class="text-5xl md:text-7xl font-black gradient-text mb-4">
+      {{REPO_NAME}}
+    </h1>
+    <p class="text-gray-400 text-lg mb-8">A year of code, commits, and collaboration</p>
+
+    <!-- Top Contributors -->
+    <div class="flex justify-center items-end gap-4 mt-8">
+      <div class="text-center float" style="animation-delay: 0.2s" id="contributor-2">
+        <div class="avatar-ring w-16 h-16 mx-auto mb-2">
+          <img src="" alt="" class="w-full h-full rounded-full object-cover bg-gray-700" id="avatar-2">
+        </div>
+        <div class="text-sm text-gray-400">#2</div>
+        <div class="text-sm font-medium" id="name-2"></div>
+      </div>
+      <div class="text-center float" id="contributor-1">
+        <div class="text-2xl mb-2">👑</div>
+        <div class="avatar-ring w-24 h-24 mx-auto mb-2 pulse-glow">
+          <img src="" alt="" class="w-full h-full rounded-full object-cover bg-gray-700" id="avatar-1">
+        </div>
+        <div class="text-sm text-yellow-400 font-bold">#1</div>
+        <div class="font-semibold" id="name-1"></div>
+      </div>
+      <div class="text-center float" style="animation-delay: 0.4s" id="contributor-3">
+        <div class="avatar-ring w-16 h-16 mx-auto mb-2">
+          <img src="" alt="" class="w-full h-full rounded-full object-cover bg-gray-700" id="avatar-3">
+        </div>
+        <div class="text-sm text-gray-400">#3</div>
+        <div class="text-sm font-medium" id="name-3"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats Cards -->
+  <section class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 my-12">
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-3xl font-black gradient-text count-up" id="stat-commits">0</div>
+      <div class="text-gray-400 text-sm mt-1">Commits</div>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-3xl font-black gradient-text count-up" id="stat-prs">0</div>
+      <div class="text-gray-400 text-sm mt-1">Pull Requests</div>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-3xl font-black gradient-text count-up" id="stat-issues">0</div>
+      <div class="text-gray-400 text-sm mt-1">Issues</div>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-3xl font-black gradient-text count-up" id="stat-contributors">0</div>
+      <div class="text-gray-400 text-sm mt-1">Contributors</div>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-3xl font-black text-green-400 count-up" id="stat-added">+0</div>
+      <div class="text-gray-400 text-sm mt-1">Lines Added</div>
+    </div>
+    <div class="glass rounded-2xl p-6 text-center card-hover">
+      <div class="text-3xl font-black text-red-400 count-up" id="stat-removed">-0</div>
+      <div class="text-gray-400 text-sm mt-1">Lines Removed</div>
+    </div>
+  </section>
+
+  <!-- Contribution Heatmap -->
+  <section class="max-w-6xl mx-auto my-12">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <span class="text-2xl">📅</span> Contribution Heatmap
+    </h2>
+    <div class="glass rounded-2xl p-6 overflow-x-auto">
+      <div class="flex gap-1 text-xs text-gray-500 mb-2 ml-8">
+        <span class="w-[52px] text-center">Jan</span>
+        <span class="w-[52px] text-center">Feb</span>
+        <span class="w-[52px] text-center">Mar</span>
+        <span class="w-[52px] text-center">Apr</span>
+        <span class="w-[52px] text-center">May</span>
+        <span class="w-[52px] text-center">Jun</span>
+        <span class="w-[52px] text-center">Jul</span>
+        <span class="w-[52px] text-center">Aug</span>
+        <span class="w-[52px] text-center">Sep</span>
+        <span class="w-[52px] text-center">Oct</span>
+        <span class="w-[52px] text-center">Nov</span>
+        <span class="w-[52px] text-center">Dec</span>
+      </div>
+      <div class="flex">
+        <div class="flex flex-col gap-1 text-xs text-gray-500 mr-2 justify-around">
+          <span>Mon</span>
+          <span>Wed</span>
+          <span>Fri</span>
+        </div>
+        <div id="heatmap" class="grid grid-flow-col gap-1" style="grid-template-rows: repeat(7, 1fr);"></div>
+      </div>
+      <div class="flex items-center justify-end gap-2 mt-4 text-xs text-gray-500">
+        <span>Less</span>
+        <div class="heatmap-cell level-0"></div>
+        <div class="heatmap-cell level-1"></div>
+        <div class="heatmap-cell level-2"></div>
+        <div class="heatmap-cell level-3"></div>
+        <div class="heatmap-cell level-4"></div>
+        <span>More</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Time Analysis -->
+  <section class="max-w-6xl mx-auto my-12 grid md:grid-cols-2 gap-6">
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span>⏰</span> When Do You Code?
+      </h2>
+      <div class="flex justify-center">
+        <canvas id="hourlyChart" width="280" height="280"></canvas>
+      </div>
+      <div class="flex justify-center gap-4 mt-4">
+        <div class="text-center">
+          <div class="text-2xl">🦉</div>
+          <div class="text-xs text-gray-400">Night Owl</div>
+          <div class="font-bold text-purple-400" id="night-owl-percent">0%</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl">🐓</div>
+          <div class="text-xs text-gray-400">Early Bird</div>
+          <div class="font-bold text-yellow-400" id="early-bird-percent">0%</div>
+        </div>
+      </div>
+    </div>
+    <div class="glass rounded-2xl p-6">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span>📊</span> Day of Week
+      </h2>
+      <canvas id="weeklyChart" height="200"></canvas>
+      <div class="text-center mt-4">
+        <span class="text-gray-400">Weekend Warrior:</span>
+        <span class="font-bold text-orange-400" id="weekend-percent">0%</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Monthly Trends -->
+  <section class="max-w-6xl mx-auto my-12">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <span>📈</span> Monthly Trends
+    </h2>
+    <div class="glass rounded-2xl p-6">
+      <canvas id="monthlyChart" height="100"></canvas>
+    </div>
+  </section>
+
+  <!-- Commit Message Analysis -->
+  <section class="max-w-6xl mx-auto my-12">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <span>💬</span> Commit Message Analysis
+    </h2>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold mb-4">Word Cloud</h3>
+        <div id="wordCloud" class="word-cloud text-center min-h-[200px]"></div>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold mb-4">Conventional Commits</h3>
+        <canvas id="conventionalChart" height="200"></canvas>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6 mt-6">
+      <div class="glass rounded-2xl p-6 text-center">
+        <h3 class="font-semibold mb-2">Top Emojis</h3>
+        <div id="topEmojis" class="text-3xl"></div>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold mb-2">📜 Longest Message</h3>
+        <p id="longestMessage" class="text-sm text-gray-400 truncate"></p>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold mb-2">😅 Shortest Message</h3>
+        <p id="shortestMessage" class="text-sm text-gray-400"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Achievements -->
+  <section class="max-w-6xl mx-auto my-12">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <span>🏅</span> Achievements Unlocked
+    </h2>
+    <div class="glass rounded-2xl p-6">
+      <div id="achievements" class="grid grid-cols-3 md:grid-cols-6 gap-4"></div>
+    </div>
+  </section>
+
+  <!-- Hot Moments -->
+  <section class="max-w-6xl mx-auto my-12">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <span>🔥</span> Hot Moments
+    </h2>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <span>💬</span> Most Discussed
+        </h3>
+        <div id="mostDiscussed" class="space-y-3"></div>
+      </div>
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <span>💣</span> Biggest Changes
+        </h3>
+        <div id="biggestChanges" class="space-y-3"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Leaderboard -->
+  <section class="max-w-6xl mx-auto my-12">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <span>🏆</span> Leaderboard
+    </h2>
+    <div class="glass rounded-2xl p-6">
+      <div id="leaderboard" class="space-y-3"></div>
+    </div>
+  </section>
+
+  <!-- Fun Stats -->
+  <section class="max-w-6xl mx-auto my-12">
+    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+      <span>🎲</span> Fun Stats
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="glass rounded-2xl p-6 text-center card-hover">
+        <div class="text-4xl mb-2">🔥</div>
+        <div class="text-2xl font-bold gradient-text" id="longest-streak">0</div>
+        <div class="text-gray-400 text-sm">Day Streak</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center card-hover">
+        <div class="text-4xl mb-2">☕</div>
+        <div class="text-2xl font-bold gradient-text" id="coffee-cups">0</div>
+        <div class="text-gray-400 text-sm">Coffee Cups*</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center card-hover">
+        <div class="text-4xl mb-2">🌙</div>
+        <div class="text-2xl font-bold gradient-text" id="late-nights">0</div>
+        <div class="text-gray-400 text-sm">Late Night Commits</div>
+      </div>
+      <div class="glass rounded-2xl p-6 text-center card-hover">
+        <div class="text-4xl mb-2">📅</div>
+        <div class="text-2xl font-bold gradient-text" id="busiest-day"></div>
+        <div class="text-gray-400 text-sm">Busiest Day</div>
+      </div>
+    </div>
+    <p class="text-xs text-gray-600 text-center mt-4">* Estimated based on 1 coffee per 5 commits</p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="max-w-6xl mx-auto text-center py-12 text-gray-500">
+    <p>Generated with ❤️ by <span class="gradient-text font-semibold">Repo Recap</span></p>
+    <p class="text-sm mt-2">{{YEAR}} Year in Review</p>
+  </footer>
+
+  <script>
+    // ========================================
+    // RAW DATA - Only these need to be replaced
+    // ========================================
+    const REPO_NAME = "{{REPO_NAME}}";
+    const YEAR = "{{YEAR}}";
+
+    // Raw commit data: [{date, hour, day, name, message}, ...]
+    const rawCommits = {{RAW_COMMITS_JSON}};
+
+    // PR/Issue data from GitHub CLI
+    const prs = {{PRS_JSON}};
+    const issues = {{ISSUES_JSON}};
+
+    // Contributor name aliases: {gitAuthorName: githubUsername, ...}
+    const contributorAliases = {{CONTRIBUTOR_ALIASES_JSON}};
+
+    // ========================================
+    // NAME NORMALIZATION
+    // ========================================
+    // Normalize contributor names using aliases (git author name → GitHub username)
+    function normalizeContributorName(name) {
+      return contributorAliases[name] || name;
+    }
+
+    // Apply normalization to all commits
+    rawCommits.forEach(c => {
+      c.originalName = c.name;
+      c.name = normalizeContributorName(c.name);
+    });
+
+    // ========================================
+    // COMPUTED DATA (auto-calculated from rawCommits)
+    // ========================================
+    // Daily commits for heatmap
+    const dailyCommitsMap = {};
+    rawCommits.forEach(c => {
+      dailyCommitsMap[c.date] = (dailyCommitsMap[c.date] || 0) + 1;
+    });
+    const dailyCommits = Object.entries(dailyCommitsMap).map(([date, count]) => ({date, count}));
+
+    // Hourly distribution
+    const hourlyMap = {};
+    rawCommits.forEach(c => {
+      hourlyMap[c.hour] = (hourlyMap[c.hour] || 0) + 1;
+    });
+    const hourlyData = Object.entries(hourlyMap).map(([hour, count]) => ({hour: parseInt(hour), count}));
+
+    // Weekly distribution
+    const weeklyMap = {};
+    rawCommits.forEach(c => {
+      weeklyMap[c.day] = (weeklyMap[c.day] || 0) + 1;
+    });
+    const weeklyData = Object.entries(weeklyMap).map(([day, count]) => ({day: parseInt(day), count}));
+
+    // Monthly data
+    const monthlyMap = {};
+    for (let m = 1; m <= 12; m++) monthlyMap[m] = {commits: 0, added: 0, removed: 0};
+    rawCommits.forEach(c => {
+      const month = parseInt(c.date.split('-')[1]);
+      monthlyMap[month].commits++;
+    });
+    // Add PR additions/deletions to monthly stats
+    prs.forEach(pr => {
+      if (pr.additions !== undefined) {
+        // Estimate month from PR (assume current month or use createdAt if available)
+        const month = new Date().getMonth() + 1;
+        monthlyMap[month].added += pr.additions || 0;
+        monthlyMap[month].removed += pr.deletions || 0;
+      }
+    });
+    const monthlyData = Object.entries(monthlyMap).map(([month, data]) => ({month: parseInt(month), ...data}));
+
+    // Contributors
+    const contribMap = {};
+    rawCommits.forEach(c => {
+      contribMap[c.name] = (contribMap[c.name] || 0) + 1;
+    });
+    const contributors = Object.entries(contribMap)
+      .map(([name, commits]) => ({name, commits}))
+      .sort((a, b) => b.commits - a.commits);
+
+    // Contributor commits (same as rawCommits, used for achievements)
+    const contributorCommits = rawCommits;
+
+    // Commit messages
+    const commitMessages = rawCommits.map(c => c.message);
+
+    // Stats
+    const totalLinesAdded = prs.reduce((sum, pr) => sum + (pr.additions || 0), 0);
+    const totalLinesRemoved = prs.reduce((sum, pr) => sum + (pr.deletions || 0), 0);
+
+    const stats = {
+      commits: rawCommits.length,
+      prs: prs.length,
+      issues: issues.length,
+      contributors: contributors.length,
+      linesAdded: totalLinesAdded,
+      linesRemoved: totalLinesRemoved
+    };
+
+    // Longest streak calculation
+    const sortedDates = [...new Set(rawCommits.map(c => c.date))].sort();
+    let longestStreak = 0, currentStreak = 1;
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prev = new Date(sortedDates[i-1]);
+      const curr = new Date(sortedDates[i]);
+      const diffDays = (curr - prev) / (1000 * 60 * 60 * 24);
+      if (diffDays === 1) {
+        currentStreak++;
+        longestStreak = Math.max(longestStreak, currentStreak);
+      } else {
+        currentStreak = 1;
+      }
+    }
+    longestStreak = Math.max(longestStreak, currentStreak);
+
+    // ========================================
+    // CONFETTI ON LOAD
+    // ========================================
+    window.addEventListener('load', () => {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    });
+
+    // ========================================
+    // ANIMATE NUMBERS
+    // ========================================
+    function animateNumber(element, target, prefix = '', suffix = '') {
+      let current = 0;
+      const duration = 2000;
+      const step = target / (duration / 16);
+
+      const animate = () => {
+        current += step;
+        if (current < target) {
+          element.textContent = prefix + Math.floor(current).toLocaleString() + suffix;
+          requestAnimationFrame(animate);
+        } else {
+          element.textContent = prefix + target.toLocaleString() + suffix;
+        }
+      };
+      animate();
+    }
+
+    // Animate stats
+    setTimeout(() => {
+      animateNumber(document.getElementById('stat-commits'), stats.commits);
+      animateNumber(document.getElementById('stat-prs'), stats.prs);
+      animateNumber(document.getElementById('stat-issues'), stats.issues);
+      animateNumber(document.getElementById('stat-contributors'), stats.contributors);
+      animateNumber(document.getElementById('stat-added'), stats.linesAdded, '+');
+      animateNumber(document.getElementById('stat-removed'), stats.linesRemoved, '-');
+    }, 500);
+
+    // ========================================
+    // TOP CONTRIBUTORS
+    // ========================================
+    function setupContributors() {
+      contributors.slice(0, 3).forEach((c, i) => {
+        const rank = i + 1;
+        const username = c.name.toLowerCase().replace(/\s+/g, '');
+        document.getElementById(`avatar-${rank}`).src = `https://github.com/${username}.png`;
+        document.getElementById(`avatar-${rank}`).onerror = function() {
+          this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=667eea&color=fff`;
+        };
+        document.getElementById(`name-${rank}`).textContent = c.name;
+      });
+    }
+    setupContributors();
+
+    // ========================================
+    // HEATMAP
+    // ========================================
+    function generateHeatmap() {
+      const container = document.getElementById('heatmap');
+      const commitMap = new Map(dailyCommits.map(d => [d.date, d.count]));
+
+      const startDate = new Date(`${YEAR}-01-01`);
+      const endDate = new Date(`${YEAR}-12-31`);
+
+      // Adjust to start from Sunday
+      const firstDay = startDate.getDay();
+
+      let currentDate = new Date(startDate);
+      currentDate.setDate(currentDate.getDate() - firstDay);
+
+      while (currentDate <= endDate || currentDate.getDay() !== 0) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const count = commitMap.get(dateStr) || 0;
+        const inYear = currentDate >= startDate && currentDate <= endDate;
+
+        let level = 0;
+        if (count > 0) level = 1;
+        if (count >= 3) level = 2;
+        if (count >= 5) level = 3;
+        if (count >= 8) level = 4;
+
+        const cell = document.createElement('div');
+        cell.className = `heatmap-cell ${inYear ? `level-${level}` : 'level-0 opacity-30'}`;
+        cell.dataset.date = dateStr;
+        cell.dataset.count = count;
+
+        cell.addEventListener('mouseenter', (e) => {
+          const tooltip = document.getElementById('tooltip');
+          tooltip.textContent = `${dateStr}: ${count} commits`;
+          tooltip.style.left = e.pageX + 10 + 'px';
+          tooltip.style.top = e.pageY - 30 + 'px';
+          tooltip.style.opacity = 1;
+        });
+        cell.addEventListener('mouseleave', () => {
+          document.getElementById('tooltip').style.opacity = 0;
+        });
+
+        container.appendChild(cell);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+    generateHeatmap();
+
+    // ========================================
+    // HOURLY CHART (Polar Area)
+    // ========================================
+    function createHourlyChart() {
+      const ctx = document.getElementById('hourlyChart').getContext('2d');
+      const hours = Array.from({length: 24}, (_, i) => i);
+      const data = hours.map(h => {
+        const found = hourlyData.find(d => d.hour === h);
+        return found ? found.count : 0;
+      });
+
+      new Chart(ctx, {
+        type: 'polarArea',
+        data: {
+          labels: hours.map(h => `${h}:00`),
+          datasets: [{
+            data: data,
+            backgroundColor: hours.map(h => {
+              if (h >= 0 && h < 5) return 'rgba(139, 92, 246, 0.7)'; // Night
+              if (h >= 5 && h < 9) return 'rgba(251, 191, 36, 0.7)'; // Morning
+              if (h >= 9 && h < 17) return 'rgba(34, 197, 94, 0.7)'; // Day
+              if (h >= 17 && h < 21) return 'rgba(249, 115, 22, 0.7)'; // Evening
+              return 'rgba(139, 92, 246, 0.7)'; // Night
+            })
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            r: {
+              ticks: { display: false },
+              grid: { color: 'rgba(255,255,255,0.1)' }
+            }
+          }
+        }
+      });
+
+      // Calculate percentages
+      const total = data.reduce((a, b) => a + b, 0);
+      const nightOwl = data.slice(0, 5).reduce((a, b) => a + b, 0) / total * 100;
+      const earlyBird = data.slice(5, 9).reduce((a, b) => a + b, 0) / total * 100;
+
+      document.getElementById('night-owl-percent').textContent = nightOwl.toFixed(1) + '%';
+      document.getElementById('early-bird-percent').textContent = earlyBird.toFixed(1) + '%';
+    }
+    createHourlyChart();
+
+    // ========================================
+    // WEEKLY CHART
+    // ========================================
+    function createWeeklyChart() {
+      const ctx = document.getElementById('weeklyChart').getContext('2d');
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const data = [1,2,3,4,5,6,7].map(d => {
+        const found = weeklyData.find(w => w.day === d);
+        return found ? found.count : 0;
+      });
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: days,
+          datasets: [{
+            data: data,
+            backgroundColor: days.map((_, i) =>
+              i >= 5 ? 'rgba(249, 115, 22, 0.7)' : 'rgba(102, 126, 234, 0.7)'
+            ),
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255,255,255,0.1)' },
+              ticks: { color: 'rgba(255,255,255,0.5)' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: 'rgba(255,255,255,0.5)' }
+            }
+          }
+        }
+      });
+
+      const total = data.reduce((a, b) => a + b, 0);
+      const weekend = (data[5] + data[6]) / total * 100;
+      document.getElementById('weekend-percent').textContent = weekend.toFixed(1) + '%';
+    }
+    createWeeklyChart();
+
+    // ========================================
+    // MONTHLY CHART
+    // ========================================
+    function createMonthlyChart() {
+      const ctx = document.getElementById('monthlyChart').getContext('2d');
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+      const commits = monthlyData.map(m => m.commits);
+      const added = monthlyData.map(m => m.added);
+      const removed = monthlyData.map(m => m.removed);
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: months,
+          datasets: [
+            {
+              label: 'Commits',
+              data: commits,
+              borderColor: 'rgba(102, 126, 234, 1)',
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: 'Lines Added',
+              data: added,
+              borderColor: 'rgba(34, 197, 94, 1)',
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+              fill: true,
+              tension: 0.4,
+              hidden: true
+            },
+            {
+              label: 'Lines Removed',
+              data: removed,
+              borderColor: 'rgba(239, 68, 68, 1)',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              fill: true,
+              tension: 0.4,
+              hidden: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: { color: 'rgba(255,255,255,0.7)' }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255,255,255,0.1)' },
+              ticks: { color: 'rgba(255,255,255,0.5)' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: 'rgba(255,255,255,0.5)' }
+            }
+          }
+        }
+      });
+    }
+    createMonthlyChart();
+
+    // ========================================
+    // COMMIT MESSAGE ANALYSIS
+    // ========================================
+    function analyzeCommitMessages() {
+      // Word frequency
+      const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'it', 'this', 'that', 'are', 'was', 'be', 'has', 'had', 'have', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought', 'used', 'up', 'into', 'from', 'as']);
+      const wordCounts = {};
+
+      commitMessages.forEach(msg => {
+        const words = msg.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+        words.forEach(word => {
+          if (word.length > 2 && !stopWords.has(word)) {
+            wordCounts[word] = (wordCounts[word] || 0) + 1;
+          }
+        });
+      });
+
+      const sortedWords = Object.entries(wordCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30);
+
+      const maxCount = sortedWords[0]?.[1] || 1;
+      const wordCloud = document.getElementById('wordCloud');
+
+      sortedWords.forEach(([word, count]) => {
+        const span = document.createElement('span');
+        const size = 0.7 + (count / maxCount) * 1.3;
+        span.style.fontSize = `${size}rem`;
+        span.textContent = word;
+        wordCloud.appendChild(span);
+      });
+
+      // Conventional commits
+      const conventional = { feat: 0, fix: 0, docs: 0, style: 0, refactor: 0, test: 0, chore: 0, other: 0 };
+      commitMessages.forEach(msg => {
+        const lower = msg.toLowerCase();
+        if (lower.startsWith('feat')) conventional.feat++;
+        else if (lower.startsWith('fix')) conventional.fix++;
+        else if (lower.startsWith('docs')) conventional.docs++;
+        else if (lower.startsWith('style')) conventional.style++;
+        else if (lower.startsWith('refactor')) conventional.refactor++;
+        else if (lower.startsWith('test')) conventional.test++;
+        else if (lower.startsWith('chore')) conventional.chore++;
+        else conventional.other++;
+      });
+
+      const ctx = document.getElementById('conventionalChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(conventional),
+          datasets: [{
+            data: Object.values(conventional),
+            backgroundColor: [
+              'rgba(34, 197, 94, 0.8)',
+              'rgba(239, 68, 68, 0.8)',
+              'rgba(59, 130, 246, 0.8)',
+              'rgba(168, 85, 247, 0.8)',
+              'rgba(249, 115, 22, 0.8)',
+              'rgba(251, 191, 36, 0.8)',
+              'rgba(107, 114, 128, 0.8)',
+              'rgba(75, 85, 99, 0.8)'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: 'rgba(255,255,255,0.7)' }
+            }
+          }
+        }
+      });
+
+      // Emoji ranking
+      const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+      const emojiCounts = {};
+      commitMessages.forEach(msg => {
+        const emojis = msg.match(emojiRegex) || [];
+        emojis.forEach(e => {
+          emojiCounts[e] = (emojiCounts[e] || 0) + 1;
+        });
+      });
+
+      const topEmojis = Object.entries(emojiCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([emoji, count]) => `${emoji}(${count})`)
+        .join(' ');
+
+      document.getElementById('topEmojis').textContent = topEmojis || 'No emojis used';
+
+      // Longest/shortest
+      const sorted = [...commitMessages].sort((a, b) => b.length - a.length);
+      document.getElementById('longestMessage').textContent = sorted[0] || '-';
+      document.getElementById('shortestMessage').textContent = sorted[sorted.length - 1] || '-';
+    }
+    analyzeCommitMessages();
+
+    // ========================================
+    // ACHIEVEMENTS (per-contributor)
+    // ========================================
+    function setupAchievements() {
+      // Build per-contributor stats from contributorCommits
+      const contribStats = {};
+      contributors.forEach(c => {
+        contribStats[c.name] = {
+          name: c.name,
+          commits: c.commits,
+          nightCommits: 0,
+          morningCommits: 0,
+          weekendCommits: 0,
+          commitTypes: { feat: 0, fix: 0, docs: 0, refactor: 0, chore: 0, test: 0 }
+        };
+      });
+
+      // Process contributorCommits to calculate per-contributor stats
+      contributorCommits.forEach(cc => {
+        const stat = contribStats[cc.name];
+        if (!stat) return;
+
+        const hour = parseInt(cc.hour);
+        const day = parseInt(cc.day);
+        const msg = (cc.message || '').toLowerCase();
+
+        // Night commits (0-4am)
+        if (hour >= 0 && hour < 5) stat.nightCommits++;
+        // Morning commits (5-8am)
+        if (hour >= 5 && hour < 9) stat.morningCommits++;
+        // Weekend commits (day 6=Sat, 7=Sun)
+        if (day >= 6) stat.weekendCommits++;
+
+        // Commit types
+        if (msg.startsWith('feat')) stat.commitTypes.feat++;
+        else if (msg.startsWith('fix')) stat.commitTypes.fix++;
+        else if (msg.startsWith('docs')) stat.commitTypes.docs++;
+        else if (msg.startsWith('refactor')) stat.commitTypes.refactor++;
+        else if (msg.startsWith('chore')) stat.commitTypes.chore++;
+        else if (msg.startsWith('test')) stat.commitTypes.test++;
+      });
+
+      // Helper to get GitHub avatar URL
+      function getAvatarUrl(name) {
+        const username = name.toLowerCase().replace(/\s+/g, '');
+        return `https://github.com/${username}.png`;
+      }
+
+      function getFallbackAvatar(name) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=667eea&color=fff&size=48`;
+      }
+
+      // Define achievements with per-contributor check functions
+      const achievementDefs = [
+        { icon: '🦉', name: 'Night Owl', desc: '10+ night commits', check: s => s.nightCommits >= 10 },
+        { icon: '🌅', name: 'Early Bird', desc: '10+ morning commits', check: s => s.morningCommits >= 10 },
+        { icon: '📅', name: 'Weekend Warrior', desc: '10+ weekend commits', check: s => s.weekendCommits >= 10 },
+        { icon: '⭐', name: 'Star', desc: '20+ commits', check: s => s.commits >= 20 },
+        { icon: '🚀', name: 'Rocket', desc: '50+ commits', check: s => s.commits >= 50 },
+        { icon: '📚', name: 'Documenter', desc: '5+ doc commits', check: s => s.commitTypes.docs >= 5 },
+        { icon: '🧹', name: 'Refactorer', desc: '5+ refactors', check: s => s.commitTypes.refactor >= 5 },
+        { icon: '🔧', name: 'Fixer', desc: '5+ fixes', check: s => s.commitTypes.fix >= 5 },
+        { icon: '✨', name: 'Feature King', desc: '5+ features', check: s => s.commitTypes.feat >= 5 },
+        { icon: '🎭', name: 'Versatile', desc: '3+ commit types', check: s => Object.values(s.commitTypes).filter(v => v > 0).length >= 3 },
+        { icon: '💯', name: 'Centurion', desc: '100+ commits', check: s => s.commits >= 100 },
+        { icon: '🔥', name: 'On Fire', desc: 'Most commits', check: (s, all) => s.commits === Math.max(...all.map(a => a.commits)) }
+      ];
+
+      const allStats = Object.values(contribStats);
+
+      const container = document.getElementById('achievements');
+      achievementDefs.forEach(aDef => {
+        // Find contributors who earned this achievement
+        const earners = allStats.filter(s => aDef.check(s, allStats));
+        const hasEarners = earners.length > 0;
+
+        const div = document.createElement('div');
+        div.className = `achievement text-center p-4 rounded-xl glass ${hasEarners ? '' : 'locked'}`;
+
+        // Build avatar HTML for earners
+        let avatarsHtml = '';
+        if (hasEarners) {
+          avatarsHtml = '<div class="achievement-avatars">';
+          earners.slice(0, 5).forEach(e => {
+            avatarsHtml += `<img src="${getAvatarUrl(e.name)}"
+                                 onerror="this.src='${getFallbackAvatar(e.name)}'"
+                                 alt="${e.name}"
+                                 title="${e.name}">`;
+          });
+          if (earners.length > 5) {
+            avatarsHtml += `<span class="text-xs text-gray-400">+${earners.length - 5}</span>`;
+          }
+          avatarsHtml += '</div>';
+        }
+
+        div.innerHTML = `
+          <div class="text-3xl mb-2">${aDef.icon}</div>
+          <div class="font-semibold text-sm">${aDef.name}</div>
+          <div class="text-xs text-gray-500">${aDef.desc}</div>
+          ${avatarsHtml}
+        `;
+        container.appendChild(div);
+      });
+    }
+    setupAchievements();
+
+    // ========================================
+    // HOT MOMENTS
+    // ========================================
+    function setupHotMoments() {
+      // Most discussed
+      const discussed = [...prs, ...issues]
+        .sort((a, b) => (b.comments || 0) - (a.comments || 0))
+        .slice(0, 3);
+
+      const discussedContainer = document.getElementById('mostDiscussed');
+      if (discussed.length === 0) {
+        discussedContainer.innerHTML = '<p class="text-gray-500">No PR/Issue data available</p>';
+      } else {
+        discussed.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'flex items-center gap-3 p-3 rounded-lg bg-white/5';
+          div.innerHTML = `
+            <div class="text-2xl">💬</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium truncate">#${item.number} ${item.title}</div>
+              <div class="text-sm text-gray-500">${item.comments || 0} comments</div>
+            </div>
+          `;
+          discussedContainer.appendChild(div);
+        });
+      }
+
+      // Biggest changes
+      const biggest = prs
+        .filter(p => p.additions !== undefined)
+        .sort((a, b) => (b.additions + b.deletions) - (a.additions + a.deletions))
+        .slice(0, 3);
+
+      const biggestContainer = document.getElementById('biggestChanges');
+      if (biggest.length === 0) {
+        biggestContainer.innerHTML = '<p class="text-gray-500">No PR data available</p>';
+      } else {
+        biggest.forEach(pr => {
+          const div = document.createElement('div');
+          div.className = 'flex items-center gap-3 p-3 rounded-lg bg-white/5';
+          div.innerHTML = `
+            <div class="text-2xl">📝</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium truncate">#${pr.number} ${pr.title}</div>
+              <div class="text-sm">
+                <span class="text-green-400">+${pr.additions}</span>
+                <span class="text-red-400">-${pr.deletions}</span>
+                <span class="text-gray-500">(${pr.changedFiles} files)</span>
+              </div>
+            </div>
+          `;
+          biggestContainer.appendChild(div);
+        });
+      }
+    }
+    setupHotMoments();
+
+    // ========================================
+    // LEADERBOARD
+    // ========================================
+    function setupLeaderboard() {
+      const container = document.getElementById('leaderboard');
+      const maxCommits = contributors[0]?.commits || 1;
+
+      contributors.slice(0, 10).forEach((c, i) => {
+        const username = c.name.toLowerCase().replace(/\s+/g, '');
+        const percentage = (c.commits / maxCommits) * 100;
+        const rankClass = i === 0 ? 'rank-gold' : i === 1 ? 'rank-silver' : i === 2 ? 'rank-bronze' : '';
+
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-4 p-3 rounded-lg bg-white/5';
+        div.innerHTML = `
+          <div class="text-xl font-bold w-8 ${rankClass}">#${i + 1}</div>
+          <img src="https://github.com/${username}.png"
+               onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=667eea&color=fff'"
+               alt="${c.name}"
+               class="w-10 h-10 rounded-full">
+          <div class="flex-1">
+            <div class="font-medium">${c.name}</div>
+            <div class="h-2 bg-white/10 rounded-full mt-1">
+              <div class="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500"
+                   style="width: ${percentage}%"></div>
+            </div>
+          </div>
+          <div class="font-bold gradient-text">${c.commits}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+    setupLeaderboard();
+
+    // ========================================
+    // FUN STATS
+    // ========================================
+    function setupFunStats() {
+      document.getElementById('longest-streak').textContent = longestStreak;
+      document.getElementById('coffee-cups').textContent = Math.floor(stats.commits / 5);
+
+      const lateNights = hourlyData
+        .filter(h => h.hour >= 0 && h.hour < 5)
+        .reduce((a, b) => a + b.count, 0);
+      document.getElementById('late-nights').textContent = lateNights;
+
+      // Find busiest day
+      const busiest = dailyCommits.sort((a, b) => b.count - a.count)[0];
+      if (busiest) {
+        const date = new Date(busiest.date);
+        document.getElementById('busiest-day').textContent =
+          `${date.getMonth() + 1}/${date.getDate()}`;
+      }
+    }
+    setupFunStats();
+  </script>
+</body>
+</html>

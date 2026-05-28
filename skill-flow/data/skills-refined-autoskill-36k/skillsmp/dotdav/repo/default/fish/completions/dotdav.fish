@@ -1,0 +1,1 @@
+/home/izumi/Documents/Projects/dotdav/completions.fish

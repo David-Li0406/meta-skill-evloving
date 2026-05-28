@@ -1,0 +1,47 @@
+# KGX merge configuration for combining normalized KGX sheets plus KGX exports
+# from strains/chemicals CURIE workflows into a single merged TSV pair.
+#
+# Outputs:
+# - output/kgx/merged/merged_nodes.tsv
+# - output/kgx/merged/merged_edges.tsv
+#
+# KGX 2.3.2 requires merged_graph: schema (not sources:/destinations:)
+
+configuration:
+  output_directory: ../output/kgx/merged
+
+merged_graph:
+  name: cmm_merged
+  source:
+    normalized_medium:
+      input:
+        format: tsv
+        filename:
+          - data/private/normalized-kgx-downloads/medium_kgx_nodes.tsv
+          - data/private/normalized-kgx-downloads/medium_kgx_edges.tsv
+
+    normalized_growth:
+      input:
+        format: tsv
+        filename:
+          - data/private/normalized-kgx-downloads/growth_kgx_nodes.tsv
+          - data/private/normalized-kgx-downloads/growth_kgx_edges.tsv
+
+    strains_from_curies:
+      input:
+        format: tsv
+        filename:
+          - output/kgx/strains_from_curies/strains_nodes.tsv
+          - output/kgx/strains_from_curies/strains_edges.tsv
+
+    chemicals_from_curies:
+      input:
+        format: tsv
+        filename:
+          - output/kgx/chemicals_from_curies/chemicals_nodes.tsv
+          - output/kgx/chemicals_from_curies/chemicals_edges.tsv
+
+  destination:
+    merged_tsv:
+      format: tsv
+      filename: merged

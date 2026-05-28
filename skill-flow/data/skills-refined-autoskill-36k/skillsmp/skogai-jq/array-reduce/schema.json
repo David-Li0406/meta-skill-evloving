@@ -1,0 +1,75 @@
+{
+  "name": "array-reduce",
+  "description": "Reduce array to a single value using specified operation",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "JSON object containing an array at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to array field (e.g., 'items' or 'data.scores')"
+    },
+    "operation": {
+      "type": "string",
+      "required": true,
+      "description": "Reduction operation: sum, product, concat, min, max, count"
+    },
+    "field": {
+      "type": "string",
+      "required": false,
+      "description": "Optional field to extract from array of objects before reducing"
+    }
+  },
+  "output": {
+    "type": ["number", "string", "null"],
+    "description": "Single reduced value, or null if path doesn't exist or value is not an array"
+  },
+  "examples": [
+    {
+      "description": "Sum array of numbers",
+      "input": {"nums": [1, 2, 3, 4, 5]},
+      "args": {"path": "nums", "operation": "sum"},
+      "output": 15
+    },
+    {
+      "description": "Product of numbers",
+      "input": {"nums": [2, 3, 4]},
+      "args": {"path": "nums", "operation": "product"},
+      "output": 24
+    },
+    {
+      "description": "Concatenate strings",
+      "input": {"words": ["hello", " ", "world"]},
+      "args": {"path": "words", "operation": "concat"},
+      "output": "hello world"
+    },
+    {
+      "description": "Find minimum",
+      "input": {"nums": [5, 2, 8, 1, 9]},
+      "args": {"path": "nums", "operation": "min"},
+      "output": 1
+    },
+    {
+      "description": "Find maximum",
+      "input": {"nums": [5, 2, 8, 1, 9]},
+      "args": {"path": "nums", "operation": "max"},
+      "output": 9
+    },
+    {
+      "description": "Count elements",
+      "input": {"items": ["a", "b", "c"]},
+      "args": {"path": "items", "operation": "count"},
+      "output": 3
+    },
+    {
+      "description": "Sum field from array of objects",
+      "input": {"orders": [{"total": 10}, {"total": 20}, {"total": 30}]},
+      "args": {"path": "orders", "operation": "sum", "field": "total"},
+      "output": 60
+    }
+  ],
+  "tags": ["array", "reduce", "aggregate", "sum", "min", "max"]
+}

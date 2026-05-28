@@ -1,0 +1,71 @@
+{
+  "name": "to-object",
+  "description": "Convert value to object (pass through objects, convert arrays to objects, other types to empty object)",
+  "version": "1.0.0",
+  "input": {
+    "type": "object",
+    "description": "Object containing any value at the specified path"
+  },
+  "args": {
+    "path": {
+      "type": "string",
+      "required": true,
+      "description": "Dot-separated path to value to convert to object (e.g., 'data' or 'nested.items')"
+    }
+  },
+  "output": {
+    "type": "object",
+    "description": "Object with value at path converted to object (objects unchanged, arrays converted, other types to empty object)"
+  },
+  "examples": [
+    {
+      "description": "Pass through existing object",
+      "input": {"user": {"name": "skogix", "age": 30}},
+      "args": {"path": "user"},
+      "output": {"user": {"name": "skogix", "age": 30}}
+    },
+    {
+      "description": "Convert array of [key, value] pairs to object",
+      "input": {"data": [["name", "skogix"], ["age", 30]]},
+      "args": {"path": "data"},
+      "output": {"data": {"name": "skogix", "age": 30}}
+    },
+    {
+      "description": "Convert array of {key, value} objects to object",
+      "input": {"data": [{"key": "name", "value": "skogix"}, {"key": "age", "value": 30}]},
+      "args": {"path": "data"},
+      "output": {"data": {"name": "skogix", "age": 30}}
+    },
+    {
+      "description": "Convert string to empty object",
+      "input": {"name": "skogix"},
+      "args": {"path": "name"},
+      "output": {"name": {}}
+    },
+    {
+      "description": "Convert null to empty object",
+      "input": {"value": null},
+      "args": {"path": "value"},
+      "output": {"value": {}}
+    },
+    {
+      "description": "Convert number to empty object",
+      "input": {"count": 42},
+      "args": {"path": "count"},
+      "output": {"count": {}}
+    },
+    {
+      "description": "Convert boolean to empty object",
+      "input": {"active": true},
+      "args": {"path": "active"},
+      "output": {"active": {}}
+    },
+    {
+      "description": "Convert empty array to empty object",
+      "input": {"items": []},
+      "args": {"path": "items"},
+      "output": {"items": {}}
+    }
+  ],
+  "tags": ["object", "conversion", "transform", "normalize"]
+}

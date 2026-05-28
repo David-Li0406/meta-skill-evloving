@@ -1,0 +1,90 @@
+name: Flutter Build
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  build:
+    name: Build iOS
+    runs-on: macos-latest # This provides the latest Xcode 26 environment
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Deep Clean and Force Pods
+        run: |
+          flutter clean
+          flutter pub get
+          cd ios
+          # Ensure we are starting from zero
+          rm -rf Pods
+          rm -rf Podfile.lock
+          rm -f .bundle
+          pod cache clean --all
+          pod repo update
+          pod install
+          cd ..
+
+      - name: Build iOS (.app)
+        # We add the target override at the end of the command here:
+        run: flutter build ios --release --no-codesign --extra-gen-snapshot-options="--no-precompiled-ios" IPHONEOS_DEPLOYMENT_TARGET=26.0
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: build/ios/iphoneos/*.app
+
+# old settings
+
+# name: Flutter Build
+
+# on:
+#   push:
+#     branches: [ main, master ]
+#   pull_request:
+#     branches: [ main, master ]
+
+# jobs:
+#   build:
+#     name: Build iOS
+#     runs-on: macos-latest
+    
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Set up Flutter
+#         uses: subosito/flutter-action@v2
+#         with:
+#           channel: 'stable'
+#           cache: true
+
+#       - name: Install dependencies
+#         run: flutter pub get
+
+#       - name: Install Pods
+#         run: |
+#           cd ios
+#           pod install
+#           cd ..
+
+#       - name: Build iOS (.app)
+#         run: flutter build ios --release --no-codesign
+
+#       # Optional: Upload build artifacts
+#       - name: Upload Build Artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: ios-build
+#           path: build/ios/iphoneos/*.app

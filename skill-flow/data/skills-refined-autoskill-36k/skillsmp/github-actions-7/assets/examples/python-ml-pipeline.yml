@@ -1,0 +1,126 @@
+# Python ML Pipeline Example
+# Complete CI/CD for machine learning projects
+# Features: Training, testing, deployment, scheduled runs
+
+name: ML Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'model/**'
+      - 'training/**'
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly training
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Data validation
+  validate-data:
+    name: Validate Data
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      - run: pip install -r requirements-dev.txt
+      - run: python scripts/validate_data.py
+
+  # Train model
+  train:
+    name: Train Model
+    runs-on: ubuntu-latest
+    needs: validate-data
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      - run: pip install -r requirements-training.txt
+      - name: Download training data
+        run: |
+          aws s3 sync s3://training-data /data
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Train model
+        run: python scripts/train.py --output /model
+      - name: Upload model artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-artifacts
+          path: /model
+
+  # Evaluate model
+  evaluate:
+    name: Evaluate Model
+    runs-on: ubuntu-latest
+    needs: train
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      - run: pip install -r requirements-dev.txt
+      - name: Download model
+        uses: actions/download-artifact@v4
+        with:
+          name: model-artifacts
+          path: /model
+      - name: Evaluate model
+        run: python scripts/evaluate.py --model /model
+      - name: Save metrics
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'custom'
+          output-file-path: metrics.json
+
+  # Deploy model
+  deploy:
+    name: Deploy Model
+    runs-on: ubuntu-latest
+    needs: [train, evaluate]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://api.example.com
+    steps:
+      - name: Download model
+        uses: actions/download-artifact@v4
+        with:
+          name: model-artifacts
+          path: /model
+      - name: Deploy to S3
+        run: |
+          aws s3 sync /model s3://models/${{ github.run_number }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Update API endpoint
+        run: |
+          curl -X POST https://api.example.com/model-reload \
+            -H "Authorization: Bearer ${{ secrets.API_TOKEN }}" \
+            -d '{"model":"s3://models/${{ github.run_number }}"}'
+
+  # Monitor model performance
+  monitor:
+    name: Monitor Performance
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Monitor predictions
+        run: |
+          # Check model performance in production
+          python scripts/monitor.py --threshold 0.8
+        env:
+          METRICS_API_KEY: ${{ secrets.METRICS_API_KEY }}

@@ -1,0 +1,87 @@
+{
+  "$schema": "../symbols-config-schema.json",
+  "projectName": "SkillMeat",
+  "symbolsDir": "{{SYMBOLS_DIR}}",
+  "domains": {
+    "api": {
+      "file": "symbols-api.json",
+      "description": "Main FastAPI application - All backend symbols including routers, services, repositories, schemas. Use apiLayers for targeted layer access.",
+      "testFile": "symbols-api-tests.json",
+      "enabled": true
+    },
+    "shared": {
+      "file": "symbols-shared.json",
+      "description": "Shared utilities and helpers - Common functions, constants, and utilities used across the application.",
+      "enabled": true
+    }
+  },
+  "apiLayers": {
+    "routers": {
+      "file": "symbols-api-routers.json",
+      "description": "API route handlers - FastAPI routers, endpoints, dependency injection, request/response handling",
+      "enabled": true
+    },
+    "services": {
+      "file": "symbols-api-services.json",
+      "description": "Business logic services - Domain operations, orchestration, validation, business rules",
+      "enabled": true
+    },
+    "repositories": {
+      "file": "symbols-api-repositories.json",
+      "description": "Data access layer - SQLAlchemy repositories, database queries, transaction management, RLS",
+      "enabled": true
+    },
+    "schemas": {
+      "file": "symbols-api-schemas.json",
+      "description": "Pydantic schemas - Request/response models, DTOs, validation schemas",
+      "enabled": true
+    },
+    "models": {
+      "file": "symbols-api-models.json",
+      "description": "SQLAlchemy models - ORM models, database table definitions, relationships",
+      "enabled": true
+    },
+    "cores": {
+      "file": "symbols-api-cores.json",
+      "description": "Core infrastructure - Auth, middleware, dependencies, error handling, observability",
+      "enabled": true
+    }
+  },
+  "extraction": {
+    "python": {
+      "directories": [
+        "app",
+        "src",
+        "api"
+      ],
+      "extensions": [".py"],
+      "excludes": [
+        "__pycache__",
+        "*.pyc",
+        ".pytest_cache",
+        ".venv",
+        "venv",
+        ".tox",
+        "*.egg-info",
+        "build",
+        "dist",
+        ".mypy_cache",
+        ".ruff_cache",
+        "alembic/versions"
+      ],
+      "excludeTests": true,
+      "excludePrivate": false
+    },
+    "typescript": {
+      "directories": ["frontend"],
+      "extensions": [".ts", ".tsx"],
+      "excludes": ["node_modules/", "dist/", "build/"],
+      "excludeTests": true,
+      "excludePrivate": false
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "description": "Template for Python FastAPI backend with SQLAlchemy ORM. Common patterns: Pydantic schemas, dependency injection, async endpoints, Alembic migrations. Adjust directories in extraction.python to match your project structure (app/, src/, api/, etc.)."
+  }
+}

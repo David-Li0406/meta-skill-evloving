@@ -1,0 +1,54 @@
+{
+  "name": "{{PROJECT_NAME}} Devspace",
+  "image": "mcr.microsoft.com/vscode/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": "false"
+    },
+    "ghcr.io/duplocloud/devcontainers/duploctl:latest": {},
+    "ghcr.io/duplocloud/devcontainers/terraform:1": {},
+    "ghcr.io/duplocloud/devcontainers/aws-cli:latest": {
+      "jit": true,
+      "jitAdmin": true
+    },
+    "ghcr.io/duplocloud/devcontainers/kubernetes:1": {
+      "jit": true,
+      "jitAdmin": true
+    },
+    "ghcr.io/duplocloud/devcontainers/git:1": {
+      "userName": "${localEnv:GIT_USERNAME}",
+      "userEmail": "${localEnv:GIT_EMAIL}",
+      "signingKey": "${localEnv:GIT_SIGNING_KEY}"
+    }
+  },
+  "runArgs": [
+    "--env-file=${localWorkspaceFolder}/.env"
+  ],
+  "initializeCommand": ".devcontainer/init.sh",
+  "postStartCommand": ".devcontainer/post-start.sh",
+  "containerEnv": {
+    "WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
+    "DUPLO_CONFIG": "${containerWorkspaceFolder}/config/duplo.yaml",
+    "XDG_CONFIG_HOME": "${containerWorkspaceFolder}/config",
+    "AWS_CONFIG_FILE": "${containerWorkspaceFolder}/config/aws",
+    "AWS_DEFAULT_REGION": "us-east-1",
+    "AWS_REGION": "us-east-1",
+    "KUBECONFIG": "${containerWorkspaceFolder}/config/kubeconfig.yaml",
+    "EDITOR": "code --wait"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hashicorp.terraform",
+        "amazonwebservices.aws-toolkit-vscode",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
+      ],
+      "settings": {
+        "[terraform]": {
+          "editor.defaultFormatter": "hashicorp.terraform",
+          "editor.formatOnSave": true
+        }
+      }
+    }
+  }
+}

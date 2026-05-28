@@ -1,0 +1,77 @@
+# Skill Manifest - Progressive Disclosure Index
+# Token estimation: 1 token ≈ 0.75 words (or ~4 characters)
+# Content multipliers: prose 1.0x, code 1.2x, tables 1.3x, YAML examples 1.3x
+
+skill: orchestration
+version: "1.0"
+specification: agentskills.io/v1
+
+progressive_disclosure:
+  # ---------------------------------------------------------------------------
+  # LEVEL 1: METADATA (~120 tokens)
+  # Range: 80-150 | We use: 120
+  # Rationale: name (~10) + description (~100) + YAML overhead (~10)
+  # ---------------------------------------------------------------------------
+  metadata:
+    estimated_tokens: 120
+    fields: [name, description]
+
+  # ---------------------------------------------------------------------------
+  # LEVEL 2: INSTRUCTIONS (~1600 tokens)
+  # Range: 1000-2500 | We use: 1600
+  # Rationale: Execution phases overview, minimal plan example in body
+  # ---------------------------------------------------------------------------
+  instructions:
+    estimated_tokens: 1600
+    file: SKILL.md
+
+  resources:
+    # -------------------------------------------------------------------------
+    # PLAN-EXAMPLES.md (~2200 tokens)
+    # Range: 1800-2500 | We use: 2200
+    # Rationale:
+    #   - Multiple complete YAML plan examples
+    #   - YAML tokenizes at ~1.3x due to indentation and structure
+    #   - ~200 lines of mostly structured YAML
+    #   - Highest token count due to example density
+    # -------------------------------------------------------------------------
+    - path: references/PLAN-EXAMPLES.md
+      purpose: Complete execution plan examples for common workflows
+      estimated_tokens: 2200
+      load_when:
+        - Creating a new execution plan
+        - User asks for plan examples
+        - Designing multi-step workflows
+      keywords: [plan, example, workflow, feature, sprint, parallel]
+
+    # -------------------------------------------------------------------------
+    # ROLLBACK-STRATEGIES.md (~1800 tokens)
+    # Range: 1500-2000 | We use: 1800
+    # Rationale:
+    #   - Mixed YAML and prose
+    #   - Tables for rollback mappings
+    #   - ~150 lines with moderate examples
+    # -------------------------------------------------------------------------
+    - path: references/ROLLBACK-STRATEGIES.md
+      purpose: Rollback patterns, state tracking, and error recovery
+      estimated_tokens: 1800
+      load_when:
+        - Defining rollback actions
+        - Execution failure occurs
+        - User asks about error recovery
+      keywords: [rollback, revert, undo, failure, recovery, state]
+
+loading_strategy:
+  recommendation: |
+    1. Start with SKILL.md for orchestration basics
+    2. Load PLAN-EXAMPLES.md when creating new plans
+    3. Load ROLLBACK-STRATEGIES.md when handling failures
+
+  fallback: |
+    SKILL.md contains plan structure and execution phases.
+    Reference files provide detailed examples and patterns.
+
+token_summary:
+  metadata_only: 120
+  with_instructions: 1720
+  with_all_resources: 5720

@@ -1,0 +1,218 @@
+{
+  "connector": "Office 365 Outlook",
+  "id": "shared_office365",
+  "docsUrl": "https://learn.microsoft.com/en-us/connectors/office365/",
+  "throttling": { "calls": 300, "seconds": 60 },
+  "triggers": {
+    "OnNewEmailV3": {
+      "name": "When a new email arrives (V3)",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "path": "/v3/Mail/OnNewEmail",
+        "queries": {
+          "folderPath": "Inbox",
+          "importance": "Any",
+          "fetchOnlyWithAttachment": false,
+          "includeAttachments": false
+        }
+      },
+      "parameters": {
+        "folderPath": { "type": "string", "default": "Inbox" },
+        "to": { "type": "string", "description": "Semicolon-separated email addresses" },
+        "from": { "type": "string" },
+        "importance": { "type": "string", "enum": ["Any", "Low", "Normal", "High"] },
+        "fetchOnlyWithAttachment": { "type": "boolean", "default": false },
+        "includeAttachments": { "type": "boolean", "default": false },
+        "subjectFilter": { "type": "string" }
+      }
+    },
+    "OnEmailFlaggedV4": {
+      "name": "When an email is flagged (V4)",
+      "type": "ApiConnectionNotification",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "path": "/v4/Mail/OnFlaggedEmail"
+      }
+    }
+  },
+  "actions": {
+    "SendEmailV2": {
+      "name": "Send an email (V2)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/Mail",
+        "body": {
+          "To": "required|string|Semicolon-separated emails",
+          "Subject": "required|string",
+          "Body": "required|string|HTML supported",
+          "Cc": "optional|string",
+          "Bcc": "optional|string",
+          "From": "optional|string|Requires Send As permission",
+          "Importance": "optional|string|Low,Normal,High",
+          "IsHtml": "optional|boolean|default:true",
+          "Attachments": "optional|array|{Name,ContentBytes}"
+        }
+      }
+    },
+    "GetEmailV2": {
+      "name": "Get email (V2)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "get",
+        "path": "/v2/Mail/@{encodeURIComponent(messageId)}",
+        "queries": { "includeAttachments": "boolean" }
+      },
+      "parameters": {
+        "messageId": { "type": "string", "required": true }
+      }
+    },
+    "GetEmailsV3": {
+      "name": "Get emails (V3)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "get",
+        "path": "/v3/Mail",
+        "queries": {
+          "folderPath": "string|default:Inbox",
+          "$top": "integer|default:10",
+          "fetchOnlyUnread": "boolean",
+          "searchQuery": "string",
+          "includeAttachments": "boolean"
+        }
+      }
+    },
+    "ReplyEmailV3": {
+      "name": "Reply to email (V3)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "post",
+        "path": "/v3/Mail/ReplyTo/@{encodeURIComponent(messageId)}",
+        "body": {
+          "Comment": "required|string",
+          "ReplyAll": "optional|boolean",
+          "Attachments": "optional|array"
+        }
+      }
+    },
+    "ForwardEmailV2": {
+      "name": "Forward an email (V2)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/Mail/Forward/@{encodeURIComponent(messageId)}",
+        "body": {
+          "To": "required|string",
+          "Comment": "optional|string"
+        }
+      }
+    },
+    "V4CalendarPostItem": {
+      "name": "Create event (V4)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "post",
+        "path": "/v4/datasets/calendars/tables/@{encodeURIComponent(calendarId)}/items",
+        "body": {
+          "subject": "required|string",
+          "start": "required|datetime|2024-01-15T09:00:00",
+          "end": "required|datetime",
+          "timeZone": "required|string|Pacific Standard Time",
+          "body": "optional|string",
+          "requiredAttendees": "optional|string|Semicolon-separated",
+          "optionalAttendees": "optional|string",
+          "importance": "optional|string|low,normal,high",
+          "isAllDay": "optional|boolean",
+          "reminderMinutesBeforeStart": "optional|integer",
+          "showAs": "optional|string|free,tentative,busy,oof,workingElsewhere",
+          "recurrence": "optional|string|none,daily,weekly,monthly,yearly"
+        }
+      }
+    },
+    "V4CalendarGetItems": {
+      "name": "Get events (V4)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "get",
+        "path": "/v4/datasets/calendars/tables/@{encodeURIComponent(calendarId)}/items",
+        "queries": {
+          "$filter": "string|OData filter",
+          "$orderby": "string",
+          "$top": "integer|max:256",
+          "$skip": "integer"
+        }
+      }
+    },
+    "MarkAsReadUnreadV3": {
+      "name": "Mark as read or unread (V3)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "post",
+        "path": "/v3/Mail/MarkAsRead/@{encodeURIComponent(messageId)}",
+        "body": { "IsRead": "required|boolean" }
+      }
+    },
+    "DeleteEmailV2": {
+      "name": "Delete email (V2)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "delete",
+        "path": "/v2/Mail/@{encodeURIComponent(messageId)}"
+      }
+    },
+    "MoveEmailV2": {
+      "name": "Move email (V2)",
+      "type": "ApiConnection",
+      "inputs": {
+        "host": { "connection": { "name": "@parameters('$connections')['shared_office365']['connectionId']" } },
+        "method": "post",
+        "path": "/v2/Mail/Move/@{encodeURIComponent(messageId)}",
+        "body": { "DestinationFolder": "required|string" }
+      }
+    }
+  },
+  "connectionReference": {
+    "shared_office365": {
+      "connectionName": "",
+      "source": "Invoker",
+      "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+      "tier": "NotSpecified"
+    }
+  },
+  "outputSchemas": {
+    "email": {
+      "id": "string",
+      "subject": "string",
+      "bodyPreview": "string",
+      "body": "string",
+      "from": "string",
+      "to": "string",
+      "cc": "string",
+      "importance": "string",
+      "isRead": "boolean",
+      "hasAttachments": "boolean",
+      "receivedDateTime": "datetime",
+      "attachments": [{ "id": "string", "name": "string", "contentBytes": "base64" }]
+    },
+    "calendarEvent": {
+      "id": "string",
+      "subject": "string",
+      "start": "datetime",
+      "end": "datetime",
+      "timeZone": "string",
+      "organizer": "string",
+      "attendees": "array",
+      "isAllDay": "boolean"
+    }
+  }
+}

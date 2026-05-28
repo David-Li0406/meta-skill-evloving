@@ -1,0 +1,109 @@
+# syntax=docker/dockerfile:1
+
+# Global ARG for runtime image selection
+# - latest: Production (no shell, minimal, most secure)
+# - latest-dev: Development/debugging (includes shell and basic tools)
+ARG RUNTIME_TAG=latest
+
+###############################
+# Builder stage
+###############################
+FROM docker.io/rust:slim AS builder
+
+# Install tini for signal handling
+RUN <<EOT
+apt update -qy
+DEBIAN_FRONTEND=noninteractive \
+  apt install -qyy --no-install-recommends \
+  tini \
+  ca-certificates
+rm -rf /var/lib/apt/lists/*
+EOT
+
+WORKDIR /app
+
+###############################
+# Build Options (choose one):
+#
+# Option A: With BuildKit cache [RECOMMENDED - faster rebuilds]
+#   Uses cache mounts for cargo registry and target directory.
+#   Requires: touch src/main.rs to invalidate incremental cache.
+#
+# Option B: Without cache [simpler, works everywhere]
+#   No cache mounts, simpler but slower rebuilds.
+#   Uncomment Option B and comment out Option A if you prefer.
+###############################
+
+#--- Option A: With BuildKit cache (default) ---
+# Copy manifests first (optimal layer caching)
+COPY Cargo.toml Cargo.lock ./
+
+# Create dummy src for dependency caching
+RUN mkdir -p src && echo "fn main() {}" > src/main.rs
+
+# Download and compile dependencies (cached layer)
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/app/target \
+    cargo build --release
+
+# Copy real source and build
+COPY . .
+
+# Build the actual application
+# NOTE: touch src/main.rs forces Cargo to recompile the main binary.
+# Without this, Cargo's incremental compilation sees no changes and
+# reuses the dummy binary from the dependency caching step above.
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/app/target \
+    touch src/main.rs && \
+    cargo build --release && \
+    cp target/release/your_app /app/server
+
+#--- Option B: Without cache (simpler fallback) ---
+# COPY . .
+# RUN cargo build --release && \
+#     cp target/release/your_app /app/server
+
+###############################
+# Runtime stage (glibc-dynamic)
+###############################
+# Re-declare ARG for this stage
+ARG RUNTIME_TAG=latest
+FROM cgr.dev/chainguard/glibc-dynamic:${RUNTIME_TAG} AS runtime
+
+# Copy tini from builder (Wolfi doesn't include it)
+COPY --from=builder /usr/bin/tini-static /usr/bin/tini
+
+# Copy the binary
+COPY --from=builder --chown=65532:65532 /app/server /app/server
+
+###############################
+# Allocator Options (choose one):
+#
+# (a) Cargo + mimalloc [RECOMMENDED - best performance]
+#     Add to Cargo.toml:
+#       [dependencies]
+#       mimalloc = { version = "0.1", default-features = false }
+#     Add to src/main.rs:
+#       #[global_allocator]
+#       static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+#
+# (b) LD_PRELOAD mimalloc [no code changes]
+#     Uncomment the lines below:
+# RUN apk add --no-cache mimalloc
+# ENV LD_PRELOAD=/usr/lib/libmimalloc.so
+#
+# (c) Default glibc malloc [no changes needed]
+#     Good for most applications. Only high-concurrency,
+#     memory-intensive workloads benefit from mimalloc.
+###############################
+
+# Switch to non-root user (Wolfi default: 65532)
+USER 65532:65532
+WORKDIR /app
+
+ENTRYPOINT ["tini", "--"]
+CMD ["/app/server"]
+
+# To build for debugging with shell access:
+# podman build --build-arg RUNTIME_TAG=latest-dev -t myapp:debug .

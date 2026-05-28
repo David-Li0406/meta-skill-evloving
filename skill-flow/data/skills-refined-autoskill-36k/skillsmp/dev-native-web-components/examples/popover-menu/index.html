@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popover Menu Example</title>
+    <meta name="description" content="Navigation menu using native Popover API with animations.">
+
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: light-dark(#ffffff, #0a0a0a);
+            --fg: light-dark(#1a1a1a, #f0f0f0);
+            --surface: light-dark(#f8f8f8, #141414);
+            --border: light-dark(#e5e5e5, #2a2a2a);
+            --accent: light-dark(#0066cc, #5599ff);
+            --muted: light-dark(#666666, #999999);
+            --radius: 0.75rem;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100dvh;
+        }
+
+        /* ===== Header ===== */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 10;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        /* ===== Menu Button ===== */
+        .menu-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            background: var(--surface);
+            color: var(--fg);
+            font: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+            anchor-name: --menu-anchor;
+        }
+
+        .menu-trigger:hover {
+            background: var(--border);
+        }
+
+        .menu-trigger[aria-expanded="true"] {
+            background: var(--border);
+        }
+
+        .menu-trigger svg {
+            width: 1.25em;
+            height: 1.25em;
+            transition: rotate 0.2s;
+        }
+
+        .menu-trigger[aria-expanded="true"] svg {
+            rotate: 180deg;
+        }
+
+        /* ===== Popover Menu ===== */
+        .menu {
+            margin: 0;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: 0 8px 32px light-dark(#0001, #0004);
+            min-width: 12rem;
+
+            /* Anchor positioning */
+            position: absolute;
+            position-anchor: --menu-anchor;
+            inset-area: bottom;
+            margin-top: 0.5rem;
+
+            /* Entry animation */
+            opacity: 0;
+            transform: translateY(-0.5rem) scale(0.95);
+            transition:
+                opacity 0.2s ease,
+                transform 0.2s ease,
+                display 0.2s allow-discrete,
+                overlay 0.2s allow-discrete;
+        }
+
+        .menu:popover-open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        @starting-style {
+            .menu:popover-open {
+                opacity: 0;
+                transform: translateY(-0.5rem) scale(0.95);
+            }
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            color: var(--fg);
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .menu a:hover {
+            background: var(--border);
+        }
+
+        .menu a:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
+        }
+
+        .menu a svg {
+            width: 1.25em;
+            height: 1.25em;
+            opacity: 0.7;
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 0.5rem 0;
+        }
+
+        /* ===== Main Content ===== */
+        main {
+            padding: 2rem;
+            max-width: 48rem;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+        }
+
+        p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ===== User Menu (Right) ===== */
+        .user-trigger {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem;
+            padding-right: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+            background: var(--surface);
+            color: var(--fg);
+            font: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+            anchor-name: --user-anchor;
+        }
+
+        .user-trigger:hover {
+            background: var(--border);
+        }
+
+        .avatar {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-menu {
+            margin: 0;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: 0 8px 32px light-dark(#0001, #0004);
+            min-width: 14rem;
+
+            position: absolute;
+            position-anchor: --user-anchor;
+            inset-area: bottom right;
+            margin-top: 0.5rem;
+
+            opacity: 0;
+            transform: translateY(-0.5rem);
+            transition:
+                opacity 0.2s,
+                transform 0.2s,
+                display 0.2s allow-discrete;
+        }
+
+        .user-menu:popover-open {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @starting-style {
+            .user-menu:popover-open {
+                opacity: 0;
+                transform: translateY(-0.5rem);
+            }
+        }
+
+        .user-menu a,
+        .user-menu button {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: transparent;
+            color: var(--fg);
+            text-decoration: none;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .user-menu a:hover,
+        .user-menu button:hover {
+            background: var(--border);
+        }
+
+        .user-info {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0.5rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        .user-email {
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+
+        .danger {
+            color: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="logo">🚀 AppName</span>
+
+            <!-- Navigation Menu -->
+            <button class="menu-trigger" popovertarget="nav-menu" aria-haspopup="menu" aria-expanded="false">
+                Menu
+                <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+
+            <nav id="nav-menu" class="menu" popover role="menu">
+                <a href="#" role="menuitem">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                    Home
+                </a>
+                <a href="#" role="menuitem">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="#" role="menuitem">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                    </svg>
+                    Projects
+                </a>
+                <div class="menu-divider"></div>
+                <a href="#" role="menuitem">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+        </div>
+
+        <!-- User Menu -->
+        <button class="user-trigger" popovertarget="user-menu">
+            <span class="avatar">JD</span>
+            <span>John</span>
+        </button>
+
+        <div id="user-menu" class="user-menu" popover>
+            <div class="user-info">
+                <div class="user-name">John Doe</div>
+                <div class="user-email">john@example.com</div>
+            </div>
+            <a href="#">Profile</a>
+            <a href="#">Billing</a>
+            <a href="#">Team</a>
+            <div class="menu-divider"></div>
+            <button class="danger">Sign out</button>
+        </div>
+    </header>
+
+    <main>
+        <h1>Popover Menu Example</h1>
+        <p>
+            This example demonstrates native Popover API for navigation menus.
+            Click the "Menu" or user avatar buttons to see the popovers.
+        </p>
+        <h2>Features Used</h2>
+        <ul>
+            <li><code>popover</code> attribute for auto-dismiss behavior</li>
+            <li><code>popovertarget</code> for declarative triggers</li>
+            <li>CSS anchor positioning (<code>position-anchor</code>)</li>
+            <li><code>@starting-style</code> for entry animations</li>
+            <li><code>light-dark()</code> for automatic dark mode</li>
+        </ul>
+    </main>
+
+    <script>
+        // Sync aria-expanded with popover state
+        document.querySelectorAll('[popovertarget]').forEach(trigger => {
+            const popover = document.getElementById(trigger.getAttribute('popovertarget'));
+            popover?.addEventListener('toggle', (e) => {
+                trigger.setAttribute('aria-expanded', e.newState === 'open');
+            });
+        });
+    </script>
+</body>
+
+</html>

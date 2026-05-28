@@ -1,0 +1,240 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/mdx/components/Table'
+
+export const metadata = {
+  title: 'Breakpoints',
+  alternates: {
+    canonical: '/docs/devup/breakpoints',
+  },
+}
+
+# Breakpoints
+
+Devup UI uses a mobile-first responsive design system with 6 breakpoints. Use arrays to apply different styles at different viewport widths.
+
+## Breakpoint Ranges
+
+<Table>
+  <TableHead>
+    <TableRow>
+      <TableHeaderCell>Index</TableHeaderCell>
+      <TableHeaderCell>Breakpoint</TableHeaderCell>
+      <TableHeaderCell>Range</TableHeaderCell>
+      <TableHeaderCell>Device</TableHeaderCell>
+    </TableRow>
+  </TableHead>
+  <TableBody>
+    <TableRow>
+      <TableCell>0</TableCell>
+      <TableCell>
+        <code>xs</code>
+      </TableCell>
+      <TableCell>0px - 479px</TableCell>
+      <TableCell>Mobile (portrait)</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>1</TableCell>
+      <TableCell>
+        <code>sm</code>
+      </TableCell>
+      <TableCell>480px - 767px</TableCell>
+      <TableCell>Mobile (landscape)</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>2</TableCell>
+      <TableCell>
+        <code>md</code>
+      </TableCell>
+      <TableCell>768px - 991px</TableCell>
+      <TableCell>Tablet</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>3</TableCell>
+      <TableCell>
+        <code>lg</code>
+      </TableCell>
+      <TableCell>992px - 1279px</TableCell>
+      <TableCell>Small desktop</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>4</TableCell>
+      <TableCell>
+        <code>xl</code>
+      </TableCell>
+      <TableCell>1280px - 1599px</TableCell>
+      <TableCell>Desktop</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>5</TableCell>
+      <TableCell>
+        <code>2xl</code>
+      </TableCell>
+      <TableCell>1600px+</TableCell>
+      <TableCell>Large desktop</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+## Basic Usage
+
+Pass an array to any style prop. Each index corresponds to a breakpoint:
+
+```tsx
+<Box bg={['red', 'blue', 'green', 'yellow', 'purple', 'orange']} />
+```
+
+This results in:
+
+- **0-479px**: red background
+- **480-767px**: blue background
+- **768-991px**: green background
+- **992-1279px**: yellow background
+- **1280-1599px**: purple background
+- **1600px+**: orange background
+
+## Using `null` to Skip Breakpoints
+
+Use `null` to skip a breakpoint and keep the previous value:
+
+```tsx
+<Box bg={['red', null, 'green', null, 'purple']} />
+```
+
+This results in:
+
+- **0-767px**: red (index 0, then null inherits)
+- **768-1279px**: green (index 2, then null inherits)
+- **1280px+**: purple
+
+## Shorter Arrays
+
+Arrays shorter than 6 elements apply styles up to their length:
+
+```tsx
+// Only define mobile and desktop
+const example = <Box fontSize={['14px', null, null, null, '18px']} />
+
+// Shorthand: mobile and tablet only
+const example2 = <Box p={[2, 4]} />
+```
+
+## Responsive Layout Example
+
+```tsx
+<Flex direction={['column', null, 'row']} gap={[2, null, 4]}>
+  <Box p={[2, null, 4]} w={['100%', null, '50%']}>
+    Left content
+  </Box>
+  <Box p={[2, null, 4]} w={['100%', null, '50%']}>
+    Right content
+  </Box>
+</Flex>
+```
+
+- **Mobile (0-767px)**: Stacked vertically, full width, small padding/gap
+- **Tablet+ (768px+)**: Side by side, 50% width each, larger padding/gap
+
+## Responsive Typography
+
+Combine with typography for responsive text:
+
+```tsx
+<Text
+  fontSize={['24px', null, null, null, '48px']}
+  lineHeight={[1.3, null, null, null, 1.2]}
+>
+  Responsive Heading
+</Text>
+```
+
+Or use responsive typography from `devup.json`:
+
+```json
+{
+  "theme": {
+    "typography": {
+      "h1": [
+        { "fontSize": "32px", "fontWeight": 800 },
+        null,
+        null,
+        null,
+        { "fontSize": "48px", "fontWeight": 800 }
+      ]
+    }
+  }
+}
+```
+
+```tsx
+<Text typography="$h1">Responsive Heading</Text>
+```
+
+## Responsive with Pseudo Selectors
+
+Combine responsive arrays with pseudo selectors:
+
+```tsx
+// Different hover colors per breakpoint
+const example = <Box _hover={{ bg: ['blue', null, 'purple'] }} />
+
+// Alternative syntax
+const example2 = <Box _hover={[{ bg: 'blue' }, null, { bg: 'purple' }]} />
+```
+
+## Common Patterns
+
+### Show/Hide Elements
+
+```tsx
+// Hide on mobile, show on desktop
+const example = (
+  <Box display={['none', null, null, null, 'block']}>Desktop only content</Box>
+)
+
+// Show on mobile, hide on desktop
+const example2 = (
+  <Box display={['block', null, null, null, 'none']}>Mobile only content</Box>
+)
+```
+
+### Responsive Grid
+
+```tsx
+<Grid
+  gap={[2, null, 4]}
+  templateColumns={['1fr', null, 'repeat(2, 1fr)', null, 'repeat(4, 1fr)']}
+>
+  <Box>Item 1</Box>
+  <Box>Item 2</Box>
+  <Box>Item 3</Box>
+  <Box>Item 4</Box>
+</Grid>
+```
+
+- **Mobile**: 1 column
+- **Tablet**: 2 columns
+- **Desktop**: 4 columns
+
+### Responsive Spacing
+
+```tsx
+<Box m={[2, null, 4]} p={[2, null, 4, null, 6]}>
+  Content with responsive padding and margin
+</Box>
+```
+
+Remember: numeric values are multiplied by 4. So `p={[2, null, 4]}` becomes `padding: 8px` on mobile and `padding: 16px` on tablet+.
+
+## Best Practices
+
+1. **Mobile-first**: Start with mobile styles at index 0
+2. **Use null wisely**: Skip breakpoints that don't need changes
+3. **Keep it simple**: Not every prop needs 6 values
+4. **Test thoroughly**: Check all breakpoints during development
+5. **Consider performance**: Responsive values generate more CSS - use judiciously

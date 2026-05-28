@@ -1,0 +1,27 @@
+[project]
+name = "deep-reading"
+version = "2.0.0"
+description = "CLI-based deep reading system with TUI audio player and Obsidian integration"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = [
+    "src/*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+show_missing = true
+fail_under = 98

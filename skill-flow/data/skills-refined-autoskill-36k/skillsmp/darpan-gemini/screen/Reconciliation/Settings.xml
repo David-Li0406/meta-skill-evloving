@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-3.xsd" default-menu-title="Settings" require-authentication="false">
+
+    <parameter name="editSftpServerId"/>
+
+
+
+
+    <transition name="saveSftpServer">
+        <actions>
+            <set field="sftpServerId" from="sftpServerId?.trim()"/>
+            <set field="description" from="description?.trim()"/>
+            <set field="host" from="host?.trim()"/>
+            <set field="username" from="username?.trim()"/>
+            <set field="remoteAttributes" from="remoteAttributes?.trim()"/>
+
+            <if condition="!sftpServerId">
+                <message type="error" text="Server ID is required."/>
+                <return error="true"/>
+            </if>
+            <if condition="!host">
+                <message type="error" text="Host is required."/>
+                <return error="true"/>
+            </if>
+            <if condition="!username">
+                <message type="error" text="Username is required for SFTP access."/>
+                <return error="true"/>
+            </if>
+            <if condition="!password &amp;&amp; !privateKey">
+                <message type="warning" text="Enter a password or private key for SFTP authentication."/>
+            </if>
+
+            <script><![CDATA[
+                Map serverMap = [
+                        sftpServerId         : sftpServerId,
+                        description          : description,
+                        host                 : host,
+                        port                 : port ? (port as Integer) : 22,
+                        username             : username,
+                        remoteAttributes     : remoteAttributes ?: 'Y'
+                ]
+                if (password) serverMap.password = password
+                if (privateKey) serverMap.privateKey = privateKey
+                context.serverMap = serverMap
+            ]]>            </script>
+
+            <service-call name="store#darpan.reconciliation.SftpServer" in-map="serverMap"/>
+            <message>Saved SFTP server ${sftpServerId}.</message>
+        </actions>
+        <default-response url=".">
+            <parameter name="editSftpServerId" from="sftpServerId"/>
+        </default-response>
+    </transition>
+
+    <pre-actions>
+        <script><![CDATA[
+            def servers = []
+            ec.entity.find("darpan.reconciliation.SftpServer")
+                    .useCache(false)
+                    .orderBy(["description", "sftpServerId"])
+                    .list()
+                    ?.each { s ->
+                        servers.add([
+                                sftpServerId         : s.sftpServerId,
+                                description          : s.description,
+                                host                 : s.host,
+                                port                 : s.port,
+                                username             : s.username,
+                                hasPassword          : !!s.password,
+                                hasPrivateKey        : !!s.privateKey
+                        ])
+                    }
+            context.sftpServers = servers
+        ]]>        </script>
+
+        <if condition="editSftpServerId">
+            <script><![CDATA[
+                String srvId = editSftpServerId?.toString()?.trim()
+                if (srvId) {
+                    def server = ec.entity.find("darpan.reconciliation.SftpServer")
+                            .condition("sftpServerId", srvId)
+                            .useCache(false)
+                            .one()
+                    if (server) {
+                        ["sftpServerId","description","host","port","username",
+                         "password","privateKey","remoteAttributes"].each { fieldName ->
+                            context[fieldName] = server[fieldName]
+                        }
+                    }
+                }
+            ]]>            </script>
+        </if>
+
+
+    </pre-actions>
+
+    <widgets>
+        <container style="container">
+            <container style="page-header">
+                <label text="Settings" type="h2"/>
+                <label text="Manage integration settings; currently SFTP credentials used by automated reconciliation jobs." type="p" style="text-muted"/>
+            </container>
+
+            <section name="SftpServerFormSection">
+                <widgets>
+                    <label text="SFTP Credentials" type="h4"/>
+                    <label text="${sftpServerId ? 'Edit Server' : 'Add Server'}" type="p" style="text-muted"/>
+                    <form-single name="SftpServerForm" transition="saveSftpServer">
+                        <field name="sftpServerId">
+                            <default-field title="Server ID">
+                                <text-line size="30"/>
+                            </default-field>
+                        </field>
+                        <field name="description">
+                            <default-field title="Description">
+                                <text-line size="60"/>
+                            </default-field>
+                        </field>
+                        <field name="host">
+                            <default-field title="Host">
+                                <text-line size="40"/>
+                            </default-field>
+                        </field>
+                        <field name="port">
+                            <default-field title="Port">
+                                <text-line size="5" default-value="22"/>
+                            </default-field>
+                        </field>
+                        <field name="username">
+                            <default-field title="Username">
+                                <text-line size="40"/>
+                            </default-field>
+                        </field>
+                        <field name="password">
+                            <default-field title="Password">
+                                <password size="40"/>
+                            </default-field>
+                        </field>
+                        <field name="privateKey">
+                            <default-field title="Private Key">
+                                <text-area cols="60" rows="4"/>
+                            </default-field>
+                        </field>
+                        <field name="remoteAttributes">
+                            <default-field title="Preserve Remote Attributes?">
+                                <check checked-value="Y" unchecked-value="N"/>
+                            </default-field>
+                        </field>
+
+                        <field name="saveButton">
+                            <default-field title="">
+                                <submit text="Save Server" btn-type="primary"/>
+                            </default-field>
+                        </field>
+
+                        <field-layout>
+                            <field-row>
+                                <field-ref name="sftpServerId"/>
+                                <field-ref name="description"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="host"/>
+                                <field-ref name="port"/>
+                            </field-row>
+                            <field-row>
+                                <field-ref name="username"/>
+                                <field-ref name="password"/>
+                            </field-row>
+                            <field-row-big>
+                                <field-ref name="privateKey"/>
+                            </field-row-big>
+                            <field-row>
+                                <field-ref name="remoteAttributes"/>
+                            </field-row>
+                            <field-row-big>
+                                <field-ref name="saveButton"/>
+                            </field-row-big>
+                        </field-layout>
+                    </form-single>
+                </widgets>
+            </section>
+
+            <container type="hr"/>
+
+            <section name="ServerListSection">
+                <widgets>
+                    <label text="Existing SFTP Servers" type="h4"/>
+                    <section name="NoServers" condition="!sftpServers">
+                        <widgets>
+                            <label text="No SFTP servers found." type="p" style="text-muted"/>
+                        </widgets>
+                    </section>
+                    <section name="ServersTable" condition="sftpServers">
+                        <widgets>
+                            <form-list name="SftpServersList" list="sftpServers" skip-form="true" paginate="true" paginate-always-show="true" style="table table-striped table-condensed">
+                                <field name="sftpServerId">
+                                    <header-field title="Server ID"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="description">
+                                    <header-field title="Description"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="host">
+                                    <header-field title="Host"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="port">
+                                    <header-field title="Port"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="username">
+                                    <header-field title="Username"/>
+                                    <default-field>
+                                        <display/>
+                                    </default-field>
+                                </field>
+                                <field name="hasPassword">
+                                    <header-field title="Password?"/>
+                                    <default-field>
+                                        <label text="${hasPassword ? 'Yes' : 'No'}" type="span"/>
+                                    </default-field>
+                                </field>
+                                <field name="hasPrivateKey">
+                                    <header-field title="Private Key?"/>
+                                    <default-field>
+                                        <label text="${hasPrivateKey ? 'Yes' : 'No'}" type="span"/>
+                                    </default-field>
+                                </field>
+                                <field name="actions">
+                                    <header-field title=""/>
+                                    <default-field>
+                                        <link url="." text="Edit" link-type="anchor-button" btn-type="info" style="btn-xs">
+                                            <parameter name="editSftpServerId" from="sftpServerId"/>
+                                        </link>
+                                    </default-field>
+                                </field>
+                            </form-list>
+                        </widgets>
+                    </section>
+                </widgets>
+            </section>
+
+
+        </container>
+    </widgets>
+</screen>

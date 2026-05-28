@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Dashboard - Comprehensive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0f1117; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; transition: transform 0.2s; }
+        .card:hover { border-color: #60a5fa; transform: translateY(-2px); }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
+        .stat-label { font-size: 0.875rem; color: #94a3b8; }
+        .highlight-cost { color: #f87171; }
+        .highlight-good { color: #4ade80; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-blue { background-color: #1e40af; color: #dbeafe; }
+        .badge-green { background-color: #166534; color: #dcfce7; }
+        .badge-purple { background-color: #6b21a8; color: #f3e8ff; }
+        .badge-orange { background-color: #c2410c; color: #ffedd5; }
+        .badge-gray { background-color: #374151; color: #d1d5db; }
+        .badge-cyan { background-color: #155e75; color: #cffafe; }
+        .model-haiku { background-color: rgba(74, 222, 128, 0.2); border-left: 3px solid #4ade80; }
+        .model-sonnet { background-color: rgba(168, 85, 247, 0.2); border-left: 3px solid #a855f7; }
+        .model-opus { background-color: rgba(251, 146, 60, 0.2); border-left: 3px solid #fb923c; }
+        .progress-bar { background-color: #374151; border-radius: 9999px; height: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 9999px; transition: width 0.3s ease; }
+        .section-title { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .data-source-badge { font-size: 0.65rem; padding: 0.15rem 0.5rem; background-color: #374151; border-radius: 9999px; color: #9ca3af; }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Header -->
+    <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-700 pb-4 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Claude Code Dashboard</h1>
+            <p class="text-sm text-gray-500 mb-2">Comprehensive Edition - All Data Sources</p>
+            <p class="text-gray-400">
+                <span id="userName" class="text-blue-400 font-semibold">{{USER_NAME}}</span>
+                <span class="text-gray-500">({{USER_EMAIL}})</span>
+            </p>
+            <div class="flex flex-wrap gap-2 mt-2">
+                <span class="badge badge-blue">{{ORG_ROLE}}</span>
+                <span class="badge badge-green">{{BILLING_TYPE}}</span>
+                <span class="badge badge-gray">v{{LAST_VERSION}}</span>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="text-sm text-gray-500">Dashboard Updated</div>
+            <div class="font-mono text-xl text-white">{{TIMESTAMP}}</div>
+            <div class="text-xs text-gray-500 mt-1">User since: {{FIRST_START_DATE}}</div>
+            <div class="text-xs text-gray-600">Days using Claude: <span class="text-blue-400 font-bold">{{DAYS_USING}}</span></div>
+        </div>
+    </header>
+
+    <!-- Key Metrics Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
+        <div class="card p-4">
+            <div class="stat-label">Startups</div>
+            <div class="stat-value">{{NUM_STARTUPS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Projects</div>
+            <div class="stat-value text-blue-400">{{NUM_PROJECTS}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Main Sessions</div>
+            <div class="stat-value text-green-400">{{MAIN_SESSIONS}}</div>
+            <div class="text-xs text-gray-500">User-initiated</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Agent Sessions</div>
+            <div class="stat-value text-purple-400">{{AGENT_SESSIONS}}</div>
+            <div class="text-xs text-gray-500">Sub-agents</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Total Cost</div>
+            <div class="stat-value highlight-cost">{{TOTAL_COST}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Lines Added</div>
+            <div class="stat-value text-green-400">+{{TOTAL_LINES_ADDED}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Lines Removed</div>
+            <div class="stat-value text-red-400">-{{TOTAL_LINES_REMOVED}}</div>
+        </div>
+        <div class="card p-4">
+            <div class="stat-label">Net Lines</div>
+            <div class="stat-value {{NET_LINES_COLOR}}">{{NET_LINES}}</div>
+        </div>
+    </div>
+
+    <!-- Session & Command Stats Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">🏆</span>
+                <h3 class="font-semibold text-white">Longest Session</h3>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Messages:</span>
+                    <span class="text-yellow-400 font-bold text-xl">{{LONGEST_SESSION_MSGS}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Duration:</span>
+                    <span class="text-white font-semibold">{{LONGEST_SESSION_DURATION}}</span>
+                </div>
+            </div>
+            <div class="mt-2 text-xs text-gray-500">From stats-cache.json</div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">💬</span>
+                <h3 class="font-semibold text-white">Command History</h3>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Commands:</span>
+                    <span class="text-blue-400 font-bold">{{TOTAL_COMMANDS}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Avg Prompt Length:</span>
+                    <span class="text-white">{{AVG_PROMPT_LENGTH}} chars</span>
+                </div>
+            </div>
+            <div class="mt-2 text-xs text-gray-500">From history.jsonl</div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">⚡</span>
+                <h3 class="font-semibold text-white">Session Performance</h3>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Avg Duration:</span>
+                    <span class="text-white font-bold">{{AVG_DURATION}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Avg API Response:</span>
+                    <span class="text-white">{{AVG_API_DURATION}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">🔍</span>
+                <h3 class="font-semibold text-white">Features Used</h3>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Prompt Queue:</span>
+                    <span class="text-purple-400 font-bold">{{PROMPT_QUEUE_COUNT}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Web Searches:</span>
+                    <span class="text-blue-400">{{TOTAL_WEB_SEARCHES}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Usage Summary -->
+    <h2 class="section-title">Model Usage Summary</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="card p-5 model-haiku">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold text-green-400 text-lg">Haiku 4.5</h3>
+                <span class="badge badge-green">Fast & Efficient</span>
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Cost:</span>
+                    <span class="text-green-400 font-bold">{{HAIKU_COST}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Input Tokens:</span>
+                    <span class="text-gray-300">{{HAIKU_INPUT}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Output Tokens:</span>
+                    <span class="text-gray-300">{{HAIKU_OUTPUT}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5 model-sonnet">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold text-purple-400 text-lg">Sonnet 4.5</h3>
+                <span class="badge badge-purple">Balanced</span>
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Cost:</span>
+                    <span class="text-purple-400 font-bold">{{SONNET_COST}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Input Tokens:</span>
+                    <span class="text-gray-300">{{SONNET_INPUT}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Output Tokens:</span>
+                    <span class="text-gray-300">{{SONNET_OUTPUT}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5 model-opus">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold text-orange-400 text-lg">Opus 4.5</h3>
+                <span class="badge badge-orange">Most Powerful</span>
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Cost:</span>
+                    <span class="text-orange-400 font-bold">{{OPUS_COST}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Input Tokens:</span>
+                    <span class="text-gray-300">{{OPUS_INPUT}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Output Tokens:</span>
+                    <span class="text-gray-300">{{OPUS_OUTPUT}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cache & Tool Usage Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Cache Efficiency</h3>
+            <p class="text-sm text-gray-400 mb-4">Cache reads save tokens and reduce costs</p>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-400">Cache Reads</span>
+                        <span class="text-blue-400 font-bold">{{TOTAL_CACHE_READS}}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill bg-blue-500" style="width: {{CACHE_READ_PCT}}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-400">Cache Created</span>
+                        <span class="text-green-400 font-bold">{{TOTAL_CACHE_CREATED}}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill bg-green-500" style="width: {{CACHE_CREATE_PCT}}%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-600">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Cache Hit Ratio:</span>
+                    <span class="text-green-400 font-bold">{{CACHE_HIT_RATIO}}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-200">Tool Usage</h3>
+                <span class="data-source-badge">from transcripts</span>
+            </div>
+            <canvas id="toolUsageChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Cost by Model</h3>
+            <canvas id="modelCostChart"></canvas>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-200">Slash Commands Used</h3>
+                <span class="data-source-badge">from history.jsonl</span>
+            </div>
+            <canvas id="slashCommandsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Token & Session Distribution -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Cost by Project</h3>
+            <canvas id="projectCostChart"></canvas>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Session Type Breakdown</h3>
+            <canvas id="sessionBreakdownChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Token Distribution -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Token Usage by Project</h3>
+        <canvas id="tokenChart" height="100"></canvas>
+    </div>
+
+    <!-- Historical Charts Section -->
+    <h2 class="section-title">📈 Historical Trends</h2>
+
+    <!-- Daily Activity Trend -->
+    <div class="card p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Daily Activity Trend</h3>
+        <canvas id="dailyActivityChart" height="80"></canvas>
+    </div>
+
+    <!-- Model Usage Over Time & Session Distribution -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Model Usage Over Time</h3>
+            <canvas id="modelOverTimeChart"></canvas>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200">Session Length Distribution</h3>
+            <canvas id="sessionLengthChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Project Comparison -->
+    <div class="card p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Project Comparison (Messages)</h3>
+        <canvas id="projectComparisonChart" height="80"></canvas>
+    </div>
+
+    <!-- Hour of Day Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-semibold text-gray-200">Hour of Day Activity</h3>
+                <span class="data-source-badge">from stats-cache.json</span>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">Authoritative session counts by hour</p>
+            <canvas id="authHourlyChart"></canvas>
+        </div>
+        <div class="card p-6">
+            <h3 class="text-lg font-semibold mb-2 text-gray-200">Weekday Pattern</h3>
+            <p class="text-xs text-gray-500 mb-4">7-day rolling average (messages)</p>
+            <canvas id="weekdayRollingChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <h2 class="section-title">Projects ({{NUM_PROJECTS}})</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8" id="projectsContainer"></div>
+
+    <!-- GitHub Repos -->
+    <h2 class="section-title">GitHub Repositories</h2>
+    <div class="card p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="githubReposContainer"></div>
+    </div>
+
+    <!-- Feature Usage -->
+    <h2 class="section-title">Feature Usage Statistics</h2>
+    <div class="card p-6 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="tipsContainer"></div>
+    </div>
+
+    <!-- Data Sources Footer -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Data Sources</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-green-400 font-semibold">~/.claude.json</div>
+                <div class="text-gray-500">User info, project costs, feature usage</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-blue-400 font-semibold">stats-cache.json</div>
+                <div class="text-gray-500">Authoritative session counts, hour activity</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-purple-400 font-semibold">history.jsonl</div>
+                <div class="text-gray-500">Command history, slash commands</div>
+            </div>
+            <div class="p-3 bg-gray-800 rounded-lg">
+                <div class="text-orange-400 font-semibold">projects/*.jsonl</div>
+                <div class="text-gray-500">Session transcripts, tool usage</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-8 pt-4 border-t border-gray-700 text-center text-gray-500 text-sm">
+        <p>Dashboard generated on {{TIMESTAMP}}</p>
+        <p class="mt-1">Comprehensive Edition - All data sources consolidated</p>
+    </footer>
+
+<script>
+    const tipsHistory = {{TIPS_DATA}};
+    const projectsData = {{PROJECTS_DATA}};
+    const githubRepos = {{GITHUB_REPOS}};
+    const modelUsage = {{MODEL_USAGE}};
+
+    // Historical data
+    const dailyStats = {{DAILY_STATS}};
+    const sessionLengths = {{SESSION_LENGTHS}};
+    const hourlyRolling = {{HOURLY_ROLLING}};
+    const weekdayRolling = {{WEEKDAY_ROLLING}};
+    const modelOverTime = {{MODEL_OVER_TIME}};
+    const projectComparison = {{PROJECT_COMPARISON}};
+
+    // New comprehensive data
+    const toolUsage = {{TOOL_USAGE}};
+    const slashCommands = {{SLASH_COMMANDS}};
+    const authHourCounts = {{AUTH_HOUR_COUNTS}};
+    const longestSession = {{LONGEST_SESSION}};
+    const commandHistory = {{COMMAND_HISTORY}};
+    const sessionBreakdown = {{SESSION_BREAKDOWN}};
+
+    // Render project cards
+    const projectsContainer = document.getElementById('projectsContainer');
+    Object.entries(projectsData)
+        .sort((a, b) => b[1].cost - a[1].cost)
+        .forEach(([path, project]) => {
+            const card = document.createElement('div');
+            card.className = 'card p-5';
+            const costColor = project.cost > 1 ? 'text-red-400' : project.cost > 0.1 ? 'text-yellow-400' : 'text-green-400';
+            const trustBadge = project.trusted ? '<span class="badge badge-green text-xs">Trusted</span>' : '';
+
+            let modelBreakdown = '';
+            if (project.modelUsage && Object.keys(project.modelUsage).length > 0) {
+                modelBreakdown = '<div class="mt-3 pt-3 border-t border-gray-600"><div class="text-xs text-gray-500 mb-2">Model Breakdown:</div>';
+                Object.entries(project.modelUsage).forEach(([model, data]) => {
+                    const modelName = model.includes('haiku') ? 'Haiku' : model.includes('sonnet') ? 'Sonnet' : model.includes('opus') ? 'Opus' : model;
+                    const modelColor = model.includes('haiku') ? 'text-green-400' : model.includes('sonnet') ? 'text-purple-400' : 'text-orange-400';
+                    modelBreakdown += `<div class="flex justify-between text-xs"><span class="${modelColor}">${modelName}</span><span class="text-gray-400">$${data.costUSD.toFixed(4)}</span></div>`;
+                });
+                modelBreakdown += '</div>';
+            }
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-semibold text-white text-lg">${project.name}</h3>
+                    ${trustBadge}
+                </div>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Cost:</span>
+                        <span class="${costColor} font-bold">\\$${project.cost.toFixed(4)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Input / Output:</span>
+                        <span class="text-gray-300">${project.inputTokens.toLocaleString()} / ${project.outputTokens.toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Cache Reads:</span>
+                        <span class="text-blue-400">${project.cacheReads.toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Lines:</span>
+                        <span><span class="text-green-400">+${project.linesAdded}</span> / <span class="text-red-400">-${project.linesRemoved}</span></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-400">Duration:</span>
+                        <span class="text-gray-300">${formatDuration(project.duration)}</span>
+                    </div>
+                </div>
+                ${modelBreakdown}
+                <div class="mt-3 pt-3 border-t border-gray-600">
+                    <p class="text-xs text-gray-500 truncate" title="${path}">${path}</p>
+                </div>
+            `;
+            projectsContainer.appendChild(card);
+        });
+
+    // GitHub repos
+    const githubContainer = document.getElementById('githubReposContainer');
+    if (Object.keys(githubRepos).length > 0) {
+        Object.entries(githubRepos).forEach(([repo, paths]) => {
+            const repoCard = document.createElement('div');
+            repoCard.className = 'p-4 bg-gray-800 rounded-lg';
+            repoCard.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    <a href="https://github.com/${repo}" target="_blank" class="text-blue-400 hover:text-blue-300 font-semibold">${repo}</a>
+                </div>
+                <div class="text-xs text-gray-500 truncate">${paths[0]}</div>
+            `;
+            githubContainer.appendChild(repoCard);
+        });
+    } else {
+        githubContainer.innerHTML = '<p class="text-gray-500 col-span-2">No GitHub repositories linked</p>';
+    }
+
+    // Tips
+    const tipsContainer = document.getElementById('tipsContainer');
+    Object.entries(tipsHistory)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 24)
+        .forEach(([tip, count]) => {
+            const tipCard = document.createElement('div');
+            tipCard.className = 'text-center p-3 bg-gray-800 rounded-lg';
+            tipCard.innerHTML = `
+                <div class="text-2xl font-bold text-blue-400">${count}</div>
+                <div class="text-xs text-gray-400 mt-1">${tip.replace(/-/g, ' ')}</div>
+            `;
+            tipsContainer.appendChild(tipCard);
+        });
+
+    // Model Cost Chart
+    new Chart(document.getElementById('modelCostChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Haiku', 'Sonnet', 'Opus'],
+            datasets: [{
+                data: [modelUsage.haiku.cost, modelUsage.sonnet.cost, modelUsage.opus.cost],
+                backgroundColor: ['rgba(74, 222, 128, 0.7)', 'rgba(168, 85, 247, 0.7)', 'rgba(251, 146, 60, 0.7)'],
+                borderColor: ['#4ade80', '#a855f7', '#fb923c'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8' } },
+                tooltip: { callbacks: { label: ctx => ctx.label + ': $' + ctx.raw.toFixed(4) } }
+            }
+        }
+    });
+
+    // Session Breakdown Chart
+    new Chart(document.getElementById('sessionBreakdownChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Main Sessions', 'Agent Sessions'],
+            datasets: [{
+                data: [sessionBreakdown.main || 0, sessionBreakdown.agent || 0],
+                backgroundColor: ['rgba(74, 222, 128, 0.7)', 'rgba(168, 85, 247, 0.7)'],
+                borderColor: ['#4ade80', '#a855f7'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8' } },
+                tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.raw } }
+            }
+        }
+    });
+
+    // Tool Usage Chart
+    if (toolUsage.length > 0) {
+        new Chart(document.getElementById('toolUsageChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: toolUsage.map(t => t.name),
+                datasets: [{
+                    label: 'Usage Count',
+                    data: toolUsage.map(t => t.count),
+                    backgroundColor: 'rgba(96, 165, 250, 0.6)',
+                    borderColor: 'rgba(96, 165, 250, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Slash Commands Chart
+    if (slashCommands.length > 0) {
+        new Chart(document.getElementById('slashCommandsChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: slashCommands.map(c => c.name),
+                datasets: [{
+                    label: 'Times Used',
+                    data: slashCommands.map(c => c.count),
+                    backgroundColor: 'rgba(168, 85, 247, 0.6)',
+                    borderColor: 'rgba(168, 85, 247, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Project Cost Chart
+    const projectCosts = Object.entries(projectsData).filter(([_, p]) => p.cost > 0).sort((a, b) => b[1].cost - a[1].cost).slice(0, 8);
+    new Chart(document.getElementById('projectCostChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: projectCosts.map(([_, p]) => p.name),
+            datasets: [{
+                label: 'Cost (USD)',
+                data: projectCosts.map(([_, p]) => p.cost),
+                backgroundColor: 'rgba(96, 165, 250, 0.6)',
+                borderColor: 'rgba(96, 165, 250, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, ticks: { color: '#94a3b8', callback: v => '$' + v.toFixed(2) }, grid: { color: '#334155' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+            }
+        }
+    });
+
+    // Token Chart
+    const projectTokens = Object.entries(projectsData).filter(([_, p]) => p.inputTokens + p.outputTokens > 0).sort((a, b) => (b[1].inputTokens + b[1].outputTokens) - (a[1].inputTokens + a[1].outputTokens)).slice(0, 10);
+    new Chart(document.getElementById('tokenChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: projectTokens.map(([_, p]) => p.name),
+            datasets: [
+                { label: 'Input', data: projectTokens.map(([_, p]) => p.inputTokens), backgroundColor: 'rgba(74, 222, 128, 0.6)', borderColor: '#4ade80', borderWidth: 1 },
+                { label: 'Output', data: projectTokens.map(([_, p]) => p.outputTokens), backgroundColor: 'rgba(168, 85, 247, 0.6)', borderColor: '#a855f7', borderWidth: 1 },
+                { label: 'Cache (÷100)', data: projectTokens.map(([_, p]) => p.cacheReads / 100), backgroundColor: 'rgba(96, 165, 250, 0.6)', borderColor: '#60a5fa', borderWidth: 1 }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true, labels: { color: '#94a3b8' } } },
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#94a3b8', callback: v => (v/1000).toFixed(0) + 'K' }, grid: { color: '#334155' } },
+                x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+            }
+        }
+    });
+
+    function formatDuration(ms) {
+        if (!ms) return 'N/A';
+        const s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
+        return h > 0 ? `${h}h ${m % 60}m` : m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
+    }
+
+    // === HISTORICAL CHARTS ===
+
+    // Daily Activity Trend
+    if (dailyStats.length > 0) {
+        new Chart(document.getElementById('dailyActivityChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: dailyStats.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Messages',
+                        data: dailyStats.map(d => d.messages),
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Main Sessions',
+                        data: dailyStats.map(d => d.mainSessions || 0),
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        label: 'Agent Sessions',
+                        data: dailyStats.map(d => d.agentSessions || 0),
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { type: 'linear', position: 'left', ticks: { color: '#94a3b8' }, grid: { color: '#334155' }, title: { display: true, text: 'Messages', color: '#94a3b8' } },
+                    y1: { type: 'linear', position: 'right', ticks: { color: '#94a3b8' }, grid: { display: false }, title: { display: true, text: 'Sessions', color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    // Session Length Distribution
+    if (sessionLengths.length > 0) {
+        new Chart(document.getElementById('sessionLengthChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: sessionLengths.map(s => s.range + ' msgs'),
+                datasets: [{
+                    label: 'Sessions',
+                    data: sessionLengths.map(s => s.count),
+                    backgroundColor: [
+                        'rgba(74, 222, 128, 0.7)',
+                        'rgba(96, 165, 250, 0.7)',
+                        'rgba(168, 85, 247, 0.7)',
+                        'rgba(251, 146, 60, 0.7)',
+                        'rgba(248, 113, 113, 0.7)',
+                        'rgba(251, 191, 36, 0.7)',
+                        'rgba(236, 72, 153, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // Model Usage Over Time
+    if (modelOverTime.length > 0) {
+        new Chart(document.getElementById('modelOverTimeChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: modelOverTime.map(d => d.date),
+                datasets: [
+                    {
+                        label: 'Haiku',
+                        data: modelOverTime.map(d => d.haiku),
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.5)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Sonnet',
+                        data: modelOverTime.map(d => d.sonnet),
+                        borderColor: '#a855f7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.5)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Opus',
+                        data: modelOverTime.map(d => d.opus),
+                        borderColor: '#fb923c',
+                        backgroundColor: 'rgba(251, 146, 60, 0.5)',
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#94a3b8' } } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { stacked: true, beginAtZero: true, ticks: { color: '#94a3b8', callback: v => (v/1000).toFixed(0) + 'K' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // Project Comparison
+    if (projectComparison.length > 0) {
+        new Chart(document.getElementById('projectComparisonChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: projectComparison.map(p => p.name),
+                datasets: [{
+                    label: 'Messages',
+                    data: projectComparison.map(p => p.messages),
+                    backgroundColor: 'rgba(96, 165, 250, 0.7)',
+                    borderColor: '#60a5fa',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Authoritative Hourly Activity (from stats-cache.json)
+    if (Object.keys(authHourCounts).length > 0) {
+        const hours = Array.from({length: 24}, (_, i) => i);
+        new Chart(document.getElementById('authHourlyChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: hours.map(h => h.toString().padStart(2, '0') + ':00'),
+                datasets: [{
+                    label: 'Sessions',
+                    data: hours.map(h => authHourCounts[h.toString()] || 0),
+                    backgroundColor: hours.map(h => {
+                        const val = authHourCounts[h.toString()] || 0;
+                        const maxVal = Math.max(...Object.values(authHourCounts));
+                        const intensity = maxVal > 0 ? val / maxVal : 0;
+                        return `rgba(96, 165, 250, ${0.3 + intensity * 0.7})`;
+                    }),
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8', maxRotation: 45 }, grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+
+    // Weekday Rolling Average
+    if (weekdayRolling.length > 0) {
+        const latestWeekday = weekdayRolling[weekdayRolling.length - 1];
+        const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const weekdayColors = [
+            'rgba(96, 165, 250, 0.7)',
+            'rgba(74, 222, 128, 0.7)',
+            'rgba(168, 85, 247, 0.7)',
+            'rgba(251, 146, 60, 0.7)',
+            'rgba(248, 113, 113, 0.7)',
+            'rgba(251, 191, 36, 0.7)',
+            'rgba(236, 72, 153, 0.7)'
+        ];
+        new Chart(document.getElementById('weekdayRollingChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: weekdays.map(d => d.slice(0, 3)),
+                datasets: [{
+                    label: 'Avg Messages',
+                    data: weekdays.map(d => latestWeekday.weekdays[d] || 0),
+                    backgroundColor: weekdayColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

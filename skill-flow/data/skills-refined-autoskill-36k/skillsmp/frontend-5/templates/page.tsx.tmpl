@@ -1,0 +1,82 @@
+import { Button } from "@openpromo/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@openpromo/ui/components/card";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { use{{EntityName}} } from "@/queries/{{entityKebab}}";
+import { {{EntityName}}Table } from "./{{EntityName}}Table";
+import { {{EntityName}}CreateDialog } from "./{{EntityName}}CreateDialog";
+
+export function {{EntityName}}Page() {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const { list } = use{{EntityName}}();
+  const { data, isLoading, error } = list;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-destructive">Error loading {{entities}}</div>
+      </div>
+    );
+  }
+
+  const {{entities}} = data?.{{entities}} ?? [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">{{EntityName}}s</h1>
+          <p className="text-muted-foreground">
+            Manage your {{entities}}
+          </p>
+        </div>
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add {{EntityName}}
+        </Button>
+      </div>
+
+      {{{entities}}.length === 0 ? (
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle>No {{entities}} yet</CardTitle>
+            <CardDescription>
+              Get started by creating your first {{entityName}}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create {{EntityName}}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <{{EntityName}}Table {{entities}}={{{entities}}} />
+          </CardContent>
+        </Card>
+      )}
+
+      <{{EntityName}}CreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
+    </div>
+  );
+}

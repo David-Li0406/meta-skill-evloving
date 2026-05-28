@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Branch Proposal Schema",
+  "description": "JSON schema for AI-generated story branch proposals in the M2 AI-assisted branching system.",
+  "type": "object",
+  "required": ["id", "metadata", "story_context", "content"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this proposal (UUID format or similar). Used for tracking, audits, and rollback.",
+      "pattern": "^[a-f0-9-]{36}$"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Proposal metadata including provenance, generation details, and confidence metrics.",
+      "required": ["created_at", "llm_model", "confidence_score"],
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when proposal was generated."
+        },
+        "llm_model": {
+          "type": "string",
+          "description": "LLM model used (e.g., 'gpt-4-turbo', 'claude-3-opus', 'local-model-v1')."
+        },
+        "llm_version": {
+          "type": "string",
+          "description": "Model version or release date (e.g., '2024-01-15' or '1.0.0')."
+        },
+        "llm_seed": {
+          "type": ["integer", "null"],
+          "description": "Random seed used during generation for reproducibility. Optional; null if seed was not set.",
+          "minimum": 0
+        },
+        "context_hash": {
+          "type": "string",
+          "description": "SHA-256 hash of the input context (LORE + character state) for reproducibility verification.",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "confidence_score": {
+          "type": "number",
+          "description": "AI Writer's self-assessed confidence in the proposal (0.0–1.0). Higher = more confident the branch is coherent and on-theme.",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "generation_time_ms": {
+          "type": "integer",
+          "description": "Time in milliseconds spent generating this proposal.",
+          "minimum": 0
+        },
+        "actor": {
+          "type": "string",
+          "description": "Actor/component that submitted the proposal (e.g., 'ai_writer_v1', 'story_author_agent')."
+        }
+      }
+    },
+    "story_context": {
+      "type": "object",
+      "description": "Story state and context at the time the branch decision was made.",
+      "required": ["story_id", "current_scene"],
+      "additionalProperties": false,
+      "properties": {
+        "story_id": {
+          "type": "string",
+          "description": "Identifier of the story being played (e.g., 'demo-story-2024')."
+        },
+        "story_title": {
+          "type": "string",
+          "description": "Human-readable title of the story."
+        },
+        "current_scene": {
+          "type": "string",
+          "description": "The current scene/knot in the Ink script (e.g., 'chapter_2.meeting_with_elder')."
+        },
+        "player_action": {
+          "type": "string",
+          "description": "The player's choice or action that triggered branch generation (e.g., 'chose to confront the guard')."
+        },
+        "player_inventory": {
+          "type": "array",
+          "description": "List of items the player has acquired (optional but recommended for context).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "player_state": {
+          "type": "object",
+          "description": "Relevant player variables (health, reputation, relationships, mood, etc.).",
+          "additionalProperties": true
+        },
+        "character_state": {
+          "type": "object",
+          "description": "States and definitions of key characters in the story (relationships, emotions, objectives).",
+          "additionalProperties": true
+        },
+        "recent_events": {
+          "type": "array",
+          "description": "Recent story events (last 5–10) to provide narrative momentum and context.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "narrative_pacing_hint": {
+          "type": "string",
+          "enum": ["slow_buildup", "climactic", "resolution", "exposition"],
+          "description": "Hint about the current narrative phase to guide generation."
+        },
+        "story_themes": {
+          "type": "array",
+          "description": "Key themes of the story (e.g., 'redemption', 'betrayal', 'discovery').",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "description": "The generated branch content (narrative text, Ink fragment, or delta).",
+      "required": ["branch_type", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "branch_type": {
+          "type": "string",
+          "enum": ["ink_fragment", "narrative_delta", "ink_knot"],
+          "description": "Type of content: 'ink_fragment' (snippet to inject), 'narrative_delta' (prose addition), 'ink_knot' (full Ink knot)."
+        },
+        "text": {
+          "type": "string",
+          "description": "The actual branch content (Ink syntax or narrative prose)."
+        },
+        "character_voice": {
+          "type": "string",
+          "description": "Character or narrator whose voice delivers this branch (e.g., 'narrator', 'antagonist', 'player_inner_monologue')."
+        },
+        "length_tokens": {
+          "type": "integer",
+          "description": "Approximate token count of the content (for validation against max-length policies).",
+          "minimum": 0
+        },
+        "ink_tags": {
+          "type": "array",
+          "description": "Ink tags used in the fragment (e.g., 'action', 'dialogue', 'internal').",
+          "items": {
+            "type": "string"
+          }
+        },
+        "return_path": {
+          "type": "string",
+          "description": "The scripted scene/knot this branch should return to (e.g., 'chapter_2.after_confrontation'). Hints to the Director where to rejoin the main story."
+        },
+        "return_path_confidence": {
+          "type": "number",
+          "description": "AI Writer's confidence (0.0–1.0) that this return path is narratively coherent.",
+          "minimum": 0.0,
+          "maximum": 1.0
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Constraints applied during generation (optional, for validation reference).",
+      "additionalProperties": false,
+      "properties": {
+        "max_length_tokens": {
+          "type": "integer",
+          "description": "Maximum token length constraint during generation."
+        },
+        "prohibited_patterns": {
+          "type": "array",
+          "description": "Patterns that were excluded during generation.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "style_template": {
+          "type": "string",
+          "description": "Style or tone template used (e.g., 'noir_detective', 'high_fantasy')."
+        }
+      }
+    }
+  }
+}

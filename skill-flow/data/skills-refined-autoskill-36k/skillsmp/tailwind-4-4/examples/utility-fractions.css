@@ -1,0 +1,31 @@
+/* Fractions using ratio type */
+
+@theme {
+  --aspect-square: 1;
+  --aspect-video: 16/9;
+  --aspect-photo: 4/3;
+}
+
+/* Aspect ratio: theme + bare fraction + arbitrary */
+@utility frame-* {
+  aspect-ratio: --value(--aspect-*, ratio, [ratio]);
+}
+/* Usage: frame-square, frame-video, frame-3/4, frame-16/9, frame-[21/9] */
+
+/* Width as fraction */
+@utility span-* {
+  width: calc(--value(ratio) * 100%);
+}
+/* Usage: span-1/2 → 50%, span-2/3 → 66.67%, span-3/4 → 75% */
+
+/* Flex basis with fraction */
+@utility basis-* {
+  flex-basis: calc(--value(ratio, [percentage]) * 100%);
+}
+/* Usage: basis-1/4, basis-1/2, basis-[40%] */
+
+/* Grid span */
+@utility col-span-* {
+  grid-column: span --value(integer) / span --value(integer);
+}
+/* Usage: col-span-2, col-span-3 */

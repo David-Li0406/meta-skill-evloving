@@ -1,0 +1,244 @@
+#pragma once
+
+#include <juce_core/juce_core.h>
+#include <cmath>
+#include <random>
+
+/**
+ * LFO (Low Frequency Oscillator)
+ *
+ * Multi-shape LFO for modulation purposes.
+ * Supports sine, triangle, square, saw, and random (sample & hold) shapes.
+ */
+class LFO
+{
+public:
+    enum class Shape
+    {
+        Sine,
+        Triangle,
+        Square,
+        SawUp,
+        SawDown,
+        Random,
+        SmoothRandom
+    };
+
+    LFO() : rng(std::random_device{}()), dist(-1.0f, 1.0f) {}
+
+    //==========================================================================
+    void prepare(double sampleRate)
+    {
+        this->sampleRate = sampleRate;
+    }
+
+    void reset()
+    {
+        phase = 0.0f;
+        currentRandomValue = dist(rng);
+        targetRandomValue = dist(rng);
+    }
+
+    //==========================================================================
+    void setRate(float rateHz)
+    {
+        rate = juce::jlimit(0.001f, 100.0f, rateHz);
+    }
+
+    void setShape(Shape s)
+    {
+        shape = s;
+    }
+
+    void setDepth(float d)
+    {
+        depth = juce::jlimit(0.0f, 1.0f, d);
+    }
+
+    //==========================================================================
+    /**
+     * Process one sample and return LFO value in range [-depth, +depth]
+     */
+    float process()
+    {
+        float value = 0.0f;
+
+        switch (shape)
+        {
+            case Shape::Sine:
+                value = std::sin(phase * juce::MathConstants<float>::twoPi);
+                break;
+
+            case Shape::Triangle:
+                value = 2.0f * std::abs(2.0f * phase - 1.0f) - 1.0f;
+                break;
+
+            case Shape::Square:
+                value = phase < 0.5f ? 1.0f : -1.0f;
+                break;
+
+            case Shape::SawUp:
+                value = 2.0f * phase - 1.0f;
+                break;
+
+            case Shape::SawDown:
+                value = 1.0f - 2.0f * phase;
+                break;
+
+            case Shape::Random:
+                value = currentRandomValue;
+                break;
+
+            case Shape::SmoothRandom:
+                // Linear interpolation between random values
+                value = currentRandomValue + (targetRandomValue - currentRandomValue) * phase;
+                break;
+        }
+
+        // Advance phase
+        phase += rate / static_cast<float>(sampleRate);
+        if (phase >= 1.0f)
+        {
+            phase -= 1.0f;
+
+            // Update random values at cycle boundary
+            if (shape == Shape::Random || shape == Shape::SmoothRandom)
+            {
+                currentRandomValue = targetRandomValue;
+                targetRandomValue = dist(rng);
+            }
+        }
+
+        return value * depth;
+    }
+
+    /**
+     * Get current value without advancing phase
+     */
+    float getCurrentValue() const
+    {
+        float value = 0.0f;
+
+        switch (shape)
+        {
+            case Shape::Sine:
+                value = std::sin(phase * juce::MathConstants<float>::twoPi);
+                break;
+            case Shape::Triangle:
+                value = 2.0f * std::abs(2.0f * phase - 1.0f) - 1.0f;
+                break;
+            case Shape::Square:
+                value = phase < 0.5f ? 1.0f : -1.0f;
+                break;
+            case Shape::SawUp:
+                value = 2.0f * phase - 1.0f;
+                break;
+            case Shape::SawDown:
+                value = 1.0f - 2.0f * phase;
+                break;
+            case Shape::Random:
+                value = currentRandomValue;
+                break;
+            case Shape::SmoothRandom:
+                value = currentRandomValue + (targetRandomValue - currentRandomValue) * phase;
+                break;
+        }
+
+        return value * depth;
+    }
+
+    //==========================================================================
+    float getPhase() const { return phase; }
+    float getRate() const { return rate; }
+
+private:
+    double sampleRate = 44100.0;
+    float phase = 0.0f;
+    float rate = 1.0f;      // Hz
+    float depth = 1.0f;
+    Shape shape = Shape::Sine;
+
+    // Random state
+    std::mt19937 rng;
+    std::uniform_real_distribution<float> dist;
+    float currentRandomValue = 0.0f;
+    float targetRandomValue = 0.0f;
+};
+
+//==============================================================================
+/**
+ * TempoSyncLFO
+ *
+ * LFO with tempo synchronization support.
+ */
+class TempoSyncLFO : public LFO
+{
+public:
+    enum class Division
+    {
+        Whole,        // 1/1
+        HalfDotted,   // 1/2.
+        Half,         // 1/2
+        QuarterDotted,// 1/4.
+        QuarterTrip,  // 1/4T
+        Quarter,      // 1/4
+        EighthDotted, // 1/8.
+        EighthTrip,   // 1/8T
+        Eighth,       // 1/8
+        SixteenthDotted,
+        SixteenthTrip,
+        Sixteenth
+    };
+
+    void setTempoSync(bool enabled)
+    {
+        tempoSyncEnabled = enabled;
+    }
+
+    void setBPM(double bpm)
+    {
+        this->bpm = juce::jmax(20.0, bpm);
+        if (tempoSyncEnabled)
+            updateSyncedRate();
+    }
+
+    void setDivision(Division div)
+    {
+        division = div;
+        if (tempoSyncEnabled)
+            updateSyncedRate();
+    }
+
+private:
+    void updateSyncedRate()
+    {
+        // Calculate rate from BPM and division
+        float beatsPerSecond = static_cast<float>(bpm) / 60.0f;
+        float multiplier = getDivisionMultiplier();
+        setRate(beatsPerSecond * multiplier);
+    }
+
+    float getDivisionMultiplier() const
+    {
+        switch (division)
+        {
+            case Division::Whole:           return 0.25f;
+            case Division::HalfDotted:      return 0.333f;
+            case Division::Half:            return 0.5f;
+            case Division::QuarterDotted:   return 0.667f;
+            case Division::QuarterTrip:     return 0.75f;
+            case Division::Quarter:         return 1.0f;
+            case Division::EighthDotted:    return 1.333f;
+            case Division::EighthTrip:      return 1.5f;
+            case Division::Eighth:          return 2.0f;
+            case Division::SixteenthDotted: return 2.667f;
+            case Division::SixteenthTrip:   return 3.0f;
+            case Division::Sixteenth:       return 4.0f;
+        }
+        return 1.0f;
+    }
+
+    bool tempoSyncEnabled = false;
+    double bpm = 120.0;
+    Division division = Division::Quarter;
+};
