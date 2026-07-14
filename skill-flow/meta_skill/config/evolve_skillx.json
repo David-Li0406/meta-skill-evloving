@@ -1,0 +1,21 @@
+{
+  "engine": "skillx",
+  "seed_meta_skill": "meta_skill/meta_skills/skillx/iter_0/SKILL.md",
+  "output_dir": "/scratch/daweili5/meta_skill_evolve/skillx",
+  "iterations": 4,
+  "refiner_model": "opus",
+  "exec_sample": ["offer-letter-generator", "powerlifting-coef-calc"],
+  "train": {
+    "source": "skillflow",
+    "corpus_dir": "data/skills-refined-36k",
+    "corpus_limit": 4000,
+    "tasks": null,
+    "subset_size": 600
+  },
+  "held_out": {
+    "source": "skillrouter",
+    "tier": "easy",
+    "include_pool": true
+  },
+  "_note": "Held-out = SkillRouter requires its skill-pool shards: run `bash /scratch/daweili5/SkillRouter/scripts/download_eval_data.sh` first. Swap train<->held_out to use SkillRouter as the training set and SkillFlow/SkillsBench as held-out."
+}
