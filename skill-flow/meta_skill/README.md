@@ -181,7 +181,92 @@ python -m meta_skill.cli manage --config meta_skill/config/smoke_skillx.json  # 
 
 ---
 
-## 6. Outputs & building the comparison table
+## 6. Running the baseline (native) skill-management methods
+
+The meta-skills wrap the **native skill-flow refiner engines** (`skill_flow/refiner/`).
+Run any management method directly — this is the baseline the evolving loop starts
+from. Each is a 3-step pipeline: **refine (manage) → pipeline (retrieve) → evaluate
+(execute on SkillsBench)**.
+
+### Step 1 — refine the library (choose the engine)
+
+`skill_flow.cli refine` takes a standalone `RefinerConfig` JSON whose `engine` field
+selects the method: `skillx` | `autoskill` | `skillclaw` | `agentskillos`.
+
+```bash
+# minimal RefinerConfig (autoskill shown; swap "engine" for the others)
+cat > /tmp/refine_autoskill.json <<'JSON'
+{
+  "engine": "autoskill",
+  "source_corpus_dir": "data/skills-refined-36k",
+  "source_index_dir":  "outputs/indices/bge-refined-36k",
+  "output_corpus_dir": "data/skills-refined-autoskill-36k",
+  "report_dir":        "outputs/refiner/autoskill-36k",
+  "autoskill": { "similarity_threshold": 0.85, "top_k": 10 }
+}
+JSON
+
+python -m skill_flow.cli refine --config /tmp/refine_autoskill.json
+# prints before/after counts, merges, drops; writes the refined corpus + summary.json
+# override paths without editing the JSON: --source-corpus-dir / --source-index-dir /
+#   --output-corpus / --report-dir
+```
+
+Engine knobs (fields of `RefinerConfig`; each engine ignores fields it doesn't use):
+
+| engine | strategy | key params (defaults) |
+|---|---|---|
+| `skillx` | cluster → LLM-merge → quality-filter | `eps` (0.10, DBSCAN), `merger.max_group_size` (15) |
+| `autoskill` | pairwise near-duplicate dedup + merge | `autoskill.similarity_threshold` (0.85), `autoskill.top_k` (10) |
+| `skillclaw` | evolve + verify merges | `skillclaw.max_group_size` (5), `skillclaw.verify_min_score` (0.5) |
+| `agentskillos` | hierarchical labeling tree | `agentskillos.n_categories` (32), `active_per_leaf` (0 = keep all) |
+
+Management LLM calls use `OPENAI_API_KEY` (default model `gpt-4o-mini`).
+
+### Step 2 — retrieve per task over the refined corpus
+
+Build the per-task top-k "result cache" the benchmark injects, by running the SkillFlow
+retrieval pipeline over the refined corpus:
+
+```bash
+python -m skill_flow.cli pipeline \
+  --tasks-dir integration/skillsbench/tasks \
+  --output-dir outputs/pipeline/autoskill_36k_paper74
+# writes result_cache.json (task -> selected skill keys) used as the benchmark selector_cache
+```
+
+### Step 3 — evaluate on SkillsBench (local Apptainer)
+
+Ready-made benchmark configs wire each method's refined corpus + result cache to the
+Apptainer backend. **Prefetch SIFs first (§4).**
+
+```bash
+python -m benchmark.scripts.cli run \
+  --config benchmark/config/apptainer_autoskill_36k_claude.json
+```
+
+Conditions (`benchmark/config/apptainer_<name>_36k_claude.json`):
+
+| config `<name>` | condition |
+|---|---|
+| `vanilla` | no skills injected (lower bound) |
+| `baseline` | unrefined full 36k library retrieval |
+| `oracle` | ground-truth SkillsBench skills injected (upper bound) |
+| `skillx` / `autoskill` / `skillclaw` / `agentskillos` | that method's refined library |
+
+Each config points at its `corpus_dir` (e.g. `data/skills-refined-autoskill-36k`) and
+`selector_cache` (the Step-2 `result_cache.json`); rewards land under `jobs_dir`
+(`outputs/evaluation/...`). Compare two runs with
+`python -m analysis.comparison.compare_runs RUN_A RUN_B`.
+
+> **Meta-skill vs. baseline.** The evolving loop (§5) drives these same engines through
+> `manage.py` (parameterized by a meta-skill `SKILL.md` instead of a `RefinerConfig`
+> JSON) and adds the retrieval proxy + attribution + refiner on top. Iteration 0 of a
+> meta-skill reproduces the corresponding baseline engine's behavior.
+
+---
+
+## 7. Outputs & building the comparison table
 
 Everything durable lands under `output_dir` (`/scratch/daweili5/meta_skill_evolve/autoskill_full/`):
 
@@ -235,7 +320,7 @@ Takeaways: the refiner tuned `similarity_threshold` up (fewer merges) and adjust
 
 ---
 
-## 7. Recovery / reproducibility (resumable regeneration)
+## 8. Recovery / reproducibility (resumable regeneration)
 
 If `/tmp` was reaped, the refined libraries are gone but the `/scratch` durable state
 (decision logs, evolved meta-skills, and — under `regen_persist/` — the source index,
@@ -272,7 +357,7 @@ python -m meta_skill.rerun_failed                  # all iters; or pass e.g. `3`
 
 ---
 
-## 8. Swapping train / held-out (SkillFlow ↔ SkillRouter)
+## 9. Swapping train / held-out (SkillFlow ↔ SkillRouter)
 
 `config/evolve_skillx.json` sets `train=skillflow`, `held_out=skillrouter`. The
 SkillRouter pool needs its shards:
@@ -285,7 +370,7 @@ Swap the two blocks to train on SkillRouter and hold out SkillFlow/SkillsBench.
 
 ---
 
-## 9. Gotchas checklist
+## 10. Gotchas checklist
 
 - **Run `prefetch_sifs.py` before any execution** — otherwise Docker Hub rate limits
   fail the run.
