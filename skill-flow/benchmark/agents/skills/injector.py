@@ -5,7 +5,7 @@ Skill injection logic for uploading skills to evaluation containers.
 import logging
 import shutil
 import tempfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from harbor.environments.base import BaseEnvironment
 
@@ -16,19 +16,34 @@ class TarGzSkillInjector:
 
     Uses tar instead of zip because tar is universally available on Linux
     containers while unzip may not be installed.
+
+    ``container_skills_dir`` is where the agent's runtime expects skills.
+    Codex auto-discovers ``$CODEX_HOME/skills`` (= ``/logs/agent/skills``);
+    Claude Code reads ``$CLAUDE_CONFIG_DIR/skills`` (= ``/logs/agent/sessions/skills``).
+    The archive's top-level folder is always ``skills``, so the extract target
+    is the parent of ``container_skills_dir``.
     """
 
-    CONTAINER_SKILLS_DIR = "/logs/agent/skills"
     CONTAINER_TMP_ARCHIVE = "/tmp/skills.tar.gz"  # nosec B108
 
-    def __init__(self, logger: logging.Logger | None = None) -> None:
+    def __init__(
+        self,
+        logger: logging.Logger | None = None,
+        container_skills_dir: str = "/logs/agent/skills",
+    ) -> None:
         """
         Initialize skill injector.
 
         Args:
             logger: Optional logger instance.
+            container_skills_dir: In-container path the agent reads skills from.
         """
         self._logger = logger or logging.getLogger(__name__)
+        if PurePosixPath(container_skills_dir).name != "skills":
+            msg = "container_skills_dir must end in 'skills'"
+            raise ValueError(msg)
+        self._container_skills_dir = container_skills_dir
+        self._extract_dir = str(PurePosixPath(container_skills_dir).parent)
 
     async def inject(
         self,
@@ -53,7 +68,7 @@ class TarGzSkillInjector:
         self._logger.debug(f"Injecting {len(skill_folders)} skills")
 
         # Create skills directory in container
-        await environment.exec(command=f"mkdir -p {self.CONTAINER_SKILLS_DIR}")
+        await environment.exec(command=f"mkdir -p {self._container_skills_dir}")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -71,7 +86,9 @@ class TarGzSkillInjector:
             await self._upload_archive(environment, temp_path)
 
         # Verify upload
-        result = await environment.exec(command=f"ls -la {self.CONTAINER_SKILLS_DIR}/")
+        result = await environment.exec(
+            command=f"ls -la {self._container_skills_dir}/"
+        )
         self._logger.debug(f"Skills directory contents:\n{result.stdout}")
 
         return len(skill_folders)
@@ -144,9 +161,14 @@ class TarGzSkillInjector:
             target_path=self.CONTAINER_TMP_ARCHIVE,
         )
 
-        # Extract and cleanup in container
+        # Extract and cleanup in container. The archive's top-level folder is
+        # "skills", so extracting into the parent dir yields container_skills_dir.
+        # --no-same-owner: the archive carries the host uid/gid; the sandbox
+        # cannot chown to them, which otherwise makes tar exit non-zero.
         extract_cmd = (
-            f"tar -xzf {self.CONTAINER_TMP_ARCHIVE} -C /logs/agent && "
+            f"mkdir -p {self._extract_dir} && "
+            f"tar --no-same-owner -xzf {self.CONTAINER_TMP_ARCHIVE} "
+            f"-C {self._extract_dir} && "
             f"rm {self.CONTAINER_TMP_ARCHIVE}"
         )
         result = await environment.exec(command=extract_cmd)

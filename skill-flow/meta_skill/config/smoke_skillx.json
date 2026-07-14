@@ -1,0 +1,22 @@
+{
+  "engine": "skillx",
+  "seed_meta_skill": "meta_skill/meta_skills/skillx/iter_0/SKILL.md",
+  "output_dir": "/scratch/daweili5/meta_skill_smoke/skillx",
+  "iterations": 2,
+  "refiner_model": "opus",
+  "exec_sample": null,
+  "train": {
+    "source": "skillflow",
+    "corpus_dir": "data/skills-refined-36k",
+    "corpus_limit": 2000,
+    "tasks": ["offer-letter-generator", "powerlifting-coef-calc", "dialogue-parser"],
+    "subset_size": 200
+  },
+  "held_out": {
+    "source": "skillflow",
+    "corpus_dir": "data/skills-refined-36k",
+    "corpus_limit": 2000,
+    "tasks": ["court-form-filling", "threejs-to-obj"],
+    "subset_size": 150
+  }
+}

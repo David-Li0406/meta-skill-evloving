@@ -4,10 +4,34 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from benchmark.core.config import EvalConfig, EvalMode
+from benchmark.core.config import AgentBackend, EvalConfig, EvalMode
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+_CODEX_AGENT = "benchmark.agents.skillflow_injection_agent:SkillFlowInjectionAgent"
+_CLAUDE_AGENT = "benchmark.agents.skillflow_claude_code_agent:SkillFlowClaudeCodeAgent"
+_DEFAULT_CODEX_VERSION = "0.112"
+
+
+def _agent_base_args(config: EvalConfig) -> list[str]:
+    """Return the agent import path + optional version pin for the backend.
+
+    Codex defaults to a pinned CLI version; Claude Code installs the latest
+    unless ``agent_version`` is set. Both accept the ``version`` kwarg.
+    """
+    if config.agent_backend == AgentBackend.CLAUDE_CODE:
+        args = ["--agent-import-path", _CLAUDE_AGENT]
+        if config.agent_version:
+            args.extend(["--agent-kwarg", f'version="{config.agent_version}"'])
+        return args
+    version = config.agent_version or _DEFAULT_CODEX_VERSION
+    return [
+        "--agent-import-path",
+        _CODEX_AGENT,
+        "--agent-kwarg",
+        f'version="{version}"',
+    ]
 
 
 def build_harbor_run_command(config: EvalConfig, job_name: str) -> list[str]:
@@ -20,11 +44,13 @@ def build_harbor_run_command(config: EvalConfig, job_name: str) -> list[str]:
     Returns:
         List of command arguments
     """
-    cmd = [
-        "uv",
-        "run",
-        "harbor",
-        "run",
+    # The apptainer backend isn't a built-in harbor env, so it must be
+    # registered via our shim (which then hands off to harbor's CLI).
+    if config.environment.resolved_backend == "apptainer":
+        cmd = ["uv", "run", "python", "-m", "benchmark.scripts.harbor_apptainer", "run"]
+    else:
+        cmd = ["uv", "run", "harbor", "run"]
+    cmd += [
         "--job-name",
         job_name,
         "--jobs-dir",
@@ -45,9 +71,12 @@ def build_harbor_run_command(config: EvalConfig, job_name: str) -> list[str]:
     elif config.dataset:
         cmd.extend(["--dataset", config.dataset])
 
-    # Add environment
-    if config.environment.use_daytona:
-        cmd.extend(["--env", "daytona"])
+    # Add environment backend. apptainer runs through the shim which remaps the
+    # harbor "docker" slot to ApptainerEnvironment, so it passes --env docker.
+    backend = config.environment.resolved_backend
+    cmd.extend(["--env", "docker" if backend == "apptainer" else backend])
+    if backend == "docker" and config.environment.force_build:
+        cmd.append("--force-build")
 
     return cmd
 
@@ -78,9 +107,15 @@ def build_mode_args(config: EvalConfig) -> list[str]:
 
 
 def _add_reasoning_effort(args: list[str], config: EvalConfig) -> None:
-    """Add reasoning_effort kwarg if configured."""
+    """Add reasoning_effort + other Claude Code agent kwargs if configured."""
     if config.reasoning_effort:
         args.extend(["--agent-kwarg", f"reasoning_effort={config.reasoning_effort}"])
+    if config.thinking:
+        args.extend(["--agent-kwarg", f"thinking={config.thinking}"])
+    if config.max_thinking_tokens is not None:
+        args.extend(["--agent-kwarg", f"max_thinking_tokens={config.max_thinking_tokens}"])
+    if config.max_turns is not None:
+        args.extend(["--agent-kwarg", f"max_turns={config.max_turns}"])
 
 
 def _build_skillflow_cached_args(config: EvalConfig) -> list[str]:
@@ -118,12 +153,7 @@ def _build_mcp_args(config: EvalConfig) -> list[str]:
 
 def _build_skillflow_injection_args(config: EvalConfig) -> list[str]:
     """Build arguments for SkillFlow injection mode."""
-    args = [
-        "--agent-import-path",
-        "benchmark.agents.skillflow_injection_agent:SkillFlowInjectionAgent",
-        "--agent-kwarg",
-        'version="0.112"',
-    ]
+    args = _agent_base_args(config)
     if config.eval_results:
         args.extend(["--agent-kwarg", f"eval_results={config.eval_results}"])
     if config.selector_cache:
@@ -139,12 +169,7 @@ def _build_skillflow_injection_args(config: EvalConfig) -> list[str]:
 
 def _build_baseline_args(config: EvalConfig) -> list[str]:
     """Build arguments for baseline mode."""
-    args = [
-        "--agent-import-path",
-        "benchmark.agents.skillflow_injection_agent:SkillFlowInjectionAgent",
-        "--agent-kwarg",
-        'version="0.112"',
-    ]
+    args = _agent_base_args(config)
     _add_reasoning_effort(args, config)
     args.extend(["--model", config.model])
     return args
@@ -153,14 +178,8 @@ def _build_baseline_args(config: EvalConfig) -> list[str]:
 def _build_skills_args(config: EvalConfig) -> list[str]:
     """Build arguments for skills mode."""
     assert config.skills
-    args = [
-        "--agent-import-path",
-        "benchmark.agents.skillflow_injection_agent:SkillFlowInjectionAgent",
-        "--agent-kwarg",
-        'version="0.112"',
-        "--agent-kwarg",
-        f"skills_dir={config.skills.skills_dir}",
-    ]
+    args = _agent_base_args(config)
+    args.extend(["--agent-kwarg", f"skills_dir={config.skills.skills_dir}"])
 
     if config.skills.match_skill_to_task:
         args.extend(["--agent-kwarg", "match_skill_to_task=True"])

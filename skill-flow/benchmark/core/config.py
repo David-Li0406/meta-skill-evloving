@@ -19,6 +19,13 @@ class EvalMode(str, Enum):
     SKILLFLOW_CACHED = "skillflow_cached"
 
 
+class AgentBackend(str, Enum):
+    """Agent CLI backbone used to run tasks inside the sandbox."""
+
+    CODEX = "codex"
+    CLAUDE_CODE = "claude_code"
+
+
 class SkillsConfig(BaseModel):
     """Configuration for skills-based evaluation."""
 
@@ -27,10 +34,27 @@ class SkillsConfig(BaseModel):
 
 
 class EnvironmentConfig(BaseModel):
-    """Configuration for evaluation environment."""
+    """Configuration for evaluation environment.
 
-    use_daytona: bool
+    ``backend`` selects the harbor environment:
+      - "docker"  : local Docker containers (no cloud account needed)
+      - "daytona" : Daytona cloud sandboxes
+    For backward compatibility, ``use_daytona`` is still honored: if ``backend``
+    is not set, ``use_daytona=true`` maps to "daytona", else "docker".
+    ``force_build`` forces a rebuild of each task image (docker backend).
+    """
+
+    use_daytona: bool = False
+    backend: str | None = None
     n_concurrent: int
+    force_build: bool = False
+
+    @property
+    def resolved_backend(self) -> str:
+        """Return the effective backend name ('docker' or 'daytona')."""
+        if self.backend:
+            return self.backend
+        return "daytona" if self.use_daytona else "docker"
 
 
 class TaskConfig(BaseModel):
@@ -59,7 +83,13 @@ class EvalConfig(BaseModel):
     job_name: str | None = None
     jobs_dir: Path
     model: str
+    agent_backend: AgentBackend = AgentBackend.CODEX
+    agent_version: str | None = None
     reasoning_effort: str | None = None
+    # Additional Claude Code determinism / agent flags (forwarded as --agent-kwarg).
+    thinking: str | None = None  # "enabled" | "adaptive" | "disabled"
+    max_thinking_tokens: int | None = None
+    max_turns: int | None = None
     dataset: str | None = None
     tasks_path: Path | None = None
     num_runs: int

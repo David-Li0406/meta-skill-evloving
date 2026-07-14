@@ -1,0 +1,16 @@
+{
+  "engine": "autoskill",
+  "seed_meta_skill": "meta_skill/meta_skills/autoskill/iter_0/SKILL.md",
+  "output_dir": "/scratch/daweili5/meta_skill_evolve/autoskill",
+  "iterations": 4,
+  "refiner_model": "opus",
+  "exec_sample": ["offer-letter-generator", "powerlifting-coef-calc", "dialogue-parser"],
+  "train": {
+    "source": "skillflow",
+    "corpus_dir": "data/skills-refined-36k",
+    "corpus_limit": 3000,
+    "tasks": ["offer-letter-generator", "powerlifting-coef-calc", "dialogue-parser"],
+    "subset_size": 250
+  },
+  "_note": "AutoSkill meta-skill, 3 evolving refinements (iterations=4 => seed + 3 evolved). SkillsBench reward tracked each iteration via local Apptainer execution (no Daytona). Each evolved meta-skill saved to meta_iter_<n>.md."
+}
